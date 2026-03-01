@@ -1,18 +1,18 @@
-(** * C-878: Vacuum attractor (F=3/8) gives zero correction.
+(** * C-878: Imbalance attractor (F=3/8) gives zero correction.
 
-    Formal proof that when F = F_vac = 3/8 (the vacuum frustration
+    Formal proof that when F = F_vac = 3/8 (the imbalance
     attractor), the algebraic York time correction vanishes for all
     coupling strengths and all York times.
 
     Additionally proves that the sedenion stress-energy simplifies
-    to (1/2)*nu_0*K^2 when beta_coupling = 0 (at vacuum).
+    to (1/2)*nu_0*K^2 when beta_coupling = 0.
 
     Mirrors: adm_algebra_bridge.rs tests at lines 270-283. *)
 
 From OpenGororoba Require Import Prelude ADMAlgebraBridge.
 
-(** CLAIM C-878a: Vacuum attractor zeroes the York time correction. *)
-Theorem C878_vacuum_zeroes_correction :
+(** CLAIM C-878a: Imbalance attractor zeroes the York time correction. *)
+Theorem C878_attractor_zeroes_correction :
   forall theta alpha_s : R,
     algebraic_york_time_correction F_vac theta alpha_s = 0.
 Proof.
@@ -21,10 +21,10 @@ Proof.
   ring.
 Qed.
 
-(** C-878b: At vacuum with zero beta, stress-energy = (1/2)*nu_0*K^2.
+(** C-878b: At attractor with zero beta, stress-energy = (1/2)*nu_0*K^2.
     This mirrors the Rust test at line 280-283:
-    sedenion_stress_energy(VACUUM_ATTRACTOR, 1.0, 1.0, 0.0) = 0.5 *)
-Theorem C878_stress_energy_at_vacuum_zero_beta :
+    sedenion_stress_energy(IMBALANCE_ATTRACTOR, 1.0, 1.0, 0.0) = 0.5 *)
+Theorem C878_stress_energy_at_attractor_zero_beta :
   forall k_sq nu_0 : R,
     sedenion_stress_energy F_vac k_sq nu_0 0 = (1/2) * nu_0 * k_sq.
 Proof.
