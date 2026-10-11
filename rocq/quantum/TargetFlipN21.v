@@ -215,4 +215,3 @@ Qed.
 
 Print Assumptions network_16_correct.
 Print Assumptions network_16_targets_excluded.
-
