@@ -6,7 +6,13 @@
     matrix of R_s, s the imaginary sum, has entry sigma_k(a, b) at row a XOR b,
     column a for b <> 0 and 0 on the diagonal. The cochain recursion of
     Albuquerque and Majid, Quasialgebra structure of the octonions,
-    Corollary 4.3, gives (-1)^f(a, b) = sigma_k(b, a) at every level. *)
+    Corollary 4.3, gives (-1)^f(a, b) = sigma_k(b, a) at every level, and
+    reproduces its Proposition 4.4 quaternion and octonion cochains and the
+    Proposition 4.2 laws: F(x, x) = -1 off the identity and anticommuting
+    distinct imaginary units. Multiplying twice by an imaginary unit negates
+    every basis element on either side, a right multiplication matrix
+    carries each coefficient on its own XOR diagonal, and alpha I + beta W_n
+    is a scaled isometry. *)
 
 From Stdlib Require Import ZArith Lia Btauto.
 Require Import CdImaginarySumConference.
@@ -392,4 +398,207 @@ Proof.
     destruct (Nat.eqb_spec a' 0) as [->|].
     + rewrite am_zero_r by assumption. reflexivity.
     + rewrite <- IH by assumption. unfold sign_of. destruct (am_exponent j b' a'); reflexivity.
+Qed.
+
+(** Proposition 4.4 of the same paper, read with paper index i on index
+    bit i - 1. (ii) is the quaternion level. (iii) is the octonion level
+    with the cubic term x1 x2 y3, which Corollary 4.3 produces; the printed
+    x2 x2 y3 differs from the recursion at x = 2, y = 4. *)
+Definition bit (x i : nat) : bool := Nat.testbit x i.
+
+Theorem am_quaternion x y : (x < 4)%nat -> (y < 4)%nat ->
+  am_exponent 2 x y = xorb (andb (bit x 0) (bit y 0)) (andb (xorb (bit x 0) (bit x 1)) (bit y 1)).
+Proof. intros Hx Hy. destruct x as [|[|[|[|x]]]], y as [|[|[|[|y]]]]; try lia; reflexivity. Qed.
+
+Definition octonion_bilinear (x y : nat) : bool :=
+  xorb (andb (bit x 0) (bit y 0))
+    (xorb (andb (xorb (bit x 0) (bit x 1)) (bit y 1))
+       (andb (xorb (xorb (bit x 0) (bit x 1)) (bit x 2)) (bit y 2))).
+
+Definition octonion_exponent (cubic : bool) (x y : nat) : bool :=
+  xorb (octonion_bilinear x y)
+    (xorb (andb (andb (bit y 0) (bit x 1)) (bit x 2))
+       (xorb (andb (andb (bit x 0) (bit y 1)) (bit x 2))
+          (andb (andb cubic (bit x 1)) (bit y 2)))).
+
+Theorem am_octonion x y : (x < 8)%nat -> (y < 8)%nat ->
+  am_exponent 3 x y = octonion_exponent (bit x 0) x y.
+Proof.
+  intros Hx Hy.
+  destruct x as [|[|[|[|[|[|[|[|x]]]]]]]], y as [|[|[|[|[|[|[|[|y]]]]]]]]; try lia; reflexivity.
+Qed.
+
+Theorem am_octonion_printed_differs : am_exponent 3 2 4 <> octonion_exponent (bit 2 1) 2 4.
+Proof. discriminate. Qed.
+
+(** Proposition 4.2 and Definition 3.2: F(x, x) = -1 off the identity, and
+    distinct imaginary units anticommute while the identity commutes. *)
+Lemma unit_neq_high j x : (x + Nat.pow 2 j <> 0)%nat.
+Proof. pose proof (Nat.pow_nonzero 2 j ltac:(lia)). lia. Qed.
+
+Theorem am_altercommutative k : forall a b, (a < Nat.pow 2 k)%nat -> (b < Nat.pow 2 k)%nat ->
+  xorb (am_exponent k a b) (am_exponent k b a) =
+  andb (negb (Nat.eqb a 0)) (andb (negb (Nat.eqb b 0)) (negb (Nat.eqb a b))).
+Proof.
+  induction k as [|j IH]; intros a b Ha Hb.
+  - simpl in Ha, Hb. assert (a = O) as -> by lia. assert (b = O) as -> by lia. reflexivity.
+  - destruct (Nat.ltb_spec a (Nat.pow 2 j)) as [Hal|Hal];
+      [|destruct (split_high j a Ha Hal) as [a' [Ha' ->]]];
+    (destruct (Nat.ltb_spec b (Nat.pow 2 j)) as [Hbl|Hbl];
+      [|destruct (split_high j b Hb Hbl) as [b' [Hb' ->]]]).
+    + rewrite !am_ll by assumption. apply IH; assumption.
+    + rewrite am_lh, am_hl, am_diagonal by assumption.
+      rewrite (proj2 (Nat.eqb_neq _ _) (unit_neq_high j b')), (proj2 (Nat.eqb_neq a (b' + Nat.pow 2 j))) by lia.
+      destruct (am_exponent j a b'), (Nat.eqb a 0); reflexivity.
+    + rewrite am_hl, am_lh, am_diagonal by assumption.
+      rewrite (proj2 (Nat.eqb_neq _ _) (unit_neq_high j a')), (proj2 (Nat.eqb_neq (a' + Nat.pow 2 j) b)) by lia.
+      destruct (am_exponent j b a'), (Nat.eqb b 0); reflexivity.
+    + rewrite !am_hh, !am_diagonal by assumption.
+      rewrite !(proj2 (Nat.eqb_neq _ _) (unit_neq_high j _)).
+      replace (Nat.eqb (a' + Nat.pow 2 j) (b' + Nat.pow 2 j)) with (Nat.eqb a' b')
+        by (destruct (Nat.eqb_spec a' b'), (Nat.eqb_spec (a' + Nat.pow 2 j) (b' + Nat.pow 2 j)); lia).
+      pose proof (IH a' b' Ha' Hb') as C. revert C.
+      destruct (Nat.eqb_spec a' 0) as [->|Ha0], (Nat.eqb_spec b' 0) as [->|Hb0];
+        rewrite ?am_zero_l, ?am_zero_r by lia; rewrite ?(Nat.eqb_sym 0);
+        rewrite ?(proj2 (Nat.eqb_neq _ _) Ha0), ?(proj2 (Nat.eqb_neq _ _) Hb0); cbn [Nat.eqb negb andb xorb];
+        repeat match goal with
+        | |- context [am_exponent j ?x ?y] => destruct (am_exponent j x y)
+        | |- context [Nat.eqb ?x ?y] => destruct (Nat.eqb x y)
+        end; cbn; congruence.
+Qed.
+
+Theorem sigma_diagonal k a : (a < Nat.pow 2 k)%nat -> a <> O -> sigma k a a = -1.
+Proof.
+  intros Ha Ha0. rewrite <- am_sign, am_diagonal by exact Ha.
+  rewrite (proj2 (Nat.eqb_neq _ _) Ha0). reflexivity.
+Qed.
+
+Theorem sigma_anticommute k a b : (a < Nat.pow 2 k)%nat -> (b < Nat.pow 2 k)%nat ->
+  a <> O -> b <> O -> a <> b -> sigma k a b = - sigma k b a.
+Proof.
+  intros Ha Hb Ha0 Hb0 Hab. rewrite <- !am_sign by assumption.
+  pose proof (am_altercommutative k b a Hb Ha) as C.
+  rewrite (proj2 (Nat.eqb_neq _ _) Ha0), (proj2 (Nat.eqb_neq _ _) Hb0), (proj2 (Nat.eqb_neq b a)) in C by lia.
+  unfold sign_of. destruct (am_exponent k b a), (am_exponent k a b); simpl in C; congruence || reflexivity.
+Qed.
+
+Lemma lxor_eqb_0 a b : Nat.eqb (Nat.lxor a b) 0 = Nat.eqb a b.
+Proof.
+  destruct (Nat.eqb_spec (Nat.lxor a b) 0) as [H|H], (Nat.eqb_spec a b) as [E|E]; try reflexivity.
+  - exfalso. apply E, Nat.lxor_eq, H.
+  - exfalso. apply H. subst. apply Nat.lxor_nilpotent.
+Qed.
+
+Lemma lxor_eqb_self a b : Nat.eqb a (Nat.lxor a b) = Nat.eqb b 0.
+Proof.
+  rewrite Nat.eqb_sym, <- (lxor_eqb_0 (Nat.lxor a b) a).
+  replace (Nat.lxor (Nat.lxor a b) a) with b by bits. reflexivity.
+Qed.
+
+Lemma lxor_eqb_self_r a b : Nat.eqb b (Nat.lxor a b) = Nat.eqb a 0.
+Proof. rewrite Nat.lxor_comm. apply lxor_eqb_self. Qed.
+
+Ltac close_bool :=
+  repeat match goal with |- context [am_exponent ?k ?x ?y] => destruct (am_exponent k x y) end;
+  cbn; congruence.
+
+(** e_a (e_a e_x) = -e_x off the identity: in exponents,
+    f(x, a) + f(a XOR x, a) = [a <> 0]. *)
+Theorem am_left_involution k : forall a x, (a < Nat.pow 2 k)%nat -> (x < Nat.pow 2 k)%nat ->
+  xorb (am_exponent k x a) (am_exponent k (Nat.lxor a x) a) = negb (Nat.eqb a 0).
+Proof.
+  induction k as [|j IH]; intros a x Ha Hx.
+  - simpl in Ha, Hx. assert (a = O) as -> by lia. assert (x = O) as -> by lia. reflexivity.
+  - destruct (Nat.ltb_spec a (Nat.pow 2 j)) as [Hal|Hal];
+      [|destruct (split_high j a Ha Hal) as [a' [Ha' ->]]];
+    (destruct (Nat.ltb_spec x (Nat.pow 2 j)) as [Hxl|Hxl];
+      [|destruct (split_high j x Hx Hxl) as [x' [Hx' ->]]]).
+    + rewrite !am_ll by (try apply lxor_lt; assumption). apply IH; assumption.
+    + rewrite lxor_high_r, (Nat.lxor_comm x' a), !am_hl by (try apply lxor_lt; assumption).
+      pose proof (IH a x' Hal Hx') as L.
+      pose proof (am_altercommutative j a x' Hal Hx') as C1.
+      pose proof (am_altercommutative j a (Nat.lxor a x') Hal ltac:(apply lxor_lt; assumption)) as C2.
+      rewrite lxor_eqb_0, lxor_eqb_self in C2. revert L C1 C2.
+      destruct (Nat.eqb_spec a 0), (Nat.eqb_spec x' 0), (Nat.eqb_spec a x'); try (exfalso; lia); close_bool.
+    + rewrite lxor_high_l, am_lh, am_hh, !am_diagonal by (try apply lxor_lt; assumption).
+      rewrite (proj2 (Nat.eqb_neq _ _) (unit_neq_high j a')), lxor_eqb_0.
+      pose proof (IH a' x Ha' Hxl) as L.
+      pose proof (am_altercommutative j a' (Nat.lxor a' x) Ha' ltac:(apply lxor_lt; assumption)) as C.
+      rewrite lxor_eqb_0, lxor_eqb_self in C. revert L C.
+      destruct (Nat.eqb_spec a' 0), (Nat.eqb_spec x 0), (Nat.eqb_spec a' x); try (exfalso; lia); close_bool.
+    + rewrite lxor_high_lr, am_hh, am_lh, !am_diagonal by (try apply lxor_lt; assumption).
+      rewrite (proj2 (Nat.eqb_neq _ _) (unit_neq_high j a')), lxor_eqb_0.
+      pose proof (IH a' x' Ha' Hx') as L.
+      pose proof (am_altercommutative j a' x' Ha' Hx') as C. revert L C.
+      destruct (Nat.eqb_spec a' 0), (Nat.eqb_spec x' 0), (Nat.eqb_spec a' x'); try (exfalso; lia); close_bool.
+Qed.
+
+(** Left and right multiplication by an imaginary unit square to -1 on the
+    basis: e_a (e_a e_x) = -e_x and (e_x e_b) e_b = -e_x. *)
+Theorem sigma_left_involution k a x : (a < Nat.pow 2 k)%nat -> (x < Nat.pow 2 k)%nat -> a <> O ->
+  sigma k a x * sigma k a (Nat.lxor a x) = -1.
+Proof.
+  intros Ha Hx Ha0. rewrite <- !am_sign by (try apply lxor_lt; assumption).
+  pose proof (am_left_involution k a x Ha Hx) as L. rewrite (proj2 (Nat.eqb_neq _ _) Ha0) in L.
+  unfold sign_of. revert L. close_bool || (destruct (am_exponent k x a), (am_exponent k (Nat.lxor a x) a); cbn; congruence).
+Qed.
+
+Theorem sigma_right_involution k a b : (a < Nat.pow 2 k)%nat -> (b < Nat.pow 2 k)%nat -> b <> O ->
+  sigma k a b * sigma k (Nat.lxor a b) b = -1.
+Proof.
+  intros Ha Hb Hb0. rewrite <- !am_sign by (try apply lxor_lt; assumption).
+  pose proof (am_left_involution k b a Hb Ha) as L.
+  pose proof (am_altercommutative k b a Hb Ha) as C1.
+  pose proof (am_altercommutative k b (Nat.lxor a b) Hb ltac:(apply lxor_lt; assumption)) as C2.
+  rewrite (Nat.lxor_comm b a) in L. rewrite lxor_eqb_0, lxor_eqb_self_r in C2.
+  rewrite (proj2 (Nat.eqb_neq _ _) Hb0) in L, C1, C2.
+  unfold sign_of. revert L C1 C2. destruct (Nat.eqb_spec a 0), (Nat.eqb_spec a b), (Nat.eqb_spec b a); try (exfalso; lia); close_bool.
+Qed.
+
+(** A right multiplication matrix R_v carries v_b on the XOR diagonal b:
+    R_v[a XOR b, a] = (e_a v)_(a XOR b) = sigma_k(a, b) v_b, so every column
+    recovers every coefficient. *)
+Theorem right_mul_entry k a b v : (a < Nat.pow 2 k)%nat -> (b < Nat.pow 2 k)%nat ->
+  coord k (mul k (basis k a) v) (Nat.lxor a b) = sigma k a b * coord k v b.
+Proof.
+  intros Ha Hb. destruct (basis_mul_coord k) as [L _].
+  rewrite L by (try apply lxor_lt; assumption).
+  replace (Nat.lxor a (Nat.lxor a b)) with b by bits. reflexivity.
+Qed.
+
+(** alpha I + beta W_n is a scaled isometry for all integers alpha, beta. *)
+Theorem isum_scaled_isometry k alpha beta x y :
+  dot k (add k (scale k alpha x) (scale k beta (mul k x (isum k))))
+        (add k (scale k alpha y) (scale k beta (mul k y (isum k)))) =
+  (alpha * alpha + (2 ^ Z.of_nat k - 1) * (beta * beta)) * dot k x y.
+Proof.
+  destruct (isum_skew k) as [_ SkR].
+  rewrite !dot_add_l, !dot_add_r, !dot_scale_l, !dot_scale_r, isum_conference, (SkR x y). ring.
+Qed.
+
+Lemma pow2_ge_4 k : (2 <= k)%nat -> (4 <= Nat.pow 2 k)%nat.
+Proof. intro Hk. change 4%nat with (Nat.pow 2 2). apply Nat.pow_le_mono_r; lia. Qed.
+
+Lemma sigma_1_2 k : (2 <= k)%nat -> sigma k 1 2 = 1 /\ sigma k 2 1 = -1.
+Proof.
+  induction k as [|j IH]; intro Hk; [lia|].
+  destruct (Nat.eq_dec j 1) as [->|Hj]; [split; reflexivity|].
+  pose proof (pow2_ge_4 j ltac:(lia)). rewrite !sigma_ll by lia. apply IH. lia.
+Qed.
+
+(** Right and left multiplication by s differ on the coherent input
+    e_0 + e_1 at coordinate 3 for every n >= 4: (e_0 + e_1) s has entry 2
+    there and s (e_0 + e_1) has entry 0, while both operators share the Gram
+    matrix of isum_conference. *)
+Theorem convention_discriminator k : (2 <= k)%nat ->
+  coord k (mul k (add k (basis k 0) (basis k 1)) (isum k)) 3 = 2 /\
+  coord k (mul k (isum k) (add k (basis k 0) (basis k 1))) 3 = 0.
+Proof.
+  intro Hk. pose proof (pow2_ge_4 k Hk) as H4. destruct (sigma_1_2 k Hk) as [S12 S21].
+  destruct (basis_mul_coord k) as [L R].
+  rewrite mul_add_l, mul_add_r, !coord_add, (L 0%nat), (L 1%nat), (R 0%nat), (R 1%nat) by lia.
+  change (Nat.lxor 0 3) with 3%nat. change (Nat.lxor 1 3) with 2%nat.
+  change (Nat.lxor 3 0) with 3%nat. change (Nat.lxor 3 1) with 2%nat.
+  rewrite !coord_isum by lia. cbn [Nat.eqb].
+  rewrite sigma_zero_l, sigma_zero_r, S12, S21. split; reflexivity.
 Qed.
