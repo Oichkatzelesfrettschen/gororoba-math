@@ -10,10 +10,12 @@
     _index carry the meaning of their cd_core bodies on int arguments:
     _dimension raises unless dim >= 1 and dim & (dim - 1) = 0, and _index
     raises unless 0 <= index < dim and returns index. The theorems read
-    int arguments other than bool: both guards reject a bool, _dimension
-    rejects every non-int dim, and _index hands any __index__ object on as
-    a Python int, so every call that reaches the loop runs on ints; the
-    pytest contract pins both guard bodies and checks these clauses.
+    exact-int arguments: _dimension rejects every dim whose type is not
+    exactly int, bool and int subclasses included, before any operator runs
+    on it, and _index hands any __index__ object on as an exact int through
+    operator.index, so every call that reaches the loop runs int's own
+    operators on ints; the pytest contract pins both guard bodies and
+    checks these clauses.
 
     cd_sign_returns_sigma: for every k and p, q < 2^k, cd_sign(2^k, p, q)
     returns sigma_k(p, q), the tower sign of CdTowerBasisSign.v, through
