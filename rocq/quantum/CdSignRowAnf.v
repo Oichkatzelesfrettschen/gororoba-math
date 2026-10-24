@@ -1,7 +1,8 @@
 (** Algebraic normal form of the Cayley-Dickson sign rows. A truth table
     f on x < 2^k has ANF coefficient anf_coef k f s on the monomial
     prod_(i in s) x_i, the Moebius transform of f over the submasks t of s,
-    and anf_inversion recovers f from its coefficients. The left sign row
+    anf_inversion recovers f from its coefficients, and anf_unique shows no
+    other coefficient table reconstructs f. The left sign row
     f_m(x) = [sigma_k(m, x) = -1] of e_m is am_exponent k x m by am_sign.
     For k >= 3 its ANF has no degree-k term, and the monomial that omits x_i
     has coefficient bit i of m, so every left sign row with m <> 0 has
@@ -241,6 +242,9 @@ Qed.
 (** The left sign row of e_m: f_m(x) = [sigma_k(m, x) = -1] (am_sign). *)
 Definition sign_row (k m : nat) (x : nat) : bool := am_exponent k x m.
 
+Lemma sign_row_sigma k m x : m < Nat.pow 2 k -> x < Nat.pow 2 k -> sign_of (sign_row k m x) = sigma k m x.
+Proof. intros Hm Hx. apply am_sign; assumption. Qed.
+
 Lemma row_filtered j c m : (forall y, y < Nat.pow 2 j -> c (y + Nat.pow 2 j) = c y) ->
   m < Nat.pow 2 (S j) ->
   xsum (S j) (fun x => andb (c x) (sign_row (S j) m x)) =
@@ -410,6 +414,46 @@ Proof.
     rewrite Bool.xorb_nilpotent, Bool.andb_false_r. reflexivity.
 Qed.
 
+(** The coefficients are unique: the Moebius transform of the function that a
+    coefficient table c reconstructs returns c, so anf_coef is the algebraic
+    normal form. *)
+Definition anf_eval (k : nat) (c : nat -> bool) (x : nat) : bool :=
+  xsum k (fun s => andb (subset s x) (c s)).
+
+Lemma anf_eval_low j c x : x < Nat.pow 2 j -> anf_eval (S j) c x = anf_eval j c x.
+Proof.
+  intro Hx. unfold anf_eval. simpl.
+  rewrite (xsum_ext j (fun s => andb (subset (s + Nat.pow 2 j) x) (c (s + Nat.pow 2 j))) (fun _ => false)),
+    xsum_false; [apply Bool.xorb_false_r|].
+  intros s Hs. rewrite subset_high_low by assumption. reflexivity.
+Qed.
+
+Lemma anf_eval_high j c x : x < Nat.pow 2 j ->
+  anf_eval (S j) c (x + Nat.pow 2 j) = xorb (anf_eval j c x) (anf_eval j (fun s => c (s + Nat.pow 2 j)) x).
+Proof.
+  intro Hx. unfold anf_eval. simpl. f_equal; apply xsum_ext; intros s Hs.
+  - rewrite subset_low_high by assumption. reflexivity.
+  - rewrite subset_high_high by assumption. reflexivity.
+Qed.
+
+Theorem anf_unique k : forall c s, s < Nat.pow 2 k -> anf_coef k (anf_eval k c) s = c s.
+Proof.
+  induction k as [|j IH]; intros c s Hs.
+  - simpl in Hs. assert (s = 0) as -> by lia. unfold anf_coef, anf_eval. simpl. destruct (c 0); reflexivity.
+  - destruct (Nat.ltb_spec s (Nat.pow 2 j)) as [Hl|Hl].
+    + unfold anf_coef. simpl.
+      rewrite (xsum_ext j (fun t => andb (subset (t + Nat.pow 2 j) s) _) (fun _ => false)), xsum_false.
+      2: { intros t Ht. rewrite subset_high_low by assumption. reflexivity. }
+      rewrite Bool.xorb_false_r, <- (IH c s Hl). apply xsum_ext. intros t Ht.
+      rewrite anf_eval_low by exact Ht. reflexivity.
+    + destruct (split_high j s Hs Hl) as [s' [Hs' ->]]. rewrite coef_high by exact Hs'.
+      rewrite (coef_ext j (anf_eval (S j) c) (anf_eval j c)) by (intros t Ht; apply anf_eval_low, Ht).
+      rewrite (coef_ext j (fun t => anf_eval (S j) c (t + Nat.pow 2 j))
+                (fun t => xorb (anf_eval j c t) (anf_eval j (fun u => c (u + Nat.pow 2 j)) t)))
+        by (intros t Ht; apply anf_eval_high, Ht).
+      rewrite coef_xor, !IH by exact Hs'. btauto.
+Qed.
+
 (** A truth table of exact degree d: every monomial it carries has weight at
     most d, and one of weight d is present. *)
 Definition degree_is (k : nat) (f : nat -> bool) (d : nat) : Prop :=
@@ -435,6 +479,9 @@ Qed.
 
 (** The right sign row of e_m: h_m(x) = [sigma_k(x, m) = -1] (am_sign). *)
 Definition right_row (k m : nat) (x : nat) : bool := am_exponent k m x.
+
+Lemma right_row_sigma k m x : m < Nat.pow 2 k -> x < Nat.pow 2 k -> sign_of (right_row k m x) = sigma k x m.
+Proof. intros Hm Hx. apply am_sign; assumption. Qed.
 
 (** Proposition 4 of docs/notes/cd_phase_degree.md: degree 1 when m is a
     power of two and max(1, bitlen(m) - 2) otherwise; log2 m - 1 is
