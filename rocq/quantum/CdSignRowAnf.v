@@ -4,9 +4,9 @@
     anf_inversion recovers f from its coefficients, and anf_unique shows no
     other coefficient table reconstructs f. The left sign row
     f_m(x) = [sigma_k(m, x) = -1] of e_m is am_exponent k x m by am_sign.
-    For k >= 3 its ANF has no degree-k term, and the monomial that omits x_i
-    has coefficient bit i of m, so every left sign row with m <> 0 has
-    degree exactly k - 1. The right sign row h_m(x) = [sigma_k(x, m) = -1]
+    For k >= 2 its ANF has no degree-k term, for k >= 3 the monomial that
+    omits x_i has coefficient bit i of m, and every left sign row with
+    m <> 0 has degree exactly max(1, k - 1). The right sign row h_m(x) = [sigma_k(x, m) = -1]
     has degree 1 when m is a power of two and max(1, bitlen(m) - 2)
     otherwise, at every level k that holds m. *)
 
