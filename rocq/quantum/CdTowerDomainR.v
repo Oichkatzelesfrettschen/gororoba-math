@@ -42,6 +42,51 @@ Module RBridge.
     mul (S k) x y = zero (S k) -> y <> zero (S k) ->
     dot (S k) x (one (S k)) = 0%R /\ dot (S k) x (zero k, one k) = 0%R.
   Proof. rewrite <- mul_eq, <- !zero_eq, <- !dot_eq, <- !one_eq. apply RTower.lemma_9_5. Qed.
+  (** The remaining theorems of the functor, restated the same way: every
+      tower operation of the statement is rewritten to the instance's and
+      the functor's theorem closes the goal by conversion. *)
+
+  Ltac to_tower :=
+    repeat first [rewrite <- mul_eq | rewrite <- conjugate_eq | rewrite <- add_eq | rewrite <- scale_eq
+                 | rewrite <- dot_eq | rewrite <- re_eq | rewrite <- zero_eq | rewrite <- one_eq].
+
+  Theorem conj_conj k x : conjugate k (conjugate k x) = x.
+  Proof. to_tower. apply RTower.conj_conj. Qed.
+  Theorem conj_mul k x y : conjugate k (mul k x y) = mul k (conjugate k y) (conjugate k x).
+  Proof. to_tower. apply RTower.conj_mul. Qed.
+  Theorem dot_conj k x y : dot k (conjugate k x) y = dot k x (conjugate k y).
+  Proof. to_tower. apply RTower.dot_conj. Qed.
+  Theorem norm_mul k :
+    (forall x, mul k x (conjugate k x) = scale k (dot k x x) (one k)) /\
+    (forall x, mul k (conjugate k x) x = scale k (dot k x x) (one k)).
+  Proof. split; intro x; to_tower; apply RTower.norm_mul. Qed.
+  Theorem adjoint k :
+    (forall x y z, dot k (mul k x y) z = dot k y (mul k (conjugate k x) z)) /\
+    (forall x y z, dot k (mul k x y) z = dot k x (mul k z (conjugate k y))).
+  Proof. split; intros x y z; to_tower; apply RTower.adjoint. Qed.
+  Theorem re_commutator k x y : re k (mul k x y) = re k (mul k y x).
+  Proof. to_tower. apply RTower.re_commutator. Qed.
+  Theorem re_associator k x y z : re k (mul k (mul k x y) z) = re k (mul k x (mul k y z)).
+  Proof. to_tower. apply RTower.re_associator. Qed.
+  Theorem conj_mul_left k x y : mul k x (mul k (conjugate k x) y) = mul k (conjugate k x) (mul k x y).
+  Proof. to_tower. apply RTower.conj_mul_left. Qed.
+  Theorem conj_mul_right k x y : mul k (mul k x y) (conjugate k y) = mul k (mul k x (conjugate k y)) y.
+  Proof. to_tower. apply RTower.conj_mul_right. Qed.
+  Theorem lemma_9_2 k x y :
+    (mul k x y = zero k <-> mul k (conjugate k x) y = zero k) /\
+    (mul k x y = zero k <-> mul k x (conjugate k y) = zero k).
+  Proof. to_tower. apply RTower.lemma_9_2. Qed.
+  Theorem purity_right k a z :
+    mul k z a = zero k -> a <> zero k -> z <> zero k -> re k a = 0%R /\ re k z = 0%R.
+  Proof. to_tower. apply RTower.purity_right. Qed.
+  Theorem annihilator_orthogonal k (x y : cd (S k)) :
+    x <> zero (S k) -> mul (S k) x y = zero (S k) ->
+    dot (S k) y (one (S k)) = 0%R /\ dot (S k) y (zero k, one k) = 0%R.
+  Proof. to_tower. apply RTower.annihilator_orthogonal. Qed.
+  Theorem right_inverse_affine k a b :
+    mul k a b = one k ->
+    mul k a (add k (scale k (dot k a a) b) (scale k (-1)%R (conjugate k a))) = zero k.
+  Proof. to_tower. apply RTower.right_inverse_affine. Qed.
 End RBridge.
 
 (** The field instance's tower is RTower's, and RTower's is CdTowerReal's, so
