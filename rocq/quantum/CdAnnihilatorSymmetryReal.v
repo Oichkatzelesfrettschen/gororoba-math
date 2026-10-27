@@ -23,6 +23,12 @@
     admit division, so the right-inverse family is stated in the note's
     affine form.
 
+    Corollary 2.9, the flexible law (x y) x = x (y x), is proved from Lemma
+    2.8 alone: the trilinear sum x (y z) - (x y) z + z (y x) - (z y) x
+    changes sign under conjugation of any one argument and conjugates to
+    minus itself with all three conjugated, so it is its own conjugate, a
+    real element whose real part Lemma 2.8 cancels; z = x gives the law.
+
     No step uses associativity, alternativity or multiplicativity of the
     norm, which fail from k = 4 on. *)
 
@@ -88,6 +94,60 @@ Theorem re_associator k x y z : re k (mul k (mul k x y) z) = re k (mul k x (mul 
 Proof.
   rewrite <- !dot_one_r, (adjoint_r k (mul k x y) z (one k)), (adjoint_r k x y), (adjoint_r k x (mul k y z) (one k)),
     !mul_one_l, conj_mul. reflexivity.
+Qed.
+
+(** Corollary 2.9 (flexibility): (x y) x = x (y x). The paper's trilinear
+    sum F(x, y, z) = x (y z) - (x y) z + z (y x) - (z y) x vanishes when an
+    argument is 1, so conj(x) = 2 re(x) 1 - x gives F(conj(x), y, z) =
+    -F(x, y, z) in each argument, while conj(F(x, y, z)) =
+    -F(conj(x), conj(y), conj(z)) by the anti-automorphism law. Hence
+    conj(F) = F, so F = re(F) 1, and re(F) = 0 by Lemma 2.8 applied to
+    (x, y, z) and to (z, y, x). F(x, y, x) = 2 (x (y x) - (x y) x). *)
+
+Lemma re_add k x y : re k (add k x y) = re k x + re k y.
+Proof. rewrite <- !dot_one_r. apply dot_add_l. Qed.
+
+Lemma re_scale k r x : re k (scale k r x) = r * re k x.
+Proof. rewrite <- !dot_one_r. apply dot_scale_l. Qed.
+
+Definition flex_sum k x y z : cd k :=
+  add k (add k (mul k x (mul k y z)) (scale k (-1) (mul k (mul k x y) z)))
+        (add k (mul k z (mul k y x)) (scale k (-1) (mul k (mul k z y) x))).
+
+Lemma flex_sum_conj_l k x y z : flex_sum k (conjugate k x) y z = scale k (-1) (flex_sum k x y z).
+Proof. unfold flex_sum. rewrite (conj_split k x). autorewrite with alg. vec. Qed.
+
+Lemma flex_sum_conj_m k x y z : flex_sum k x (conjugate k y) z = scale k (-1) (flex_sum k x y z).
+Proof. unfold flex_sum. rewrite (conj_split k y). autorewrite with alg. vec. Qed.
+
+Lemma flex_sum_conj_r k x y z : flex_sum k x y (conjugate k z) = scale k (-1) (flex_sum k x y z).
+Proof. unfold flex_sum. rewrite (conj_split k z). autorewrite with alg. vec. Qed.
+
+Lemma conj_flex_sum k x y z :
+  conjugate k (flex_sum k x y z) = scale k (-1) (flex_sum k (conjugate k x) (conjugate k y) (conjugate k z)).
+Proof. unfold flex_sum. autorewrite with alg. vec. Qed.
+
+Lemma flex_sum_self_conj k x y z : conjugate k (flex_sum k x y z) = flex_sum k x y z.
+Proof. rewrite conj_flex_sum, flex_sum_conj_l, flex_sum_conj_m, flex_sum_conj_r. vec. Qed.
+
+Lemma re_flex_sum k x y z : re k (flex_sum k x y z) = 0.
+Proof.
+  unfold flex_sum. rewrite !re_add, !re_scale, (re_associator k x y z), (re_associator k z y x). ring.
+Qed.
+
+Theorem flex_sum_zero k x y z : flex_sum k x y z = zero k.
+Proof.
+  pose proof (add_conj k (flex_sum k x y z)) as H.
+  rewrite flex_sum_self_conj, re_flex_sum in H.
+  apply ext. intros i _. pose proof (f_equal (fun v => coord k v i) H) as Hi. cbn beta in Hi.
+  autorewrite with coord in Hi. rewrite coord_zero. lra.
+Qed.
+
+Theorem flexible k x y : mul k (mul k x y) x = mul k x (mul k y x).
+Proof.
+  pose proof (flex_sum_zero k x y x) as H. unfold flex_sum in H.
+  apply ext. intros i _. pose proof (f_equal (fun v => coord k v i) H) as Hi. cbn beta in Hi.
+  autorewrite with coord in Hi. lra.
 Qed.
 
 (** The identity of Lemma 9.2, x (conj(x) y) = conj(x) (x y), and its mirror
