@@ -14,7 +14,10 @@
     the right. Corollary 9.3 then conjugates x y = 0 to conj(y) conj(x) = 0
     and applies the equivalences twice; the purity of annihilators (Lemma
     9.4) and Lemmas 2.6 and 2.8 on the real parts of commutators and
-    associators follow from the same adjoint identities. CdAnnihilatorSymmetry.v
+    associators follow from the same adjoint identities, and Lemma 9.5
+    (a zero divisor of level k + 1 is orthogonal to span(1, i), with i the
+    adjoined unit (0, 1)) follows from Lemma 9.4 applied to the swapped
+    pair (b, a), which (-conj(d), c) annihilates. CdAnnihilatorSymmetry.v
     proves the integer-tower statement by the trace-form route of
     docs/notes/topics/cd-one-sided-inverses.md; here the real coefficients
     admit division, so the right-inverse family is stated in the note's
@@ -171,6 +174,66 @@ Qed.
 Theorem purity_right k a z :
   mul k z a = zero k -> a <> zero k -> z <> zero k -> re k a = 0 /\ re k z = 0.
 Proof. intros H. apply purity_left, kernel_swap, H. Qed.
+
+(** Lemma 9.5: a zero divisor of level k + 1 is orthogonal to C = span(1, i),
+    where i = (0, 1) is the imaginary unit the doubling adjoins, so <x, i> is
+    the real part of the second half of x. When (a, b)(c, d) = 0 with (c, d)
+    nonzero, Lemma 9.4 makes a imaginary, and then
+    (-conj(d), c)(b, a) = (a c - conj(d) b, conj(d a + b conj(c))) = 0, so
+    (b, a) is a zero divisor as well and Lemma 9.4 makes b imaginary. *)
+
+Definition i_unit k : cd (S k) := (zero k, one k).
+
+Lemma dot_i_unit k (x : cd (S k)) : dot (S k) x (i_unit k) = re k (snd x).
+Proof. destruct x as [a b]. cbn [dot i_unit fst snd]. rewrite dot_zero_r, dot_one_r. ring. Qed.
+
+Lemma imaginary_conj k a : re k a = 0 -> conjugate k a = scale k (-1) a.
+Proof. intro Ha. rewrite conj_split, Ha. vec. Qed.
+
+Lemma swap_zero_divisor k (a b c d : cd k) :
+  mul (S k) (a, b) (c, d) = zero (S k) -> re k a = 0 ->
+  mul (S k) (scale k (-1) (conjugate k d), c) (b, a) = zero (S k).
+Proof.
+  intros H Ha. pose proof (imaginary_conj k a Ha) as Ca.
+  pose proof (f_equal fst H) as H1. pose proof (f_equal snd H) as H2. cbn [mul fst snd zero] in H1, H2.
+  cbn [mul fst snd zero]. f_equal.
+  - rewrite mul_scale_l, Ca, mul_scale_l, <- H1. vec.
+  - pose proof (f_equal (conjugate k) H2) as C.
+    rewrite conj_add, !conj_mul, conj_conj, conj_zero, Ca, mul_scale_l in C.
+    rewrite mul_scale_r. exact C.
+Qed.
+
+Lemma swap_nonzero k (c d : cd k) :
+  (c, d) <> zero (S k) -> (scale k (-1) (conjugate k d), c) <> zero (S k).
+Proof.
+  intros H E. apply H. pose proof (f_equal fst E) as E1. pose proof (f_equal snd E) as E2.
+  cbn [fst snd zero] in E1, E2. cbn [zero]. subst c. f_equal.
+  assert (Cd : conjugate k d = zero k).
+  { apply ext. intros i _. pose proof (f_equal (fun v => coord k v i) E1) as Hi. cbn beta in Hi.
+    rewrite coord_scale, coord_zero in Hi. rewrite coord_zero. lra. }
+  rewrite <- (conj_conj k d), Cd. apply conj_zero.
+Qed.
+
+Theorem lemma_9_5 k (x y : cd (S k)) :
+  mul (S k) x y = zero (S k) -> y <> zero (S k) ->
+  dot (S k) x (one (S k)) = 0 /\ dot (S k) x (i_unit k) = 0.
+Proof.
+  intros H Hy. destruct x as [a b], y as [c d].
+  pose proof (re_left_zero (S k) (a, b) (c, d) H Hy) as Ha. cbn [re fst] in Ha.
+  split.
+  - rewrite dot_one_r. exact Ha.
+  - rewrite dot_i_unit. cbn [snd].
+    exact (re_left_zero (S k) (b, a) _ (kernel_swap (S k) _ _ (swap_zero_divisor k a b c d H Ha))
+             (swap_nonzero k c d Hy)).
+Qed.
+
+(** The second statement of Lemma 9.5: the annihilator of a nonzero x lies
+    in the orthogonal complement of C, by the kernel swap. *)
+
+Theorem annihilator_orthogonal k (x y : cd (S k)) :
+  x <> zero (S k) -> mul (S k) x y = zero (S k) ->
+  dot (S k) y (one (S k)) = 0 /\ dot (S k) y (i_unit k) = 0.
+Proof. intros Hx H. exact (lemma_9_5 k y x (kernel_swap (S k) x y H) Hx). Qed.
 
 (** The corollary: direct finiteness, and the right inverses of a as the
     affine family conj(a)/<a, a> + w with a w = 0. *)
