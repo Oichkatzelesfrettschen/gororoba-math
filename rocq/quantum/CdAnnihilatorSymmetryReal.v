@@ -12,8 +12,8 @@
     conj(x) = 2 re(x) 1 - x: both sides read 2 re(x) (x y) - x (x y). The
     mirror identity (x y) conj(y) = (x conj(y)) y is the same reflection on
     the right. Corollary 9.3 then conjugates x y = 0 to conj(y) conj(x) = 0
-    and applies the equivalences twice; the purity of annihilators (Lemmas
-    9.4 and 9.5) and Lemmas 2.6 and 2.8 on the real parts of commutators and
+    and applies the equivalences twice; the purity of annihilators (Lemma
+    9.4) and Lemmas 2.6 and 2.8 on the real parts of commutators and
     associators follow from the same adjoint identities. CdAnnihilatorSymmetry.v
     proves the integer-tower statement by the trace-form route of
     docs/notes/topics/cd-one-sided-inverses.md; here the real coefficients
