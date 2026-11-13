@@ -13,9 +13,10 @@
 #      has its .vo; the admission scanner of rocq/open accepts the tree.
 # Environment: ROCQ_SWITCH (default rocq-9.3), ROCQ_JOBS (default the online
 # processor count), ROCQ_BUILD_DIR (parent of the scratch directory, default
-# $TMPDIR or /tmp; the two trees need about 600 MB). At six jobs the build of
-# rocq/open peaked at 12 GB of memory in one of three runs; lower ROCQ_JOBS on
-# a host with less.
+# $TMPDIR or /tmp; the two trees need about 600 MB). At six jobs the whole
+# script peaked at 11.9 GB of memory (systemd scope accounting, 12-thread
+# x86-64 host), and a run capped at 12 GB was killed in the build of
+# rocq/open; lower ROCQ_JOBS on a host with less.
 # Needs git, opam, tar, make, rustc and getconf on PATH. Exit status: 0 every
 # check passed, 1 a check failed, 2 a tool or the switch is missing.
 set -eu
