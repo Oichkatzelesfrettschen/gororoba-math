@@ -9,9 +9,11 @@ public import GororobaMath.CayleyDickson.Tower
 Left multiplication by `e i + e j` carries the pair of basis elements
 `{e x, e x'}`, `x' = x ^^^ i ^^^ j`, into the pair
 `{e (i ^^^ x), e (j ^^^ x)}`, since `i ^^^ x' = j ^^^ x`. On that pair it is
-a two-by-two matrix of signs, singular exactly when the pair is *aligned*,
-and then `e x + e x'` or `e x - e x'` spans its kernel. gororoba-quantum
-reads the nullity of a two-term operand as its number of aligned pairs
+a two-by-two matrix of signs. When the pair is *aligned*, `e x + e x'` or
+`e x - e x'` lies in its kernel; this file proves that implication. The
+converse, that an unaligned pair has determinant `±2`, belongs with the
+module structure of the tower. gororoba-quantum reads the nullity of a
+two-term operand with `i ≠ j` as its number of aligned pairs
 (`docs/evidence/pathion-kernel-map/README.md`,
 `gororoba_quantum/pathion_kernel_map.py`).
 
@@ -20,14 +22,21 @@ reads the nullity of a two-term operand as its number of aligned pairs
 * `Tower.two_term_mul_add_eq_zero`, `Tower.two_term_mul_sub_eq_zero`: over
   every ring and at every level, an aligned pair gives the explicit zero
   product `(e i + e j) * (e x ± e x') = 0`.
-* `Tower.alignedPairCount`: the number of aligned pairs, a computable
-  function of `k`, `i`, `j`; the instances below evaluate it in the kernel
-  for the operands of the retained hardware runs.
+* `Tower.partner_partner`, `Tower.partner_eq_self_iff`: `partner i j` is an
+  involution, with a fixed point exactly when `i = j`, so for `i ≠ j` the
+  indices split into two-element pairs.
+* `Tower.alignedAdd_partner`, `Tower.alignedSub_partner`,
+  `Tower.alignedAdd_and_alignedSub`: alignment is a property of the pair, and
+  the two kinds exclude each other.
+* `Tower.alignedPairCount`: the number of aligned pairs for `i ≠ j`, and `0`
+  for `i = j`, where every index is its own partner and the operand is
+  `e i + e i`; the instances below evaluate it in the kernel for the
+  operands of the retained hardware runs.
 
 The count is a lower bound on the nullity over a ring where the `2 ^ k`
-basis elements are independent. The equality `nullity = alignedPairCount`
-over a field of characteristic other than two needs the module structure
-of the tower and is stated nowhere in this file.
+basis elements are independent and `i ≠ j`. The equality
+`nullity = alignedPairCount` over a field of characteristic other than two
+needs the module structure of the tower and is stated nowhere in this file.
 -/
 
 @[expose] public section
@@ -63,6 +72,52 @@ theorem xor_partner_right {k : ℕ} (i j x : BitVec k) : j ^^^ partner i j x = i
   rw [partner, BitVec.xor_comm (x ^^^ i) j, ← BitVec.xor_assoc, BitVec.xor_self,
     BitVec.zero_xor, BitVec.xor_comm]
 
+/-- `partner i j` is an involution. -/
+theorem partner_partner {k : ℕ} (i j x : BitVec k) : partner i j (partner i j x) = x := by
+  unfold partner
+  ext n hn
+  simp only [BitVec.getElem_xor]
+  cases x[n] <;> cases i[n] <;> cases j[n] <;> rfl
+
+/-- An index is its own partner exactly when the operand repeats one basis
+element, so for `i ≠ j` every pair `{x, partner i j x}` has two elements. -/
+theorem partner_eq_self_iff {k : ℕ} (i j x : BitVec k) : partner i j x = x ↔ i = j := by
+  unfold partner
+  constructor
+  · intro h
+    ext n hn
+    have hb := congrArg (fun v : BitVec k => v[n]) h
+    simp only [BitVec.getElem_xor] at hb
+    revert hb
+    cases x[n] <;> cases i[n] <;> cases j[n] <;> simp
+  · rintro rfl
+    ext n hn
+    simp only [BitVec.getElem_xor]
+    cases x[n] <;> cases i[n] <;> rfl
+
+/-- Alignment with opposite signs is a property of the pair. -/
+theorem alignedAdd_partner (k : ℕ) (i j x : BitVec k) :
+    alignedAdd k i j (partner i j x) = alignedAdd k i j x := by
+  unfold alignedAdd
+  rw [partner_partner]
+  cases negSign k i x <;> cases negSign k j (partner i j x) <;> cases negSign k j x <;>
+    cases negSign k i (partner i j x) <;> rfl
+
+/-- Alignment with equal signs is a property of the pair. -/
+theorem alignedSub_partner (k : ℕ) (i j x : BitVec k) :
+    alignedSub k i j (partner i j x) = alignedSub k i j x := by
+  unfold alignedSub
+  rw [partner_partner]
+  cases negSign k i x <;> cases negSign k j (partner i j x) <;> cases negSign k j x <;>
+    cases negSign k i (partner i j x) <;> rfl
+
+/-- No pair is aligned in both ways. -/
+theorem alignedAdd_and_alignedSub (k : ℕ) (i j x : BitVec k) :
+    (alignedAdd k i j x && alignedSub k i j x) = false := by
+  unfold alignedAdd alignedSub
+  cases negSign k i x <;> cases negSign k j (partner i j x) <;> cases negSign k j x <;>
+    cases negSign k i (partner i j x) <;> rfl
+
 /-- The four products of the operand's terms with the pair's terms. -/
 theorem two_term_mul_pair (k : ℕ) (i j x : BitVec k) :
     (e R k i + e R k j) * (e R k x + e R k (partner i j x)) =
@@ -92,12 +147,20 @@ theorem two_term_mul_sub_eq_zero (k : ℕ) (i j x : BitVec k) (h : alignedSub k 
     e_mul_e, xor_partner_left, xor_partner_right, h1, h2]
   cases negSign k j (partner i j x) <;> cases negSign k i (partner i j x) <;> simp
 
-/-- The number of aligned pairs of the operand `e i + e j`: each pair
-`{x, partner i j x}` is met at both of its indices, so the count of aligned
-indices is halved. -/
+/-- The number of aligned pairs of the operand `e i + e j` with `i ≠ j`:
+each pair `{x, partner i j x}` has two elements (`partner_eq_self_iff`) that
+are aligned together (`alignedAdd_partner`, `alignedSub_partner`), so the
+count of aligned indices is halved. For `i = j` every index is its own
+partner and `e x - e x = 0` is no kernel direction, so the count is `0`. -/
 def alignedPairCount (k : ℕ) (i j : BitVec k) : ℕ :=
-  ((List.range (2 ^ k)).filter fun n =>
-    alignedAdd k i j (BitVec.ofNat k n) || alignedSub k i j (BitVec.ofNat k n)).length / 2
+  if i = j then 0
+  else
+    ((List.range (2 ^ k)).filter fun n =>
+      alignedAdd k i j (BitVec.ofNat k n) || alignedSub k i j (BitVec.ofNat k n)).length / 2
+
+/-- A repeated basis element has no aligned pair. -/
+theorem alignedPairCount_self (k : ℕ) (i : BitVec k) : alignedPairCount k i i = 0 := by
+  simp [alignedPairCount]
 
 /-- The sedenion operand `e_1 + e_10` has four aligned pairs. -/
 theorem alignedPairCount_sedenion_1_10 : alignedPairCount 4 1#4 10#4 = 4 := by decide

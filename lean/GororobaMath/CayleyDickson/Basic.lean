@@ -13,8 +13,8 @@ operation, under the product
 
 and the conjugation `star (a, b) = (star a, -b)`. The product is the one of
 gororoba-quantum `gororoba_quantum/cd_core.py` (`cd_sign`) and of the Rocq
-tower `rocq/quantum/CdTowerRing.v` (`RingTower.mul`), so a statement proved
-here reads on the same basis signs as both.
+tower `CdTowerRing.v` of gororoba-quantum (`RingTower.mul`), so a statement
+proved here reads on the same basis signs as both.
 
 `A` is a `NonAssocRing`: the double of an associative ring is associative
 only when `A` is commutative, and the double of the octonions is not
@@ -165,9 +165,10 @@ theorem star_mul_self (x : CayleyDickson A) :
     star x * x = ⟨star x.re * x.re + star x.im * x.im, 0⟩ := by
   ext <;> simp
 
-/-- The reflection is an algebra automorphism: it carries the kernel of left
-multiplication by `x` onto the kernel of left multiplication by
-`reflect x`. -/
+/-- The reflection preserves products. With `reflect_add`, `reflect_one`,
+`reflect_star` and `reflect_reflect` it is an involution that preserves the
+ring and star operations, so it carries the kernel of left multiplication by
+`x` onto the kernel of left multiplication by `reflect x`. -/
 theorem reflect_mul (x y : CayleyDickson A) :
     reflect (x * y) = reflect x * reflect y := by
   ext <;> simp [add_comm]
