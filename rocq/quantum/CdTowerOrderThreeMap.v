@@ -22,11 +22,15 @@
     - psi_diagonal_mul: (a, b) -> (psi a, psi b) preserves the product of
       level 5, by RingTower.diag_mul.
 
+    Instances: Root3Map applies OrderThreeMap to Z[sqrt 3] itself, and
+    Mod11 applies OrderThreeAutomorphism to Zmod 11, where 5 5 = 3 and
+    2 6 = 1, so both signatures are satisfiable.
+
     The file proves that psi preserves sums, scalars, products and
     conjugates. It does not prove that psi is a bijection or that its cube
     is the identity. *)
 
-From Stdlib Require Import Ring Lia PeanoNat ZArith InitialRing Setoid.
+From Stdlib Require Import Ring Lia PeanoNat ZArith InitialRing Setoid Zmod.
 Require Import CdTowerRing CdTowerRingBasis CdTowerRingBaseChange.
 
 Module Type RingWithRoot3.
@@ -242,3 +246,28 @@ Proof.
 Qed.
 
 End OrderThreeAutomorphism.
+
+(** The signatures are satisfiable: Z[sqrt 3] for the square root of 3, and Zmod 11 with 5 5 = 3 and
+    2 6 = 1 for the square root together with the inverse of 2. *)
+
+Module Root3Map := OrderThreeMap Root3Integers.
+
+Module Zmod11 <: RingWithRoot3Half.
+  Definition t := Zmod 11.
+  Definition zero : t := Zmod.zero.
+  Definition one : t := Zmod.one.
+  Definition add : t -> t -> t := Zmod.add.
+  Definition mul : t -> t -> t := Zmod.mul.
+  Definition sub : t -> t -> t := Zmod.sub.
+  Definition opp : t -> t := Zmod.opp.
+  Lemma ring_th : ring_theory zero one add mul sub opp (@eq t).
+  Proof. exact (Zmod.ring_theory 11). Qed.
+  Definition r3 : t := Zmod.of_Z 11 5.
+  Lemma r3_squared : mul r3 r3 = add one (add one one).
+  Proof. vm_compute. reflexivity. Qed.
+  Definition inv2 : t := Zmod.of_Z 11 6.
+  Lemma two_inverse : mul (add one one) inv2 = one.
+  Proof. vm_compute. reflexivity. Qed.
+End Zmod11.
+
+Module Mod11 := OrderThreeAutomorphism Zmod11.
