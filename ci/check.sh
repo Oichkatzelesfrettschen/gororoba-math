@@ -2,9 +2,9 @@
 # Usage: sh ci/check.sh
 # The Lean half of the admission gate of gororoba-math. From any directory of
 # the checkout:
-#   1. every tracked shell script passes the lint at severity error, and
-#      every tracked Python file passes ruff check and ruff format --check
-#      under ruff.toml;
+#   1. every tracked shell script passes the lint at severity error, every
+#      tracked Python file passes ruff check and ruff format --check under
+#      ruff.toml, and every tracked workflow passes actionlint;
 #   2. every tracked module under lean/GororobaMath/, taken from git's file
 #      list, and the audit command build with warnings as errors;
 #   3. the axiom audit accepts a generated file that imports the root
@@ -16,12 +16,12 @@
 #   5. the axiom audit rejects its known-bad inputs: lean/AuditFixture.lean,
 #      naming sorryAx, the declared axiom and the native_decide axiom, and
 #      a root that matches no module (lean/audit/UnknownRoot.lean).
-# Needs git, shellcheck, ruff and lake (elan, with the toolchain of
-# lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
+# Needs git, shellcheck, ruff, actionlint and lake (elan, with the toolchain
+# of lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
 set -eu
 
-for tool in git lake shellcheck ruff; do
+for tool in git lake shellcheck ruff actionlint; do
   command -v "$tool" >/dev/null || {
     echo "check: $tool is not on PATH (README.md, Toolchain)" >&2
     exit 2
@@ -50,6 +50,14 @@ if [ -s "$work/python.txt" ]; then
     ruff format --quiet --check "$source"
   done <"$work/python.txt"
   echo "check: ruff passed on $(wc -l <"$work/python.txt") Python file(s)"
+fi
+
+git ls-files -- '.github/workflows/*.yml' >"$work/workflows.txt"
+if [ -s "$work/workflows.txt" ]; then
+  while IFS= read -r workflow; do
+    actionlint "$workflow"
+  done <"$work/workflows.txt"
+  echo "check: actionlint passed on $(wc -l <"$work/workflows.txt") workflow(s)"
 fi
 
 git ls-files -- ':(glob)lean/GororobaMath/**/*.lean' |

@@ -37,7 +37,6 @@ jobs:
     timeout-minutes: 150
     env:
       OPAMROOT: ${{ github.workspace }}/.opam
-      ROCQ_BUILD_DIR: ${{ runner.temp }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install system packages
@@ -60,4 +59,4 @@ jobs:
           path: .opam
           key: ${{ steps.opam.outputs.cache-primary-key }}
       - name: Run the Rocq gate
-        run: sh ci/check_rocq.sh
+        run: ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh
