@@ -88,8 +88,17 @@ GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_signs.sh
 ```
 
 compares `Tower.sign` with `cd_core.cd_sign` on every index pair of levels
-3 to 6 and prints the gororoba-quantum commit it read. It runs on demand,
-since it reads another repository.
+3 to 6, and
+
+```sh
+GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_estimator.sh
+```
+
+compares `KernelMap.vHat`, `KernelMap.nHat` and `KernelMap.nullity`, evaluated
+over the rationals, with `pathion_kernel_map._pair_summary` on twelve fixed
+blocks whose bins are all decided. Each prints the gororoba-quantum commit it
+read and runs on demand, since it reads another repository; the second also
+needs that repository's Python packages.
 
 ## License
 

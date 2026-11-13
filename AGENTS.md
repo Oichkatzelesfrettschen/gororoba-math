@@ -42,7 +42,8 @@ gororoba repository shares; this file governs where the two differ.
   `native_decide` and no declared axiom outside `lean/AuditFixture.lean`.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
-  on the same inputs; `ci/compare_signs.sh` is the model.
+  on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
+  for `Tower.sign`, `ci/compare_estimator.sh` for the nullity estimator.
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another

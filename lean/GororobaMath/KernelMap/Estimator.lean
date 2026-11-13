@@ -9,7 +9,8 @@ public import Mathlib
 gororoba-quantum reads the nullity of a left-multiplication operator of
 `A_5` on hardware from a contrast `c y` over output bins `y`
 (`docs/evidence/pathion-kernel-map/nhat-bias/README.md`, with the code in
-`pathion_kernel_map._pair_summary`). Every bin carries an ideal contrast
+`pathion_kernel_map._pair_summary`, compared with the definitions below by
+`ci/compare_estimator.sh`). Every bin carries an ideal contrast
 `+1` or `-1`; the bins of ideal contrast `+1` are `posBins`, the others
 `negBins`. The estimator is
 
