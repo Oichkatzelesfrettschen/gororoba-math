@@ -7,9 +7,9 @@
 #      under ruff.toml;
 #   2. every tracked module under lean/GororobaMath/, taken from git's file
 #      list, and the audit command build with warnings as errors;
-#   3. the axiom audit accepts a generated file that imports each of those
-#      modules, so the audit covers a module whatever lean/GororobaMath.lean
-#      imports;
+#   3. the axiom audit accepts a generated file that imports the root
+#      module and each of those modules, so the audit covers a module
+#      whatever lean/GororobaMath.lean imports;
 #   4. lean/GororobaMath.lean imports each of those modules, read from
 #      Lean's own listing of the file's imports (lean --deps), and the same
 #      check reports a module whose import sits inside a block comment;
@@ -65,6 +65,9 @@ lake build --wfail $(cat "$work/modules.txt") GororobaMath AxiomAudit
 echo "check: $(wc -l <"$work/modules.txt") tracked module(s) built with no warning"
 
 {
+  # The root module is audited with the modules below it, so a declaration
+  # written in lean/GororobaMath.lean itself is covered.
+  echo "import GororobaMath"
   sed 's/^/import /' "$work/modules.txt"
   echo "import AxiomAudit"
   echo "#audit_axioms GororobaMath"

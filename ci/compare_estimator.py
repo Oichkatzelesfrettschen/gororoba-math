@@ -21,6 +21,7 @@ accepted mutant, 2 a usage error.
 """
 
 import json
+import math
 import sys
 from fractions import Fraction
 from pathlib import Path
@@ -124,6 +125,9 @@ def write_cases(quantum: Path, lean_out: Path, json_out: Path) -> None:
 
 
 def differs(lean_value: Fraction, python_value: float) -> bool:
+    """True when the readings disagree; a NaN or infinite Python reading never agrees."""
+    if not math.isfinite(python_value):
+        return True
     return abs(float(lean_value) - python_value) > TOLERANCE * max(1.0, abs(python_value))
 
 
