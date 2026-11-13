@@ -102,7 +102,10 @@ unlisted_sources _RocqProject "$work/quantum-sources.txt" >"$work/unlisted.txt" 
   cat "$work/unlisted.txt" >&2
   exit 1
 }
-run_logged "$work/quantum-makefile.log" opam exec --switch="$switch" -- rocq makefile -f _RocqProject -o Makefile.rocq
+# The tree has two logical roots and installs no package, the case in which
+# rocq makefile asks for --no-rocq-package-warning; any other line it prints
+# that names a warning still fails the check below.
+run_logged "$work/quantum-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
 run_logged "$work/quantum-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs"
 if grep -n '[Ww]arning' "$work/quantum-makefile.log" "$work/quantum-all.log" >&2; then
   echo "check_rocq: the rocq/quantum build printed a warning" >&2
