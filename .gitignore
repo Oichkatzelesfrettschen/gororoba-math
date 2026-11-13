@@ -3,6 +3,9 @@
 /lean/.lake
 # Working notes and agent reports that are not results.
 /local/
+# Tool caches.
+/.ruff_cache/
+/.opam/
 # Rocq build products.
 *.vo
 *.vok

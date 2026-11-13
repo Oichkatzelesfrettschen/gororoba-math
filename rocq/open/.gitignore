@@ -16,3 +16,8 @@ extraction/*.vo
 extraction/*.glob
 # Stale generated SQLite planning exports (canonical source is registry/ at repo root)
 registry/
+# Output of the Coq 9.1 makefile generator; CoqMakefile.conf and the
+# dependency file record the opam paths of the host that ran it.
+CoqMakefile
+CoqMakefile.conf
+.CoqMakefile.d
