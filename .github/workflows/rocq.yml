@@ -1,0 +1,63 @@
+name: rocq
+
+# The Rocq half of the admission gate, ci/check_rocq.sh, when a pull request
+# or a push to main touches a Rocq source, the opam ports, the gate or the
+# installer. The path filter leaves the workflow unrun on other changes, so
+# it is kept out of the required checks (a required check from a skipped
+# workflow stays pending).
+on:
+  pull_request:
+    paths:
+      - rocq/**
+      - ci/check_rocq.sh
+      - ci/install_rocq.sh
+      - .github/workflows/rocq.yml
+  push:
+    branches: [main]
+    paths:
+      - rocq/**
+      - ci/check_rocq.sh
+      - ci/install_rocq.sh
+      - .github/workflows/rocq.yml
+  workflow_dispatch:
+
+concurrency:
+  group: rocq-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-26.04
+    # A run without a restored switch compiles OCaml, Rocq and MathComp
+    # before the proofs.
+    timeout-minutes: 150
+    env:
+      OPAMROOT: ${{ github.workspace }}/.opam
+      ROCQ_BUILD_DIR: ${{ runner.temp }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+          command -v rustc
+      - name: Restore the opam switch
+        id: opam
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: opam-rocq-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}
+      - name: Install the Rocq toolchain
+        run: sh ci/install_rocq.sh
+      - name: Save the opam switch
+        if: steps.opam.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: ${{ steps.opam.outputs.cache-primary-key }}
+      - name: Run the Rocq gate
+        run: sh ci/check_rocq.sh

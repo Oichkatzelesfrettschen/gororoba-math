@@ -21,6 +21,18 @@ The tower theorems hold for every level and every coefficient ring, so they
 cover the 64- and 128-dimensional runs as well as `A_5`. The estimator
 theorems hold over every field of characteristic zero.
 
+## Rocq trees
+
+`rocq/open` is the proof tree of gororoba-open (347 sources under
+`theories/` and `verified/`, with checkpoints, extraction targets and the
+frozen quantum-observable evidence its bindings cite), and `rocq/quantum`
+the 24 proof files of gororoba-quantum (the Cayley-Dickson tower over
+ordered domains and commutative rings, basis-sign and associator normal
+forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
+and the terminal-channel separation). Both arrived with their history;
+`rocq/open/README.md` describes that tree in the words of its origin, where
+it sat at `proofs/`.
+
 ## Toolchain
 
 - Lean: the release `lean/lean-toolchain` names, installed through
@@ -29,6 +41,9 @@ theorems hold over every field of characteristic zero.
 - Mathlib: the tag `lean/lakefile.toml` names, resolved to the commits of
   `lean/lake-manifest.json`.
 - `shellcheck` for the gate's shell lint.
+- Rocq: opam with the switch `sh ci/install_rocq.sh` builds (OCaml 5.5.1,
+  rocq-core 9.3.0, rocq-stdlib 9.2.0, Flocq, MathComp, Hierarchy Builder,
+  Elpi, Equations, ExtLib), `make`, and `rustc` for the admission scanner.
 
 ```sh
 cd lean
@@ -56,6 +71,16 @@ modules `lean/GororobaMath.lean` imports, so the gate first requires that
 file to import every tracked module under `lean/GororobaMath/`; it also
 requires the audit to reject `lean/AuditFixture.lean`, which holds one of
 each.
+
+```sh
+sh ci/check_rocq.sh
+```
+
+runs the Rocq half on an export of `HEAD` outside the checkout: every
+tracked source is listed in its `_RocqProject`, `rocq/open` passes `make all
+check-schur-geometry check-admissions extract-check`, `rocq/quantum`
+compiles with `-w @all` and no warning, and neither tree holds `Admitted` or
+`admit`.
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_signs.sh
