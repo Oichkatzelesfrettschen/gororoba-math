@@ -33,10 +33,12 @@ two-term operand with `i ≠ j` as its number of aligned pairs
   `e i + e i`; the instances below evaluate it in the kernel for the
   operands of the retained hardware runs.
 
-The count is a lower bound on the nullity over a ring where the `2 ^ k`
-basis elements are independent and `i ≠ j`. The equality
-`nullity = alignedPairCount` over a field of characteristic other than two
-needs the module structure of the tower and is stated nowhere in this file.
+Each aligned pair contributes one explicit zero product, and the vectors
+`e x ± e x'` of different pairs have disjoint index sets. No nullity is
+defined in this file. hypothesis: over a field of characteristic other than
+two and for `i ≠ j`, the nullity of left multiplication by `e i + e j`
+equals `alignedPairCount`; the statement and its proof need the module
+structure of the tower.
 -/
 
 @[expose] public section

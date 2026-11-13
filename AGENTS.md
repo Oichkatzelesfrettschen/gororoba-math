@@ -15,16 +15,18 @@ gororoba repository shares; this file governs where the two differ.
   namespace.
 - `lean/AxiomAudit.lean` defines `#audit_axioms`; `lean/AuditFixture.lean` is
   its known-bad input and no library module imports it; `lean/audit/` holds
-  the files the gate and the on-demand checks run.
+  the files the gate and the on-demand checks run. The gate takes the module
+  list from `git ls-files`, so it builds and audits a module the root file
+  omits and then fails on the omission.
 - `ci/check.sh` is the admission gate. `ci/compare_signs.sh` runs on demand
   and needs `GOROROBA_QUANTUM`.
 
 ## Statements and proofs
 
-- A library declaration depends only on `propext`, `Classical.choice` and
-  `Quot.sound`. A statement that waits on a proof stays on its branch; `main`
-  holds no `sorry`, no `native_decide` and no declared axiom outside
-  `lean/AuditFixture.lean`.
+- A declaration of the Lean library depends only on `propext`,
+  `Classical.choice` and `Quot.sound`. A statement that waits on a proof
+  stays on its branch; under `lean/`, `main` holds no `sorry`, no
+  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
   on the same inputs; `ci/compare_signs.sh` is the model.
@@ -53,7 +55,7 @@ gororoba repository shares; this file governs where the two differ.
 Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
 commit, run `sh ci/check.sh`, and land by pull request with the review chain
 of the workspace guide ("Reviews and merges"). The `lean` workflow runs the
-same gate on the pull-request head.
+same gate on every pull request.
 
 ## Text
 
