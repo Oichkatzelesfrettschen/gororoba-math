@@ -13,7 +13,9 @@
 #      has its .vo; the admission scanner of rocq/open accepts the tree.
 # Environment: ROCQ_SWITCH (default rocq-9.3), ROCQ_JOBS (default the online
 # processor count), ROCQ_BUILD_DIR (parent of the scratch directory, default
-# $TMPDIR or /tmp; the two trees need about 600 MB).
+# $TMPDIR or /tmp; the two trees need about 600 MB). At six jobs the build of
+# rocq/open peaked at 12 GB of memory in one of three runs; lower ROCQ_JOBS on
+# a host with less.
 # Needs git, opam, tar, make, rustc and getconf on PATH. Exit status: 0 every
 # check passed, 1 a check failed, 2 a tool or the switch is missing.
 set -eu
@@ -57,6 +59,9 @@ run_logged() {
   shift
   "$@" >"$log" 2>&1 || {
     tail -n 60 "$log" >&2
+    # A compiler error or a killed process can sit far above the tail of a
+    # parallel build's log.
+    grep -n -E '^(Error|File ")|Killed|Out of memory|\*\*\* \[' "$log" | tail -n 20 >&2 || true
     echo "check_rocq: failed: $*" >&2
     exit 1
   }
