@@ -6,9 +6,9 @@
     a z = 0 exactly when z a = 0, from a vanishing sum of squares vanishing
     termwise. The functor RingTower states the same doubling
     (a, b)(c, d) = (ac - conj(d) b, da + b conj(c)) over a signature that
-    holds the ring laws alone, CommutativeRing, so it covers the rings where
-    the norm form is isotropic: Q(i), the complex numbers and the prime
-    fields. On it, for every level:
+    holds the ring laws alone, CommutativeRing, so it covers coefficient
+    rings that admit no such order, such as Q(i), the complex numbers and
+    the finite fields. On it, for every level:
 
     - kernel_conj: a z = 0 exactly when conj(z) conj(a) = 0, from the
       anti-automorphism law conj(x y) = conj(y) conj(x). Conjugation is
@@ -23,7 +23,13 @@
       commutes with conjugation, and reflect_kernel carries ker L_x onto
       ker L_(reflect x).
     - two_zero_commutative: when 2 = 0 conjugation is the identity and the
-      product commutes.
+      product commutes. level_one_commutative: level 1 commutes over every
+      ring, so level 2 is the first level where a z = 0 and z a = 0 can
+      differ.
+    - diag_mul: a map of level k that preserves sums, scalars, products and
+      conjugates extends to level k + 1 by acting on both halves, and the
+      extension has the same four properties (diag_add, diag_scale,
+      diag_conj), so it extends again.
     - lift_mul: x -> (x, 0) embeds each level in the next as a subalgebra.
 
     The functor RingTowerI adds an element i with i i = -1. At level 2
@@ -35,8 +41,10 @@
     at a level of at least 2 exactly when 2 = 0, and
     pure_kernel_swap_two_zero: the swap for pure a alone already forces
     2 = 0. kernel_swap_witness names the pair when 2 differs from 0. So
-    Corollary 9.3 depends on the order of the coefficients, and
-    pure_kernel_conj is the form that holds without it.
+    the ring laws alone do not give Corollary 9.3: the ordered-domain
+    hypotheses of CdTowerDomain.v suffice for it, 2 = 0 suffices for it,
+    and a square root of -1 with 2 different from 0 refutes it, while
+    pure_kernel_conj holds in every case.
 
     Instances: the Gaussian integers Z[i] as pairs of integers, a subring
     of Q(i), and Zmod 5 with i = 2 from CdTwistedProduct.v. In both 2
@@ -318,6 +326,13 @@ Proof.
   intro H. rewrite <- (two_zero_conj k (mul k x y) H), conj_mul, !(two_zero_conj k _ H). reflexivity.
 Qed.
 
+(** Levels 0 and 1 are commutative over every commutative ring. *)
+
+Lemma level_one_commutative (x y : cd 1) : mul 1 x y = mul 1 y x.
+Proof.
+  destruct x as [a b], y as [c d]. cbv [mul add scale conjugate fst snd neg_one]. f_equal; ring.
+Qed.
+
 (** The reflection of level k + 1 that negates the second half. *)
 
 Definition reflect k (x : cd (S k)) : cd (S k) := (fst x, scale k neg_one (snd x)).
@@ -352,6 +367,50 @@ Proof.
   split; intro H.
   - rewrite <- reflect_mul, H. apply reflect_zero.
   - rewrite <- (reflect_involutive k (mul (S k) x z)), reflect_mul, H. apply reflect_zero.
+Qed.
+
+(** The diagonal extension (a, b) -> (f a, f b) of a map f of level k. When
+    f preserves sums, scalars, products and conjugates, so does the
+    extension; reflect and every diagonal extension of it are such maps. *)
+
+Definition diag k (f : cd k -> cd k) (x : cd (S k)) : cd (S k) := (f (fst x), f (snd x)).
+
+Section Diagonal.
+  Variable k : nat.
+  Variable f : cd k -> cd k.
+  Hypothesis f_add : forall x y, f (add k x y) = add k (f x) (f y).
+  Hypothesis f_scale : forall r x, f (scale k r x) = scale k r (f x).
+  Hypothesis f_mul : forall x y, f (mul k x y) = mul k (f x) (f y).
+  Hypothesis f_conj : forall x, f (conjugate k x) = conjugate k (f x).
+
+  Lemma diag_add x y : diag k f (add (S k) x y) = add (S k) (diag k f x) (diag k f y).
+  Proof. unfold diag. cbn [add fst snd]. rewrite !f_add. reflexivity. Qed.
+
+  Lemma diag_scale r x : diag k f (scale (S k) r x) = scale (S k) r (diag k f x).
+  Proof. unfold diag. cbn [scale fst snd]. rewrite !f_scale. reflexivity. Qed.
+
+  Lemma diag_conj x : diag k f (conjugate (S k) x) = conjugate (S k) (diag k f x).
+  Proof. unfold diag. cbn [conjugate fst snd]. rewrite f_conj, f_scale. reflexivity. Qed.
+
+  Lemma diag_one : f (one k) = one k -> diag k f (one (S k)) = one (S k).
+  Proof.
+    intro H. unfold diag. cbn [one fst snd]. rewrite H. f_equal.
+    rewrite <- (scale_zero k D.zero) at 1. rewrite f_scale. vec.
+  Qed.
+
+  Theorem diag_mul x y : diag k f (mul (S k) x y) = mul (S k) (diag k f x) (diag k f y).
+  Proof.
+    destruct x as [a b], y as [c d]. unfold diag. cbn [mul fst snd].
+    rewrite !f_add, !f_scale, !f_mul, !f_conj. reflexivity.
+  Qed.
+End Diagonal.
+
+Theorem diag_reflect_mul k x y :
+  diag (S k) (reflect k) (mul (S (S k)) x y) =
+  mul (S (S k)) (diag (S k) (reflect k) x) (diag (S k) (reflect k) y).
+Proof.
+  apply diag_mul;
+    [apply reflect_add | intros; apply reflect_scale | apply reflect_mul | intros; apply reflect_conj].
 Qed.
 
 (** The subalgebra embedding x -> (x, 0), iterated k times from level j. *)
