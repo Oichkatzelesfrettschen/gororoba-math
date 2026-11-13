@@ -29,7 +29,11 @@ against the exact value `nullity = (|B+| - |B-|) / 2`.
   noise, as long as `vHat ≠ 0`. With eight bins this is the reading `4`.
 
 The statements hold over any field of characteristic zero: the rationals
-for the exact replay of retained counts, the reals for a noise model.
+for the exact replay of retained counts, the reals for a noise model. They
+cover a block in which every bin is decided (ideal contrast `+1` or `-1`)
+and take `vHat ≠ 0` exactly; `_pair_summary` reports no estimate when
+`|vHat| ≤ 1e-9`, a guard on floating-point division that the theorems
+leave to the caller.
 -/
 
 @[expose] public section

@@ -6,8 +6,8 @@ public import GororobaMath.CayleyDickson.Basic
 /-!
 # The Cayley-Dickson tower and its basis signs
 
-`Tower R k` is the `k`-fold Cayley-Dickson double of `R`, of rank `2 ^ k`
-over `R`: `Tower R 2` is the quaternion algebra, `Tower R 3` the octonions,
+`Tower R k` is the `k`-fold Cayley-Dickson double of `R`, with the `2 ^ k`
+basis elements `Tower.e R k p`: `Tower R 2` is the quaternion algebra, `Tower R 3` the octonions,
 `Tower R 4` the sedenions and `Tower R 5` the 32-dimensional algebra that
 gororoba-quantum calls `A_5` (`CayleyDickson.Pathion`).
 
