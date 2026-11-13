@@ -1,0 +1,54 @@
+name: rocq
+
+# The Rocq half of the admission gate, ci/check_rocq.sh, on every pull
+# request and every push to main. The trigger carries no path filter: a
+# filter reads a bounded prefix of a large diff, and a change to a
+# .gitattributes file alters the export the gate builds from, so the run
+# that decides admission is the one that always starts.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: rocq-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-26.04
+    # A run without a restored switch compiles OCaml, Rocq and MathComp
+    # before the proofs.
+    timeout-minutes: 150
+    env:
+      OPAMROOT: ${{ github.workspace }}/.opam
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+          command -v rustc
+      # The key follows the ports, the installer and this file, which names
+      # the runner image and the system packages the switch is built with.
+      - name: Restore the opam switch
+        id: opam
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: opam-rocq-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh', '.github/workflows/rocq.yml') }}
+      - name: Install the Rocq toolchain
+        run: sh ci/install_rocq.sh
+      - name: Save the opam switch
+        if: steps.opam.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: ${{ steps.opam.outputs.cache-primary-key }}
+      - name: Run the Rocq gate
+        run: ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh
