@@ -18,7 +18,7 @@
       basis pairs over the source ring gives
       target_map(x) target_map(y) = h(c) target_map(x y) on all pairs.
 
-    IntegerRing is Z as a CommutativeRing and IntegerHom is the unique
+    IntegerRing is Z as a CommutativeRing and IntegerHom is the
     homomorphism from Z to a commutative ring (Stdlib's gen_phiZ with
     gen_phiZ_morph), so a computation over the integers transfers to every
     commutative ring. *)
@@ -179,7 +179,7 @@ Qed.
 
 End BaseChange.
 
-(** The integers, and the unique ring homomorphism from them to a commutative ring. *)
+(** The integers, and the ring homomorphism from them to a commutative ring that Stdlib's gen_phiZ defines. *)
 
 Module IntegerRing <: CommutativeRing.
   Definition t := Z.
