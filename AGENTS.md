@@ -16,7 +16,9 @@ gororoba repository shares; this file governs where the two differ.
   namespace.
 - `lean/AxiomAudit.lean` defines `#audit_axioms`; `lean/AuditFixture.lean` is
   its known-bad input and no library module imports it; `lean/audit/` holds
-  the files the gate and the on-demand checks run.
+  the files the gate and the on-demand checks run. The gate takes the module
+  list from `git ls-files`, so it builds and audits a module the root file
+  omits and then fails on the omission.
 - `rocq/open/` is the proof tree that gororoba-open held under `proofs/`
   (imported at its commit 604b7e74 with history): `theories/` under the
   logical root `OpenGororoba`, `verified/` under `OpenGororobaVerified`, its
@@ -34,10 +36,10 @@ gororoba repository shares; this file governs where the two differ.
 
 ## Statements and proofs
 
-- A library declaration depends only on `propext`, `Classical.choice` and
-  `Quot.sound`. A statement that waits on a proof stays on its branch; `main`
-  holds no `sorry`, no `native_decide` and no declared axiom outside
-  `lean/AuditFixture.lean`.
+- A declaration of the Lean library depends only on `propext`,
+  `Classical.choice` and `Quot.sound`. A statement that waits on a proof
+  stays on its branch; under `lean/`, `main` holds no `sorry`, no
+  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
   on the same inputs; `ci/compare_signs.sh` is the model.
@@ -82,10 +84,11 @@ gororoba repository shares; this file governs where the two differ.
 
 Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
 commit, run `sh ci/check.sh`, and `sh ci/check_rocq.sh` when the change
-touches `rocq/` or the Rocq scripts, and land by pull request with the
-review chain of the workspace guide ("Reviews and merges"). The `lean`
-workflow runs the first script on every pull request and the `rocq` workflow
-the second on a pull request that touches those paths.
+touches `rocq/` or the Rocq scripts, and land by pull request, merged by
+merge commit so that an imported history stays, with the review chain of
+the workspace guide ("Reviews and merges"). The `lean` workflow runs the
+first script on every pull request and the `rocq` workflow the second on a
+pull request that touches those paths.
 
 ## Text
 
