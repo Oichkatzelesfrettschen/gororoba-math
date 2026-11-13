@@ -81,10 +81,15 @@ sh ci/check_rocq.sh
 ```
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
-tracked source is listed in its `_RocqProject`, `rocq/open` passes `make all
-check-schur-geometry check-admissions extract-check`, `rocq/quantum`
-compiles with `-w @all` and no warning, and neither tree holds `Admitted` or
-`admit`.
+tracked source of `rocq/open/theories`, `rocq/open/verified` and
+`rocq/quantum` is listed in its `_RocqProject` and compiles (347 and 24
+sources), `rocq/open` passes `make all check-schur-geometry check-admissions
+check-plugins extract-check`, the build log of `rocq/quantum` holds no
+warning, and none of the three directories holds `Admitted` or `admit`. Of
+the eleven sources elsewhere under `rocq/open`, those make targets compile
+seven; `NullityTwelveCoefficientCertificate.v`, `ExtractFP24Admit.v`,
+`ExtractR2VBDP4.v` and `RustExtractSpike.v` stay uncompiled, and the script
+names all eleven and fails on a twelfth.
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_signs.sh
@@ -106,5 +111,6 @@ needs that repository's Python packages.
 ## License
 
 Apache-2.0, in [LICENSE](LICENSE), for the library and the proof trees. The
-package descriptions and the patch under `rocq/open/opam/packages` describe
-third-party Rocq libraries and carry the license each `opam` file names.
+package descriptions, the patch and the switch export under `rocq/open/opam`
+describe third-party Rocq libraries and carry the license each `opam` entry
+names.

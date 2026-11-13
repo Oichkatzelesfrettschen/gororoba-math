@@ -3,14 +3,22 @@
 # The Rocq half of the admission gate. It exports the tracked rocq/ tree of
 # HEAD into a scratch directory outside the checkout and, under the opam
 # switch of ci/install_rocq.sh:
-#   1. rocq/open: every tracked source of theories/ and verified/ is listed
-#      in _RocqProject; make all, check-schur-geometry, check-admissions
-#      (the scanner's unit tests, then no Admitted or admit in theories/ and
-#      verified/) and extract-check pass; every listed source has its .vo.
-#   2. rocq/quantum: every tracked source is listed in _RocqProject; the
+#   0. inventory: every tracked .v under rocq/ sits in theories/ or verified/
+#      of rocq/open, in rocq/quantum, or on one of the two name lists below
+#      (compiled by a make target of rocq/open; held uncompiled).
+#   1. rocq/open: every tracked source of theories/ and verified/ is a line
+#      of _RocqProject, which compiles them with -w +default (each warning
+#      of the default set is an error); make all, check-schur-geometry,
+#      check-admissions (the scanner's unit tests, then no Admitted or admit
+#      in theories/ and verified/), check-plugins and extract-check pass;
+#      every listed source has its .vo.
+#   2. rocq/quantum: every tracked source is a line of _RocqProject; the
 #      generated makefile compiles each with -w @all against
-#      rocq/open/verified; the log holds no warning; every listed source
-#      has its .vo; the admission scanner of rocq/open accepts the tree.
+#      rocq/open/verified. Under -w @all rocq prints a warning and exits 0
+#      (measured, Rocq 9.3.0), so the check that fails the build is the
+#      search of the log for a warning line, calibrated on a source with a
+#      deprecated import; every listed source has its .vo; the admission
+#      scanner of rocq/open accepts the tree.
 # Environment: ROCQ_SWITCH (default rocq-9.3), ROCQ_JOBS (default the online
 # processor count), ROCQ_BUILD_DIR (parent of the scratch directory, default
 # $TMPDIR or /tmp; the two trees need about 600 MB). At six jobs the whole
@@ -39,11 +47,69 @@ work=$(mktemp -d "${ROCQ_BUILD_DIR:-${TMPDIR:-/tmp}}/gororoba-math-rocq.XXXXXXXX
 trap 'rm -r "$work"' EXIT INT TERM
 git -C "$root" archive HEAD rocq | tar -x -C "$work"
 
-# Fails when a source of the newline-separated list $2 is absent from the
-# project file $1, printing each absent one.
-unlisted_sources() {
-  awk 'NR == FNR { listed[$1] = 1; next } !($1 in listed) { print; missing = 1 } END { exit missing }' "$1" "$2"
+# Sources outside the three project-listed directories. A make target of
+# rocq/open compiles each source of the first list (check-schur-geometry the
+# four Schur sources, extract ExtractQuaternion.v, check-plugins the two
+# plugin fixtures). No recipe this script runs compiles a source of the
+# second list: check-schur-geometry scans the certificate for admissions
+# only, ExtractFP24Admit.v and ExtractR2VBDP4.v belong to the CertiRocq
+# recipes extract-c and extract-r2vb-c, which need a rocq-certirocq switch,
+# and no recipe names RustExtractSpike.v.
+target_compiled='rocq/open/checkpoints/schur-geometry/CDTowerOperatorCorrespondence.v
+rocq/open/checkpoints/schur-geometry/CDUnconditionalDoublingNullity.v
+rocq/open/checkpoints/schur-geometry/SchurAccelerationObstruction.v
+rocq/open/extraction/ExtractQuaternion.v
+rocq/open/tests/MathCompMatrixCompatibility.v
+rocq/open/tests/PluginCompatibility.v
+rocq/open/tests/SchurAccelerationBoundaries.v'
+held_uncompiled='rocq/open/checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v
+rocq/open/extraction/ExtractFP24Admit.v
+rocq/open/extraction/ExtractR2VBDP4.v
+rocq/open/extraction/RustExtractSpike.v'
+
+# Fails unless the sources of the list $1 that lie outside the three
+# project-listed directories are exactly the two lists above, printing the
+# difference.
+outside_sources_match() {
+  grep -v -E '^rocq/(open/(theories|verified)|quantum)/' "$1" | LC_ALL=C sort >"$work/outside.txt" || true
+  printf '%s\n%s\n' "$target_compiled" "$held_uncompiled" | LC_ALL=C sort >"$work/outside-named.txt"
+  diff "$work/outside-named.txt" "$work/outside.txt"
 }
+# Fails when a line of the newline-separated source list $2 is absent, as a
+# whole line, from the project file $1, printing each absent one. An empty
+# project file lists nothing, so every source is absent from it.
+unlisted_sources() {
+  status=0
+  grep -F -x -v -f "$1" "$2" || status=$?
+  case $status in
+    0) return 1 ;;
+    1) return 0 ;;
+    *) return 2 ;;
+  esac
+}
+# Succeeds when a log among the arguments holds a warning line, printing it.
+log_holds_warning() {
+  grep -n '[Ww]arning' "$@"
+}
+
+git -C "$root" ls-files -- 'rocq/*.v' >"$work/tracked-sources.txt"
+if grep -n '[[:space:]]' "$work/tracked-sources.txt" >&2; then
+  echo "check_rocq: the tracked sources above hold whitespace in their path, which a project file cannot list" >&2
+  exit 1
+fi
+outside_sources_match "$work/tracked-sources.txt" >"$work/outside.diff" || {
+  echo "check_rocq: sources outside the project-listed directories differ from the lists in ci/check_rocq.sh (< named, > tracked):" >&2
+  cat "$work/outside.diff" >&2
+  exit 1
+}
+{
+  cat "$work/tracked-sources.txt"
+  echo rocq/open/tests/UnnamedSourceCalibration.v
+} >"$work/tracked-sources-bad.txt"
+if outside_sources_match "$work/tracked-sources-bad.txt" >/dev/null; then
+  echo "check_rocq: the inventory check accepted a source that neither list names" >&2
+  exit 1
+fi
 # Fails when a .v source listed in the project file $1 (run in its
 # directory) has no .vo beside it, printing each such source.
 uncompiled_sources() {
@@ -87,7 +153,15 @@ if unlisted_sources _RocqProject "$work/open-sources-bad.txt" >/dev/null; then
   echo "check_rocq: the listing check accepted a source the project file omits" >&2
   exit 1
 fi
-for target in all check-schur-geometry check-admissions extract-check; do
+# A name that extends a listed one after a space, and an empty project file.
+echo 'theories/Prelude.v extra.v' >"$work/open-sources-bad.txt"
+: >"$work/empty-project.txt"
+if unlisted_sources _RocqProject "$work/open-sources-bad.txt" >/dev/null ||
+  unlisted_sources "$work/empty-project.txt" "$work/open-sources.txt" >/dev/null; then
+  echo "check_rocq: the listing check accepted a name that extends a listed one, or an empty project file" >&2
+  exit 1
+fi
+for target in all check-schur-geometry check-admissions check-plugins extract-check; do
   run_logged "$work/open-$target.log" opam exec --switch="$switch" -- make --jobs="$jobs" "$target"
   echo "check_rocq: rocq/open $target passed"
 done
@@ -113,7 +187,17 @@ unlisted_sources _RocqProject "$work/quantum-sources.txt" >"$work/unlisted.txt" 
 # that names a warning still fails the check below.
 run_logged "$work/quantum-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
 run_logged "$work/quantum-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs"
-if grep -n '[Ww]arning' "$work/quantum-makefile.log" "$work/quantum-all.log" >&2; then
+mkdir "$work/warning-calibration"
+echo 'From Coq Require Import List.' >"$work/warning-calibration/DeprecatedPrefix.v"
+(
+  cd "$work/warning-calibration"
+  run_logged "$work/warning-calibration.log" opam exec --switch="$switch" -- rocq compile -q -w @all -Q . "" DeprecatedPrefix.v
+)
+log_holds_warning "$work/warning-calibration.log" >/dev/null || {
+  echo "check_rocq: rocq compile -w @all printed no warning for a deprecated import, so the log search cannot fail the build" >&2
+  exit 1
+}
+if log_holds_warning "$work/quantum-makefile.log" "$work/quantum-all.log" >&2; then
   echo "check_rocq: the rocq/quantum build printed a warning" >&2
   exit 1
 fi

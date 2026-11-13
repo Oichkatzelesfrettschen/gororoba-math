@@ -9,7 +9,12 @@
 # Environment: ROCQ_SWITCH (default rocq-9.3), OPAMROOT (default ~/.opam),
 # OPAMJOBS (default the online processor count).
 # A switch that already holds every root package of the export is left
-# unchanged, so a restored cache makes a second run a no-op.
+# unchanged, so a restored cache makes a second run a no-op. The check reads
+# the 14 root packages; the other packages of the export are their
+# dependencies, which opam switch import installs at the recorded versions
+# and which this script does not compare afterwards. The export pins each
+# package version, and opam.ocaml.org and rocq-prover.org supply the
+# metadata and checksums of those versions at the time of the run.
 # Exit status: 0 the switch holds every root package, 1 an opam step failed,
 # 2 a tool is missing. Reaches opam.ocaml.org and rocq-prover.org.
 set -eu
@@ -28,7 +33,13 @@ switch=${ROCQ_SWITCH:-rocq-9.3}
 OPAMJOBS=${OPAMJOBS:-$(getconf _NPROCESSORS_ONLN)}
 export OPAMJOBS OPAMYES=1
 
-# The root packages of the export, one "name.version" per line.
+# The root packages of the export, one "name.version" per line. The parser
+# reads the lines between "roots: [" and "]", so an export that opens the
+# list in another layout fails here.
+grep -q -x 'roots: \[' "$export" || {
+  echo "install_rocq: $export does not open its root list with the line 'roots: ['" >&2
+  exit 1
+}
 roots=$(awk '/^roots: \[/ { inside = 1; next } inside && /^\]/ { exit } inside { gsub(/[" ]/, ""); print }' "$export")
 [ -n "$roots" ] || {
   echo "install_rocq: $export names no root package" >&2

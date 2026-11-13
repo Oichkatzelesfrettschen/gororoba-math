@@ -1,24 +1,14 @@
 name: rocq
 
-# The Rocq half of the admission gate, ci/check_rocq.sh, when a pull request
-# or a push to main touches a Rocq source, the opam ports, the gate or the
-# installer. The path filter leaves the workflow unrun on other changes, so
-# it is kept out of the required checks (a required check from a skipped
-# workflow stays pending).
+# The Rocq half of the admission gate, ci/check_rocq.sh, on every pull
+# request and every push to main. The trigger carries no path filter: a
+# filter reads a bounded prefix of a large diff, and a change to a
+# .gitattributes file alters the export the gate builds from, so the run
+# that decides admission is the one that always starts.
 on:
   pull_request:
-    paths:
-      - rocq/**
-      - ci/check_rocq.sh
-      - ci/install_rocq.sh
-      - .github/workflows/rocq.yml
   push:
     branches: [main]
-    paths:
-      - rocq/**
-      - ci/check_rocq.sh
-      - ci/install_rocq.sh
-      - .github/workflows/rocq.yml
   workflow_dispatch:
 
 concurrency:
@@ -44,12 +34,14 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
           command -v rustc
+      # The key follows the ports, the installer and this file, which names
+      # the runner image and the system packages the switch is built with.
       - name: Restore the opam switch
         id: opam
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .opam
-          key: opam-rocq-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}
+          key: opam-rocq-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh', '.github/workflows/rocq.yml') }}
       - name: Install the Rocq toolchain
         run: sh ci/install_rocq.sh
       - name: Save the opam switch

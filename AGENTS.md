@@ -28,7 +28,10 @@ gororoba repository shares; this file governs where the two differ.
   `proofs/` (imported at its commit a3237e3dc with history), compiled under
   the empty logical root, so `Require Import CdTowerDomain.` carries no
   prefix; `StiefelWitnessInvertible.v` imports `OpenGororobaVerified` from
-  `rocq/open/verified`.
+  `rocq/open/verified`. The retained replay of that one file in
+  gororoba-quantum compiles it as `GororobaQuantum.StiefelWitnessInvertible`
+  (`-Q quantum GororobaQuantum`); no source imports it, so both names
+  compile the same bytes.
 - `ci/check.sh` is the Lean half of the admission gate and
   `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
@@ -55,11 +58,17 @@ gororoba repository shares; this file governs where the two differ.
 
 ## Rocq sources
 
-- A new source is listed in the `_RocqProject` of its tree in the commit
+- A new source of `rocq/open/theories`, `rocq/open/verified` or
+  `rocq/quantum` is listed in the `_RocqProject` of its tree in the commit
   that adds it; `ci/check_rocq.sh` fails on a tracked source the project
-  file omits and on a listed source without a compiled object.
-- `rocq/open` compiles with warnings as errors through its `Makefile`, and
-  `rocq/quantum` with `-w @all` and a log free of warnings. No source of
+  file omits and on a listed source without a compiled object. A source
+  anywhere else under `rocq/` is named in one of the two lists at the top
+  of `ci/check_rocq.sh` (compiled by a make target of `rocq/open`, or held
+  uncompiled), and the script fails on a tracked source neither names.
+- `rocq/open` compiles with `-w +default`, which makes each warning of
+  Rocq's default set an error. `rocq/quantum` compiles with `-w @all`, the
+  flag of its retained replays, under which `rocq` prints a warning and
+  exits 0; the gate fails on a warning line in the build log. No source of
   `rocq/open/theories`, `rocq/open/verified` or `rocq/quantum` holds
   `Admitted` or `admit` (`rocq/open/admission_check.rs`).
 - Retained records in gororoba-open and gororoba-quantum cite sources of
@@ -88,8 +97,7 @@ commit, run `sh ci/check.sh`, and `sh ci/check_rocq.sh` when the change
 touches `rocq/` or the Rocq scripts, and land by pull request, merged by
 merge commit so that an imported history stays, with the review chain of
 the workspace guide ("Reviews and merges"). The `lean` workflow runs the
-first script on every pull request and the `rocq` workflow the second on a
-pull request that touches those paths.
+first script and the `rocq` workflow the second on every pull request.
 
 ## Text
 
