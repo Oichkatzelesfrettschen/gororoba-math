@@ -73,6 +73,9 @@ instance : Sub (CayleyDickson A) := ⟨fun x y => ⟨x.re - y.re, x.im - y.im⟩
 @[simp] theorem sub_re (x y : CayleyDickson A) : (x - y).re = x.re - y.re := rfl
 @[simp] theorem sub_im (x y : CayleyDickson A) : (x - y).im = x.im - y.im := rfl
 
+/-- Natural and integer multiples act on each half, so the `ℕ`- and
+`ℤ`-actions of the group are the componentwise ones and agree with every
+componentwise module structure built over them. -/
 instance : AddCommGroup (CayleyDickson A) where
   add_assoc x y z := by ext <;> simp [add_assoc]
   zero_add x := by ext <;> simp
@@ -80,8 +83,18 @@ instance : AddCommGroup (CayleyDickson A) where
   add_comm x y := by ext <;> simp [add_comm]
   neg_add_cancel x := by ext <;> simp
   sub_eq_add_neg x y := by ext <;> simp [sub_eq_add_neg]
-  nsmul := nsmulRec
-  zsmul := zsmulRec
+  nsmul n x := ⟨n • x.re, n • x.im⟩
+  nsmul_zero x := by ext <;> exact AddMonoid.nsmul_zero _
+  nsmul_succ n x := by ext <;> exact AddMonoid.nsmul_succ n _
+  zsmul n x := ⟨n • x.re, n • x.im⟩
+  zsmul_zero' x := by ext <;> exact SubNegMonoid.zsmul_zero' _
+  zsmul_succ' n x := by ext <;> exact SubNegMonoid.zsmul_succ' n _
+  zsmul_neg' n x := by ext <;> exact SubNegMonoid.zsmul_neg' n _
+
+@[simp] theorem nsmul_re (n : ℕ) (x : CayleyDickson A) : (n • x).re = n • x.re := rfl
+@[simp] theorem nsmul_im (n : ℕ) (x : CayleyDickson A) : (n • x).im = n • x.im := rfl
+@[simp] theorem zsmul_re (n : ℤ) (x : CayleyDickson A) : (n • x).re = n • x.re := rfl
+@[simp] theorem zsmul_im (n : ℤ) (x : CayleyDickson A) : (n • x).im = n • x.im := rfl
 
 /-- The reflection `(a, b) ↦ (a, -b)` of the second half. -/
 def reflect (x : CayleyDickson A) : CayleyDickson A := ⟨x.re, -x.im⟩
