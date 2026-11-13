@@ -1,0 +1,13 @@
+# Lake build tree; on the workstations a symbolic link to a directory outside
+# the checkout (AGENTS.md, "Build tree").
+/lean/.lake
+# Working notes and agent reports that are not results.
+/local/
+# Rocq build products.
+*.vo
+*.vok
+*.vos
+*.glob
+*.aux
+.lia.cache
+.nia.cache
