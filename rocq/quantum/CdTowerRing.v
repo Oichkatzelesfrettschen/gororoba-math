@@ -30,7 +30,10 @@
       conjugates extends to level k + 1 by acting on both halves, and the
       extension has the same four properties (diag_add, diag_scale,
       diag_conj), so it extends again.
-    - lift_mul: x -> (x, 0) embeds each level in the next as a subalgebra.
+    - lift_mul with lift_add, lift_scale, lift_conj, lift_one and
+      lift_injective: x -> (x, 0), iterated, is an injective map of level j
+      into level k + j that preserves sums, scalars, products, conjugates
+      and 1.
 
     The functor RingTowerI adds an element i with i i = -1. At level 2
     write ((x0, x1), (x2, x3)) as x0 + x1 e_1 + x2 e_2 + x3 e_3. Then
@@ -413,7 +416,8 @@ Proof.
     [apply reflect_add | intros; apply reflect_scale | apply reflect_mul | intros; apply reflect_conj].
 Qed.
 
-(** The subalgebra embedding x -> (x, 0), iterated k times from level j. *)
+(** The map x -> (x, 0), iterated k times from level j: injective, and it
+    preserves sums, scalars, products, conjugates and 1. *)
 
 Fixpoint lift (j k : nat) : cd j -> cd (k + j) :=
   match k as n return cd j -> cd (n + j) with
@@ -428,6 +432,21 @@ Lemma lift_mul j k x y : mul (k + j) (lift j k x) (lift j k y) = lift j k (mul j
 Proof.
   induction k as [|n IH]; [reflexivity |].
   cbn [lift Nat.add]. rewrite embed_mul, IH. reflexivity.
+Qed.
+
+Lemma lift_add j k x y : add (k + j) (lift j k x) (lift j k y) = lift j k (add j x y).
+Proof.
+  induction k as [|n IH]; [reflexivity |].
+  cbn [lift Nat.add add fst snd]. rewrite IH. f_equal. vec.
+Qed.
+
+Lemma lift_one j k : lift j k (one j) = one (k + j).
+Proof. induction k as [|n IH]; [reflexivity |]. cbn [lift Nat.add one]. rewrite IH. reflexivity. Qed.
+
+Lemma lift_injective j k x y : lift j k x = lift j k y -> x = y.
+Proof.
+  induction k as [|n IH]; intro H; [exact H |].
+  apply IH. exact (f_equal fst H).
 Qed.
 
 Lemma lift_zero j k : lift j k (zero j) = zero (k + j).
