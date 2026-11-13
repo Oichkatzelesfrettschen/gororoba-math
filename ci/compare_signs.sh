@@ -24,6 +24,8 @@ core="$quantum/gororoba_quantum/cd_core.py"
   echo "compare_signs: $core does not exist" >&2
   exit 2
 }
+quantum=$(CDPATH='' cd -- "$quantum" && pwd)
+core="$quantum/gororoba_quantum/cd_core.py"
 [ "$#" -gt 0 ] || set -- 3 4 5 6
 
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)

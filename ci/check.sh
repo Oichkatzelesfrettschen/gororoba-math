@@ -2,7 +2,9 @@
 # Usage: sh ci/check.sh
 # The Lean half of the admission gate of gororoba-math. From any directory of
 # the checkout:
-#   1. every tracked shell script passes the lint at severity error;
+#   1. every tracked shell script passes the lint at severity error, and
+#      every tracked Python file passes ruff check and ruff format --check
+#      under ruff.toml;
 #   2. every tracked module under lean/GororobaMath/, taken from git's file
 #      list, and the audit command build with warnings as errors;
 #   3. the axiom audit accepts a generated file that imports each of those
@@ -14,12 +16,12 @@
 #   5. the axiom audit rejects its known-bad inputs: lean/AuditFixture.lean,
 #      naming sorryAx, the declared axiom and the native_decide axiom, and
 #      a root that matches no module (lean/audit/UnknownRoot.lean).
-# Needs git, shellcheck and lake (elan, with the toolchain of
+# Needs git, shellcheck, ruff and lake (elan, with the toolchain of
 # lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
 set -eu
 
-for tool in git lake shellcheck; do
+for tool in git lake shellcheck ruff; do
   command -v "$tool" >/dev/null || {
     echo "check: $tool is not on PATH (README.md, Toolchain)" >&2
     exit 2
@@ -40,6 +42,15 @@ while IFS= read -r script; do
   shellcheck -S error "$script"
 done <"$work/scripts.txt"
 echo "check: shellcheck passed on $(wc -l <"$work/scripts.txt") script(s)"
+
+git ls-files -- '*.py' >"$work/python.txt"
+if [ -s "$work/python.txt" ]; then
+  while IFS= read -r source; do
+    ruff check --quiet "$source"
+    ruff format --quiet --check "$source"
+  done <"$work/python.txt"
+  echo "check: ruff passed on $(wc -l <"$work/python.txt") Python file(s)"
+fi
 
 git ls-files -- ':(glob)lean/GororobaMath/**/*.lean' |
   sed -e 's|^lean/||' -e 's|\.lean$||' -e 's|/|.|g' | LC_ALL=C sort >"$work/modules.txt"

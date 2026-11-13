@@ -1,0 +1,5 @@
+# Lint and format rules for the Python files under ci/ (ci/check.sh runs both).
+line-length = 120
+
+[lint]
+select = ["E", "F", "W", "I", "B", "S", "UP"]
