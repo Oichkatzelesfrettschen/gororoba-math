@@ -28,7 +28,9 @@
 #      positivity, and its axioms are exactly the lines of the tree's
 #      kernel-assumptions.txt, so a new axiom fails until its line is added.
 #      Calibrated on a source that declares an axiom.
-# Environment: ROCQ_SWITCH (default rocq-9.3), ROCQ_JOBS (default the online
+# The switch is named rocq-9.3, the name the mutation harnesses of
+# check-schur-geometry pass to their own subprocesses.
+# Environment: ROCQ_JOBS (default the online
 # processor count), ROCQ_BUILD_DIR (parent of the scratch directory, default
 # $TMPDIR or /tmp; the two trees need about 600 MB). At six jobs the whole
 # script peaked at 11.9 GB of memory (systemd scope accounting, 12-thread
@@ -44,7 +46,7 @@ for tool in git opam tar make rustc getconf; do
     exit 2
   }
 done
-switch=${ROCQ_SWITCH:-rocq-9.3}
+switch=rocq-9.3
 jobs=${ROCQ_JOBS:-$(getconf _NPROCESSORS_ONLN)}
 opam switch list --short | grep -q -x -F "$switch" || {
   echo "check_rocq: opam switch $switch does not exist; run sh ci/install_rocq.sh" >&2

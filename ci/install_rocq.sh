@@ -6,7 +6,10 @@
 # plugin), at the versions rocq/open/opam/qualified-rocq-9.3.export records.
 # rocq/open/opam is an opam repository holding the ports of the packages
 # whose released metadata excludes Rocq 9.3.
-# Environment: ROCQ_SWITCH (default rocq-9.3), OPAMROOT (default ~/.opam),
+# The switch is named rocq-9.3 and takes no other name: two test harnesses
+# of rocq/open run their subprocesses under --switch=rocq-9.3, and a retained
+# record of gororoba-open cites one of them by digest.
+# Environment: OPAMROOT (default ~/.opam),
 # OPAMJOBS (default the online processor count).
 # A switch that already holds every root package of the export is left
 # unchanged, so a restored cache makes a second run a no-op. The check reads
@@ -29,7 +32,7 @@ done
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 ports="$root/rocq/open/opam"
 export="$ports/qualified-rocq-9.3.export"
-switch=${ROCQ_SWITCH:-rocq-9.3}
+switch=rocq-9.3
 OPAMJOBS=${OPAMJOBS:-$(getconf _NPROCESSORS_ONLN)}
 export OPAMJOBS OPAMYES=1
 
