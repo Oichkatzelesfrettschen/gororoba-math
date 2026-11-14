@@ -284,6 +284,93 @@ theorem negSign_swap : ∀ (k : ℕ) (p q : BitVec k), p ≠ 0#k → q ≠ 0#k �
         · simp only [hpz, hqz, ↓reduceIte]
           exact negSign_swap k _ _ hqz hpz (Ne.symm hs)
 
+/-- The square sign of a basis element is negative exactly when the element
+is not `1`. -/
+theorem negSign_self_eq (k : ℕ) (p : BitVec k) : negSign k p p = decide (p ≠ 0#k) := by
+  by_cases h : p = 0#k
+  · subst h
+    simp [negSign_zero_left]
+  · simp [h, negSign_self k p h]
+
+/-- Exchanging the two factors of a product of basis elements reverses its
+sign exactly when both factors differ from `1` and from each other. -/
+theorem negSign_swap_xor (k : ℕ) (p q : BitVec k) :
+    negSign k q p = xor (negSign k p q) (decide (p ≠ 0#k ∧ q ≠ 0#k ∧ p ≠ q)) := by
+  by_cases hp : p = 0#k
+  · subst hp
+    simp [negSign_zero_left, negSign_zero_right]
+  by_cases hq : q = 0#k
+  · subst hq
+    simp [negSign_zero_left, negSign_zero_right]
+  by_cases hpq : p = q
+  · subst hpq
+    simp
+  · rw [negSign_swap k p q hp hq hpq]
+    simp [hp, hq, hpq]
+
+theorem cons_eq_zero_iff {k : ℕ} (b : Bool) (p : BitVec k) :
+    BitVec.cons b p = 0#(k + 1) ↔ b = false ∧ p = 0#k := by
+  constructor
+  · intro h
+    have hb := congrArg BitVec.msb h
+    have hp := congrArg (BitVec.setWidth k) h
+    simp only [BitVec.msb_cons, BitVec.setWidth_cons] at hb hp
+    exact ⟨hb.trans (by simp), hp.trans (by simp)⟩
+  · rintro ⟨rfl, rfl⟩
+    apply BitVec.eq_of_toNat_eq
+    simp
+
+theorem xor_eq_left_iff {k : ℕ} (p q : BitVec k) : p ^^^ q = p ↔ q = 0#k := by
+  simp
+
+/-- The sign of a product at level `k + 1` is the sign of the product of
+the low parts, corrected by the top bits: a transposition of the low
+factors when the right factor lies in the second half, and the conjugation
+signs of the left factor's second half. -/
+theorem negSign_cons (k : ℕ) (P Q : Bool) (p q : BitVec k) :
+    negSign (k + 1) (BitVec.cons P p) (BitVec.cons Q q) =
+      ((negSign k p q ^^ (P && (decide (q ≠ 0#k) ^^ Q))) ^^
+        (Q && decide (p ≠ 0#k ∧ q ≠ 0#k ∧ p ≠ q))) := by
+  cases P <;> cases Q
+  · rw [negSign_of_not_msb_of_not_msb (by simp) (by simp)]
+    simp
+  · rw [negSign_of_not_msb_of_msb (by simp) (by simp), BitVec.setWidth_cons,
+      BitVec.setWidth_cons, negSign_swap_xor k p q]
+    simp
+  · rw [negSign_of_msb_of_not_msb (by simp) (by simp)]
+    simp [Bool.xor_comm]
+  · rw [negSign_of_msb_of_msb (by simp) (by simp), BitVec.setWidth_cons, BitVec.setWidth_cons]
+    by_cases hq : q = 0#k
+    · simp [hq, negSign_zero_right]
+    · simp [hq, negSign_swap_xor k p q]
+
+/-- Left multiplication by `e k p` applied twice: the sign of
+`e k p * e k (p ^^^ q)` is that of `e k p * e k q`, reversed when `p ≠ 0`.
+It is the basis form of `e p * (e p * e q) = -e q` for `p ≠ 0`. -/
+theorem negSign_xor_right : ∀ (k : ℕ) (p q : BitVec k),
+    negSign k p (p ^^^ q) = xor (decide (p ≠ 0#k)) (negSign k p q)
+  | 0, p, q => by
+    have hp : p = 0#0 := Subsingleton.elim _ _
+    subst hp
+    simp [negSign_zero_left]
+  | k + 1, p, q => by
+    obtain ⟨P, a, rfl⟩ : ∃ P a, p = BitVec.cons P a :=
+      ⟨_, _, (BitVec.cons_msb_setWidth p).symm⟩
+    obtain ⟨Q, c, rfl⟩ : ∃ Q c, q = BitVec.cons Q c :=
+      ⟨_, _, (BitVec.cons_msb_setWidth q).symm⟩
+    rw [BitVec.cons_xor_cons, negSign_cons, negSign_cons, negSign_xor_right k a c]
+    have h1 : (a ^^^ c = 0#k) ↔ a = c := BitVec.xor_eq_zero_iff
+    have h2 : (a = a ^^^ c) ↔ c = 0#k := eq_comm.trans (xor_eq_left_iff a c)
+    simp only [ne_eq, cons_eq_zero_iff, h1, h2]
+    by_cases ha : a = 0#k <;> by_cases hc : c = 0#k <;> by_cases hac : a = c <;>
+      cases P <;> cases Q <;> cases negSign k a c <;> simp_all
+
+/-- The sign of `e k p * e k (p ^^^ q)` is opposite to that of
+`e k p * e k q` for `p ≠ 0`. -/
+theorem negSign_xor_right_of_ne_zero (k : ℕ) {p : BitVec k} (hp : p ≠ 0#k) (q : BitVec k) :
+    negSign k p (p ^^^ q) = !negSign k p q := by
+  rw [negSign_xor_right, decide_eq_true hp, Bool.true_xor]
+
 /-- Two distinct basis elements other than `1` anticommute. -/
 theorem e_mul_e_anticomm (k : ℕ) {p q : BitVec k} (hp : p ≠ 0#k) (hq : q ≠ 0#k)
     (hpq : p ≠ q) :
