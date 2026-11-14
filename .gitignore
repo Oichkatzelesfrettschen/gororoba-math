@@ -3,6 +3,9 @@
 /lean/.lake
 # Working notes and agent reports that are not results.
 /local/
+# Working-tree build directory of the root Makefile, or a symbolic link to
+# one outside the checkout.
+/build
 # Tool caches.
 /.ruff_cache/
 /.opam/
@@ -14,3 +17,13 @@
 *.aux
 .lia.cache
 .nia.cache
+.nra.cache
+.lra.cache
+*.vio
+# Makefiles that rocq makefile generates beside a _RocqProject; their conf
+# and dependency files record the opam paths of the host that ran it.
+Makefile.rocq
+Makefile.rocq.*
+.Makefile.rocq*.d
+# Python byte code of the ci/ scripts.
+__pycache__/
