@@ -87,9 +87,9 @@ sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
 the eleven sources elsewhere under `rocq/open`, those make targets compile
-seven; `NullityTwelveCoefficientCertificate.v`, `ExtractFP24Admit.v`,
-`ExtractR2VBDP4.v` and `RustExtractSpike.v` stay uncompiled, and the script
-names all eleven and fails on a twelfth.
+seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
+`ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
+uncompiled, and the script names all eleven and fails on a twelfth.
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_signs.sh

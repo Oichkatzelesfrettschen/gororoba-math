@@ -64,8 +64,9 @@ gororoba repository shares; this file governs where the two differ.
   that adds it; `ci/check_rocq.sh` fails on a tracked source the project
   file omits and on a listed source without a compiled object. A source
   anywhere else under `rocq/` is named in one of the two lists at the top
-  of `ci/check_rocq.sh` (compiled by a make target of `rocq/open`, or held
-  uncompiled), and the script fails on a tracked source neither names.
+  of `ci/check_rocq.sh` (compiled by a make target of `rocq/open` or by
+  the script, or held uncompiled), and the script fails on a tracked source
+  neither names.
 - `rocq/open` compiles its project-listed sources, checkpoints and plugin
   fixtures with `-w +default`, which makes each warning of Rocq's default
   set an error; its `extract` recipe passes no warning option.

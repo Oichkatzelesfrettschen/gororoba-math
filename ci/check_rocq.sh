@@ -6,7 +6,8 @@
 #   0. inventory: the export holds every path of HEAD's rocq/ tree; every
 #      .v of that tree sits in theories/ or verified/ of rocq/open, in
 #      rocq/quantum, or on one of the two name lists below (compiled by a
-#      make target of rocq/open, which then has its .vo; held uncompiled).
+#      make target of rocq/open or by this script, which then has its .vo;
+#      held uncompiled).
 #   1. rocq/open: every tracked source of theories/ and verified/ is a line
 #      of _RocqProject, which compiles them with -w +default (each warning
 #      of the default set is an error); make all, check-schur-geometry,
@@ -63,20 +64,21 @@ diff "$work/tree-files.txt" "$work/export-files.txt" >"$work/export.diff" || {
 # Sources outside the three project-listed directories. A make target of
 # rocq/open compiles each source of the first list (check-schur-geometry the
 # four Schur sources, extract ExtractQuaternion.v, check-plugins the two
-# plugin fixtures). No recipe this script runs compiles a source of the
-# second list: check-schur-geometry scans the certificate for admissions
-# only, ExtractFP24Admit.v and ExtractR2VBDP4.v belong to the CertiRocq
+# plugin fixtures), except the nullity certificate: check-schur-geometry
+# scans it for admissions only, so this script compiles it under that
+# recipe's flags. Nothing this script runs compiles a source of the second
+# list: ExtractFP24Admit.v and ExtractR2VBDP4.v belong to the CertiRocq
 # recipes extract-c and extract-r2vb-c, which need a rocq-certirocq switch,
 # and no recipe names RustExtractSpike.v.
 target_compiled='rocq/open/checkpoints/schur-geometry/CDTowerOperatorCorrespondence.v
 rocq/open/checkpoints/schur-geometry/CDUnconditionalDoublingNullity.v
+rocq/open/checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v
 rocq/open/checkpoints/schur-geometry/SchurAccelerationObstruction.v
 rocq/open/extraction/ExtractQuaternion.v
 rocq/open/tests/MathCompMatrixCompatibility.v
 rocq/open/tests/PluginCompatibility.v
 rocq/open/tests/SchurAccelerationBoundaries.v'
-held_uncompiled='rocq/open/checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v
-rocq/open/extraction/ExtractFP24Admit.v
+held_uncompiled='rocq/open/extraction/ExtractFP24Admit.v
 rocq/open/extraction/ExtractR2VBDP4.v
 rocq/open/extraction/RustExtractSpike.v'
 
@@ -189,17 +191,21 @@ uncompiled_sources _RocqProject || {
   echo "check_rocq: rocq/open sources above have no .vo" >&2
   exit 1
 }
-# The sources the make targets compile outside the project file: a recipe
-# that loses its compile line leaves no object here.
+run_logged "$work/open-nullity-certificate.log" opam exec --switch="$switch" -- rocq compile -q -w +default \
+  -Q theories OpenGororoba -Q checkpoints/schur-geometry OpenGororobaCheckpoint \
+  checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v
+echo "check_rocq: rocq/open nullity certificate compiled"
+# The sources compiled outside the project file: a recipe that loses its
+# compile line leaves no object here.
 for source in $target_compiled; do
   [ -f "$work/${source}o" ] || echo "$source"
 done >"$work/uncompiled-targets.txt"
 [ ! -s "$work/uncompiled-targets.txt" ] || {
-  echo "check_rocq: no make target of rocq/open compiled:" >&2
+  echo "check_rocq: neither a make target of rocq/open nor this script compiled:" >&2
   cat "$work/uncompiled-targets.txt" >&2
   exit 1
 }
-echo "check_rocq: rocq/open compiled all $(grep -c '\.v$' _RocqProject) listed sources and the $(printf '%s\n' "$target_compiled" | grep -c .) sources of its make targets"
+echo "check_rocq: rocq/open compiled all $(grep -c '\.v$' _RocqProject) listed sources and the $(printf '%s\n' "$target_compiled" | grep -c .) sources outside the project file"
 
 cd "$work/rocq/quantum"
 grep '^rocq/quantum/' "$work/tracked-sources.txt" | sed 's|^rocq/quantum/||' >"$work/quantum-sources.txt"
