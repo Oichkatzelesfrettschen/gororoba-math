@@ -38,6 +38,16 @@ the four exceptional indices are aligned at neither level
 (`Tower.negSign_xor_right`, `Tower.negSign_swap_xor`). When `a = 0`,
 `b = 0` or `a = b`, no index is aligned.
 
+Over the reals the recursion is the specialization, to sums of two standard
+basis vectors, of results of Biss, Dugger and Isaksen, *Large annihilators
+in Cayley-Dickson algebras* (arXiv:math/0511691): Theorem 10.1 there doubles
+the annihilator of `(a, 0)` and of `(0, a)`, Proposition 11.1 gives the
+annihilator of `(e a, e b)` the dimension of an anti-associator space, and
+Lemmas 8.7 and 8.8 double the associator dimensions; Theorem 9.8 is the
+divisibility by `4`, and Lemmas 9.4 and 9.5 the vanishing at `e 0` and at
+the adjoined unit. The statements here are about the count, so they hold
+over every ring of the first paragraph.
+
 ## Main results
 
 * `Tower.alignedPairCount_succ_of_msb_eq`,
