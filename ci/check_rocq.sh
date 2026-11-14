@@ -16,7 +16,7 @@
 #      every listed source has its .vo.
 #   2. rocq/quantum: every tracked source is a line of _RocqProject; the
 #      generated makefile compiles each with -w @all against
-#      rocq/open/verified. Under -w @all rocq prints a warning and exits 0
+#      rocq/open/verified and rocq/open/theories. Under -w @all rocq prints a warning and exits 0
 #      (measured, Rocq 9.3.0), so the check that fails the build is the
 #      search of the log for a warning line, calibrated on a source with a
 #      deprecated import built through the same project options; every
@@ -311,7 +311,7 @@ fi
 sed -n 's|\.v$||p' _RocqProject | tr / . >"$work/quantum-modules.txt"
 # shellcheck disable=SC2046
 run_logged "$work/quantum-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
-  -Q . "" -R ../open/verified OpenGororobaVerified $(cat "$work/quantum-modules.txt")
+  -Q . "" -R ../open/verified OpenGororobaVerified -Q ../open/theories OpenGororoba $(cat "$work/quantum-modules.txt")
 kernel_context_matches "$work/quantum-kernel.log" kernel-assumptions.txt >"$work/quantum-kernel.diff" || {
   echo "check_rocq: the kernel check of rocq/quantum differs from rocq/quantum/kernel-assumptions.txt (< ledger, > checked):" >&2
   cat "$work/quantum-kernel.diff" >&2

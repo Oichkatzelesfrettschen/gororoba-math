@@ -1,5 +1,6 @@
 -Q . ""
 -R ../open/verified OpenGororobaVerified
+-Q ../open/theories OpenGororoba
 -docroot GororobaQuantum
 -arg -w
 -arg @all
@@ -32,7 +33,10 @@ CdTwistedProduct.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
 MatrixLeftInverseCertificate.v
+QuantumChannelFromOpen.v
+SignBridge.v
 StiefelWitnessInvertible.v
 TargetFlipN21.v
 TerminalChannelSeparation.v
 TerminalChannelSeparationReal.v
+TowerBridge.v

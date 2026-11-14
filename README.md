@@ -29,15 +29,15 @@ theorems hold over every field of characteristic zero.
 `rocq/open` is the proof tree of gororoba-open (351 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
-33 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
+36 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
 tower over ordered domains and commutative rings with its basis, base change,
 order-three map and the kernel certificates of the canonical `A_5`
 points, basis-sign and associator normal
 forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
-and the terminal-channel separation) and four that began here. The two
+and the terminal-channel separation) and seven that began here. The two
 imported trees arrived with their history; `rocq/open/README.md` describes
-that tree in the words of its origin, where it sat at `proofs/`. The four
-sources that began here are
+that tree in the words of its origin, where it sat at `proofs/`. Four of
+the sources that began here are
 `GaussianIntegerHom.v` (the homomorphism `(a, b) -> a + b i` from the
 Gaussian integers to a commutative ring with a square root of -1),
 `MatrixLeftInverseCertificate.v` (a matrix `L` with `L M = d I` makes the
@@ -48,6 +48,18 @@ as Gaussian-integer tables, linearly independent over every ring that
 receives the Gaussian integers) and `A5W8ArcMatrixRanks.v` (independent
 columns of eight 24 x 6 matrices over every such ring where the scalar of
 the certificate maps to a nonzero divisor).
+
+Three sources join the two trees, which each define the Cayley-Dickson
+tower recursively; `rocq/quantum/_RocqProject` reads `rocq/open/theories`
+as `OpenGororoba` for them. `TowerBridge.v` maps the real tower of
+`OpenGororoba.RecursiveCDTower` onto the real instance of the tower of
+`CdTowerDomain`, with a two-sided inverse, and the map preserves
+multiplication (`to_quantum_mul`). `SignBridge.v` proves that the sign
+functions of the two trees agree at every level (`open_fuel_sign_sigma`,
+`verified_fuel_sign_sigma`, `open_cube_sign_sigma`,
+`python_cd_sign_returns_open_sign`). `QuantumChannelFromOpen.v` derives
+the terminal-channel theorems of `rocq/quantum` as instances of the
+general theorem of `rocq/open`.
 
 ## Toolchain
 
