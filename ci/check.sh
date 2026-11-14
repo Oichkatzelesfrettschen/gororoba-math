@@ -14,8 +14,9 @@
 #      Lean's own listing of the file's imports (lean --deps), and the same
 #      check reports a module whose import sits inside a block comment;
 #   5. the axiom audit rejects its known-bad inputs: lean/AuditFixture.lean,
-#      naming sorryAx, the declared axiom and the native_decide axiom, and
-#      a root that matches no module (lean/audit/UnknownRoot.lean).
+#      naming sorryAx, the declared axiom, the native_decide axiom and
+#      the unused private theorem closed by sorry, and a root that matches
+#      no module (lean/audit/UnknownRoot.lean).
 # Needs git, shellcheck, ruff and lake (elan, with the toolchain of
 # lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
