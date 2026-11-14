@@ -35,6 +35,8 @@ argument with the second sign negated gives the kernel of `e i - e j`.
   `e i + e j` has dimension `alignedPairCount k i j` for all `i` and `j`,
   including `i = j`, where it is `0`.
 * `Tower.finrank_ker_mulLeft_e_sub_e`: the same for `e i - e j` with `i ≠ j`.
+* `Tower.finrank_ker_pathion_1_18`, `Tower.finrank_ker_pathion_1_18_int`:
+  the `A_5` operand `e_1 + e_18` has nullity twelve over `ℚ` and over `ℤ`.
 -/
 
 @[expose] public section
@@ -387,6 +389,18 @@ rationals. -/
 theorem finrank_ker_pathion_1_18 :
     finrank ℚ (LinearMap.ker (mulLeft ℚ 5 (e ℚ 5 1#5 + e ℚ 5 18#5))) = 12 := by
   rw [finrank_ker_mulLeft_e_add_e_of_charZero, alignedPairCount_pathion_1_18]
+
+/-- Over the integers, where `2` is not a unit, the kernel of `e_1 + e_18`
+on `A_5` has rank twelve. The statement elaborates `finrank ℤ` with the
+`ℤ`-module structure of the additive group, which `Subsingleton` identifies
+with the one of `Tower.instModule`. -/
+theorem finrank_ker_pathion_1_18_int :
+    finrank ℤ (LinearMap.ker (mulLeft ℤ 5 (e ℤ 5 1#5 + e ℤ 5 18#5))) = 12 := by
+  have h := finrank_ker_mulLeft_e_add_e (R := ℤ)
+    (fun _ _ h => mul_left_cancel₀ two_ne_zero h) 5 1#5 18#5
+  rw [alignedPairCount_pathion_1_18] at h
+  convert h using 2
+  exact Subsingleton.elim _ _
 
 end Tower
 

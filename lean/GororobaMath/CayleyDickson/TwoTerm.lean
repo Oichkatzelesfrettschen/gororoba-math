@@ -10,9 +10,10 @@ Left multiplication by `e i + e j` carries the pair of basis elements
 `{e x, e x'}`, `x' = x ^^^ i ^^^ j`, into the pair
 `{e (i ^^^ x), e (j ^^^ x)}`, since `i ^^^ x' = j ^^^ x`. On that pair it is
 a two-by-two matrix of signs. When the pair is *aligned*, `e x + e x'` or
-`e x - e x'` lies in its kernel; this file proves that implication. The
-converse, that an unaligned pair has determinant `±2`, and the resulting
-nullity are in `GororobaMath.CayleyDickson.TwoTermNullity`. gororoba-quantum
+`e x - e x'` lies in its kernel; this file proves that implication.
+`GororobaMath.CayleyDickson.TwoTermNullity` proves the converse, that an
+unaligned pair forces both coordinates of a kernel vector to vanish once
+`2` cancels, and the resulting nullity. gororoba-quantum
 reads the nullity of a two-term operand with `i ≠ j` as its number of
 aligned pairs (`docs/evidence/pathion-kernel-map/README.md`,
 `gororoba_quantum/pathion_kernel_map.py`).
