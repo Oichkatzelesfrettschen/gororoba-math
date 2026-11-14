@@ -8,8 +8,8 @@
       on the basis vectors of the source ring.
     The three finite checks over A give, over every commutative ring B that receives a homomorphism h from A:
     the v_j are annihilated by y, every z with y z = 0 satisfies h(d) z = sum_j f_j(z) v_j, and a combination
-    sum_j a_j v_j determines h(d) a_j. Where h(d) is invertible, the kernel of z -> y z is the free module on
-    v_0 .. v_(n-1).
+    sum_j a_j v_j determines h(d) a_j, so a vanishing combination has h(d) a_j = 0. Where h(d) is invertible,
+    the kernel of z -> y z is the free module on v_0 .. v_(n-1).
 
     Convention: the product is `mul` of CdTowerRing.v; a functional is a vector u acting by the coordinate
     pairing u(x) = sum_i coord_i(u) coord_i(x), in the coordinate basis of CdTowerRingBasis.v. *)
@@ -166,6 +166,15 @@ Proof.
   - rewrite SB.dsum_delta. rewrite (proj2 (Nat.ltb_lt _ _) Hl). reflexivity.
   - intros m Hm. rewrite target_pair_scale, <- h_pair, functionals_dual by assumption.
     rewrite (Nat.eqb_sym l m). destruct (Nat.eqb m l); [ring | rewrite H.h_zero; ring].
+Qed.
+
+(** A combination that vanishes has every coefficient annihilated by h(d): where h(d) is a nonzero divisor
+    the vectors are linearly independent over the target ring. *)
+Theorem combination_zero_coefficients (a : nat -> B.t) :
+  SB.tsum k n (fun j => TB.scale k (a j) (tmap k (vectors j))) = TB.zero k ->
+  forall l, (l < n)%nat -> B.mul (H.h d) (a l) = B.zero.
+Proof.
+  intros E l Hl. rewrite <- (coefficients_recovered a l Hl), E. apply target_pair_zero.
 Qed.
 
 (** With an inverse of h(d), the kernel is the free module on the vectors: an element lies in the kernel

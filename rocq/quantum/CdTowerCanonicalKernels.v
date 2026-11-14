@@ -120,6 +120,14 @@ Proof.
   exact (coefficients_recovered 5 8 2 W8_functionals W8_vectors W8_functionals_dual a).
 Qed.
 
+Theorem W8_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 8 (fun j => TB.scale 5 (a j) (tmap 5 (W8_vectors j))) = TB.zero 5 ->
+  forall l, (l < 8)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 8 2 W8_functionals W8_vectors
+           W8_functionals_dual a).
+Qed.
+
 Theorem W8_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
   TB.mul 5 (tmap 5 W8_point) z = TB.zero 5 <->
   z = SB.tsum 5 8 (fun j => TB.scale 5 (D.mul inverse (target_pair 5 (tmap 5 (W8_functionals j)) z))
@@ -216,6 +224,14 @@ Theorem Ehat_coefficients_recovered (a : nat -> D.t) : forall l, (l < 8)%nat ->
     (SB.tsum 5 8 (fun j => TB.scale 5 (a j) (tmap 5 (Ehat_vectors j)))) = D.mul (H.h 2) (a l).
 Proof.
   exact (coefficients_recovered 5 8 2 Ehat_functionals Ehat_vectors Ehat_functionals_dual a).
+Qed.
+
+Theorem Ehat_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 8 (fun j => TB.scale 5 (a j) (tmap 5 (Ehat_vectors j))) = TB.zero 5 ->
+  forall l, (l < 8)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 8 2 Ehat_functionals Ehat_vectors
+           Ehat_functionals_dual a).
 Qed.
 
 Theorem Ehat_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
@@ -316,6 +332,14 @@ Proof.
   exact (coefficients_recovered 5 8 2 Iso_functionals Iso_vectors Iso_functionals_dual a).
 Qed.
 
+Theorem Iso_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 8 (fun j => TB.scale 5 (a j) (tmap 5 (Iso_vectors j))) = TB.zero 5 ->
+  forall l, (l < 8)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 8 2 Iso_functionals Iso_vectors
+           Iso_functionals_dual a).
+Qed.
+
 Theorem Iso_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
   TB.mul 5 (tmap 5 Iso_point) z = TB.zero 5 <->
   z = SB.tsum 5 8 (fun j => TB.scale 5 (D.mul inverse (target_pair 5 (tmap 5 (Iso_functionals j)) z))
@@ -414,6 +438,14 @@ Proof.
   exact (coefficients_recovered 5 8 2 Xp_functionals Xp_vectors Xp_functionals_dual a).
 Qed.
 
+Theorem Xp_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 8 (fun j => TB.scale 5 (a j) (tmap 5 (Xp_vectors j))) = TB.zero 5 ->
+  forall l, (l < 8)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 8 2 Xp_functionals Xp_vectors
+           Xp_functionals_dual a).
+Qed.
+
 Theorem Xp_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
   TB.mul 5 (tmap 5 Xp_point) z = TB.zero 5 <->
   z = SB.tsum 5 8 (fun j => TB.scale 5 (D.mul inverse (target_pair 5 (tmap 5 (Xp_functionals j)) z))
@@ -510,6 +542,14 @@ Theorem Xm_coefficients_recovered (a : nat -> D.t) : forall l, (l < 8)%nat ->
     (SB.tsum 5 8 (fun j => TB.scale 5 (a j) (tmap 5 (Xm_vectors j)))) = D.mul (H.h 2) (a l).
 Proof.
   exact (coefficients_recovered 5 8 2 Xm_functionals Xm_vectors Xm_functionals_dual a).
+Qed.
+
+Theorem Xm_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 8 (fun j => TB.scale 5 (a j) (tmap 5 (Xm_vectors j))) = TB.zero 5 ->
+  forall l, (l < 8)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 8 2 Xm_functionals Xm_vectors
+           Xm_functionals_dual a).
 Qed.
 
 Theorem Xm_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
@@ -618,6 +658,14 @@ Proof.
   exact (coefficients_recovered 5 12 2 B9_functionals B9_vectors B9_functionals_dual a).
 Qed.
 
+Theorem B9_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 12 (fun j => TB.scale 5 (a j) (tmap 5 (B9_vectors j))) = TB.zero 5 ->
+  forall l, (l < 12)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 12 2 B9_functionals B9_vectors
+           B9_functionals_dual a).
+Qed.
+
 Theorem B9_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
   TB.mul 5 (tmap 5 B9_point) z = TB.zero 5 <->
   z = SB.tsum 5 12 (fun j => TB.scale 5 (D.mul inverse (target_pair 5 (tmap 5 (B9_functionals j)) z))
@@ -722,6 +770,14 @@ Theorem V_coefficients_recovered (a : nat -> D.t) : forall l, (l < 12)%nat ->
     (SB.tsum 5 12 (fun j => TB.scale 5 (a j) (tmap 5 (V_vectors j)))) = D.mul (H.h 50) (a l).
 Proof.
   exact (coefficients_recovered 5 12 50 V_functionals V_vectors V_functionals_dual a).
+Qed.
+
+Theorem V_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 12 (fun j => TB.scale 5 (a j) (tmap 5 (V_vectors j))) = TB.zero 5 ->
+  forall l, (l < 12)%nat -> D.mul (H.h 50) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 12 50 V_functionals V_vectors
+           V_functionals_dual a).
 Qed.
 
 Theorem V_kernel_free_basis (inverse : D.t) : D.mul (H.h 50) inverse = D.one -> forall z,
@@ -830,6 +886,14 @@ Proof.
   exact (coefficients_recovered 5 12 2 VB_functionals VB_vectors VB_functionals_dual a).
 Qed.
 
+Theorem VB_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 12 (fun j => TB.scale 5 (a j) (tmap 5 (VB_vectors j))) = TB.zero 5 ->
+  forall l, (l < 12)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 12 2 VB_functionals VB_vectors
+           VB_functionals_dual a).
+Qed.
+
 Theorem VB_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
   TB.mul 5 (tmap 5 VB_point) z = TB.zero 5 <->
   z = SB.tsum 5 12 (fun j => TB.scale 5 (D.mul inverse (target_pair 5 (tmap 5 (VB_functionals j)) z))
@@ -936,6 +1000,14 @@ Proof.
   exact (coefficients_recovered 5 12 2 Vap_functionals Vap_vectors Vap_functionals_dual a).
 Qed.
 
+Theorem Vap_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 12 (fun j => TB.scale 5 (a j) (tmap 5 (Vap_vectors j))) = TB.zero 5 ->
+  forall l, (l < 12)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 12 2 Vap_functionals Vap_vectors
+           Vap_functionals_dual a).
+Qed.
+
 Theorem Vap_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
   TB.mul 5 (tmap 5 Vap_point) z = TB.zero 5 <->
   z = SB.tsum 5 12 (fun j => TB.scale 5 (D.mul inverse (target_pair 5 (tmap 5 (Vap_functionals j)) z))
@@ -1040,6 +1112,14 @@ Theorem Vam_coefficients_recovered (a : nat -> D.t) : forall l, (l < 12)%nat ->
     (SB.tsum 5 12 (fun j => TB.scale 5 (a j) (tmap 5 (Vam_vectors j)))) = D.mul (H.h 2) (a l).
 Proof.
   exact (coefficients_recovered 5 12 2 Vam_functionals Vam_vectors Vam_functionals_dual a).
+Qed.
+
+Theorem Vam_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 12 (fun j => TB.scale 5 (a j) (tmap 5 (Vam_vectors j))) = TB.zero 5 ->
+  forall l, (l < 12)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 12 2 Vam_functionals Vam_vectors
+           Vam_functionals_dual a).
 Qed.
 
 Theorem Vam_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
@@ -1156,6 +1236,14 @@ Proof.
   exact (coefficients_recovered 5 16 2 Np_functionals Np_vectors Np_functionals_dual a).
 Qed.
 
+Theorem Np_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 16 (fun j => TB.scale 5 (a j) (tmap 5 (Np_vectors j))) = TB.zero 5 ->
+  forall l, (l < 16)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 16 2 Np_functionals Np_vectors
+           Np_functionals_dual a).
+Qed.
+
 Theorem Np_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
   TB.mul 5 (tmap 5 Np_point) z = TB.zero 5 <->
   z = SB.tsum 5 16 (fun j => TB.scale 5 (D.mul inverse (target_pair 5 (tmap 5 (Np_functionals j)) z))
@@ -1268,6 +1356,14 @@ Theorem Nm_coefficients_recovered (a : nat -> D.t) : forall l, (l < 16)%nat ->
     (SB.tsum 5 16 (fun j => TB.scale 5 (a j) (tmap 5 (Nm_vectors j)))) = D.mul (H.h 2) (a l).
 Proof.
   exact (coefficients_recovered 5 16 2 Nm_functionals Nm_vectors Nm_functionals_dual a).
+Qed.
+
+Theorem Nm_combination_zero_coefficients (a : nat -> D.t) :
+  SB.tsum 5 16 (fun j => TB.scale 5 (a j) (tmap 5 (Nm_vectors j))) = TB.zero 5 ->
+  forall l, (l < 16)%nat -> D.mul (H.h 2) (a l) = D.zero.
+Proof.
+  exact (combination_zero_coefficients 5 16 2 Nm_functionals Nm_vectors
+           Nm_functionals_dual a).
 Qed.
 
 Theorem Nm_kernel_free_basis (inverse : D.t) : D.mul (H.h 2) inverse = D.one -> forall z,
