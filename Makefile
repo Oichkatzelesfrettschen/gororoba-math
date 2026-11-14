@@ -82,8 +82,8 @@ rocq-open: rocq-sync
 # search of the log, which holds the output of the makefile generator and
 # of the build, is the check that fails the target.
 rocq-quantum: rocq-open
-	cd "$(ROCQ_TREE)/quantum" && $(OPAM) rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq >../quantum-build.log 2>&1 || \
-		{ cat "$(ROCQ_TREE)/quantum-build.log" >&2; exit 1; }
+	(cd "$(ROCQ_TREE)/quantum" && $(OPAM) rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq) \
+		>"$(ROCQ_TREE)/quantum-build.log" 2>&1 || { cat "$(ROCQ_TREE)/quantum-build.log" >&2; exit 1; }
 	$(OPAM) make -C "$(ROCQ_TREE)/quantum" -f Makefile.rocq --jobs=$(ROCQ_JOBS) >>"$(ROCQ_TREE)/quantum-build.log" 2>&1 || \
 		{ tail -n 60 "$(ROCQ_TREE)/quantum-build.log" >&2; exit 1; }
 	@if grep -n '[Ww]arning' "$(ROCQ_TREE)/quantum-build.log" >&2; then \
