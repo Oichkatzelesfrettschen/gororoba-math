@@ -33,6 +33,9 @@ structure, which is what lets the construction iterate
   and `star`.
 * `CayleyDickson.inl`: `a ↦ (a, 0)` preserves products, sums, `1` and `star`
   and is injective.
+* `CayleyDickson.instModule`, `CayleyDickson.linearEquivProd`: an
+  `R`-module structure on `A` acts on each half, and the double is then the
+  product `A × A` as an `R`-module.
 -/
 
 @[expose] public section
@@ -73,6 +76,9 @@ instance : Sub (CayleyDickson A) := ⟨fun x y => ⟨x.re - y.re, x.im - y.im⟩
 @[simp] theorem sub_re (x y : CayleyDickson A) : (x - y).re = x.re - y.re := rfl
 @[simp] theorem sub_im (x y : CayleyDickson A) : (x - y).im = x.im - y.im := rfl
 
+/-- Natural and integer multiples act on each half, so the `ℕ`- and
+`ℤ`-actions of the group are the componentwise ones and agree with every
+componentwise module structure built over them. -/
 instance : AddCommGroup (CayleyDickson A) where
   add_assoc x y z := by ext <;> simp [add_assoc]
   zero_add x := by ext <;> simp
@@ -80,8 +86,18 @@ instance : AddCommGroup (CayleyDickson A) where
   add_comm x y := by ext <;> simp [add_comm]
   neg_add_cancel x := by ext <;> simp
   sub_eq_add_neg x y := by ext <;> simp [sub_eq_add_neg]
-  nsmul := nsmulRec
-  zsmul := zsmulRec
+  nsmul n x := ⟨n • x.re, n • x.im⟩
+  nsmul_zero x := by ext <;> exact AddMonoid.nsmul_zero _
+  nsmul_succ n x := by ext <;> exact AddMonoid.nsmul_succ n _
+  zsmul n x := ⟨n • x.re, n • x.im⟩
+  zsmul_zero' x := by ext <;> exact SubNegMonoid.zsmul_zero' _
+  zsmul_succ' n x := by ext <;> exact SubNegMonoid.zsmul_succ' n _
+  zsmul_neg' n x := by ext <;> exact SubNegMonoid.zsmul_neg' n _
+
+@[simp] theorem nsmul_re (n : ℕ) (x : CayleyDickson A) : (n • x).re = n • x.re := rfl
+@[simp] theorem nsmul_im (n : ℕ) (x : CayleyDickson A) : (n • x).im = n • x.im := rfl
+@[simp] theorem zsmul_re (n : ℤ) (x : CayleyDickson A) : (n • x).re = n • x.re := rfl
+@[simp] theorem zsmul_im (n : ℤ) (x : CayleyDickson A) : (n • x).im = n • x.im := rfl
 
 /-- The reflection `(a, b) ↦ (a, -b)` of the second half. -/
 def reflect (x : CayleyDickson A) : CayleyDickson A := ⟨x.re, -x.im⟩
@@ -112,6 +128,44 @@ theorem inl_injective : Function.Injective (inl : A → CayleyDickson A) :=
   fun _ _ h => congrArg CayleyDickson.re h
 
 end Additive
+
+section Module
+
+variable [NonAssocRing A] {R : Type*} [Semiring R] [Module R A]
+
+/-- A scalar acts on each half. At `R = ℕ` and `R = ℤ` this is the action of
+the group structure, since `nsmul` and `zsmul` act on each half too. -/
+instance : SMul R (CayleyDickson A) := ⟨fun r x => ⟨r • x.re, r • x.im⟩⟩
+
+@[simp] theorem smul_re (r : R) (x : CayleyDickson A) : (r • x).re = r • x.re := rfl
+@[simp] theorem smul_im (r : R) (x : CayleyDickson A) : (r • x).im = r • x.im := rfl
+
+/-- The double of an `R`-module is an `R`-module, componentwise. -/
+instance instModule : Module R (CayleyDickson A) where
+  one_smul x := by ext <;> simp
+  mul_smul r s x := by ext <;> simp [mul_smul]
+  smul_zero r := by ext <;> simp
+  smul_add r x y := by ext <;> simp
+  add_smul r s x := by ext <;> simp [add_smul]
+  zero_smul x := by ext <;> simp
+
+variable (A R) in
+/-- The double is the product of its two halves as an `R`-module. -/
+def linearEquivProd : CayleyDickson A ≃ₗ[R] A × A where
+  toFun x := (x.re, x.im)
+  invFun p := ⟨p.1, p.2⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+@[simp] theorem linearEquivProd_apply (x : CayleyDickson A) :
+    linearEquivProd A R x = (x.re, x.im) := rfl
+
+@[simp] theorem linearEquivProd_symm_apply (p : A × A) :
+    (linearEquivProd A R).symm p = ⟨p.1, p.2⟩ := rfl
+
+end Module
 
 section Ring
 
