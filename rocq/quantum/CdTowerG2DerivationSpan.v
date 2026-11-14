@@ -21,7 +21,9 @@
     h(d) F(x) = sum_(t < 14) c_t D_(t+1)(x) for all x, with D_(t+1) the map of [table t] (the table images_(t+1)
     of CdTowerG2Derivations.v) and c_t = [span_coefficient t] ([derivations_spanned]); where h(d) has an inverse
     u, F = sum_(t < 14) (u c_t) D_(t+1)
-    ([derivations_spanned_invertible]). *)
+    ([derivations_spanned_invertible]). Each c_t is h(d) times [reduced_coefficient t], so where h(d) is a
+    nonzero divisor F = sum_(t < 14) [reduced_coefficient t] D_(t+1) ([derivations_spanned_regular]); the
+    Gaussian integers are such a ring ([derivations_spanned_gaussian]). *)
 
 From Stdlib Require Import Ring Lia PeanoNat ZArith List Bool.
 Require Import CdTowerRing CdTowerRingBasis CdTowerRingBaseChange GaussianIntegerHom.
@@ -633,12 +635,70 @@ Proof.
     induction n as [|p IH]; cbn [SB.dsum]; [ring |]. rewrite <- IH, !TB.coord_scale. ring.
 Qed.
 
+(** [reduced_coefficient t] is row t of the left inverse C applied to the coordinates of F, and
+    [span_coefficient t] is h(d) times it. *)
+Definition reduced_coefficient (t : nat) : D.t :=
+  SC.SB.dsum 256
+    (fun j => D.mul (H.h (SC.LC.sparse_entry G2DerivationTables.independence_left t j)) (unknown j)).
+
+Lemma span_coefficient_scalar t :
+  span_coefficient t = D.mul (H.h G2SpanTables.scalar) (reduced_coefficient t).
+Proof.
+  unfold span_coefficient, SC.coefficient, reduced_coefficient, functionals.
+  rewrite <- SC.LC.dsum_scale_left. apply SC.SB.dsum_ext. intros j _. cbn beta. rewrite H.h_mul. ring.
+Qed.
+
+(** Where h(d) is a nonzero divisor, F is the combination of the 14 derivations with the coefficients
+    [reduced_coefficient]. *)
+Theorem derivations_spanned_regular :
+  (forall y, D.mul (H.h G2SpanTables.scalar) y = D.zero -> y = D.zero) ->
+  forall x, F x = SB.tsum 4 14 (fun t => TB.scale 4 (reduced_coefficient t) (target_map 4 (table t) x)).
+Proof.
+  intros Reg x. apply TB.ext. intros i _. rewrite SB.coord_tsum.
+  pose proof (f_equal (fun w => TB.coord 4 w i) (derivations_spanned x)) as E. cbn beta in E.
+  rewrite TB.coord_scale, SB.coord_tsum in E.
+  assert (S : forall n,
+             SB.dsum n (fun t => TB.coord 4 (TB.scale 4 (span_coefficient t) (target_map 4 (table t) x)) i) =
+             D.mul (H.h G2SpanTables.scalar)
+               (SB.dsum n (fun t => TB.coord 4 (TB.scale 4 (reduced_coefficient t) (target_map 4 (table t) x)) i))).
+  { intro n. induction n as [|p IH]; cbn [SB.dsum]; [ring |].
+    rewrite IH, !TB.coord_scale, span_coefficient_scalar. ring. }
+  rewrite (S 14%nat) in E. clear S.
+  set (a := TB.coord 4 (F x) i) in *.
+  set (b := SB.dsum 14 (fun t => TB.coord 4 (TB.scale 4 (reduced_coefficient t) (target_map 4 (table t) x)) i))
+    in *.
+  assert (Z : D.mul (H.h G2SpanTables.scalar) (D.sub a b) = D.zero).
+  { transitivity (D.sub (D.mul (H.h G2SpanTables.scalar) a) (D.mul (H.h G2SpanTables.scalar) b)); [ring |].
+    rewrite E. ring. }
+  apply Reg in Z. transitivity (D.add (D.sub a b) b); [ring | rewrite Z; ring].
+Qed.
+
 End Derivation.
 
 End G2DerivationSpan.
 
 (** Over the Gaussian integers, with the identity homomorphism. *)
 Module GaussianG2Span := G2DerivationSpan GaussianIntegers GaussianIdentity.
+
+(** Over the Gaussian integers d = 6 is a nonzero divisor ([gaussian_regular]), so a derivation is itself a
+    combination of the 14 tables with Gaussian-integer coefficients. *)
+Module GaussianG2SpanRegular.
+Import GaussianG2Span.LS.BC.
+
+Theorem derivations_spanned_gaussian (F : TB.cd 4 -> TB.cd 4) :
+  SB.linear 4 F ->
+  (forall a b, (a < Nat.pow 2 4)%nat -> (b < Nat.pow 2 4)%nat ->
+     F (TB.mul 4 (SB.basis 4 a) (SB.basis 4 b)) =
+     TB.add 4 (TB.mul 4 (F (SB.basis 4 a)) (SB.basis 4 b)) (TB.mul 4 (SB.basis 4 a) (F (SB.basis 4 b)))) ->
+  forall x, F x = SB.tsum 4 14 (fun t => TB.scale 4 (GaussianG2Span.reduced_coefficient F t)
+                                            (target_map 4 (GaussianG2Span.table t) x)).
+Proof.
+  intros L B. apply (GaussianG2Span.derivations_spanned_regular F L B).
+  intros y E. apply (gaussian_regular G2SpanTables.scalar); [| exact E].
+  intro Z. vm_compute in Z. discriminate Z.
+Qed.
+
+End GaussianG2SpanRegular.
 
 (** Over a commutative ring with a square root of -1, with the homomorphism (a, b) -> a + b i. *)
 Module G2DerivationSpanWithI (D : CommutativeRingWithI).

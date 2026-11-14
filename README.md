@@ -52,7 +52,8 @@ three files generated in gororoba-quantum for the `A_5` program:
 as Gaussian-integer tables, linearly independent over every ring that
 receives the Gaussian integers), `CdTowerG2DerivationSpan.v` (over every
 such ring, six times a linear map of the sedenions that satisfies the
-Leibniz rule on the basis units is a combination of those 14) and
+Leibniz rule on the basis units is a combination of those 14, and the map
+itself is one where the image of 6 is a nonzero divisor) and
 `A5W8ArcMatrixRanks.v` (independent
 columns of eight 24 x 6 matrices over every such ring where the scalar of
 the certificate maps to a nonzero divisor).
