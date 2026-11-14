@@ -119,7 +119,7 @@ if lake env lean audit/Fixture.lean >"$work/fixture.out" 2>&1; then
   echo "check: the axiom audit accepted its known-bad fixture" >&2
   exit 1
 fi
-for axiom in sorryAx AuditFixture.declaredAxiom native_decide; do
+for axiom in sorryAx AuditFixture.declaredAxiom native_decide AuditFixture.privateSorry; do
   grep -q -F "$axiom" "$work/fixture.out" || {
     cat "$work/fixture.out" >&2
     echo "check: the axiom audit did not name $axiom in its fixture" >&2
