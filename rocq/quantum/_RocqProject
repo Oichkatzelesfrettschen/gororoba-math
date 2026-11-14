@@ -18,8 +18,11 @@ CdTowerBasisSign.v
 CdTowerDomain.v
 CdTowerDomainR.v
 CdTowerDomainZ.v
+CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v
+CdTowerRingBaseChange.v
+CdTowerRingBasis.v
 CdTowerRingDomain.v
 CdTwistedProduct.v
 FoldAverageDescent.v
