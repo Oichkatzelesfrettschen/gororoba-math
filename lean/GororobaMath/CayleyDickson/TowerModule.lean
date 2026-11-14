@@ -22,10 +22,15 @@ coordinate of `y` at `i ^^^ w`, negated when `negSign k i (i ^^^ w)` holds.
 ## Main results
 
 * `Tower.instModule`: the `R`-module structure of every level, with
-  `Tower.smul_mk` and `Tower.smul_level_zero` holding by `rfl`.
+  `Tower.smul_mk` and `Tower.smul_level_zero` holding by `rfl`;
+  `Tower.instModule_int` identifies it at `R = ℤ` with the action of the
+  additive group. `Tower` and `levelStructure` are semireducible, so the
+  two `ℤ`-module structures agree by unfolding at a fixed level and by
+  `Subsingleton` at every level, and instance unification at reducible
+  transparency does not identify them.
 * `Tower.basis`, `Tower.basis_apply`: a basis indexed by `BitVec k` whose
   vector at `p` is `e R k p`; `Tower.finrank_eq` gives `finrank = 2 ^ k`.
-* `Tower.mul_smul_comm'`, `Tower.smul_mul_assoc'`, `Tower.smul_eq_mul`: the
+* `Tower.mul_smul_comm'`, `Tower.smul_mul_assoc'`, `Tower.smul_eq_smul_one_mul`: the
   scalar action commutes with the product, and `r • x = (r • 1) * x`.
 * `Tower.mulLeft`: left multiplication as an `R`-linear map.
 * `Tower.repr_e_mul`: the coordinates of `e i * y`.
@@ -64,6 +69,12 @@ theorem smul_level_zero (r x : R) : (r • (x : Tower R 0) : Tower R 0) = r * x 
 
 theorem smul_mk {k : ℕ} (r : R) (a b : Tower R k) : r • mk a b = mk (r • a) (r • b) := rfl
 
+omit [CommRing R] [StarRing R] in
+/-- At `R = ℤ` the module structure is the action of the additive group. -/
+theorem instModule_int (k : ℕ) :
+    instModule ℤ k = AddCommGroup.toIntModule (Tower ℤ k) :=
+  Subsingleton.elim _ _
+
 /-- Over a commutative ring whose star is the identity, scalars pass through
 the product on both sides and through the star, at every level. The three
 statements are proved together because the product of level `k + 1` uses the
@@ -100,7 +111,7 @@ theorem star_smul' {k : ℕ} (r : R) (x : Tower R k) : star (r • x) = r • st
 
 /-- The action of a scalar is left multiplication by its image `r • 1` in
 the tower. -/
-theorem smul_eq_mul {k : ℕ} (r : R) (x : Tower R k) : r • x = (r • 1 : Tower R k) * x := by
+theorem smul_eq_smul_one_mul {k : ℕ} (r : R) (x : Tower R k) : r • x = (r • 1 : Tower R k) * x := by
   rw [smul_mul_assoc', one_mul]
 
 variable (R) in
