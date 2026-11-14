@@ -12,9 +12,10 @@
     Independence: [coefficient r n] is coordinate (r mod 16) of D_(n+1)(e_(r / 16)), a 256 x 14 matrix M.
     [independence_left] holds a 14 x 256 matrix L by its nonzero entries (row, value) and
     [independence_d] the scalar d = 1 with L M = d I ([independence_left_inverse]). A combination
-    sum_n a_n D_(n+1) that vanishes on the target algebra then has h(d) a_n = 0
+    sum_n a_n D_(n+1) that vanishes on the 16 basis units of the target algebra then has h(d) a_n = 0
     ([derivations_relation_coefficients], through MatrixLeftInverseCertificate.v), and since d = 1 the
-    14 derivations are linearly independent over every target ring ([derivations_independent]). *)
+    14 derivations are linearly independent over every target ring
+    ([derivations_independent_on_basis_units], [derivations_independent]). *)
 
 From Stdlib Require Import Ring Lia PeanoNat ZArith List.
 Require Import CdTowerRing CdTowerRingBasis CdTowerRingBaseChange GaussianIntegerHom.
@@ -384,7 +385,7 @@ Theorem derivation_14 : forall x y, target_map 4 images_14 (TB.mul 4 x y) =
   TB.add 4 (TB.mul 4 (target_map 4 images_14 x) y) (TB.mul 4 x (target_map 4 images_14 y)).
 Proof. exact (derivation_transport 4 images_14 leibniz_basis_14). Qed.
 
-(** [images n] is the table of D_(n+1). *)
+(** [images n] is the table of D_(n+1) for n < 14; a larger n reads the last table. *)
 Definition images (n : nat) : nat -> TA.cd 4 :=
   match n with
   | 0 => images_1
@@ -405,6 +406,10 @@ Definition images (n : nat) : nat -> TA.cd 4 :=
 
 Definition coefficient (r n : nat) : GaussianIntegers.t := TA.coord 4 (images n (r / 16)) (r mod 16).
 
+Lemma independence_left_well_formed :
+  LC.sparse_shape G2DerivationTables.independence_left 14 256 = true.
+Proof. vm_compute. reflexivity. Qed.
+
 Lemma independence_left_inverse : forall l j, (l < 14)%nat -> (j < 14)%nat ->
   LC.SA.dsum 256
     (fun r => GaussianIntegers.mul (LC.sparse_entry G2DerivationTables.independence_left l r)
@@ -420,45 +425,52 @@ Qed.
 Lemma dsum_agree n (g : nat -> D.t) : SB.dsum n g = LC.SB.dsum n g.
 Proof. induction n as [|m IH]; cbn [SB.dsum LC.SB.dsum]; [reflexivity | rewrite IH; reflexivity]. Qed.
 
-(** Coordinate c of the image of the basis unit e_m under the map with prescribed images. *)
-Lemma target_map_basis_coord (table : nat -> TA.cd 4) m c : (m < Nat.pow 2 4)%nat ->
-  TB.coord 4 (target_map 4 table (SB.basis 4 m)) c = H.h (TA.coord 4 (table m) c).
+(** Coordinate c of the image of the basis unit e_m under the map with prescribed images, at every
+    level k. *)
+Lemma target_map_basis_coord k (table : nat -> TA.cd k) m c : (m < Nat.pow 2 k)%nat ->
+  TB.coord k (target_map k table (SB.basis k m)) c = H.h (TA.coord k (table m) c).
 Proof.
   intro Hm. unfold target_map. rewrite SB.coord_tsum.
   rewrite (SB.dsum_ext _ _
-             (fun i => D.mul (TB.coord 4 (tmap 4 (table i)) c) (if Nat.eqb i m then D.one else D.zero))).
+             (fun i => D.mul (TB.coord k (tmap k (table i)) c) (if Nat.eqb i m then D.one else D.zero))).
   - rewrite SB.dsum_delta, (proj2 (Nat.ltb_lt _ _) Hm), <- tmap_coord. reflexivity.
   - intros i Hi. rewrite TB.coord_scale, SB.coord_basis by assumption.
     rewrite (Nat.eqb_sym m i). ring.
 Qed.
 
-(** A combination of the 14 derivations that vanishes on the target algebra has every coefficient
-    annihilated by h(d). *)
+(** A combination of the 14 derivations that vanishes on the 16 basis units of the target algebra has
+    every coefficient annihilated by h(d). *)
 Theorem derivations_relation_coefficients (a : nat -> D.t) :
-  (forall x, SB.tsum 4 14 (fun n => TB.scale 4 (a n) (target_map 4 (images n) x)) = TB.zero 4) ->
+  (forall m, (m < 16)%nat -> SB.tsum 4 14 (fun n => TB.scale 4 (a n) (target_map 4 (images n) (SB.basis 4 m))) =
+     TB.zero 4) ->
   forall n, (n < 14)%nat -> D.mul (H.h G2DerivationTables.independence_d) (a n) = D.zero.
 Proof.
   intro R.
   apply (LC.relation_coefficients 256 14 G2DerivationTables.independence_d coefficient
            (LC.sparse_entry G2DerivationTables.independence_left) independence_left_inverse a).
   unfold LC.relation. intros r Hr.
-  assert (Hm : (r / 16 < Nat.pow 2 4)%nat).
-  { change (Nat.pow 2 4) with 16%nat. apply Nat.Div0.div_lt_upper_bound. lia. }
-  pose proof (f_equal (fun w => TB.coord 4 w (r mod 16)) (R (SB.basis 4 (r / 16)))) as E.
+  assert (Hm : (r / 16 < 16)%nat) by (apply Nat.Div0.div_lt_upper_bound; lia).
+  pose proof (f_equal (fun w => TB.coord 4 w (r mod 16)) (R (r / 16) Hm)) as E.
   cbn beta in E. rewrite SB.coord_tsum, TB.coord_zero in E.
   rewrite <- dsum_agree, <- E. apply SB.dsum_ext. intros n _.
-  rewrite TB.coord_scale, target_map_basis_coord by exact Hm. unfold coefficient. ring.
+  rewrite TB.coord_scale, (target_map_basis_coord 4) by exact Hm. unfold coefficient. ring.
 Qed.
 
 (** The scalar is 1, so the 14 derivations are linearly independent over the target ring. *)
-Theorem derivations_independent (a : nat -> D.t) :
-  (forall x, SB.tsum 4 14 (fun n => TB.scale 4 (a n) (target_map 4 (images n) x)) = TB.zero 4) ->
+Theorem derivations_independent_on_basis_units (a : nat -> D.t) :
+  (forall m, (m < 16)%nat -> SB.tsum 4 14 (fun n => TB.scale 4 (a n) (target_map 4 (images n) (SB.basis 4 m))) =
+     TB.zero 4) ->
   forall n, (n < 14)%nat -> a n = D.zero.
 Proof.
   intros R n Hn. pose proof (derivations_relation_coefficients a R n Hn) as E.
   change G2DerivationTables.independence_d with GaussianIntegers.one in E.
   rewrite H.h_one in E. rewrite <- E. ring.
 Qed.
+
+Theorem derivations_independent (a : nat -> D.t) :
+  (forall x, SB.tsum 4 14 (fun n => TB.scale 4 (a n) (target_map 4 (images n) x)) = TB.zero 4) ->
+  forall n, (n < 14)%nat -> a n = D.zero.
+Proof. intro R. apply derivations_independent_on_basis_units. intros m _. apply R. Qed.
 
 End G2Derivations.
 

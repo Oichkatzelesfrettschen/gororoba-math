@@ -9,9 +9,13 @@
     Convention: [matrix r j] is the entry of row r and column j, [left l r] the entry of row l and column r,
     [entry table r j] reads row r, column j of a list of rows, and [sparse_entry table l r] reads row l of a
     list of rows that hold their nonzero entries as pairs (column, value), with zero for an absent column.
-    Finite sums are [dsum] of CdTowerRingBasis.v. *)
+    Both readers are total: a missing row, column or key reads as zero, and the first of two entries with one
+    key wins. [dense_shape table rows columns] and [sparse_shape table lines bound] decide that a table has
+    exactly the stated shape (every row of the stated length; every key below the bound and no key twice in a
+    line), so that a certificate which checks them rests on no default. Finite sums are [dsum] of
+    CdTowerRingBasis.v. *)
 
-From Stdlib Require Import Ring Lia PeanoNat List.
+From Stdlib Require Import Ring Lia PeanoNat List Bool.
 Require Import CdTowerRing CdTowerRingBasis CdTowerRingBaseChange.
 
 Module LeftInverseCertificate (A B : CommutativeRing) (H : RingHom A B).
@@ -27,6 +31,19 @@ Definition sparse_entry (table : list (list (nat * A.t))) (l r : nat) : A.t :=
   | Some item => snd item
   | None => A.zero
   end.
+
+Definition dense_shape {X : Type} (table : list (list X)) (rows columns : nat) : bool :=
+  Nat.eqb (length table) rows && forallb (fun row => Nat.eqb (length row) columns) table.
+
+Fixpoint distinct_keys {X : Type} (line : list (nat * X)) : bool :=
+  match line with
+  | nil => true
+  | item :: rest => negb (existsb (fun other => Nat.eqb (fst other) (fst item)) rest) && distinct_keys rest
+  end.
+
+Definition sparse_shape {X : Type} (table : list (list (nat * X))) (lines bound : nat) : bool :=
+  Nat.eqb (length table) lines &&
+  forallb (fun line => forallb (fun item => Nat.ltb (fst item) bound) line && distinct_keys line) table.
 
 Lemma h_dsum n g : H.h (SA.dsum n g) = SB.dsum n (fun m => H.h (g m)).
 Proof.
