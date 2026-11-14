@@ -3,6 +3,7 @@
 -docroot GororobaQuantum
 -arg -w
 -arg @all
+A5W8ArcMatrixRanks.v
 CdAnnihilatorSymmetry.v
 CdAnnihilatorSymmetryReal.v
 CdAssociatorAnf.v
@@ -19,6 +20,7 @@ CdTowerCanonicalKernels.v
 CdTowerDomain.v
 CdTowerDomainR.v
 CdTowerDomainZ.v
+CdTowerG2Derivations.v
 CdTowerKernelCertificate.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
@@ -28,6 +30,8 @@ CdTowerRingBasis.v
 CdTowerRingDomain.v
 CdTwistedProduct.v
 FoldAverageDescent.v
+GaussianIntegerHom.v
+MatrixLeftInverseCertificate.v
 StiefelWitnessInvertible.v
 TargetFlipN21.v
 TerminalChannelSeparation.v

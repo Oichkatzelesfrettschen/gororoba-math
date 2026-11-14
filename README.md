@@ -28,15 +28,26 @@ theorems hold over every field of characteristic zero.
 
 `rocq/open` is the proof tree of gororoba-open (351 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
-frozen quantum-observable evidence its bindings cite), and `rocq/quantum`
-the 29 proof files of gororoba-quantum (the Cayley-Dickson tower over
-ordered domains and commutative rings with its basis, base change,
+frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
+33 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
+tower over ordered domains and commutative rings with its basis, base change,
 order-three map and the kernel certificates of the canonical `A_5`
 points, basis-sign and associator normal
 forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
-and the terminal-channel separation). Both arrived with their history;
-`rocq/open/README.md` describes that tree in the words of its origin, where
-it sat at `proofs/`.
+and the terminal-channel separation) and four that began here. The two
+imported trees arrived with their history; `rocq/open/README.md` describes
+that tree in the words of its origin, where it sat at `proofs/`. The four
+sources that began here are
+`GaussianIntegerHom.v` (the homomorphism `(a, b) -> a + b i` from the
+Gaussian integers to a commutative ring with a square root of -1),
+`MatrixLeftInverseCertificate.v` (a matrix `L` with `L M = d I` makes the
+columns of `M` independent over every ring where the image of `d` is a
+nonzero divisor), and two files generated in gororoba-quantum for the
+`A_5` program: `CdTowerG2Derivations.v` (14 derivations of the sedenions
+as Gaussian-integer tables, linearly independent over every ring that
+receives the Gaussian integers) and `A5W8ArcMatrixRanks.v` (independent
+columns of eight 24 x 6 matrices over every such ring where the scalar of
+the certificate maps to a nonzero divisor).
 
 ## Toolchain
 
@@ -87,7 +98,7 @@ sh ci/check_rocq.sh
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 29
+`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 33
 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
@@ -96,7 +107,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth.
 
-The script then re-checks all 380 project-listed modules with Rocq's kernel
+The script then re-checks all 384 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
