@@ -11,7 +11,9 @@
     [structure_source] binds to the product of CdTowerRing.v. [back] holds a 256 x 242 matrix P by its nonzero
     entries (column, value), [vectors] the 256 x 14 matrix V of the coordinates of the 14 tables, and
     [functionals] the matrix d C for the left inverse C of V of CdTowerG2Derivations.v and the scalar
-    d = [scalar]. [splitting] checks P M + V (d C) = d I on the 65536 entries by [vm_compute].
+    d = [scalar]. [splitting] checks P M + V (d C) = d I on the 65536 entries by [vm_compute], each sum over
+    the rows of M taken over the nonzero entries of a line of P ([dsum_sparse_table] of
+    MatrixSplittingCertificate.v).
 
     Over every commutative ring D that receives a homomorphism h from the Gaussian integers, a linear map F
     that satisfies the Leibniz rule on the pairs of basis units then has
@@ -473,11 +475,14 @@ Lemma splitting : forall i j, (i < 256)%nat -> (j < 256)%nat ->
     (SC.SA.dsum 14 (fun t => GaussianIntegers.mul (vectors i t) (functionals t j))) =
   if Nat.eqb j i then G2SpanTables.scalar else GaussianIntegers.zero.
 Proof.
-  intros i j Hi Hj. apply gaussian_eqb_eq.
+  intros i j Hi Hj.
+  pose proof (SC.dsum_sparse_table G2SpanTables.back 256 242 i (fun r => matrix r j)
+                (proj2 tables_well_formed)) as S.
+  cbn beta in S. unfold back. rewrite S. clear S. apply gaussian_eqb_eq.
   assert (E : forall_below 256 (fun i => forall_below 256 (fun j =>
                 gaussian_eqb
                   (GaussianIntegers.add
-                     (SC.SA.dsum 242 (fun r => GaussianIntegers.mul (back i r) (matrix r j)))
+                     (SC.sparse_sum (nth i G2SpanTables.back []) (fun r => matrix r j))
                      (SC.SA.dsum 14 (fun t => GaussianIntegers.mul (vectors i t) (functionals t j))))
                   (if Nat.eqb j i then G2SpanTables.scalar else GaussianIntegers.zero))) = true)
     by (vm_compute; reflexivity).

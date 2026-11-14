@@ -25,6 +25,73 @@ Module SA := LC.SA.
 Module SB := LC.SB.
 
 Add Ring splitting_target : B.ring_th.
+Add Ring splitting_source : A.ring_th.
+
+(** [line_entry line r] is the value of key r in one line of a sparse table, zero for an absent key;
+    [sparse_sum line g] is the sum of value * g(key) over the items of the line. For a line with distinct
+    keys below [rows], [dsum_sparse] equates it with the dense sum over the keys below [rows]. *)
+Definition line_entry (line : list (nat * A.t)) (r : nat) : A.t :=
+  match find (fun item => Nat.eqb (fst item) r) line with
+  | Some item => snd item
+  | None => A.zero
+  end.
+
+Definition sparse_sum (line : list (nat * A.t)) (g : nat -> A.t) : A.t :=
+  fold_right (fun item acc => A.add (A.mul (snd item) (g (fst item))) acc) A.zero line.
+
+Lemma line_entry_cons k v rest r :
+  line_entry ((k, v) :: rest) r = if Nat.eqb k r then v else line_entry rest r.
+Proof. unfold line_entry. cbn [find fst]. destruct (Nat.eqb k r); reflexivity. Qed.
+
+Lemma line_entry_absent line k :
+  existsb (fun other => Nat.eqb (fst other) k) line = false -> line_entry line k = A.zero.
+Proof.
+  induction line as [|[k' v] rest IH]; [reflexivity |]. cbn [existsb fst]. intro E.
+  apply orb_false_elim in E as [E1 E2]. rewrite line_entry_cons, E1. exact (IH E2).
+Qed.
+
+Lemma dsum_add_source n g g' : SA.dsum n (fun m => A.add (g m) (g' m)) = A.add (SA.dsum n g) (SA.dsum n g').
+Proof. induction n as [|m IH]; cbn [SA.dsum]; [ring | rewrite IH; ring]. Qed.
+
+Lemma dsum_sparse rows line g :
+  forallb (fun item => Nat.ltb (fst item) rows) line = true -> LC.distinct_keys line = true ->
+  SA.dsum rows (fun r => A.mul (line_entry line r) (g r)) = sparse_sum line g.
+Proof.
+  induction line as [|[k v] rest IH].
+  - intros _ _. cbn [sparse_sum fold_right]. rewrite (SA.dsum_ext rows _ (fun _ => A.zero)).
+    + apply SA.dsum_zero.
+    + intros r _. unfold line_entry. cbn [find]. ring.
+  - cbn [forallb LC.distinct_keys sparse_sum fold_right fst snd]. intros R K.
+    apply andb_prop in R as [Rk Rrest]. apply andb_prop in K as [Kk Krest].
+    apply negb_true_iff in Kk. fold (sparse_sum rest g). rewrite <- (IH Rrest Krest).
+    rewrite (SA.dsum_ext rows _
+               (fun r => A.add (A.mul (A.mul v (g r)) (if Nat.eqb r k then A.one else A.zero))
+                               (A.mul (line_entry rest r) (g r)))).
+    + rewrite dsum_add_source, SA.dsum_delta, Rk. reflexivity.
+    + intros r _. rewrite line_entry_cons.
+      destruct (Nat.eqb_spec k r) as [->|N].
+      * rewrite Nat.eqb_refl, (line_entry_absent rest r Kk). ring.
+      * destruct (Nat.eqb_spec r k) as [->|_]; [contradiction | ring].
+Qed.
+
+Lemma sparse_shape_line (table : list (list (nat * A.t))) lines bound i :
+  LC.sparse_shape table lines bound = true ->
+  forallb (fun item => Nat.ltb (fst item) bound) (nth i table nil) = true /\
+  LC.distinct_keys (nth i table nil) = true.
+Proof.
+  unfold LC.sparse_shape. intro S. apply andb_prop in S as [_ S]. rewrite forallb_forall in S.
+  destruct (Nat.lt_ge_cases i (length table)) as [L|L].
+  - apply andb_prop. apply S. apply nth_In. exact L.
+  - rewrite (nth_overflow _ _ L). split; reflexivity.
+Qed.
+
+(** The dense sum against line i of a well-formed sparse table is the sparse sum of that line. *)
+Lemma dsum_sparse_table (table : list (list (nat * A.t))) lines rows i g :
+  LC.sparse_shape table lines rows = true ->
+  SA.dsum rows (fun r => A.mul (LC.sparse_entry table i r) (g r)) = sparse_sum (nth i table nil) g.
+Proof.
+  intro S. destruct (sparse_shape_line table lines rows i S) as [R K]. exact (dsum_sparse rows _ g R K).
+Qed.
 
 Section Certificate.
 
