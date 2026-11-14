@@ -7,10 +7,13 @@ public import GororobaMath.CayleyDickson.TwoTerm
 /-!
 # The nullity of a two-term operand
 
-Left multiplication by `e i + e j` on `Tower R k` has a kernel of dimension
-`alignedPairCount k i j`, over every nontrivial commutative ring `R` with the
-identity as star in which `2` is a non-zero-divisor: every field of
-characteristic other than two, the integers, the rationals, the reals. The
+Left multiplication by `e i + e j` on `Tower R k` has a kernel that is a free
+module of rank `alignedPairCount k i j`, over every nontrivial commutative
+ring `R` with the identity as star in which `2` is a non-zero-divisor: the
+integers, the rationals, the reals, and every field of characteristic other
+than two taken with the identity as its star (the complex numbers with
+conjugation as star lie outside the statement). Over a field the rank is the
+dimension of the kernel. The
 basis is `Tower.basis` (the elements `e p`, indexed by `BitVec k` with the
 top bit outermost) and the signs are `Tower.negSign`, the convention of
 `gororoba_quantum/cd_core.py` (`cd_sign`).
@@ -32,7 +35,7 @@ argument with the second sign negated gives the kernel of `e i - e j`.
 * `Tower.mem_ker_mulLeft_e_add_e`, `Tower.mem_ker_mulLeft_e_sub_e`: the
   kernels in coordinates.
 * `Tower.finrank_ker_mulLeft_e_add_e`: the kernel of left multiplication by
-  `e i + e j` has dimension `alignedPairCount k i j` for all `i` and `j`,
+  `e i + e j` has rank `alignedPairCount k i j` for all `i` and `j`,
   including `i = j`, where it is `0`.
 * `Tower.finrank_ker_mulLeft_e_sub_e`: the same for `e i - e j` with `i ≠ j`.
 * `Tower.finrank_ker_pathion_1_18`, `Tower.finrank_ker_pathion_1_18_int`:

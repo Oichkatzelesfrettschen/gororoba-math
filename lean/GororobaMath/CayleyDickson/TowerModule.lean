@@ -184,7 +184,7 @@ instance (k : ℕ) : Module.Free R (Tower R k) := Module.Free.of_basis (basis R 
 
 instance (k : ℕ) : Module.Finite R (Tower R k) := Module.Finite.of_basis (basis R k)
 
-/-- `Tower R k` has dimension `2 ^ k` over a nontrivial commutative ring. -/
+/-- `Tower R k` has rank `2 ^ k` over a nontrivial commutative ring. -/
 theorem finrank_eq [Nontrivial R] (k : ℕ) : finrank R (Tower R k) = 2 ^ k := by
   rw [finrank_eq_card_basis (basis R k), Fintype.card_congr BitVec.equivFin.toEquiv,
     Fintype.card_fin]
