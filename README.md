@@ -26,9 +26,10 @@ theorems hold over every field of characteristic zero.
 `rocq/open` is the proof tree of gororoba-open (350 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite), and `rocq/quantum`
-the 27 proof files of gororoba-quantum (the Cayley-Dickson tower over
-ordered domains and commutative rings with its basis, base change and
-order-three map, basis-sign and associator normal
+the 29 proof files of gororoba-quantum (the Cayley-Dickson tower over
+ordered domains and commutative rings with its basis, base change,
+order-three map and the kernel certificates of the canonical `A_5`
+points, basis-sign and associator normal
 forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
 and the terminal-channel separation). Both arrived with their history;
 `rocq/open/README.md` describes that tree in the words of its origin, where
@@ -83,7 +84,7 @@ sh ci/check_rocq.sh
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (350 and 27
+`rocq/quantum` is listed in its `_RocqProject` and compiles (350 and 29
 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
@@ -92,7 +93,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth.
 
-The script then re-checks all 377 project-listed modules with Rocq's kernel
+The script then re-checks all 379 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
