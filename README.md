@@ -23,7 +23,7 @@ theorems hold over every field of characteristic zero.
 
 ## Rocq trees
 
-`rocq/open` is the proof tree of gororoba-open (350 sources under
+`rocq/open` is the proof tree of gororoba-open (351 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite), and `rocq/quantum`
 the 29 proof files of gororoba-quantum (the Cayley-Dickson tower over
@@ -84,7 +84,7 @@ sh ci/check_rocq.sh
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (350 and 29
+`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 29
 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
@@ -93,7 +93,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth.
 
-The script then re-checks all 379 project-listed modules with Rocq's kernel
+The script then re-checks all 380 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
