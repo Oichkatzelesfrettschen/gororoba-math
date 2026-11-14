@@ -96,14 +96,24 @@ gororoba repository shares; this file governs where the two differ.
 - On the workstations `lean/.lake` is a symbolic link, made before the first
   `lake` command, to a Lake tree outside the checkout, since the Mathlib
   build tree is about 7 GB and build trees stay outside checkouts. The
-  primary checkout and each session worktree have their own Lake tree, and
-  the `packages` entry of a worktree's tree is a symbolic link to the
-  `packages` directory of the primary checkout's tree, so the worktrees
-  share one Mathlib and each keeps its own `build/`. `ci/check.sh` builds
-  the library and then audits the compiled objects in a second step, and a
-  `build/` that two worktrees share lets a build in one replace the objects
-  the other audits or elaborates against. The build-host record of
-  gororoba-infrastructure names the directories.
+  primary checkout's tree holds the packages, fetched there first with
+  `lake exe cache get`. Each session worktree has a tree of its own, made
+  in three steps, with `TREE` a new directory outside every checkout and
+  `PRIMARY_TREE` the primary checkout's tree: `mkdir -p "$TREE"`,
+  `ln -s "$PRIMARY_TREE/packages" "$TREE/packages"`, and, from the
+  worktree root, `ln -s "$TREE" lean/.lake`. The worktrees then share one
+  Mathlib and each keeps its own `build/`. `ci/check.sh` builds the library
+  and then audits the compiled objects in a second step, and a `build/`
+  that two worktrees share lets a build in one replace the objects the
+  other audits or elaborates against.
+- The shared `packages` link holds only while the worktree's
+  `lean/lean-toolchain` and `lean/lake-manifest.json` equal the primary
+  checkout's. A worktree that changes either, the toolchain bump above
+  included, replaces the link with a `packages` directory of its own before
+  `lake update` or `lake exe cache get`, since both rewrite the packages.
+- `git worktree remove` deletes the `lean/.lake` link and leaves the tree
+  it pointed at; the tree is removed with its worktree. The build-host
+  record of gororoba-infrastructure names the directories.
 
 ## Landing
 
