@@ -1,0 +1,7 @@
+# Receipts and audit records of gororoba-open and gororoba-quantum cite
+# these files by the sha256 of their bytes, so a checkout on any platform
+# keeps the bytes of the index.
+rocq/**/*.v -text
+rocq/open/_RocqProject -text
+rocq/open/evidence/quantum_observables/frozen/** -text
+rocq/open/opam/qualified-rocq-9.3.export -text whitespace=-blank-at-eof,-blank-at-eol
