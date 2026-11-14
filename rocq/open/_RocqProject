@@ -342,6 +342,7 @@ theories/CDTowerMatrixAdapter.v
 theories/CDPureDoublingKernel.v
 theories/CDConcreteTowerAdapter.v
 theories/CDTowerKernelSwap.v
+theories/CDTowerZeroDivisors.v
 theories/MorenoSedenionInstance.v
 theories/MorenoTowerInstance.v
 theories/MorenoSwapIndependence.v
