@@ -13,7 +13,7 @@
     ([NAME_relation_coefficients]), and the six columns are linearly independent where h(d) is a nonzero
     divisor ([NAME_columns_independent]). Over the Gaussian integers themselves d is nonzero
     ([NAME_columns_independent_gaussian]); independence over Q(i), which is rank 6, follows by clearing
-    denominators. *)
+    denominators, a step in prose: no theorem of this file models Q(i). *)
 
 From Stdlib Require Import Lia PeanoNat ZArith List.
 Require Import CdTowerRing CdTowerRingBaseChange GaussianIntegerHom MatrixLeftInverseCertificate.
