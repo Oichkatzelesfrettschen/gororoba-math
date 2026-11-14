@@ -11,14 +11,16 @@
     [structure_source] binds to the product of CdTowerRing.v. [back] holds a 256 x 242 matrix P by its nonzero
     entries (column, value), [vectors] the 256 x 14 matrix V of the coordinates of the 14 tables, and
     [functionals] the matrix d C for the left inverse C of V of CdTowerG2Derivations.v and the scalar
-    d = [scalar]. [splitting] checks P M + V (d C) = d I on the 65536 entries by [vm_compute], each sum over
-    the rows of M taken over the nonzero entries of a line of P ([dsum_sparse_table] of
-    MatrixSplittingCertificate.v).
+    d = [scalar]. [splitting] checks P M + V (d C) = d I on the 65536 entries by [vm_compute], each sum
+    taken over the nonzero entries of a line of P against the sparse rows of M ([matrix_table], bound to the
+    matrix by [matrix_table_source]) and over the nonzero entries of a column of d C ([functional_columns],
+    [functional_columns_source]), through [dsum_sparse_table] of MatrixSplittingCertificate.v.
 
     Over every commutative ring D that receives a homomorphism h from the Gaussian integers, a linear map F
     that satisfies the Leibniz rule on the pairs of basis units then has
-    h(d) F(x) = sum_t c_t D_t(x) for all x, with D_t the map of the t-th table and c_t = [span_coefficient]
-    ([derivations_spanned]); where h(d) has an inverse u, F = sum_t (u c_t) D_t
+    h(d) F(x) = sum_(t < 14) c_t D_(t+1)(x) for all x, with D_(t+1) the map of [table t] (the table images_(t+1)
+    of CdTowerG2Derivations.v) and c_t = [span_coefficient t] ([derivations_spanned]); where h(d) has an inverse
+    u, F = sum_(t < 14) (u c_t) D_(t+1)
     ([derivations_spanned_invertible]). *)
 
 From Stdlib Require Import Ring Lia PeanoNat ZArith List Bool.
@@ -469,6 +471,42 @@ Definition vectors (i t : nat) : GaussianIntegers.t := TA.coord 4 (table t (i / 
 Definition functionals (t j : nat) : GaussianIntegers.t :=
   GaussianIntegers.mul G2SpanTables.scalar (SC.LC.sparse_entry G2DerivationTables.independence_left t j).
 
+(** [matrix_table] holds each row of the matrix by its nonzero entries (column, value), and
+    [functional_columns] each column of d C by its nonzero entries (row, value); both are computed here from
+    [matrix] and [functionals], and the two source lemmas bind every entry of the tables to them. *)
+Definition matrix_table : list (list (nat * (Z * Z))) :=
+  Eval vm_compute in
+    map (fun r => filter (fun item => negb (gaussian_eqb (snd item) GaussianIntegers.zero))
+                         (map (fun j => (j, matrix r j)) (seq 0 256))) (seq 0 242).
+
+Definition functional_columns : list (list (nat * (Z * Z))) :=
+  Eval vm_compute in
+    map (fun j => filter (fun item => negb (gaussian_eqb (snd item) GaussianIntegers.zero))
+                         (map (fun t => (t, functionals t j)) (seq 0 14))) (seq 0 256).
+
+Lemma matrix_table_source : forall r j, (r < 242)%nat -> (j < 256)%nat ->
+  SC.line_entry (nth r matrix_table []) j = matrix r j.
+Proof.
+  intros r j Hr Hj. apply gaussian_eqb_eq.
+  assert (E : forall_below 242 (fun r => forall_below 256 (fun j =>
+                gaussian_eqb (SC.line_entry (nth r matrix_table []) j) (matrix r j))) = true)
+    by (vm_compute; reflexivity).
+  exact (forall_below_spec _ _ (forall_below_spec _ _ E r Hr) j Hj).
+Qed.
+
+Lemma functional_columns_source : forall t j, (t < 14)%nat -> (j < 256)%nat ->
+  SC.line_entry (nth j functional_columns []) t = functionals t j.
+Proof.
+  intros t j Ht Hj. apply gaussian_eqb_eq.
+  assert (E : forall_below 14 (fun t => forall_below 256 (fun j =>
+                gaussian_eqb (SC.line_entry (nth j functional_columns []) t) (functionals t j))) = true)
+    by (vm_compute; reflexivity).
+  exact (forall_below_spec _ _ (forall_below_spec _ _ E t Ht) j Hj).
+Qed.
+
+Lemma functional_columns_well_formed : SC.LC.sparse_shape functional_columns 256 14 = true.
+Proof. vm_compute. reflexivity. Qed.
+
 Lemma splitting : forall i j, (i < 256)%nat -> (j < 256)%nat ->
   GaussianIntegers.add
     (SC.SA.dsum 242 (fun r => GaussianIntegers.mul (back i r) (matrix r j)))
@@ -476,14 +514,26 @@ Lemma splitting : forall i j, (i < 256)%nat -> (j < 256)%nat ->
   if Nat.eqb j i then G2SpanTables.scalar else GaussianIntegers.zero.
 Proof.
   intros i j Hi Hj.
-  pose proof (SC.dsum_sparse_table G2SpanTables.back 256 242 i (fun r => matrix r j)
-                (proj2 tables_well_formed)) as S.
-  cbn beta in S. unfold back. rewrite S. clear S. apply gaussian_eqb_eq.
+  rewrite (SC.SA.dsum_ext 242 _
+             (fun r => GaussianIntegers.mul (SC.LC.sparse_entry G2SpanTables.back i r)
+                                            (SC.line_entry (nth r matrix_table []) j))).
+  2: { intros r Hr. unfold back. rewrite (matrix_table_source r j Hr Hj). reflexivity. }
+  rewrite (SC.SA.dsum_ext 14 _
+             (fun t => GaussianIntegers.mul (SC.LC.sparse_entry functional_columns j t) (vectors i t))).
+  2: { intros t Ht. change (SC.LC.sparse_entry functional_columns j t)
+         with (SC.line_entry (nth j functional_columns []) t).
+       rewrite (functional_columns_source t j Ht Hj). apply (Rmul_comm GaussianIntegers.ring_th). }
+  pose proof (SC.dsum_sparse_table G2SpanTables.back 256 242 i
+                (fun r => SC.line_entry (nth r matrix_table []) j) (proj2 tables_well_formed)) as S1.
+  pose proof (SC.dsum_sparse_table functional_columns 256 14 j (fun t => vectors i t)
+                functional_columns_well_formed) as S2.
+  cbn beta in S1, S2. rewrite S1, S2. clear S1 S2. apply gaussian_eqb_eq.
   assert (E : forall_below 256 (fun i => forall_below 256 (fun j =>
                 gaussian_eqb
                   (GaussianIntegers.add
-                     (SC.sparse_sum (nth i G2SpanTables.back []) (fun r => matrix r j))
-                     (SC.SA.dsum 14 (fun t => GaussianIntegers.mul (vectors i t) (functionals t j))))
+                     (SC.sparse_sum (nth i G2SpanTables.back [])
+                        (fun r => SC.line_entry (nth r matrix_table []) j))
+                     (SC.sparse_sum (nth j functional_columns []) (fun t => vectors i t)))
                   (if Nat.eqb j i then G2SpanTables.scalar else GaussianIntegers.zero))) = true)
     by (vm_compute; reflexivity).
   exact (forall_below_spec _ _ (forall_below_spec _ _ E i Hi) j Hj).
