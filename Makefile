@@ -38,7 +38,10 @@ MARKER := $(ROCQ_TREE)/.gororoba-math-build-tree
 OPAM := opam exec --switch=$(ROCQ_SWITCH) --
 # rsync keeps a receiver file that an exclude pattern matches, so a sync
 # leaves the compiled objects and generated makefiles of the build tree in
-# place, and make recompiles only the sources whose times changed.
+# place. The sync compares contents (--checksum) and copies no modification
+# time, so a source whose bytes changed carries the time of the sync, later
+# than any object compiled from its previous bytes, and an unchanged source
+# keeps its time; make recompiles the changed sources and their dependents.
 ROCQ_PRODUCTS := '*.vo' '*.vok' '*.vos' '*.glob' '*.aux' '.*.cache' \
 	'Makefile.rocq' 'Makefile.rocq.*' '.Makefile.rocq*.d' \
 	'/open/html/' '/open/metrics/' '/quantum-build.log' \
@@ -68,7 +71,7 @@ rocq-sync:
 	fi
 	mkdir -p "$(ROCQ_TREE)"
 	touch "$(MARKER)"
-	rsync -a --delete $(foreach pattern,$(ROCQ_PRODUCTS),--exclude=$(pattern)) rocq/ "$(ROCQ_TREE)/"
+	rsync -rlpgoD --checksum --delete $(foreach pattern,$(ROCQ_PRODUCTS),--exclude=$(pattern)) rocq/ "$(ROCQ_TREE)/"
 	@find "$(ROCQ_TREE)" -name '*.vo' | while IFS= read -r object; do \
 		stem=$${object%.vo}; \
 		[ -f "$$stem.v" ] || rm -f -- "$$stem.vo" "$$stem.vok" "$$stem.vos" "$$stem.glob" \
@@ -82,15 +85,20 @@ rocq-open: rocq-sync
 # search of the log, which holds the output of the makefile generator and
 # of the build, is the check that fails the target. A source that warned
 # has left its object behind, and a second run would find it up to date and
-# print nothing, so a rejected build removes the objects of rocq/quantum.
+# print nothing, so a log with a warning removes the objects of rocq/quantum,
+# whether the build itself passed or failed. The build runs with
+# --no-print-directory, which keeps the build directory's own name out of
+# the searched log.
 rocq-quantum: rocq-open
 	(cd "$(ROCQ_TREE)/quantum" && $(OPAM) rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq) \
 		>"$(ROCQ_TREE)/quantum-build.log" 2>&1 || { cat "$(ROCQ_TREE)/quantum-build.log" >&2; exit 1; }
-	$(OPAM) make -C "$(ROCQ_TREE)/quantum" -f Makefile.rocq --jobs=$(ROCQ_JOBS) >>"$(ROCQ_TREE)/quantum-build.log" 2>&1 || \
-		{ tail -n 60 "$(ROCQ_TREE)/quantum-build.log" >&2; exit 1; }
-	@if grep -n '[Ww]arning' "$(ROCQ_TREE)/quantum-build.log" >&2; then \
+	@status=0; $(OPAM) make --no-print-directory -C "$(ROCQ_TREE)/quantum" -f Makefile.rocq --jobs=$(ROCQ_JOBS) \
+		>>"$(ROCQ_TREE)/quantum-build.log" 2>&1 || status=$$?; \
+	if [ "$$status" -ne 0 ]; then tail -n 60 "$(ROCQ_TREE)/quantum-build.log" >&2; fi; \
+	if grep -n '[Ww]arning' "$(ROCQ_TREE)/quantum-build.log" >&2; then \
 		find "$(ROCQ_TREE)/quantum" \( -name '*.vo' -o -name '*.vok' -o -name '*.vos' -o -name '*.glob' \) -exec rm -f -- {} +; \
-		echo "rocq-quantum: the makefile generator or the build printed a warning; the objects of rocq/quantum are removed" >&2; exit 1; fi
+		echo "rocq-quantum: the makefile generator or the build printed a warning; the objects of rocq/quantum are removed" >&2; exit 1; fi; \
+	exit "$$status"
 	@echo "rocq-quantum: compiled $$(grep -c '\.v$$' rocq/quantum/_RocqProject) listed sources, no warning"
 
 rocq: rocq-quantum
