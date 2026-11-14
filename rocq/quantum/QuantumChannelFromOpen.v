@@ -1,4 +1,5 @@
-(** The quantum terminal-channel theorems, rational and real, each proved by
+(** The quantum theorem observed_means_exclude_common_binary_channel, in its
+    rational and its real form, each proved by
     one instantiation of the general theorem of the open tree: the hardware
     means are the outputs, the replay means the inputs, the observed
     fractions the centers and mean_radius all four radii. Each statement
