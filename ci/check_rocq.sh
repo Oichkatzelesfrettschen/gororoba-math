@@ -298,7 +298,7 @@ echo "check_rocq: rocq/quantum compiled all $(grep -c '\.v$' _RocqProject) liste
 (
   cd "$work/rocq/warning-calibration"
   run_logged "$work/calibration-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
-    -Q . "" -R ../open/verified OpenGororobaVerified DeclaredAxiom
+    -Q . "" -R ../open/verified OpenGororobaVerified -Q ../open/theories OpenGororoba DeclaredAxiom
 )
 checked_axioms "$work/calibration-kernel.log" | grep -q -x -F DeclaredAxiom.calibration_axiom || {
   echo "check_rocq: rocq check -o did not report a declared axiom, so the ledger comparison cannot see one" >&2

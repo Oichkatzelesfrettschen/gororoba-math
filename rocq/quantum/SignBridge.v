@@ -1,7 +1,8 @@
 (** One sign function in four Rocq spellings. CdTowerBasisSign.sigma (the
     quantum tree, Z-valued, top bit first) equals
     OpenGororoba.M3IsAssociator.cd_sign_fuel at dimension 2^k for every
-    fuel and every index pair, by induction on k: the two recursions take
+    fuel of at least k and every index pair, by induction on k (that
+    spelling returns 1 on empty fuel): the two recursions take
     the same four top-bit branches with the same arguments, so no index
     bound enters. It equals OpenGororobaVerified.C1474_FuelAdequacy.cd_sign_fuel
     (the function StiefelWitnessInvertible.v reads) whenever the fuel exceeds

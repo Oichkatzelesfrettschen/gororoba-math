@@ -55,11 +55,17 @@ as `OpenGororoba` for them. `TowerBridge.v` maps the real tower of
 `OpenGororoba.RecursiveCDTower` onto the real instance of the tower of
 `CdTowerDomain`, with a two-sided inverse, and the map preserves
 multiplication (`to_quantum_mul`). `SignBridge.v` proves that the sign
-functions of the two trees agree at every level (`open_fuel_sign_sigma`,
-`verified_fuel_sign_sigma`, `open_cube_sign_sigma`,
-`python_cd_sign_returns_open_sign`). `QuantumChannelFromOpen.v` derives
-the terminal-channel theorems of `rocq/quantum` as instances of the
-general theorem of `rocq/open`.
+functions of the two trees agree at every level `k`, each under the
+bound its spelling needs: the fuel-indexed function of
+`rocq/open/theories` for fuel at least `k` (`open_fuel_sign_sigma`), that
+of `rocq/open/verified` for fuel above `k` (`verified_fuel_sign_sigma`),
+the Boolean sign law for indices below `2^k` (`open_cube_sign_sigma`),
+and the Python semantics of `cd_sign` for such indices and fuel at least
+`k + 7` (`python_cd_sign_returns_open_sign`). `QuantumChannelFromOpen.v`
+derives `observed_means_exclude_common_binary_channel` of `rocq/quantum`,
+in its rational and its real form, from the general theorem
+`separated_centers_exclude_common_binary_channel` of `rocq/open`; the
+other statements of the two terminal-channel files are not rederived.
 
 ## Toolchain
 
@@ -110,7 +116,7 @@ sh ci/check_rocq.sh
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 33
+`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 36
 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
@@ -119,7 +125,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth.
 
-The script then re-checks all 384 project-listed modules with Rocq's kernel
+The script then re-checks all 387 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
