@@ -20,8 +20,10 @@ CdTowerCanonicalKernels.v
 CdTowerDomain.v
 CdTowerDomainR.v
 CdTowerDomainZ.v
+CdTowerG2DerivationSpan.v
 CdTowerG2Derivations.v
 CdTowerKernelCertificate.v
+CdTowerLeibnizSystem.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v
@@ -32,6 +34,7 @@ CdTwistedProduct.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
 MatrixLeftInverseCertificate.v
+MatrixSplittingCertificate.v
 StiefelWitnessInvertible.v
 TargetFlipN21.v
 TerminalChannelSeparation.v
