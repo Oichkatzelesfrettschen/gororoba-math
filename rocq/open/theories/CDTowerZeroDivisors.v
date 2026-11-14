@@ -1,6 +1,8 @@
 (** Zero divisors and one-sided inverses of the recursive real Cayley-Dickson tower.
 
-    Consequences of the kernel swap of CDTowerKernelSwap.v, at every order:
+    Statements at every order.  Four rest on CDTowerKernelSwap.v, the first
+    two on tower_conj_left_zero (a z = 0 gives conj(a) z = 0) and the last
+    two on the kernel swap tower_kernel_swap:
 
     - a z = 0 makes a and z orthogonal for the coordinate inner product;
     - a z = 0 with z nonzero makes a pure, re(a) = 0 (Biss, Dugger and
@@ -9,12 +11,18 @@
     - at order n + 1, a z = 0 with z nonzero makes a orthogonal to the unit
       (0, 1) adjoined by the last doubling as well (Biss, Dugger and Isaksen,
       Lemma 9.5; Moreno, Corollary 1.9);
-    - a conj(a) = conj(a) a = <a, a> 1, and a b = 1 gives b a = 1, although
-      a right inverse is unique only up to the kernel of z -> a z.
+    - a b = 1 exactly when b a = 1.
 
-    The inner product is positive definite over the reals, which is where
-    the arguments use the coefficient field.  No step uses associativity,
-    alternativity or multiplicativity of the norm. *)
+    Two use neither:
+
+    - a conj(a) = conj(a) a = <a, a> 1, by induction on the order;
+    - given a b = 1, a b' = 1 exactly when a (b' - b) = 0, so the right
+      inverses of a are the coset of b by the kernel of z -> a z.
+
+    The arguments use the reals in three places: the inner product is
+    positive definite, a product of scalars vanishes only with a factor, and
+    2 is nonzero.  No step uses associativity, alternativity or
+    multiplicativity of the norm. *)
 
 From Stdlib Require Import Reals Lra Lia PeanoNat.
 From OpenGororoba Require Import RecursiveCDTower CDTowerKernelSwap.
@@ -232,9 +240,10 @@ Proof.
  rewrite tower_conj_antimorphism, !tower_conj_involution, tower_conj_one in restored. exact restored.
 Qed.
 
-(** The right inverses of a form a coset of the kernel of z -> a z, so a
-    zero divisor with a right inverse would have several; the two-sided
-    statement above holds for each of them. *)
+(** The right inverses of a form a coset of the kernel of z -> a z.  Every
+    nonzero a has the inverse conj(a) / <a, a> (tower_mul_conj), so a zero
+    divisor has several right inverses, and the two-sided statement above
+    holds for each of them. *)
 
 Theorem tower_right_inverse_coset order operand inverse other :
  tower_mul order operand inverse = tower_one order ->
