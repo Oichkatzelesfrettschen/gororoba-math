@@ -47,6 +47,8 @@ argument with the second sign negated gives the kernel of `e i - e j`.
 * `Tower.kerEquivFun_e_add_e`, `Tower.free_ker_mulLeft_e_add_e` and their
   `e_sub_e` forms: the kernel is linearly equivalent to the functions on
   the aligned-pair representatives, hence a free module.
+* `Tower.kerEquivAddSub`: for `i ≠ j` the kernels of `e i + e j` and of
+  `e i - e j` are linearly equivalent.
 * `Tower.finrank_ker_pathion_1_18`, `Tower.finrank_ker_pathion_1_18_int`:
   the `A_5` operand `e_1 + e_18` has nullity twelve over `ℚ` and over `ℤ`.
 -/
@@ -395,6 +397,19 @@ module when `2` is a non-zero-divisor. -/
 theorem free_ker_mulLeft_e_sub_e (h2 : IsLeftRegular (2 : R)) (k : ℕ) {i j : BitVec k}
     (hij : i ≠ j) : Module.Free R (LinearMap.ker (mulLeft R k (e R k i - e R k j))) :=
   Module.Free.of_equiv (kerEquivFun_e_sub_e h2 k hij).symm
+
+/-- For `i ≠ j` the kernels of left multiplication by `e i + e j` and by
+`e i - e j` are linearly equivalent: negating both signs of a pair keeps
+its two relations in agreement, so both kernels are the functions on the
+same representatives. -/
+noncomputable def kerEquivAddSub (h2 : IsLeftRegular (2 : R)) (k : ℕ) {i j : BitVec k}
+    (hij : i ≠ j) :
+    LinearMap.ker (mulLeft R k (e R k i + e R k j)) ≃ₗ[R]
+      LinearMap.ker (mulLeft R k (e R k i - e R k j)) :=
+  (kerEquivFun_e_add_e h2 k i j).trans
+    ((LinearEquiv.funCongrLeft R R
+        (Equiv.subtypeEquivRight (fun x => by simp [IsPairRep]))).trans
+      (kerEquivFun_e_sub_e h2 k hij).symm)
 
 /-- The nullity of left multiplication by `e i + e j` is the number of
 aligned pairs, at every level `k` and for all indices `i` and `j`, over
