@@ -11,10 +11,10 @@ Left multiplication by `e i + e j` carries the pair of basis elements
 `{e (i ^^^ x), e (j ^^^ x)}`, since `i ^^^ x' = j ^^^ x`. On that pair it is
 a two-by-two matrix of signs. When the pair is *aligned*, `e x + e x'` or
 `e x - e x'` lies in its kernel; this file proves that implication. The
-converse, that an unaligned pair has determinant `±2`, belongs with the
-module structure of the tower. gororoba-quantum reads the nullity of a
-two-term operand with `i ≠ j` as its number of aligned pairs
-(`docs/evidence/pathion-kernel-map/README.md`,
+converse, that an unaligned pair has determinant `±2`, and the resulting
+nullity are in `GororobaMath.CayleyDickson.TwoTermNullity`. gororoba-quantum
+reads the nullity of a two-term operand with `i ≠ j` as its number of
+aligned pairs (`docs/evidence/pathion-kernel-map/README.md`,
 `gororoba_quantum/pathion_kernel_map.py`).
 
 ## Main results
@@ -35,10 +35,10 @@ two-term operand with `i ≠ j` as its number of aligned pairs
 
 Each aligned pair contributes one explicit zero product, and the vectors
 `e x ± e x'` of different pairs have disjoint index sets. No nullity is
-defined in this file. hypothesis: over a field of characteristic other than
-two and for `i ≠ j`, the nullity of left multiplication by `e i + e j`
-equals `alignedPairCount`; the statement and its proof need the module
-structure of the tower.
+defined in this file; `Tower.finrank_ker_mulLeft_e_add_e` proves that the
+nullity of left multiplication by `e i + e j` equals `alignedPairCount`
+over every nontrivial commutative ring with the identity as star in which
+`2` is a non-zero-divisor.
 -/
 
 @[expose] public section
