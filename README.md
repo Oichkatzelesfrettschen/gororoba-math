@@ -21,6 +21,18 @@ The tower theorems hold for every level and every coefficient ring, so they
 cover the 64- and 128-dimensional runs as well as `A_5`. The estimator
 theorems hold over every field of characteristic zero.
 
+## Rocq trees
+
+`rocq/open` is the proof tree of gororoba-open (347 sources under
+`theories/` and `verified/`, with checkpoints, extraction targets and the
+frozen quantum-observable evidence its bindings cite), and `rocq/quantum`
+the 24 proof files of gororoba-quantum (the Cayley-Dickson tower over
+ordered domains and commutative rings, basis-sign and associator normal
+forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
+and the terminal-channel separation). Both arrived with their history;
+`rocq/open/README.md` describes that tree in the words of its origin, where
+it sat at `proofs/`.
+
 ## Toolchain
 
 - Lean: the release `lean/lean-toolchain` names, installed through
@@ -28,7 +40,11 @@ theorems hold over every field of characteristic zero.
   fetches the release on first use).
 - Mathlib: the tag `lean/lakefile.toml` names, resolved to the commits of
   `lean/lake-manifest.json`.
-- `shellcheck` for the gate's shell lint.
+- `shellcheck`, `ruff` and `actionlint` for the gate's lint of shell scripts,
+  Python files and workflows.
+- Rocq: opam with the switch `sh ci/install_rocq.sh` builds (OCaml 5.5.1,
+  rocq-core 9.3.0, rocq-stdlib 9.2.0, Flocq, MathComp, Hierarchy Builder,
+  Elpi, Equations, ExtLib), `make`, and `rustc` for the admission scanner.
 
 ```sh
 cd lean
@@ -36,11 +52,13 @@ lake exe cache get   # prebuilt Mathlib, about 7 GB with the sources
 lake build
 ```
 
-The first build of the library took 161 s, and its largest process peaked
-at 6.8 GB of resident memory (`/usr/bin/time -f '%es %MkB' lake build` on a
-12-thread x86-64 workstation, Lean 4.35.0, Mathlib v4.35.0, with the
-prebuilt Mathlib present and the library then one module that imports all
-of Mathlib).
+With the prebuilt Mathlib present and no library object built, `lake build
+GororobaMath` took 29 s and its largest process peaked at 3.0 GB of resident
+memory (`/usr/bin/time -f '%es %MkB'` at commit d47b053 on a 12-thread
+x86-64 workstation, Lean 4.35.0, Mathlib v4.35.0). The first `lake build`
+after `lake exe cache get` took 161 s. A file that imports Mathlib outside
+the module system peaks at 6.8 GB, against 3.8 GB as `module` with `public
+import Mathlib`.
 
 ## Checks
 
@@ -57,6 +75,32 @@ audits every tracked module under `lean/GororobaMath/`, taken from git's
 file list, and separately requires `lean/GororobaMath.lean` to import each
 one; it also requires the audit to reject `lean/AuditFixture.lean`, which
 holds one of each.
+
+```sh
+sh ci/check_rocq.sh
+```
+
+runs the Rocq half on an export of `HEAD` outside the checkout: every
+tracked source of `rocq/open/theories`, `rocq/open/verified` and
+`rocq/quantum` is listed in its `_RocqProject` and compiles (347 and 24
+sources), `rocq/open` passes `make all check-schur-geometry check-admissions
+check-plugins extract-check`, the build log of `rocq/quantum` holds no
+warning, and none of the three directories holds `Admitted` or `admit`. Of
+the eleven sources elsewhere under `rocq/open`, those make targets compile
+seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
+`ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
+uncompiled, and the script names all eleven and fails on a twelfth.
+
+The script then re-checks all 371 project-listed modules with Rocq's kernel
+checker and compares the axioms it reports with a ledger in each tree.
+`rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
+library: functional extensionality, excluded middle and the two axioms of
+the classical real numbers. `rocq/open/kernel-assumptions.txt` holds 137:
+39 that six modules of the tree declare (`SStructuralGaps`,
+`CarlsonIntegrals`, `TightBindingTopology`, `MorenoSedenionInstance`,
+`CDFidelity`, `C958_ZDGraphTopology`), five of the standard library, and 93
+primitive operations and their specifications from Rocq's core library
+(floats, 63-bit integers, strings).
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_signs.sh
@@ -77,4 +121,7 @@ needs that repository's Python packages.
 
 ## License
 
-Apache-2.0, in [LICENSE](LICENSE).
+Apache-2.0, in [LICENSE](LICENSE), for the library and the proof trees. The
+package descriptions, the patch and the switch export under `rocq/open/opam`
+describe third-party Rocq libraries and carry the license each `opam` entry
+names.
