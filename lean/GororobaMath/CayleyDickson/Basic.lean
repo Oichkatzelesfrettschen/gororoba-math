@@ -33,6 +33,9 @@ structure, which is what lets the construction iterate
   and `star`.
 * `CayleyDickson.inl`: `a ↦ (a, 0)` preserves products, sums, `1` and `star`
   and is injective.
+* `CayleyDickson.instModule`, `CayleyDickson.linearEquivProd`: an
+  `R`-module structure on `A` acts on each half, and the double is then the
+  product `A × A` as an `R`-module.
 -/
 
 @[expose] public section
@@ -125,6 +128,44 @@ theorem inl_injective : Function.Injective (inl : A → CayleyDickson A) :=
   fun _ _ h => congrArg CayleyDickson.re h
 
 end Additive
+
+section Module
+
+variable [NonAssocRing A] {R : Type*} [Semiring R] [Module R A]
+
+/-- A scalar acts on each half. At `R = ℕ` and `R = ℤ` this is the action of
+the group structure, since `nsmul` and `zsmul` act on each half too. -/
+instance : SMul R (CayleyDickson A) := ⟨fun r x => ⟨r • x.re, r • x.im⟩⟩
+
+@[simp] theorem smul_re (r : R) (x : CayleyDickson A) : (r • x).re = r • x.re := rfl
+@[simp] theorem smul_im (r : R) (x : CayleyDickson A) : (r • x).im = r • x.im := rfl
+
+/-- The double of an `R`-module is an `R`-module, componentwise. -/
+instance instModule : Module R (CayleyDickson A) where
+  one_smul x := by ext <;> simp
+  mul_smul r s x := by ext <;> simp [mul_smul]
+  smul_zero r := by ext <;> simp
+  smul_add r x y := by ext <;> simp
+  add_smul r s x := by ext <;> simp [add_smul]
+  zero_smul x := by ext <;> simp
+
+variable (A R) in
+/-- The double is the product of its two halves as an `R`-module. -/
+def linearEquivProd : CayleyDickson A ≃ₗ[R] A × A where
+  toFun x := (x.re, x.im)
+  invFun p := ⟨p.1, p.2⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+@[simp] theorem linearEquivProd_apply (x : CayleyDickson A) :
+    linearEquivProd A R x = (x.re, x.im) := rfl
+
+@[simp] theorem linearEquivProd_symm_apply (p : A × A) :
+    (linearEquivProd A R).symm p = ⟨p.1, p.2⟩ := rfl
+
+end Module
 
 section Ring
 
