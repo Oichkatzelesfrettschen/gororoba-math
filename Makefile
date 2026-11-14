@@ -80,14 +80,17 @@ rocq-open: rocq-sync
 
 # Under -w @all rocq prints a warning and exits 0 (ci/check_rocq.sh), so the
 # search of the log, which holds the output of the makefile generator and
-# of the build, is the check that fails the target.
+# of the build, is the check that fails the target. A source that warned
+# has left its object behind, and a second run would find it up to date and
+# print nothing, so a rejected build removes the objects of rocq/quantum.
 rocq-quantum: rocq-open
 	(cd "$(ROCQ_TREE)/quantum" && $(OPAM) rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq) \
 		>"$(ROCQ_TREE)/quantum-build.log" 2>&1 || { cat "$(ROCQ_TREE)/quantum-build.log" >&2; exit 1; }
 	$(OPAM) make -C "$(ROCQ_TREE)/quantum" -f Makefile.rocq --jobs=$(ROCQ_JOBS) >>"$(ROCQ_TREE)/quantum-build.log" 2>&1 || \
 		{ tail -n 60 "$(ROCQ_TREE)/quantum-build.log" >&2; exit 1; }
 	@if grep -n '[Ww]arning' "$(ROCQ_TREE)/quantum-build.log" >&2; then \
-		echo "rocq-quantum: the makefile generator or the build printed a warning" >&2; exit 1; fi
+		find "$(ROCQ_TREE)/quantum" \( -name '*.vo' -o -name '*.vok' -o -name '*.vos' -o -name '*.glob' \) -exec rm -f -- {} +; \
+		echo "rocq-quantum: the makefile generator or the build printed a warning; the objects of rocq/quantum are removed" >&2; exit 1; fi
 	@echo "rocq-quantum: compiled $$(grep -c '\.v$$' rocq/quantum/_RocqProject) listed sources, no warning"
 
 rocq: rocq-quantum
