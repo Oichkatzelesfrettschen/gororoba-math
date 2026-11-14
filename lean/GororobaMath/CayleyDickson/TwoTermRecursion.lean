@@ -38,20 +38,23 @@ the four exceptional indices are aligned at neither level
 (`Tower.negSign_xor_right`, `Tower.negSign_swap_xor`). When `a = 0`,
 `b = 0` or `a = b`, no index is aligned.
 
-Over the reals the recursion is the specialization, to sums of two standard
-basis vectors, of results of Biss, Dugger and Isaksen, *Large annihilators
-in Cayley-Dickson algebras* (arXiv:math/0511691). Theorem 10.1 there doubles
-the annihilator of `(a, 0)` and of `(0, a)` for `a` orthogonal to `1` and
-to the unit of the last doubling, which a sum of two basis vectors other
-than those two is. Proposition 11.1 gives the annihilator of `(a, b)` the
-dimension of an anti-associator space when `a` and `b` are a quaternionic
-pair of alternative vectors, which two distinct imaginary basis vectors
-are, and Lemmas 8.7 and 8.8 double the associator dimensions of such a
-pair. Theorem 9.8 is the divisibility by `4`, and Lemmas 9.4 and 9.5 the
-vanishing at `e 0` and at the adjoined unit. The theorems of this file are
-statements about the count on bit vectors and name no ring; through
-`Tower.finrank_ker_mulLeft_e_add_e` they describe the kernel rank over
-every ring of the first paragraph.
+Over the reals the recursion matches results of Biss, Dugger and Isaksen,
+*Large annihilators in Cayley-Dickson algebras* (arXiv:math/0511691), read
+on sums of two standard basis vectors. The same-half case is Theorem 10.1
+there, which doubles the annihilator of `(a, 0)` and of `(0, a)` for a
+level-`k` element `a` orthogonal to `1` and to `e (2 ^ (k - 1))`, the unit
+that the doubling to level `k` adjoins; a sum of two basis vectors other
+than those two is such an element. Theorem 9.8 is the divisibility by `4`,
+and Lemmas 9.4 and 9.5 the vanishing at `e 0` and at the adjoined unit. For
+the mixed case, Proposition 11.1 gives the annihilator of `(e a, e b)` the
+dimension of the anti-associator space of `e a` and `e b`, a quaternionic
+pair of alternative vectors, and Lemmas 8.7 and 8.8 double the associator
+dimensions of such a pair. hypothesis: `dim Ass[e a, e b] = 2 * N k a b + 4`
+for distinct imaginary basis vectors, the identity under which those lemmas
+read as the mixed case (computed for `k ≤ 7`; no associator space is
+defined here). The theorems of this file are statements about the count on
+bit vectors and name no ring; through `Tower.finrank_ker_mulLeft_e_add_e`
+they describe the kernel rank over every ring of the first paragraph.
 
 ## Main results
 
@@ -523,7 +526,7 @@ theorem alignedPairCount_top_right (k : ℕ) (i : BitVec (k + 1)) :
     alignedPairCount (k + 1) i (BitVec.cons true 0#k) = 0 := by
   rw [alignedPairCount_comm, alignedPairCount_top_left]
 
-theorem four_dvd_two_pow_or_lt {k : ℕ} : 2 ^ k < 4 ∨ 4 ∣ 2 ^ k := by
+theorem two_pow_lt_four_or_four_dvd {k : ℕ} : 2 ^ k < 4 ∨ 4 ∣ 2 ^ k := by
   rcases Nat.lt_or_ge k 2 with hk | hk
   · left
     calc 2 ^ k < 2 ^ 2 := Nat.pow_lt_pow_right (by norm_num) hk
@@ -537,7 +540,7 @@ theorem four_dvd_alignedPairCount : ∀ (k : ℕ) (i j : BitVec k), 4 ∣ aligne
   | 0, i, j => by rw [Subsingleton.elim i j, alignedPairCount_self]; exact dvd_zero 4
   | k + 1, i, j => by
     have ih := four_dvd_alignedPairCount k (i.setWidth k) (j.setWidth k)
-    have hp := four_dvd_two_pow_or_lt (k := k)
+    have hp := two_pow_lt_four_or_four_dvd (k := k)
     rcases alignedPairCount_succ_cases i j with h | h | h <;> omega
 
 /-- An aligned-pair count at level `k` is `0` or at most `2 ^ (k - 1) - 4`. -/

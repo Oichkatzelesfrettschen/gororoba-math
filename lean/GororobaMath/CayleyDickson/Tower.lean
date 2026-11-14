@@ -367,12 +367,6 @@ theorem negSign_xor_right : ∀ (k : ℕ) (p q : BitVec k),
     by_cases ha : a = 0#k <;> by_cases hc : c = 0#k <;> by_cases hac : a = c <;>
       cases P <;> cases Q <;> cases negSign k a c <;> simp_all
 
-/-- The sign of `e k p * e k (p ^^^ q)` is opposite to that of
-`e k p * e k q` for `p ≠ 0`. -/
-theorem negSign_xor_right_of_ne_zero (k : ℕ) {p : BitVec k} (hp : p ≠ 0#k) (q : BitVec k) :
-    negSign k p (p ^^^ q) = !negSign k p q := by
-  rw [negSign_xor_right, decide_eq_true hp, Bool.true_xor]
-
 /-- Two distinct basis elements other than `1` anticommute. -/
 theorem e_mul_e_anticomm (k : ℕ) {p q : BitVec k} (hp : p ≠ 0#k) (hq : q ≠ 0#k)
     (hpq : p ≠ q) :
