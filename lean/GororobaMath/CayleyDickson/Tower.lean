@@ -325,9 +325,6 @@ theorem cons_eq_zero_iff {k : ℕ} (b : Bool) (p : BitVec k) :
     apply BitVec.eq_of_toNat_eq
     simp
 
-theorem xor_eq_left_iff {k : ℕ} (p q : BitVec k) : p ^^^ q = p ↔ q = 0#k := by
-  simp
-
 /-- The sign of a product at level `k + 1` is the sign of the product of
 the low parts, corrected by the top bits: a transposition of the low
 factors when the right factor lies in the second half, and the conjugation
@@ -365,7 +362,7 @@ theorem negSign_xor_right : ∀ (k : ℕ) (p q : BitVec k),
       ⟨_, _, (BitVec.cons_msb_setWidth q).symm⟩
     rw [BitVec.cons_xor_cons, negSign_cons, negSign_cons, negSign_xor_right k a c]
     have h1 : (a ^^^ c = 0#k) ↔ a = c := BitVec.xor_eq_zero_iff
-    have h2 : (a = a ^^^ c) ↔ c = 0#k := eq_comm.trans (xor_eq_left_iff a c)
+    have h2 : (a = a ^^^ c) ↔ c = 0#k := eq_comm.trans xor_left_eq_self_iff
     simp only [ne_eq, cons_eq_zero_iff, h1, h2]
     by_cases ha : a = 0#k <;> by_cases hc : c = 0#k <;> by_cases hac : a = c <;>
       cases P <;> cases Q <;> cases negSign k a c <;> simp_all

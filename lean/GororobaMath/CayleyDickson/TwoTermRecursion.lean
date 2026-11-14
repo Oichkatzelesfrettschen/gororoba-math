@@ -40,13 +40,18 @@ the four exceptional indices are aligned at neither level
 
 Over the reals the recursion is the specialization, to sums of two standard
 basis vectors, of results of Biss, Dugger and Isaksen, *Large annihilators
-in Cayley-Dickson algebras* (arXiv:math/0511691): Theorem 10.1 there doubles
-the annihilator of `(a, 0)` and of `(0, a)`, Proposition 11.1 gives the
-annihilator of `(e a, e b)` the dimension of an anti-associator space, and
-Lemmas 8.7 and 8.8 double the associator dimensions; Theorem 9.8 is the
-divisibility by `4`, and Lemmas 9.4 and 9.5 the vanishing at `e 0` and at
-the adjoined unit. The statements here are about the count, so they hold
-over every ring of the first paragraph.
+in Cayley-Dickson algebras* (arXiv:math/0511691). Theorem 10.1 there doubles
+the annihilator of `(a, 0)` and of `(0, a)` for `a` orthogonal to `1` and
+to the unit of the last doubling, which a sum of two basis vectors other
+than those two is. Proposition 11.1 gives the annihilator of `(a, b)` the
+dimension of an anti-associator space when `a` and `b` are a quaternionic
+pair of alternative vectors, which two distinct imaginary basis vectors
+are, and Lemmas 8.7 and 8.8 double the associator dimensions of such a
+pair. Theorem 9.8 is the divisibility by `4`, and Lemmas 9.4 and 9.5 the
+vanishing at `e 0` and at the adjoined unit. The theorems of this file are
+statements about the count on bit vectors and name no ring; through
+`Tower.finrank_ker_mulLeft_e_add_e` they describe the kernel rank over
+every ring of the first paragraph.
 
 ## Main results
 
@@ -109,15 +114,13 @@ theorem partner_cons {k : ℕ} (I J X : Bool) (a b y : BitVec k) :
       BitVec.cons (X ^^ I ^^ J) (partner a b y) := by
   simp [partner]
 
+/-- `xor_left_eq_self_iff` with the equation reversed. -/
 theorem self_eq_xor_left_iff {k : ℕ} (p q : BitVec k) : p = p ^^^ q ↔ q = 0#k :=
-  eq_comm.trans (xor_eq_left_iff p q)
+  eq_comm.trans xor_left_eq_self_iff
 
-theorem self_eq_xor_right_iff {k : ℕ} (p q : BitVec k) : q = p ^^^ q ↔ p = 0#k := by
-  rw [BitVec.xor_comm]
-  exact self_eq_xor_left_iff q p
-
-theorem xor_eq_right_iff {k : ℕ} (p q : BitVec k) : p ^^^ q = q ↔ p = 0#k :=
-  eq_comm.trans (self_eq_xor_right_iff p q)
+/-- `xor_right_eq_self_iff` with the equation reversed. -/
+theorem self_eq_xor_right_iff {k : ℕ} (p q : BitVec k) : q = p ^^^ q ↔ p = 0#k :=
+  eq_comm.trans xor_right_eq_self_iff
 
 /-- The sign of `e k q * e k (p ^^^ q)` is that of `e k q * e k p`, reversed
 when `q ≠ 0`. -/
@@ -141,7 +144,8 @@ theorem misaligned_partner (k : ℕ) (i j x : BitVec k) :
     cases negSign k i (partner i j x) <;> rfl
 
 /-- The number of indices whose pair under the operand `e i + e j` is
-aligned. -/
+aligned. For `i = j` every index is its own partner and counts, so the
+value is `2 ^ k`, while `alignedPairCount k i i = 0`. -/
 def alignedCount (k : ℕ) (i j : BitVec k) : ℕ :=
   (Finset.univ.filter fun x => misaligned k i j x = false).card
 
@@ -456,18 +460,27 @@ theorem alignedPairCount_succ_add {k : ℕ} {i j : BitVec (k + 1)} (h : i.msb �
     exact alignedPairCount_false_true_add hb ha (Ne.symm hab)
   · exact absurd rfl h
 
-/-- The three cases of the recursion in one statement. -/
+/-- The three cases of the recursion in one statement: each disjunct
+carries the condition on `i` and `j` under which its equation holds, and
+the three conditions exclude one another. -/
 theorem alignedPairCount_succ_cases {k : ℕ} (i j : BitVec (k + 1)) :
-    alignedPairCount (k + 1) i j = 2 * alignedPairCount k (i.setWidth k) (j.setWidth k) ∨
-      alignedPairCount (k + 1) i j = 0 ∨
-      alignedPairCount (k + 1) i j + 2 * alignedPairCount k (i.setWidth k) (j.setWidth k) + 4 =
-        2 ^ k := by
+    (i.msb = j.msb ∧
+        alignedPairCount (k + 1) i j =
+          2 * alignedPairCount k (i.setWidth k) (j.setWidth k)) ∨
+      (i.msb ≠ j.msb ∧
+        (i.setWidth k = 0#k ∨ j.setWidth k = 0#k ∨ i.setWidth k = j.setWidth k) ∧
+        alignedPairCount (k + 1) i j = 0) ∨
+      (i.msb ≠ j.msb ∧
+        ¬(i.setWidth k = 0#k ∨ j.setWidth k = 0#k ∨ i.setWidth k = j.setWidth k) ∧
+        alignedPairCount (k + 1) i j +
+          2 * alignedPairCount k (i.setWidth k) (j.setWidth k) + 4 = 2 ^ k) := by
   by_cases h : i.msb = j.msb
-  · exact Or.inl (alignedPairCount_succ_of_msb_eq h)
+  · exact Or.inl ⟨h, alignedPairCount_succ_of_msb_eq h⟩
   · by_cases hd : i.setWidth k = 0#k ∨ j.setWidth k = 0#k ∨ i.setWidth k = j.setWidth k
-    · exact Or.inr (Or.inl (alignedPairCount_succ_eq_zero h hd))
-    · simp only [not_or] at hd
-      exact Or.inr (Or.inr (alignedPairCount_succ_add h hd.1 hd.2.1 hd.2.2))
+    · exact Or.inr (Or.inl ⟨h, hd, alignedPairCount_succ_eq_zero h hd⟩)
+    · have hd' := hd
+      simp only [not_or] at hd'
+      exact Or.inr (Or.inr ⟨h, hd, alignedPairCount_succ_add h hd'.1 hd'.2.1 hd'.2.2⟩)
 
 /-- No two-term operand has an aligned pair at a level `k ≤ 3`. -/
 theorem alignedPairCount_eq_zero_of_le_three :
