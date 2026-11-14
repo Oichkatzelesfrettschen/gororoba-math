@@ -33,7 +33,16 @@ points, basis-sign and associator normal
 forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
 and the terminal-channel separation). Both arrived with their history;
 `rocq/open/README.md` describes that tree in the words of its origin, where
-it sat at `proofs/`.
+it sat at `proofs/`. Four sources of `rocq/quantum` began here:
+`GaussianIntegerHom.v` (the homomorphism `(a, b) -> a + b i` from the
+Gaussian integers to a commutative ring with a square root of -1),
+`MatrixLeftInverseCertificate.v` (a matrix `L` with `L M = d I` makes the
+columns of `M` independent over every ring where the image of `d` is a
+nonzero divisor), and two files generated in gororoba-quantum for the
+`A_5` program: `CdTowerG2Derivations.v` (14 derivations of the sedenions
+as Gaussian-integer tables, linearly independent over every ring that
+receives the Gaussian integers) and `A5W8ArcMatrixRanks.v` (independent
+columns of eight 24 x 6 matrices).
 
 ## Toolchain
 
@@ -84,7 +93,7 @@ sh ci/check_rocq.sh
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (350 and 29
+`rocq/quantum` is listed in its `_RocqProject` and compiles (350 and 33
 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
@@ -93,7 +102,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth.
 
-The script then re-checks all 379 project-listed modules with Rocq's kernel
+The script then re-checks all 383 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
