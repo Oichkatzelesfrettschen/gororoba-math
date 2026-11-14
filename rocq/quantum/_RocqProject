@@ -1,0 +1,29 @@
+-Q . ""
+-R ../open/verified OpenGororobaVerified
+-docroot GororobaQuantum
+-arg -w
+-arg @all
+CdAnnihilatorSymmetry.v
+CdAnnihilatorSymmetryReal.v
+CdAssociatorAnf.v
+CdAssociatorCensus.v
+CdAssociatorPointIndicators.v
+CdHalfFold.v
+CdImaginarySumConference.v
+CdSignAstTranslation.v
+CdSignPythonSemantics.v
+CdSignRowAnf.v
+CdSignSourceCertificate.v
+CdTowerBasisSign.v
+CdTowerDomain.v
+CdTowerDomainR.v
+CdTowerDomainZ.v
+CdTowerReal.v
+CdTowerRing.v
+CdTowerRingDomain.v
+CdTwistedProduct.v
+FoldAverageDescent.v
+StiefelWitnessInvertible.v
+TargetFlipN21.v
+TerminalChannelSeparation.v
+TerminalChannelSeparationReal.v
