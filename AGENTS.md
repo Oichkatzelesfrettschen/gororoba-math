@@ -119,7 +119,9 @@ gororoba repository shares; this file governs where the two differ.
   which copies `rocq/` into `BUILD_DIR/rocq` (default `build`, ignored)
   and compiles both trees there with the options of their `_RocqProject`
   files. On a workstation `build` is a symbolic link to a directory
-  outside the checkout, or `BUILD_DIR` names one, one per worktree. A
+  outside the checkout, or `BUILD_DIR` names one, one per worktree; the
+  targets refuse any other path inside the checkout, and `make clean`
+  removes only a tree that carries the marker file `rocq-sync` wrote. A
   compile inside `rocq/` leaves objects beside the sources; git ignores
   them, and `ci/check_rocq.sh` never reads them, since it exports `HEAD`.
 
