@@ -29,15 +29,24 @@ argument with the second sign negated gives the kernel of `e i - e j`.
 
 ## Main results
 
-* `CayleyDickson.finrank_pairedSubmodule`: for an involution `σ` and signs
-  `δ`, the vectors with `y x = ± y (σ x)` form a free module whose rank is
-  the number of pairs whose two relations agree.
+* `CayleyDickson.pairedEquiv`, `CayleyDickson.finrank_pairedSubmodule`: for
+  an involution `σ` and signs `δ` with `δ x = false` at every fixed point of
+  `σ`, an injective key `ι → ℕ` that picks each pair's representative, and
+  a ring in which `a + a = 0` forces `a = 0`, the vectors with
+  `y x = ± y (σ x)` are the functions on the representatives of the pairs
+  whose two relations agree; over a nontrivial ring their rank is the
+  number of those pairs. A fixed point with `δ x = true` is outside the
+  statement: it carries the relation `y x = y x` and adds a free
+  coordinate that no representative counts.
 * `Tower.mem_ker_mulLeft_e_add_e`, `Tower.mem_ker_mulLeft_e_sub_e`: the
   kernels in coordinates.
 * `Tower.finrank_ker_mulLeft_e_add_e`: the kernel of left multiplication by
   `e i + e j` has rank `alignedPairCount k i j` for all `i` and `j`,
   including `i = j`, where it is `0`.
 * `Tower.finrank_ker_mulLeft_e_sub_e`: the same for `e i - e j` with `i ≠ j`.
+* `Tower.kerEquivFun_e_add_e`, `Tower.free_ker_mulLeft_e_add_e` and their
+  `e_sub_e` forms: the kernel is linearly equivalent to the functions on
+  the aligned-pair representatives, hence a free module.
 * `Tower.finrank_ker_pathion_1_18`, `Tower.finrank_ker_pathion_1_18_int`:
   the `A_5` operand `e_1 + e_18` has nullity twelve over `ℚ` and over `ℤ`.
 -/
@@ -333,6 +342,60 @@ theorem add_self_eq_zero_of_isLeftRegular (h2 : IsLeftRegular (2 : R)) (a : R)
     (h : a + a = 0) : a = 0 :=
   h2 (show 2 * a = 2 * 0 by rw [two_mul, h, mul_zero])
 
+omit [TrivialStar R] in
+/-- The coordinate map of `Tower.basis` carries the kernel of `L` onto the
+paired submodule that describes it in coordinates. -/
+noncomputable def kerEquivPaired {k : ℕ} (L : Tower R k →ₗ[R] Tower R k) (δ : BitVec k → Bool)
+    (σ : BitVec k → BitVec k)
+    (hL : ∀ y, y ∈ LinearMap.ker L ↔ (basis R k).equivFun y ∈ pairedSubmodule σ δ) :
+    LinearMap.ker L ≃ₗ[R] pairedSubmodule (R := R) σ δ :=
+  ((basis R k).equivFun.submoduleMap (LinearMap.ker L)).trans
+    (LinearEquiv.ofEq _ _ (by
+      ext z
+      rw [Submodule.mem_map_equiv, hL, LinearEquiv.apply_symm_apply]))
+
+/-- An index fixed by the partner map, which exists only for `i = j`,
+carries the relation `y x = -y x`. -/
+theorem pairSign_eq_false_of_partner_eq_self {k : ℕ} (i j x : BitVec k)
+    (hx : partner i j x = x) : pairSign i j x = false := by
+  unfold pairSign
+  rw [(partner_eq_self_iff i j x).1 hx, (partner_eq_self_iff j j x).2 rfl]
+  simp
+
+/-- The kernel of left multiplication by `e i + e j` is linearly equivalent
+to the functions on the representatives of the pairs whose two relations
+agree, when `2` is a non-zero-divisor. -/
+noncomputable def kerEquivFun_e_add_e (h2 : IsLeftRegular (2 : R)) (k : ℕ) (i j : BitVec k) :
+    LinearMap.ker (mulLeft R k (e R k i + e R k j)) ≃ₗ[R]
+      ({x // IsPairRep (pairSign i j) BitVec.toNat (σ := partner i j) x} → R) :=
+  (kerEquivPaired _ _ _ (mem_ker_mulLeft_e_add_e i j)).trans
+    (pairedEquiv (partner_partner i j) (pairSign_eq_false_of_partner_eq_self i j)
+      (fun _ _ h => BitVec.eq_of_toNat_eq h) (add_self_eq_zero_of_isLeftRegular h2))
+
+/-- The kernel of left multiplication by `e i + e j` is a free module when
+`2` is a non-zero-divisor. -/
+theorem free_ker_mulLeft_e_add_e (h2 : IsLeftRegular (2 : R)) (k : ℕ) (i j : BitVec k) :
+    Module.Free R (LinearMap.ker (mulLeft R k (e R k i + e R k j))) :=
+  Module.Free.of_equiv (kerEquivFun_e_add_e h2 k i j).symm
+
+/-- The kernel of left multiplication by `e i - e j`, `i ≠ j`, is linearly
+equivalent to the functions on the representatives of the pairs whose two
+relations agree, when `2` is a non-zero-divisor. -/
+noncomputable def kerEquivFun_e_sub_e (h2 : IsLeftRegular (2 : R)) (k : ℕ) {i j : BitVec k}
+    (hij : i ≠ j) :
+    LinearMap.ker (mulLeft R k (e R k i - e R k j)) ≃ₗ[R]
+      ({x // IsPairRep (fun x => !pairSign i j x) BitVec.toNat (σ := partner i j) x} → R) :=
+  (kerEquivPaired _ _ _ (mem_ker_mulLeft_e_sub_e i j)).trans
+    (pairedEquiv (partner_partner i j)
+      (fun x hx => absurd ((partner_eq_self_iff i j x).1 hx) hij)
+      (fun _ _ h => BitVec.eq_of_toNat_eq h) (add_self_eq_zero_of_isLeftRegular h2))
+
+/-- The kernel of left multiplication by `e i - e j`, `i ≠ j`, is a free
+module when `2` is a non-zero-divisor. -/
+theorem free_ker_mulLeft_e_sub_e (h2 : IsLeftRegular (2 : R)) (k : ℕ) {i j : BitVec k}
+    (hij : i ≠ j) : Module.Free R (LinearMap.ker (mulLeft R k (e R k i - e R k j))) :=
+  Module.Free.of_equiv (kerEquivFun_e_sub_e h2 k hij).symm
+
 /-- The nullity of left multiplication by `e i + e j` is the number of
 aligned pairs, at every level `k` and for all indices `i` and `j`, over
 every nontrivial commutative ring with the identity as star in which `2` is
@@ -394,9 +457,14 @@ theorem finrank_ker_pathion_1_18 :
   rw [finrank_ker_mulLeft_e_add_e_of_charZero, alignedPairCount_pathion_1_18]
 
 /-- Over the integers, where `2` is not a unit, the kernel of `e_1 + e_18`
-on `A_5` has rank twelve. The statement elaborates `finrank ℤ` with the
-`ℤ`-module structure of the additive group, which `Subsingleton` identifies
-with the one of `Tower.instModule`. -/
+on `A_5` has rank twelve. At the numeral level `5` the statement
+elaborates, and its `finrank ℤ` reads the kernel through the `ℤ`-module
+structure of the additive group, which `Subsingleton` identifies with the
+one of `Tower.instModule`. At a symbolic level `k` the same statement is
+rejected by the elaborator, since `AddCommGroup.toIntModule (Tower ℤ k)`
+and `Tower.instModule ℤ k` then differ at instance transparency;
+`finrank_ker_mulLeft_e_add_e` at `R := ℤ` is the statement at every
+level. -/
 theorem finrank_ker_pathion_1_18_int :
     finrank ℤ (LinearMap.ker (mulLeft ℤ 5 (e ℤ 5 1#5 + e ℤ 5 18#5))) = 12 := by
   have h := finrank_ker_mulLeft_e_add_e (R := ℤ)
