@@ -23,6 +23,11 @@ and `BitVec.toNat_xor` carries the index law below to integers.
 * `Tower.star_e`: `star (e k p)` is `e k p` for `p = 0` and `-e k p`
   otherwise.
 * `Tower.e_mul_self`: `e k p * e k p = -1` for `p ≠ 0`.
+* `Tower.negSign_xor_right`: the sign of `e k p * e k (p ^^^ q)` is that of
+  `e k p * e k q`, reversed for `p ≠ 0`, the basis form of
+  `e p * (e p * e q) = -e q`; `Tower.negSign_swap_xor` gives the sign of the
+  reversed product, and `Tower.negSign_cons` writes every sign of level
+  `k + 1` as a sign of level `k` with top-bit corrections.
 -/
 
 @[expose] public section
