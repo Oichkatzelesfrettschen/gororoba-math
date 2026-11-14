@@ -103,8 +103,6 @@ OpenGororoba.CarlsonIntegrals.RJ
 OpenGororoba.CarlsonIntegrals.RJ_symmetric_12
 OpenGororoba.CarlsonIntegrals.RJ_symmetric_13
 OpenGororoba.CarlsonIntegrals.RJ_symmetric_23
-OpenGororoba.MorenoSedenionInstance.SedMorSkew.im_lx_eq_im_rx
-OpenGororoba.MorenoSedenionInstance.SedMorSkew.im_rx_eq_im_lx
 OpenGororoba.SStructuralGaps.abstract_sed_mul_hi
 OpenGororoba.SStructuralGaps.abstract_sed_mul_lo
 OpenGororoba.SStructuralGaps.s1_g2_stabilizer_is_su3

@@ -15,11 +15,16 @@ CdSignPythonSemantics.v
 CdSignRowAnf.v
 CdSignSourceCertificate.v
 CdTowerBasisSign.v
+CdTowerCanonicalKernels.v
 CdTowerDomain.v
 CdTowerDomainR.v
 CdTowerDomainZ.v
+CdTowerKernelCertificate.v
+CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v
+CdTowerRingBaseChange.v
+CdTowerRingBasis.v
 CdTowerRingDomain.v
 CdTwistedProduct.v
 FoldAverageDescent.v
