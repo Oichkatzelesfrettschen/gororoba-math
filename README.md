@@ -91,6 +91,17 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth.
 
+The script then re-checks all 371 project-listed modules with Rocq's kernel
+checker and compares the axioms it reports with a ledger in each tree.
+`rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
+library: functional extensionality, excluded middle and the two axioms of
+the classical real numbers. `rocq/open/kernel-assumptions.txt` holds 137:
+39 that six modules of the tree declare (`SStructuralGaps`,
+`CarlsonIntegrals`, `TightBindingTopology`, `MorenoSedenionInstance`,
+`CDFidelity`, `C958_ZDGraphTopology`), five of the standard library, and 93
+primitive operations and their specifications from Rocq's core library
+(floats, 63-bit integers, strings).
+
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_signs.sh
 ```

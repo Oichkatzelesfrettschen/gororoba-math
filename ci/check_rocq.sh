@@ -22,6 +22,12 @@
 #      deprecated import built through the same project options; every
 #      listed source has its .vo; the admission scanner of rocq/open accepts
 #      the tree.
+#   3. kernel: rocq check -silent -o re-checks every project-listed module
+#      of both trees from its compiled object; its context summary reports
+#      nothing relying on type-in-type, an unsafe fixpoint or assumed
+#      positivity, and its axioms are exactly the lines of the tree's
+#      kernel-assumptions.txt, so a new axiom fails until its line is added.
+#      Calibrated on a source that declares an axiom.
 # Environment: ROCQ_SWITCH (default rocq-9.3), ROCQ_JOBS (default the online
 # processor count), ROCQ_BUILD_DIR (parent of the scratch directory, default
 # $TMPDIR or /tmp; the two trees need about 600 MB). At six jobs the whole
@@ -47,7 +53,8 @@ opam switch list --short | grep -q -x -F "$switch" || {
 
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d "${ROCQ_BUILD_DIR:-${TMPDIR:-/tmp}}/gororoba-math-rocq.XXXXXXXX")
-trap 'rm -r "$work"' EXIT INT TERM
+open_kernel=
+trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$work"' EXIT INT TERM
 git -C "$root" archive HEAD rocq | tar -x -C "$work"
 # git archive leaves out a path that a .gitattributes file marks
 # export-ignore, and a recipe of rocq/open skips a source or a golden file
@@ -110,6 +117,26 @@ listing_rejects() {
   [ "$rejection" -eq 1 ]
 }
 # Succeeds when a log among the arguments holds a warning line, printing it.
+# Prints, sorted, the axiom names of the context summary that rocq check -o
+# writes into the log $1.
+checked_axioms() {
+  awk '/^\* Axioms:/ { inside = 1; next } /^\* / { inside = 0 } inside && NF { sub(/^[ \t]+/, ""); print }' "$1" | LC_ALL=C sort -u
+}
+# Fails unless the kernel-check log $1 reports no constant relying on
+# type-in-type, on an unsafe fixpoint or on assumed positivity, and its
+# axioms are exactly the lines of the ledger $2; prints the difference.
+kernel_context_matches() {
+  for line in '* Constants/Inductives relying on type-in-type: <none>' \
+    '* Constants/Inductives relying on unsafe (co)fixpoints: <none>' \
+    '* Inductives whose positivity is assumed: <none>'; do
+    grep -q -x -F "$line" "$1" || {
+      echo "the context summary lacks the line: $line"
+      return 1
+    }
+  done
+  checked_axioms "$1" >"$1.axioms"
+  diff "$2" "$1.axioms"
+}
 log_holds_warning() {
   grep -n '[Ww]arning' "$@"
 }
@@ -207,6 +234,16 @@ done >"$work/uncompiled-targets.txt"
 }
 echo "check_rocq: rocq/open compiled all $(grep -c '\.v$' _RocqProject) listed sources and the $(printf '%s\n' "$target_compiled" | grep -c .) sources outside the project file"
 
+# The kernel checker re-checks every listed module and its dependencies
+# from the compiled objects, independently of the compiler, and lists the
+# axioms they rest on. It runs beside the rocq/quantum build and is
+# collected at the end of the script.
+sed -n 's|^theories/\(.*\)\.v$|OpenGororoba.\1|p; s|^verified/\(.*\)\.v$|OpenGororobaVerified.\1|p' _RocqProject | tr / . >"$work/open-modules.txt"
+# shellcheck disable=SC2046
+opam exec --switch="$switch" -- rocq check -silent -o -R theories OpenGororoba -R verified OpenGororobaVerified \
+  $(cat "$work/open-modules.txt") >"$work/open-kernel.log" 2>&1 &
+open_kernel=$!
+
 cd "$work/rocq/quantum"
 grep '^rocq/quantum/' "$work/tracked-sources.txt" | sed 's|^rocq/quantum/||' >"$work/quantum-sources.txt"
 [ -s "$work/quantum-sources.txt" ] || {
@@ -233,6 +270,8 @@ mkdir "$work/rocq/warning-calibration"
   grep -v '\.v$' ../quantum/_RocqProject >_RocqProject
   echo DeprecatedPrefix.v >>_RocqProject
   echo 'From Coq Require Import List.' >DeprecatedPrefix.v
+  echo DeclaredAxiom.v >>_RocqProject
+  echo 'Axiom calibration_axiom : False.' >DeclaredAxiom.v
   run_logged "$work/warning-calibration.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
   run_logged "$work/warning-calibration-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq
 )
@@ -250,4 +289,44 @@ uncompiled_sources _RocqProject || {
 }
 run_logged "$work/quantum-admissions.log" "$work/rocq/.cache/proof-admission-check/admission-check" "$work/rocq/quantum/"
 echo "check_rocq: rocq/quantum compiled all $(grep -c '\.v$' _RocqProject) listed sources with no warning and no admission"
+
+# Kernel check and assumption ledgers. Calibration first: the checker must
+# report an axiom that a source declares, and the comparison must reject
+# that report against the quantum ledger.
+(
+  cd "$work/rocq/warning-calibration"
+  run_logged "$work/calibration-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
+    -Q . "" -R ../open/verified OpenGororobaVerified DeclaredAxiom
+)
+checked_axioms "$work/calibration-kernel.log" | grep -q -x -F DeclaredAxiom.calibration_axiom || {
+  echo "check_rocq: rocq check -o did not report a declared axiom, so the ledger comparison cannot see one" >&2
+  exit 1
+}
+if kernel_context_matches "$work/calibration-kernel.log" kernel-assumptions.txt >/dev/null; then
+  echo "check_rocq: the ledger comparison accepted a log that reports an unlisted axiom" >&2
+  exit 1
+fi
+sed -n 's|\.v$||p' _RocqProject | tr / . >"$work/quantum-modules.txt"
+# shellcheck disable=SC2046
+run_logged "$work/quantum-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
+  -Q . "" -R ../open/verified OpenGororobaVerified $(cat "$work/quantum-modules.txt")
+kernel_context_matches "$work/quantum-kernel.log" kernel-assumptions.txt >"$work/quantum-kernel.diff" || {
+  echo "check_rocq: the kernel check of rocq/quantum differs from rocq/quantum/kernel-assumptions.txt (< ledger, > checked):" >&2
+  cat "$work/quantum-kernel.diff" >&2
+  exit 1
+}
+echo "check_rocq: rocq/quantum kernel check passed on $(grep -c . "$work/quantum-modules.txt") modules; axioms match the ledger ($(grep -c . kernel-assumptions.txt))"
+wait "$open_kernel" || {
+  open_kernel=
+  tail -n 40 "$work/open-kernel.log" >&2
+  echo "check_rocq: the kernel check of rocq/open failed" >&2
+  exit 1
+}
+open_kernel=
+kernel_context_matches "$work/open-kernel.log" ../open/kernel-assumptions.txt >"$work/open-kernel.diff" || {
+  echo "check_rocq: the kernel check of rocq/open differs from rocq/open/kernel-assumptions.txt (< ledger, > checked):" >&2
+  cat "$work/open-kernel.diff" >&2
+  exit 1
+}
+echo "check_rocq: rocq/open kernel check passed on $(grep -c . "$work/open-modules.txt") modules; axioms match the ledger ($(grep -c . ../open/kernel-assumptions.txt))"
 echo "check_rocq: passed"

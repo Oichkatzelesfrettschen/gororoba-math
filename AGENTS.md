@@ -75,6 +75,11 @@ gororoba repository shares; this file governs where the two differ.
   exits 0; the gate fails on a warning line in the build log. No source of
   `rocq/open/theories`, `rocq/open/verified` or `rocq/quantum` holds
   `Admitted` or `admit` (`rocq/open/admission_check.rs`).
+- `ci/check_rocq.sh` re-checks every project-listed module with the kernel
+  checker (`rocq check -silent -o`) and compares the axioms it reports with
+  `rocq/open/kernel-assumptions.txt` and
+  `rocq/quantum/kernel-assumptions.txt`. A change that adds or removes an
+  axiom a tree rests on changes that tree's ledger in the same commit.
 - Retained records in gororoba-open and gororoba-quantum cite sources of
   these trees by sha256. Before editing a source, `git grep` its digest in
   both repositories; a cited source keeps its bytes, and a change lands in a
