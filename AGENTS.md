@@ -41,6 +41,46 @@ gororoba repository shares; this file governs where the two differ.
   gororoba-open ingests for a theorem receipt, and
   `ci/check_kernel_replay_evidence.sh` calibrates it; `ci/check_rocq.sh` runs
   that calibration from its export of `HEAD`.
+- `ci/quantum-sources/` holds the generators of eight `rocq/quantum` sources
+  (`CdSignPythonSemantics.v`, `CdSignSourceCertificate.v`, `TargetFlipN21.v`,
+  `CdTowerCanonicalKernels.v`, `CdTowerG2Derivations.v`,
+  `A5W8ArcMatrixRanks.v`, `CdTowerG2DerivationSpan.v` and
+  `StiefelWitnessInvertible.v`), the JSON records three of them render
+  (`certificates.json`, `left-inverses.json`, `span.json`), and the helpers of
+  the span certificate. A generator reads `gororoba_quantum/cd_core.py`,
+  `parallel.py` and evidence records of the checkout `GOROROBA_QUANTUM`
+  names, so no admission check runs it. `ci/check_quantum_sources.sh` renders
+  each source again, requires it to equal the tracked file, rejects a copy
+  with one digit changed and a `cd_core.py` with one changed shift, refuses
+  unsafe writes, and compares the Stiefel package cross-check with the retained
+  record; `ci/replay_quantum_bundles.sh` compares the
+  ledgers of the retained bundles of gororoba-quantum with `rocq/quantum`
+  (`--ledgers-only` stops there and needs no Rocq) and runs their replays.
+  Both run on demand. The generator files here are the live ones: a source
+  of `rocq/quantum` that a generator renders changes through its generator,
+  in the same commit. A write (`--write`, `--generate`, and the default mode
+  of `span_certificate.py`) goes only to `rocq/quantum` of this checkout and
+  to the JSON record beside the generator: the generators refuse
+  `QUANTUM_SOURCES_ROCQ` and every option but the write flag in a write, and
+  refuse a `rocq/quantum` that is a link or holds a linked `.v`; only
+  `--check` honors `QUANTUM_SOURCES_ROCQ` (an existing directory, nothing
+  created), which the calibration of `ci/check_quantum_sources.sh` uses. The
+  helper scripts `make_mutants.py` and `make_span_mutants.py` write to the
+  directory named on their command line, a scratch directory by use. A
+  replay script of a retained bundle runs from a shadow root: it holds copies
+  of the bundle and of `rocq/quantum`, and symbolic links to the entries of
+  the gororoba-quantum checkout that the bundle's ledgers name, which the
+  script could write; it is not given `GOROROBA_QUANTUM`. A generator that a
+  retained ledger of gororoba-quantum binds (`cd_sign_rocq_ast.py`,
+  `cd_sign_source_ast.py`, `target_flip_certificate.py`,
+  `kernel_certificates.py` with `certificates.json`; and
+  `span_certificate.py`, `render_span.py` and `span.json`, which row A5-500 of
+  the findings ledger of gororoba-quantum cites, with `gaussian_certificates.py`,
+  which both import, and `left-inverses.json`, which they read) keeps its bytes
+  there, as the record of the commit that ledger names or cites, and no gate
+  there renders a source from it. The rendered
+  sources keep their header and marker lines, which name the path of the
+  generator in gororoba-quantum, because the retained records cite those bytes.
 
 ## Statements and proofs
 
