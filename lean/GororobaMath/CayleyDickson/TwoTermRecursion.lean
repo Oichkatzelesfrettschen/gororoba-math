@@ -51,8 +51,8 @@ dimension of the anti-associator space of `e a` and `e b`, a quaternionic
 pair of alternative vectors, and Lemmas 8.7 and 8.8 double the associator
 dimensions of such a pair. `Tower.finrank_assocSpace_e` proves
 `dim Ass[e a, e b] = 2 * N k a b + 4` for distinct imaginary basis vectors,
-the identity under which those lemmas read as the mixed case. The theorems of this file are statements about the count on
-bit vectors and name no ring; through `Tower.finrank_ker_mulLeft_e_add_e`
+the identity under which those lemmas read as the mixed case. The theorems
+of this file are statements about the count on bit vectors and name no ring; through `Tower.finrank_ker_mulLeft_e_add_e`
 they describe the kernel rank over every ring of the first paragraph.
 
 ## Main results
