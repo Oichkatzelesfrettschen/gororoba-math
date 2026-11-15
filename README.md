@@ -153,7 +153,8 @@ warning, and none of the three directories holds `Admitted` or `admit`. Of
 the eleven sources elsewhere under `rocq/open`, those make targets compile
 seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
-uncompiled, and the script names all eleven and fails on a twelfth.
+uncompiled, and the script names all eleven and fails on a twelfth. Before any
+build it runs the calibration of the kernel replay evidence producer (below).
 
 The script then re-checks all 390 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
@@ -226,7 +227,8 @@ with `-R external/Flocq Flocq` before every target. A warning printed on a zero
 exit status, a source that fails to compile, a missing declaration, another
 Rocq version, a Flocq directory without `Core/Core.vo` and an output directory
 inside the tracking repository must each be refused with no evidence file. It
-runs on demand and compiles a few sources of a few lines each.
+compiles a few sources of a few lines each, and `sh ci/check_rocq.sh` runs it
+from its export of `HEAD` before the tree build.
 
 ## License
 

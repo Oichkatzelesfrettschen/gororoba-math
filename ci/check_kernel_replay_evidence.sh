@@ -16,7 +16,7 @@
 # compile, a declaration name the source lacks, a Rocq that reports another
 # version, a Flocq library directory without Core/Core.vo, and an output
 # directory inside the checkout.
-# Runs on demand, outside ci/check.sh and ci/check_rocq.sh. It compiles a few
+# ci/check_rocq.sh runs it from its export of HEAD. It compiles a few
 # sources of a few lines each and writes only under a temporary directory it
 # removes. Exit status: 0 every case behaved, 1 a case misbehaved, 2 a tool or
 # the switch is missing.
@@ -35,7 +35,6 @@ opam switch list --short | grep -q -x -F "$switch" || {
   exit 2
 }
 here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
-root=$(git -C "$here" rev-parse --show-toplevel)
 producer="$here/kernel_replay_evidence.py"
 work=$(mktemp -d "${TMPDIR:-/tmp}/gororoba-math-replay.XXXXXXXX")
 trap 'rm -r "$work"' EXIT INT TERM

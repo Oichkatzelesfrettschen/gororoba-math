@@ -39,7 +39,8 @@ gororoba repository shares; this file governs where the two differ.
   `GOROROBA_QUANTUM`.
   `ci/kernel_replay_evidence.py` produces the kernel replay evidence that
   gororoba-open ingests for a theorem receipt, and
-  `ci/check_kernel_replay_evidence.sh` calibrates it on demand.
+  `ci/check_kernel_replay_evidence.sh` calibrates it; `ci/check_rocq.sh` runs
+  that calibration from its export of `HEAD`.
 
 ## Statements and proofs
 
