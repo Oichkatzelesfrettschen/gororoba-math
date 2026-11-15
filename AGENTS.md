@@ -36,7 +36,10 @@ gororoba repository shares; this file governs where the two differ.
 - `ci/check.sh` is the Lean half of the admission gate and
   `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
-  `GOROROBA_QUANTUM`.
+  `GOROROBA_QUANTUM` and `ROCQ_BUILD_TREE`, the `rocq` directory of a tree
+  that `make rocq` compiled; `ci/audit/SignTable.v` is its Rocq source,
+  kept outside `rocq/` because the gate admits there only project-listed
+  sources.
 
 ## Statements and proofs
 
@@ -47,7 +50,9 @@ gororoba repository shares; this file governs where the two differ.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
-  for `Tower.sign`, `ci/compare_estimator.sh` for the nullity estimator.
+  for `Tower.sign`, which it also compares with both Rocq sign functions of
+  `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
+  estimator.
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another

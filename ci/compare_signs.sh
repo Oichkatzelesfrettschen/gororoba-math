@@ -1,24 +1,48 @@
 #!/bin/sh
-# Usage: GOROROBA_QUANTUM=PATH sh ci/compare_signs.sh [LEVEL...]
-# Compares the basis signs of the Lean tower (CayleyDickson.Tower.sign,
-# printed by lean/audit/SignTable.lean) with gororoba_quantum/cd_core.py
-# cd_sign of the gororoba-quantum checkout at $GOROROBA_QUANTUM, on every
-# index pair of each LEVEL (default 3 4 5 6; level 5 is A_5, 1024 pairs).
-# Prints one line per level with the pair count, then the gororoba-quantum
-# commit and the sha256 of cd_core.py. Runs on demand, outside ci/check.sh,
-# because it reads another repository.
-# Exit status: 0 every table identical, 1 a table differs, 2 a tool or the
-# checkout is missing. Writes only under a temporary directory it removes.
+# Usage: GOROROBA_QUANTUM=PATH ROCQ_BUILD_TREE=PATH sh ci/compare_signs.sh [LEVEL...]
+# Compares four sign tables on every index pair of each LEVEL (default 3 4 5
+# 6; level 5 is A_5, 1024 pairs): the Lean tower (CayleyDickson.Tower.sign,
+# printed by lean/audit/SignTable.lean), gororoba_quantum/cd_core.py cd_sign
+# of the gororoba-quantum checkout at $GOROROBA_QUANTUM, and the two Rocq
+# sign functions that rocq/quantum/SignBridge.v proves equal,
+# CdTowerBasisSign.sigma and open_cube_sign (printed by ci/audit/SignTable.v).
+# The Lean table is the reference; each other table must equal it line by
+# line. ROCQ_BUILD_TREE names the rocq directory of a build tree that
+# `make rocq` compiled (BUILD_DIR/rocq, holding open/ and quantum/ with their
+# .vo files); the script compiles one audit source against that tree and
+# changes nothing in it. A cmp of the first level's Lean table against a
+# copy of the first Rocq table with its first entry negated must report a
+# difference before any verdict counts.
+# Prints one line per level with the pair count and the tables compared,
+# then the gororoba-quantum commit and the sha256 of cd_core.py. Runs on
+# demand, outside ci/check.sh, because it reads another repository.
+# Exit status: 0 every table identical, 1 a table differs, 2 a tool, the
+# checkout, the build tree or its SignBridge.vo is missing, or the audit
+# source does not compile. Writes only under a temporary directory it
+# removes.
 set -eu
 
 PYTHON=${PYTHON:-python3}
-for tool in git lake cmp sha256sum "$PYTHON"; do
+switch=rocq-9.3
+for tool in git lake cmp awk sha256sum opam "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "compare_signs: $tool is not on PATH" >&2
     exit 2
   }
 done
-quantum=${GOROROBA_QUANTUM:?compare_signs: set GOROROBA_QUANTUM to a gororoba-quantum checkout}
+opam switch list --short | grep -q -x -F "$switch" || {
+  echo "compare_signs: opam switch $switch does not exist; run sh ci/install_rocq.sh" >&2
+  exit 2
+}
+[ -n "${GOROROBA_QUANTUM:-}" ] || {
+  echo "compare_signs: set GOROROBA_QUANTUM to a gororoba-quantum checkout" >&2
+  exit 2
+}
+[ -n "${ROCQ_BUILD_TREE:-}" ] || {
+  echo "compare_signs: set ROCQ_BUILD_TREE to the rocq directory of a build tree that make rocq compiled" >&2
+  exit 2
+}
+quantum=$GOROROBA_QUANTUM
 core="$quantum/gororoba_quantum/cd_core.py"
 [ -f "$core" ] || {
   echo "compare_signs: $core does not exist" >&2
@@ -26,14 +50,13 @@ core="$quantum/gororoba_quantum/cd_core.py"
 }
 quantum=$(CDPATH='' cd -- "$quantum" && pwd)
 core="$quantum/gororoba_quantum/cd_core.py"
+tree=$ROCQ_BUILD_TREE
+[ -f "$tree/quantum/SignBridge.vo" ] || {
+  echo "compare_signs: $tree/quantum/SignBridge.vo does not exist; run make rocq first" >&2
+  exit 2
+}
+tree=$(CDPATH='' cd -- "$tree" && pwd)
 [ "$#" -gt 0 ] || set -- 3 4 5 6
-
-root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
-work=$(mktemp -d)
-trap 'rm -r "$work"' EXIT INT TERM
-
-cd "$root/lean"
-status=0
 for level in "$@"; do
   case "$level" in
   *[!0-9]* | "")
@@ -41,6 +64,51 @@ for level in "$@"; do
     exit 2
     ;;
   esac
+done
+
+root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
+work=$(mktemp -d)
+trap 'rm -r "$work"' EXIT INT TERM
+
+# One compilation prints, in level order, the sigma table and then the
+# open_cube_sign table of every level as Rocq string literals; awk cuts the
+# literals into rocq-sigma-N.txt and rocq-open-N.txt, one row per line.
+mkdir "$work/rocq"
+{
+  cat "$root/ci/audit/SignTable.v"
+  for level in "$@"; do
+    printf 'Eval vm_compute in sigma_text %s.\nEval vm_compute in open_text %s.\n' "$level" "$level"
+  done
+} >"$work/rocq/SignTable.v"
+(
+  cd "$work/rocq"
+  opam exec --switch="$switch" -- rocq compile -q -Q "$tree/quantum" "" \
+    -R "$tree/open/verified" OpenGororobaVerified -Q "$tree/open/theories" OpenGororoba SignTable.v
+) >"$work/rocq.out" 2>"$work/rocq.err" || {
+  cat "$work/rocq.err" >&2
+  echo "compare_signs: ci/audit/SignTable.v does not compile against $tree" >&2
+  exit 2
+}
+awk -v dir="$work" -v levels="$*" '
+  BEGIN { n = split(levels, level, " "); block = 0; inside = 0 }
+  !inside && /^ +=  *"/ { sub(/^ +=  *"/, ""); inside = 1; text = "" }
+  inside && /^ +: string$/ {
+    sub(/"$/, "", text)
+    file = dir "/rocq-" (block % 2 == 0 ? "sigma" : "open") "-" level[int(block / 2) + 1] ".txt"
+    print text > file
+    close(file)
+    block++
+    inside = 0
+    next
+  }
+  inside { text = (text == "" ? $0 : text "\n" $0) }
+  END { if (block != 2 * n) { print "compare_signs: the Rocq output holds " block " tables, expected " 2 * n > "/dev/stderr"; exit 1 } }
+' "$work/rocq.out" || exit 2
+
+cd "$root/lean"
+status=0
+calibrated=0
+for level in "$@"; do
   lake env lean --run audit/SignTable.lean "$level" >"$work/lean.txt"
   "$PYTHON" -I -B -c '
 import sys
@@ -51,10 +119,24 @@ for p in range(size):
     print(" ".join(str(cd_sign(size, p, q)) for q in range(size)))
 ' "$quantum/gororoba_quantum" "$level" >"$work/python.txt"
   pairs=$(awk '{ n += NF } END { print n + 0 }' "$work/lean.txt")
-  if cmp -s "$work/lean.txt" "$work/python.txt"; then
-    echo "compare_signs: level $level: $pairs signs identical"
+  if [ "$calibrated" -eq 0 ]; then
+    awk 'NR == 1 { $1 = ($1 == "1" ? "-1" : "1") } { print }' "$work/rocq-sigma-$level.txt" >"$work/mutated.txt"
+    if cmp -s "$work/lean.txt" "$work/mutated.txt"; then
+      echo "compare_signs: the comparison accepted a table with a negated first entry" >&2
+      exit 1
+    fi
+    calibrated=1
+  fi
+  same=1
+  for other in "$work/python.txt" "$work/rocq-sigma-$level.txt" "$work/rocq-open-$level.txt"; do
+    cmp -s "$work/lean.txt" "$other" || {
+      echo "compare_signs: level $level: $(basename "$other" .txt) differs from the Lean table" >&2
+      same=0
+    }
+  done
+  if [ "$same" -eq 1 ]; then
+    echo "compare_signs: level $level: $pairs signs identical in Lean, Python, Rocq sigma and Rocq open_cube_sign"
   else
-    echo "compare_signs: level $level: tables differ" >&2
     status=1
   fi
 done
