@@ -28,8 +28,10 @@
 #      listed source has its .vo; the admission scanner of rocq/open accepts
 #      the tree.
 #   3. rocq/delegation: every tracked source is a line of _RocqProject,
-#      which compiles them with -w +default; every listed source has its
-#      .vo; the admission scanner of rocq/open accepts the tree.
+#      which compiles them with -w +default (the option lines are required
+#      and the build log holds no warning line); each rendered source lists
+#      in stated as many rights as it states theorems; every listed source
+#      has its .vo; the admission scanner of rocq/open accepts the tree.
 #   4. kernel: rocq check -silent -o re-checks every project-listed module
 #      of the three trees from its compiled object; its context summary reports
 #      nothing relying on type-in-type, an unsafe fixpoint or assumed
@@ -149,6 +151,10 @@ checked_axioms() {
 # type-in-type, on an unsafe fixpoint or on assumed positivity, and its
 # axioms are exactly the lines of the ledger $2; prints the difference.
 kernel_context_matches() {
+  grep -q '^\* Axioms:' "$1" || {
+    echo "the context summary lacks its Axioms section"
+    return 1
+  }
   for line in '* Constants/Inductives relying on type-in-type: <none>' \
     '* Constants/Inductives relying on unsafe (co)fixpoints: <none>' \
     '* Inductives whose positivity is assumed: <none>'; do
@@ -353,8 +359,47 @@ unlisted_sources _RocqProject "$work/delegation-sources.txt" >"$work/unlisted.tx
   cat "$work/unlisted.txt" >&2
   exit 1
 }
+# The project file carries the fatal warning set, and each rendered source
+# pairs every theorem it states with a right in its list stated: a theorem
+# outside that list is outside the rights that inventory_is_chain_table
+# identifies with the chain. Calibrated on a copy with one more theorem.
+{ grep -q -x -F -- '-arg -w' _RocqProject && grep -q -x -F -- '-arg +default' _RocqProject; } || {
+  echo "check_rocq: rocq/delegation/_RocqProject lacks the option lines -arg -w and -arg +default" >&2
+  exit 1
+}
+# Succeeds when the source $1 holds as many Theorem lines as entries of
+# its list stated, and at least one. The generator spells every other
+# result of a rendered source Lemma.
+stated_covers() {
+  theorems=$(grep -c '^Theorem ' "$1" || true)
+  entries=$(grep -c '^  *\[\{0,1\}exist Stated ' "$1" || true)
+  [ "$theorems" -gt 0 ] && [ "$theorems" -eq "$entries" ]
+}
+grep -l '^Definition stated ' ./*.v >"$work/delegation-rendered.txt" || true
+[ "$(grep -c . "$work/delegation-rendered.txt")" -eq 3 ] || {
+  echo "check_rocq: rocq/delegation holds other than three sources with a list stated" >&2
+  exit 1
+}
+while IFS= read -r source; do
+  stated_covers "$source" || {
+    echo "check_rocq: $source states a theorem that its list stated omits, or the reverse" >&2
+    exit 1
+  }
+  {
+    cat "$source"
+    echo 'Theorem unlisted_calibration : True.'
+  } >"$work/stated-calibration.v"
+  if stated_covers "$work/stated-calibration.v"; then
+    echo "check_rocq: the stated-list check accepted a source with an unlisted theorem" >&2
+    exit 1
+  fi
+done <"$work/delegation-rendered.txt"
 run_logged "$work/delegation-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
 run_logged "$work/delegation-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs"
+if log_holds_warning "$work/delegation-makefile.log" "$work/delegation-all.log" >&2; then
+  echo "check_rocq: the rocq/delegation build printed a warning" >&2
+  exit 1
+fi
 uncompiled_sources _RocqProject || {
   echo "check_rocq: rocq/delegation sources above have no .vo" >&2
   exit 1

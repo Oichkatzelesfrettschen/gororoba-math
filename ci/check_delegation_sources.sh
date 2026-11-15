@@ -8,8 +8,8 @@
 #     gororoba-open commit aa5166e0);
 #   - the rendering equals the tracked source;
 #   - the statements of the tracked source, with the proof lines removed,
-#     are the inventory byte for byte (a final newline added where the
-#     inventory ends without one).
+#     are the bytes of the inventory, with one final newline added where
+#     the inventory ends without one (all three do).
 # Calibration: an inventory whose first statement concludes a different
 # action than it assumes must be refused by the generator with status 1,
 # and an inventory whose first statement names another action throughout
@@ -21,7 +21,7 @@
 set -eu
 
 PYTHON=${PYTHON:-python3}
-for tool in git sha256sum cmp sed "$PYTHON"; do
+for tool in git sha256sum cmp sed grep cut cp tail dirname mktemp "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "check_delegation_sources: $tool is not on PATH" >&2
     exit 2
@@ -36,7 +36,7 @@ inventories="$open/curated/01_theory_frameworks"
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 generator="$root/ci/delegation-sources/render_inventory.py"
 work=$(mktemp -d "${TMPDIR:-/tmp}/gororoba-math-delegation.XXXXXXXX")
-trap 'rm -r "$work"' EXIT
+trap 'rm -r "$work" </dev/null' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
@@ -69,9 +69,10 @@ for size in 512 1024 2048; do
     echo "check_delegation_sources: Inventory$size.v differs from its rendering" >&2
     status=1
   fi
-  # The functor body: the lines after "Import R D." and its blank line, up
-  # to the blank line before "End Inventory.", without the proof lines.
-  sed -n '/^Import R D\.$/,/^End Inventory\.$/p' "$tracked" |
+  # The statements: the lines after "Import R D." and its blank line, up
+  # to the blank line before the comment that opens the list stated,
+  # without the proof lines.
+  sed -n '/^Import R D\.$/,/^(\* A right together with a proof/p' "$tracked" |
     sed '1,2d; $d' | sed '$d' |
     grep -v -x -F 'Proof. exact (rd_direct _ _ _). Qed.' >"$work/statements-$size.v"
   cp "$inventory" "$work/inventory-$size.v"
@@ -109,4 +110,4 @@ else
 fi
 
 [ "$status" -eq 0 ] || exit 1
-echo "check_delegation_sources: passed against gororoba-open $(git -C "$open" rev-parse --short HEAD)"
+echo "check_delegation_sources: passed against gororoba-open $(git -C "$open" rev-parse --short HEAD 2>/dev/null || echo "(no git checkout)")"

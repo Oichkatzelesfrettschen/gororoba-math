@@ -7,8 +7,12 @@ INVENTORY is confine_theorems_N.v of gororoba-open
 (curated/01_theory_frameworks): Theorem statements, each of the form
 has_right S O A -> reachable_delegation S O A, with no proofs. The rendering
 keeps the bytes of every statement, in order, inside a functor over a rights
-relation and follows each with its proof; it then lists the rights the
-statements name and proves that list equal to chain_table 16 N of Model.v.
+relation and follows each with its proof. The functor then pairs every
+right with the theorem stated about it (the list stated, which typechecks
+only when each theorem is about its right), and the source proves the rights
+of that list equal to chain_table 16 N of Model.v. A statement ends in a
+newline in the rendering, also the last one of an inventory that ends
+without one.
 Writes the rendering to standard output and nothing else. Exit status: 0
 rendered, 1 the inventory holds a line that is no such statement, 2 usage.
 """
@@ -30,7 +34,7 @@ def fail(message):
 
 
 def parse(text):
-    rows, names, position = [], set(), 0
+    bodies, rows, names, position = [], [], set(), 0
     while position < len(text):
         match = STATEMENT.match(text, position)
         if match is None:
@@ -44,22 +48,26 @@ def parse(text):
             fail(f"{name} is stated twice")
         names.add(name)
         body = match.group(0)
-        rows.append((body if body.endswith("\n") else body + "\n", subject, target, action))
+        bodies.append(body if body.endswith("\n") else body + "\n")
+        rows.append((name, subject, target, action))
         position = match.end()
     if not rows:
         fail("the inventory holds no statement")
-    return rows
+    return bodies, rows
 
 
-def render(rows, size):
-    held = ";\n   ".join(f'("{subject}", "{target}", {action})' for _, subject, target, action in rows)
-    statements = "".join(body + PROOF for body, _, _, _ in rows)
+def render(bodies, rows, size):
+    stated = ";\n   ".join(
+        f'exist Stated ("{subject}", "{target}", {action}) {name}' for name, subject, target, action in rows
+    )
+    statements = "".join(body + PROOF for body in bodies)
     return f"""(* Rendered by ci/delegation-sources/render_inventory.py from
    curated/01_theory_frameworks/confine_theorems_{size}.v of gororoba-open;
    a change goes through the generator. Inventory holds the statements of
-   that file, each with its proof, for every rights relation. inventory
-   lists the rights they name, and inventory_is_chain_table identifies it
-   with chain_table 16 {size} of Model.v, the chain of {size} threads with an
+   that file, each with its proof, for every rights relation, and stated
+   pairs each right with the theorem about it. inventory is the list of
+   those rights, and inventory_is_chain_table identifies it with
+   chain_table 16 {size} of Model.v, the chain of {size} threads with an
    arena every 16. *)
 
 From Stdlib Require Import String List.
@@ -73,13 +81,15 @@ Module D := Reachability R.
 Import R D.
 
 {statements}
+(* A right together with a proof of the statement about it. *)
+Definition Stated (r : string * string * Action) : Prop :=
+  has_right (fst (fst r)) (snd (fst r)) (snd r) ->
+  reachable_delegation (fst (fst r)) (snd (fst r)) (snd r).
+
+Definition stated : list (sig Stated) :=
+  [{stated}].
+
 End Inventory.
-
-Definition inventory : list (string * string * Action) :=
-  [{held}].
-
-Lemma inventory_is_chain_table : inventory = chain_table 16 {size}.
-Proof. vm_compute. reflexivity. Qed.
 
 Module Size <: SIZE.
   Definition period := 16.
@@ -89,8 +99,15 @@ End Size.
 Module System := Chain Size.
 Module Statements := Inventory System.R.
 
+(* The rights of the statements, in order. *)
+Definition inventory : list (string * string * Action) :=
+  map (@proj1_sig _ _) Statements.stated.
+
+Lemma inventory_is_chain_table : inventory = chain_table 16 {size}.
+Proof. vm_compute. reflexivity. Qed.
+
 (* Each right an inventory statement names is held in the chain. *)
-Theorem inventory_held :
+Lemma inventory_held :
   Forall (fun r => chain_right 16 {size} (fst (fst r)) (snd (fst r)) (snd r))
     inventory.
 Proof.
@@ -98,7 +115,7 @@ Proof.
 Qed.
 
 (* So the conclusion of each inventory statement holds outright. *)
-Theorem inventory_reachable :
+Lemma inventory_reachable :
   Forall (fun r => System.D.reachable_delegation
                      (fst (fst r)) (snd (fst r)) (snd r))
     inventory.
@@ -114,8 +131,8 @@ def main(argv):
         print(__doc__, file=sys.stderr)
         raise SystemExit(2)
     with open(argv[1], encoding="ascii", newline="") as handle:
-        rows = parse(handle.read())
-    sys.stdout.write(render(rows, int(argv[2])))
+        bodies, rows = parse(handle.read())
+    sys.stdout.write(render(bodies, rows, int(argv[2])))
 
 
 if __name__ == "__main__":

@@ -40,7 +40,8 @@ reachable set under each for every `n` and `p` (`chain_reachable_iff`,
 `confine_theorems_N.v` that gororoba-open keeps under
 `curated/01_theory_frameworks/` (2,590, 5,182 and 10,366 statements, there
 without proofs and over two undefined parameters): each holds every
-statement of its inventory, byte for byte, with its proof, and proves that
+statement of its inventory with its proof, pairs each right with the
+theorem about it, and proves that
 the rights the statements name are the table of the chain of that size with
 period 16 (`inventory_is_chain_table`). The tree declares no axiom and its
 ledger is empty.
@@ -233,7 +234,8 @@ GOROROBA_OPEN=../gororoba-open sh ci/check_delegation_sources.sh
 renders the three inventory sources of `rocq/delegation` again from the
 statement inventories of that checkout, whose sha256 it records, requires
 each rendering to equal the tracked source and the statements of each
-tracked source to be its inventory byte for byte, and requires the generator
+tracked source to be the bytes of its inventory with a final newline
+added, and requires the generator
 to refuse a statement whose conclusion names another right than its
 hypothesis.
 

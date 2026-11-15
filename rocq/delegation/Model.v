@@ -25,9 +25,13 @@
    - chain_reachable_iff: a thread reaches the rights held at or above it;
    - chain_restricted_iff: under P, its own rights and the P-rights above;
    - chain_single_iff: its own rights and those of the next thread;
-   - chain_grant_iff, chain_restricted_grant: Grant is reachable on every
-     higher thread object in the first semantics and only on the next one
-     under P a := a <> Grant. *)
+   - chain_grant_iff, chain_restricted_grant: Grant is reachable on the
+     object of every higher thread below n in the first semantics and only
+     on that of the next one under P a := a <> Grant;
+   - chain_arena_iff: an arena is reachable, for Map alone, from the threads
+     at or below its holder.
+   restricted_iff holds for every rights relation: a restriction acts on
+   the action alone. *)
 
 From Stdlib Require Import String List Arith Lia DecimalString Decimal DecimalNat.
 Import ListNotations.
@@ -74,6 +78,37 @@ Module Reachability (R : RIGHTS).
     intros P s o a H. induction H as [s o a H | s g t o a Hg Ho _ _ IH].
     - now apply rd_direct.
     - now apply (rd_grant s g t).
+  Qed.
+
+  (* A restriction acts on the action alone: a right is reachable under P
+     when it is held, or its action satisfies P and the closure reaches it. *)
+  Lemma restricted_iff : forall (P : Action -> Prop) s o a,
+    restricted_delegation P s o a <->
+    has_right s o a \/ (P a /\ reachable_delegation s o a).
+  Proof.
+    intros P s o a. split.
+    - intros H. destruct H as [s o a H | s g t o a Hg Ho Pa Ht].
+      + now left.
+      + right. split; [exact Pa |].
+        apply (rd_grant s g t); [assumption | assumption |].
+        now apply (restricted_reachable P).
+    - intros [H | [Pa H]]; [now apply rr_direct |].
+      induction H as [s o a H | s g t o a Hg Ho _ IH].
+      + now apply rr_direct.
+      + apply (rr_grant P s g t); auto.
+  Qed.
+
+  (* A reached Grant delegates as a held one does. *)
+  Lemma reached_grant_delegates : forall s g t o a,
+    reachable_delegation s g Grant -> owner g t ->
+    reachable_delegation t o a -> reachable_delegation s o a.
+  Proof.
+    intros s g t o a H. remember Grant as b eqn:Eb. revert t o a Eb.
+    induction H as [s g b Hh | s g' t' g b Hg' Ho' _ IH];
+      intros t o a -> Ho Ht.
+    - now apply (rd_grant s g t).
+    - apply (rd_grant s g' t'); [assumption | assumption |].
+      now apply (IH t o a eq_refl).
   Qed.
 
   Lemma unrestricted_iff : forall s o a,
@@ -323,8 +358,18 @@ Module Chain (N : SIZE).
     inversion Hr; names; subst. split; [reflexivity | lia].
   Qed.
 
+  Theorem chain_arena_iff : forall i k a,
+    reachable_delegation (subject i) (arena k) a <->
+    a = Map /\ i <= period * k /\ period * k < n.
+  Proof.
+    intros i k a. rewrite chain_reachable_iff. split.
+    - intros [h [Hih Hr]]. inversion Hr; names; subst. repeat split; lia.
+    - intros [-> [Hi Hk]]. exists (period * k). split; [exact Hi |].
+      now apply cr_arena.
+  Qed.
+
   (* Where the semantics differ. A delegated Grant delegates again: Grant
-     is reachable on the object of every higher thread. *)
+     is reachable on the object of every higher thread below n. *)
   Theorem chain_grant_iff : forall i j,
     reachable_delegation (subject i) (thread_object j) Grant <->
     i < j /\ j < n.
@@ -335,8 +380,8 @@ Module Chain (N : SIZE).
       replace j with (S (j - 1)) at 2 by lia. apply cr_next_grant. lia.
   Qed.
 
-  (* When Grant does not travel, a thread holds Grant on the next thread's
-     object and reaches no other. *)
+  (* When Grant does not travel, a thread reaches Grant on the object of
+     the next thread, where one exists, and on no other. *)
   Theorem chain_restricted_grant : forall i j,
     restricted_delegation (fun a => a <> Grant) (subject i) (thread_object j) Grant <->
     j = S i /\ j < n.
@@ -345,21 +390,6 @@ Module Chain (N : SIZE).
     - intros [Hr | [Hne _]]; [| congruence].
       inversion Hr; names; subst; try congruence. now split.
     - intros [-> Hlt]. left. now apply cr_next_grant.
-  Qed.
-
-  (* The other actions travel under that restriction as they do without
-     it. *)
-  Theorem chain_restricted_other : forall i o a, a <> Grant ->
-    (restricted_delegation (fun a => a <> Grant) (subject i) o a <->
-     reachable_delegation (subject i) o a).
-  Proof.
-    intros i o a Ha. rewrite chain_restricted_iff, chain_reachable_iff. split.
-    - intros [Hr | [_ [j [Hj Hr]]]].
-      + exists i. now split.
-      + exists j. split; [lia | exact Hr].
-    - intros [j [Hj Hr]]. destruct (Nat.eq_dec i j) as [-> | Hne].
-      + now left.
-      + right. split; [exact Ha |]. exists j. split; [lia | exact Hr].
   Qed.
 
   (* Two threads up, the closure reaches a right that one step does not. *)
@@ -374,8 +404,8 @@ Module Chain (N : SIZE).
       destruct H as [Hr | Hr]; inversion Hr; names; subst; lia.
   Qed.
 
-  (* Every right of the table is reachable from its own subject, with no
-     hypothesis left. *)
+  (* For a nonzero period every right of the table is reachable from its
+     own subject. *)
   Theorem chain_table_reachable : period <> 0 ->
     Forall (fun r => reachable_delegation (fst (fst r)) (snd (fst r)) (snd r))
       (chain_table period n).

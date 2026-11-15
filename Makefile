@@ -24,9 +24,9 @@
 #              near 2 GB a job (ci/check_rocq.sh).
 #
 # The warning options are the option lines of each tree's _RocqProject
-# (-w +default in rocq/open, -w @all in rocq/quantum); this file adds no
-# compiler option. rocq/open/Makefile adds the Flocq library root of the
-# switch, as it does under the gate.
+# (-w +default in rocq/open and rocq/delegation, -w @all in rocq/quantum);
+# this file adds no compiler option. rocq/open/Makefile adds the Flocq
+# library root of the switch, as it does under the gate.
 
 BUILD_DIR ?= build
 ROCQ_SWITCH ?= rocq-9.3

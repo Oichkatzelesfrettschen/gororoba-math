@@ -22,11 +22,16 @@ The content is in four places:
 
 - `inventory_is_chain_table` (each inventory source): the rights the
   statements name, in order, are `chain_table 16 N`, computed by the kernel.
-  This identifies which system the inventories enumerate.
+  This identifies which system the inventories enumerate. The list
+  `stated` inside the functor pairs each right with the theorem about it
+  and typechecks only when the theorem is about that right; `inventory` is
+  the list of those rights, and `ci/check_rocq.sh` requires as many entries
+  as theorems.
 - `chain_table_spec` (`Model.v`): for a period `p <> 0` the table lists
   exactly the rights `chain_right p n` holds.
 - `chain_reachable_iff`: in that system thread `i` reaches exactly the
-  rights held by the threads `j >= i`.
+  rights held by the threads `j >= i`; `chain_arena_iff` is the exact form
+  for an arena.
 - The theorems that separate the semantics (next section).
 
 `inventory_held` and `inventory_reachable` then discharge the hypothesis of
@@ -45,7 +50,11 @@ defines:
 | `single_delegation` | what the owner holds | no |
 
 `restricted_reachable`, `unrestricted_iff` and `single_reachable` order
-them. On the chain the reachable sets are, for every size and period:
+them, for every rights relation. Two further facts hold for every rights
+relation: `restricted_iff` (a right is reachable under `P` exactly when it
+is held, or its action satisfies `P` and the closure reaches it, so a
+restriction acts on the action alone) and `reached_grant_delegates` (in
+the closure a reached `Grant` delegates as a held one does). On the chain the reachable sets are, for every size and period:
 
 | Theorem | Thread `i` reaches `(o, a)` exactly when |
 |---|---|
@@ -57,8 +66,8 @@ The theorem that changes with the answer to "does `Grant` delegate
 `Grant`": `chain_grant_iff` (closure: `Grant` on the object of thread `j`
 is reachable from `i` exactly when `i < j < n`) against
 `chain_restricted_grant` (with `P a := a <> Grant`: exactly when
-`j = i + 1 < n`). `chain_restricted_other` shows the restriction changes
-nothing for the other actions, and `chain_single_weaker` exhibits a right
+`j = i + 1 < n`). By `restricted_iff` the restriction changes nothing for
+the other actions, and `chain_single_weaker` exhibits a right
 two threads up that the closure reaches and one step does not.
 
 ## One statement for every size and period
@@ -77,8 +86,8 @@ the confinement corollaries.
 Claim: the inventories were written to describe the chain with period 16.
 
 - Evidence for: `inventory_is_chain_table` holds for all three (equality of
-  ordered lists of 2,590, 5,182 and 10,366 triples), and the right counts
-  are `5 n - 2 + n / 16`.
+  ordered lists of 2,590, 5,182 and 10,366 triples), which is
+  `5 n - 2 + n / 16` at these three sizes, each a multiple of 16.
 - What the inventories do not determine: they list rights and never an
   owner. The owner relation here (object `Thread i` names subject
   `Thread_i`) is this tree's reading of the two spellings. They also never
@@ -189,6 +198,7 @@ works.
 - `GOROROBA_OPEN=PATH sh ci/check_delegation_sources.sh` (on demand) renders
   them again from the gororoba-open checkout, whose three inventories it
   pins by sha256, and requires the statements of each rendered source to be
-  the inventory byte for byte.
+  the bytes of the inventory with one final newline added (each inventory
+  ends without one).
 - `ci/check_rocq.sh` compiles the tree, scans it for admissions and compares
   the kernel checker's axiom report with the empty ledger.
