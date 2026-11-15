@@ -148,6 +148,9 @@ if lake env lean audit/UnknownRoot.lean >"$work/unknown.out" 2>&1; then
 fi
 echo "check: axiom audit rejected the fixture and the unknown root"
 
+# leanchecker replays the modules it is given and assumes their imports, so
+# every library module is named; Mathlib's objects are assumed, as its
+# prebuilt cache already is.
 # shellcheck disable=SC2046 # one module name per argument
 lake env leanchecker GororobaMath $(cat "$work/modules.txt") >"$work/replay.out" 2>&1 || {
   cat "$work/replay.out" >&2

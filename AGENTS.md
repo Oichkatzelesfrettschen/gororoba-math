@@ -129,7 +129,10 @@ gororoba repository shares; this file governs where the two differ.
   set an error; its `extract` recipe passes no warning option.
   `rocq/quantum` compiles with `-w @all`, the
   flag of its retained replays, under which `rocq` prints a warning and
-  exits 0; the gate fails on a warning line in the build log. No source of
+  exits 0; the gate fails on a warning line in the build log. `@all`
+  names no warning set (measured, Rocq 9.3.0: a warning that is off by
+  default stays silent under it and prints under `-w all`), so that
+  build sees the default set. No source of
   `rocq/open/theories`, `rocq/open/verified` or `rocq/quantum` holds
   `Admitted` or `admit` (`rocq/open/admission_check.rs`).
 - `ci/check_rocq.sh` re-checks every project-listed module with the kernel
