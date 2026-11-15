@@ -96,9 +96,10 @@ gororoba repository shares; this file governs where the two differ.
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
-  estimator. `ci/compare_kernel_map_bins.sh` checks the bin contract that
-  `KernelMap.nullity_eq_alignedPairCount` takes as a hypothesis against
-  `pathion_kernel_map.kernel_map_circuit`.
+  estimator. `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
+  the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
+  on `pathion_kernel_map.kernel_map_circuit` for every two-term operand of
+  `A_5`.
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another
