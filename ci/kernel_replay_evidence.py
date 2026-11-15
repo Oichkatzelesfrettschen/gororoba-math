@@ -647,8 +647,13 @@ def produce(
 
 
 def git_output(tree: Path, arguments: list[str]) -> subprocess.CompletedProcess:
-    """One git command in the tree, with messages in the C locale so a refusal can read them."""
-    environment = {**os.environ, "LC_ALL": "C"}
+    """One git command in the tree, with messages in the C locale so a refusal can read them.
+
+    The caller's GIT_* variables are dropped: GIT_DIR or GIT_CEILING_DIRECTORIES can make git
+    answer "not a git repository" inside the checkout that tracks the tree.
+    """
+    environment = {name: value for name, value in os.environ.items() if not name.startswith("GIT_")}
+    environment["LC_ALL"] = "C"
     return subprocess.run(  # noqa: S603
         ["git", "-C", str(tree), *arguments],  # noqa: S607
         capture_output=True,

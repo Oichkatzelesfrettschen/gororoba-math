@@ -87,7 +87,7 @@ gororoba repository shares; this file governs where the two differ.
 - Kernel replay evidence for a gororoba-open receipt comes from
   `ci/kernel_replay_evidence.py`, which compiles, kernel-checks and writes the
   evidence file and the retained logs and object into a directory outside
-  every checkout; gororoba-open ingests the file and never runs Rocq. A
+  the checkout that tracks the tree; gororoba-open ingests the file and never runs Rocq. A
   change to the compile or checker argument vectors, the closure order or
   the Flocq handling of the script changes the evidence contract that
   `theorem_replay.rs` of gororoba-open validates, so both land together, and

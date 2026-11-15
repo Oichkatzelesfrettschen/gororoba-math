@@ -374,6 +374,20 @@ fi
 grep -q 'inside the checkout' "$work/inside.log" || fail "checkout: the refusal names another cause"
 echo "check_kernel_replay_evidence: output inside the checkout refused"
 
+# Known-bad: git variables of the caller that hide the repository do not hide it from the producer.
+for hidden in "GIT_DIR=$work/no-such-git-dir" "GIT_CEILING_DIRECTORIES=$work/repo/rocq"; do
+  if (
+    export "${hidden?}"
+    produce "$work/repo/rocq/open" "$work/repo/out-env" "$work/env.log" --proof verified/C900_Test.v \
+      --declaration fixture --warning-policy fatal_all
+  ); then
+    fail "the producer accepted an output directory inside the checkout under ${hidden%%=*}"
+  fi
+  [ ! -e "$work/repo/out-env" ] || fail "a run under ${hidden%%=*} created a directory in the checkout"
+  grep -q 'inside the checkout' "$work/env.log" || fail "${hidden%%=*}: the refusal names another cause"
+done
+echo "check_kernel_replay_evidence: output inside the checkout refused under GIT_DIR and GIT_CEILING_DIRECTORIES"
+
 # Known-bad: a git that fails leaves the checkout unknown, so the run is refused
 # before it writes anything.
 mkdir "$work/fakegit"
@@ -426,4 +440,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 3 known-good and $((10 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 3 known-good and $((12 + mutants)) known-bad cases behaved"
