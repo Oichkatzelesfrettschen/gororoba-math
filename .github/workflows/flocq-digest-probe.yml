@@ -1,0 +1,65 @@
+name: flocq-digest-probe
+
+# Probe of the Flocq object digests on the hosted runner. It restores the
+# switch under the key of rocq.yml, prints digests and package versions, and
+# uploads the Flocq directory for comparison with a local switch. Not for merge.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: probe
+    runs-on: ubuntu-26.04
+    timeout-minutes: 150
+    env:
+      OPAMROOT: ${{ github.workspace }}/.opam
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+          command -v rustc
+      - name: Restore the opam switch
+        id: opam
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: opam-rocq-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh', '.github/workflows/rocq.yml') }}
+      - name: Install the Rocq toolchain
+        run: sh ci/install_rocq.sh
+      - name: Collect digests and versions
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/probe"
+          mkdir -p "$out"
+          echo "cache-hit=${{ steps.opam.outputs.cache-hit }}" | tee "$out/cache.txt"
+          uname -a | tee "$out/uname.txt"
+          cat /etc/os-release > "$out/os-release.txt"
+          { gcc --version | head -1; ocamlfind ocamlopt -version 2>/dev/null || true; ocaml -version; } > "$out/system-tools.txt" 2>&1 || true
+          cat "$out/system-tools.txt"
+          opam list --switch=rocq-9.3 --installed --columns=name,version --color=never | tee "$out/opam-list.txt"
+          opam exec --switch=rocq-9.3 -- rocq --version | tee "$out/rocq-version.txt"
+          opam exec --switch=rocq-9.3 -- rocq -config > "$out/rocq-config.txt" 2>&1 || true
+          cat "$out/rocq-config.txt"
+          prefix=$(opam var --switch=rocq-9.3 prefix)
+          echo "$prefix" > "$out/prefix.txt"
+          (cd "$prefix/lib/coq" && find . -name '*.vo' -type f | LC_ALL=C sort | xargs sha256sum) > "$out/vo-sha256.txt"
+          wc -l "$out/vo-sha256.txt"
+          (cd "$prefix/lib/coq/user-contrib/Flocq" && find . -name '*.vo' -type f | LC_ALL=C sort | xargs sha256sum) | tee "$out/flocq-sha256.txt"
+          mkdir -p "$out/changes"
+          cp "$prefix"/.opam-switch/install/*.changes "$out/changes/"
+          tar -C "$prefix/lib/coq/user-contrib" -cf "$out/Flocq.tar" Flocq
+          tar -C "$prefix/lib/coq" -cf "$out/Corelib.tar" theories
+          tar -C "$prefix/lib/coq/user-contrib" -czf "$out/Stdlib.tar.gz" Stdlib
+          echo "OUT=$out" >> "$GITHUB_ENV"
+      - name: Upload the probe record
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: flocq-probe
+          path: ${{ env.OUT }}
+          retention-days: 5
