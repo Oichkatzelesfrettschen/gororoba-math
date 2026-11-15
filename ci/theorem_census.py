@@ -18,6 +18,18 @@ term. The script reads the source only to find the names of the declarations
 (Theorem, Lemma, Corollary, Fact, Proposition, Example, outside comments and
 strings) and the statement text shown in the table.
 
+Coherence. The compiled tree holds a copy of every source. Each copy must equal the
+file of --tree byte for byte and its object must not be older than the copy; the
+declaration names and statement text come from the copy, so they describe the
+object that Rocq prints.
+
+Scope. A declaration is listed when it names no project constant, whatever it claims:
+a theorem over a definition local to its own file is not listed (the local
+definition is a project constant), and a theorem over standard-library names alone is
+listed even when it states the file's claim. The list bounds where a statement
+carries no project content; it does not decide whether a header overclaims.
+Declarations of other kinds (Definition, Remark) are not read.
+
 Calibration. Every run checks four declarations against the criterion before it
 reports: C029_three_embeddings and C029_s3_order of C029_FermionGenerations are
 listed, chern_sum_zero_under_trs of C1233_ChernSumZero and
@@ -71,7 +83,10 @@ def strip_comments_and_strings(text: str) -> str:
                 in_string = False
             out.append("\n" if ch == "\n" else " ")
         elif depth > 0:
-            if two == "(*":
+            if ch == '"':
+                in_string = True
+                out.append(" ")
+            elif two == "(*":
                 depth += 1
                 out.append("  ")
                 i += 1
@@ -113,6 +128,25 @@ def verified_sources(project: Path) -> list[str]:
     return stems
 
 
+def check_coherence(tree: Path, objects: Path, stems: list[str]) -> None:
+    """Require that each compiled object comes from the checkout's source bytes.
+
+    The compiled tree carries its own copy of every source. The copy must equal the
+    checkout's file, and its object must not be older than the copy, so the printed
+    type and the statement text describe one source.
+    """
+    for stem in stems:
+        checkout = tree / "verified" / f"{stem}.v"
+        copy = objects / "verified" / f"{stem}.v"
+        obj = objects / "verified" / f"{stem}.vo"
+        if not copy.is_file() or not obj.is_file():
+            raise CensusError(f"no compiled source and object for verified/{stem} under {objects}")
+        if copy.read_bytes() != checkout.read_bytes():
+            raise CensusError(f"verified/{stem}.v differs between {tree} and {objects}: rebuild the compiled tree")
+        if obj.stat().st_mtime < copy.stat().st_mtime:
+            raise CensusError(f"verified/{stem}.vo is older than its source under {objects}: rebuild the compiled tree")
+
+
 def declarations(tree: Path, stems: list[str]) -> dict[str, list[tuple[str, str]]]:
     """Map each source stem to its (name, statement text) declarations."""
     found: dict[str, list[tuple[str, str]]] = {}
@@ -123,7 +157,7 @@ def declarations(tree: Path, stems: list[str]) -> dict[str, list[tuple[str, str]
 
 
 def flocq_root() -> Path:
-    """Flocq library directory: FLOCQ_ROOT, else the switch prefix, else `opam var lib`."""
+    """Flocq library directory: FLOCQ_ROOT, else the prefix of the active opam switch."""
     named = os.environ.get("FLOCQ_ROOT")
     candidates = []
     if named:
@@ -199,7 +233,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         stems = verified_sources(args.tree / "_RocqProject")
-        decls = declarations(args.tree, stems)
+        check_coherence(args.tree, args.objects, stems)
+        decls = declarations(args.objects, stems)
         types = run_checks(args.objects, decls)
         listed = {key: not ROOT_REFERENCE.search(text) for key, text in types.items()}
         for stem, name in CALIBRATION_LISTED:
