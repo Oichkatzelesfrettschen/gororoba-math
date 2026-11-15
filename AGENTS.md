@@ -115,6 +115,16 @@ gororoba repository shares; this file governs where the two differ.
   it pointed at; the tree is removed with its worktree. The build-host
   record of gororoba-infrastructure names the directories.
 
+- The root `Makefile` builds the working tree: `make lean`, and `make rocq`,
+  which copies `rocq/` into `BUILD_DIR/rocq` (default `build`, ignored)
+  and compiles both trees there with the options of their `_RocqProject`
+  files. On a workstation `build` is a symbolic link to a directory
+  outside the checkout, or `BUILD_DIR` names one, one per worktree; the
+  targets refuse any other path inside the checkout, and `make clean`
+  removes only a tree that carries the marker file `rocq-sync` wrote. A
+  compile inside `rocq/` leaves objects beside the sources; git ignores
+  them, and `ci/check_rocq.sh` never reads them, since it exports `HEAD`.
+
 ## Landing
 
 Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
