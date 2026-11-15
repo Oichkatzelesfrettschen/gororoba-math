@@ -32,7 +32,7 @@ quantum=$(CDPATH='' cd -- "$quantum" && pwd)
 here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 root=$(git -C "$here" rev-parse --show-toplevel)
 work=$(mktemp -d)
-trap 'rm -r "$work"' EXIT INT TERM
+trap 'rm -r "$work" </dev/null' EXIT INT TERM
 
 "$PYTHON" -B "$here/compare_estimator.py" cases "$quantum" "$work/EstimatorBlocks.lean" "$work/python.json"
 cd "$root/lean"
