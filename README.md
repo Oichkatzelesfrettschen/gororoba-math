@@ -204,6 +204,72 @@ blocks whose bins are all decided. Each prints the gororoba-quantum commit it
 read and runs on demand, since it reads another repository; the second also
 needs that repository's Python packages.
 
+```sh
+GOROROBA_QUANTUM=../gororoba-quantum sh ci/check_quantum_sources.sh
+```
+
+renders the eight sources of `rocq/quantum` that `ci/quantum-sources/` generates
+(the sign semantics and source certificates, the N = 21 target-flip witnesses,
+the canonical kernel certificates, the Gaussian-integer certificates of the
+G_2 derivation tables, the W8 arc matrices and the derivation span, and the
+Stiefel witness) from the records and `cd_core.py` of that checkout, requires
+each rendering to equal the tracked file, and requires each generator to reject
+a copy of its source with one digit changed (eight copies, one per rendered
+source), and runs four more calibrations: a copy of the gororoba-quantum
+package whose `cd_core.py` has one changed shift must be rejected by the
+generators that read it, the Stiefel package cross-check
+(`stiefel_witness_certificate.py --package-cross-check`, python-hypercomplex) must
+equal the retained `package_cross_check.json` (reported as skipped when
+`hypercomplex` is not installed), six refused writes (an override, `--output`, an
+unknown flag, a linked source, a linked `rocq/quantum`, an override naming no
+directory) must leave the checkout unchanged, and `make_mutants.py` and
+`make_span_mutants.py` must build their mutants from the tracked sources. It
+needs python-flint under `PYTHON`; a missing module or tool exits
+with status 2, a rendering difference with status 1. A write of a generator
+(`--write`, `--generate`) goes only to `rocq/quantum` of this checkout and to the
+JSON record beside it; a destination override is honored only with `--check`.
+
+```sh
+GOROROBA_QUANTUM=../gororoba-quantum opam exec --switch=rocq-9.3 -- \
+  sh ci/replay_quantum_bundles.sh [--ledgers-only] [BUNDLE...]
+```
+
+compares, for each retained bundle of `docs/evidence/` in gororoba-quantum, the
+`proofs/NAME.v` rows of its ledgers with the files of `rocq/quantum` (the
+`proofs/theories/` and `proofs/verified/` rows belong to gororoba-open and are
+compared with `GOROROBA_ROOT` when it is set), then runs the bundle's replay and
+the `TargetFlipN21` compile and kernel check. `--ledgers-only` stops after the
+comparison and needs no Rocq. A `BUNDLE` is one plain path component naming a
+bundle; any other word exits with status 2. It runs on demand, since it reads
+another repository and compiles for minutes; a bundle that reads a gororoba-open
+checkout is skipped unless `GOROROBA_ROOT` names one.
+
+The Rocq half of the span and Gaussian mutation controls has no caller. Nothing in
+`ci/check.sh`, `ci/check_rocq.sh` or `ci/check_quantum_sources.sh` runs
+`ci/quantum-sources/run_span_checks.sh`, which compiles the three span sources
+and `SpanQueries.v`, kernel-checks them, builds the six mutants of
+`make_span_mutants.py` and requires each to be rejected in the lemma named for it;
+the six mutants of `make_mutants.py` (the Gaussian-integer sources) have no
+compile driver. The span checks run by hand, with a build directory outside the
+checkout:
+
+```sh
+B=$(mktemp -d)
+cp rocq/quantum/*.v ci/quantum-sources/SpanQueries.v ci/quantum-sources/make_span_mutants.py "$B"
+(cd "$B" && opam exec --switch=rocq-9.3 -- rocq makefile --no-rocq-package-warning -Q . "" -o Makefile.span \
+  CdTowerDomain.v CdTowerDomainR.v CdTowerReal.v CdTwistedProduct.v CdTowerRing.v CdTowerRingBasis.v \
+  CdTowerRingBaseChange.v GaussianIntegerHom.v MatrixLeftInverseCertificate.v CdTowerG2Derivations.v && \
+  opam exec --switch=rocq-9.3 -- make -f Makefile.span)
+opam exec --switch=rocq-9.3 -- sh ci/quantum-sources/run_span_checks.sh "$B"
+```
+
+`run_span_checks.sh` compiles the span sources itself, takes `$HOME/.opam/rocq-9.3/bin/rocq`,
+writes `span-checks-record.txt` in `$B`, ends with one verdict line and exits 0
+when every expectation held.
+The `make` above runs one job at a time: measured with `-j4`, it stopped on a
+missing dependency of `CdTowerDomain` (hypothesis: the generated makefile
+lacks an edge for the empty logical root; untraced).
+
 ## License
 
 Apache-2.0, in [LICENSE](LICENSE), for the library and the proof trees. The
