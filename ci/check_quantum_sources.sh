@@ -19,12 +19,13 @@
 # docs/evidence/stiefel_witness/package_cross_check.json of the checkout;
 # without hypercomplex under $PYTHON that check is reported as skipped and
 # the status is unchanged. (3) Write containment: a write with
-# QUANTUM_SOURCES_ROCQ, with --output, with an unknown flag, into a linked
+# QUANTUM_SOURCES_ROCQ, with --output (also behind an abbreviated write flag),
+# with an unknown flag, into a linked
 # source or into a linked rocq/quantum (run from a scratch copy of this
 # directory) must exit 2 and change nothing. (4) make_mutants.py and
 # make_span_mutants.py (the controls run_span_checks.sh compiles) must
 # build their mutants from the tracked sources, and make_span_mutants.py must
-
+# fail on a source that lacks its anchor. Prints one line per check, then the
 # summary, the gororoba-quantum commit and the sha256 of cd_core.py.
 # Runs on demand, outside ci/check.sh, because it reads another repository.
 # Exit status: 0 every rendering equal and every perturbed copy rejected,
@@ -195,6 +196,7 @@ refused() { # NAME DIRECTORY-OF-THE-COPY GENERATOR ARGUMENT...; the environment 
 QUANTUM_SOURCES_ROCQ="$work/outside" refused "an override" "$st" cd_sign_rocq_ast --write
 refused "--output" "$st" target_flip_certificate --write --output "$work/out/y.v"
 refused "an unknown flag" "$st" cd_sign_rocq_ast --write --bogus
+refused "an abbreviated write flag with --output" "$st" target_flip_certificate --writ --output "$work/out/y.v"
 refused "a linked source" "$st" cd_sign_rocq_ast --write
 refused "a linked rocq/quantum" "$st2" cd_sign_rocq_ast --write
 QUANTUM_SOURCES_ROCQ="$work/missing" refused "an override that names no directory in a check" "$st" cd_sign_rocq_ast --check
