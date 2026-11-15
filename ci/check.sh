@@ -4,7 +4,9 @@
 # the checkout:
 #   1. every tracked shell script passes the lint at severity error, every
 #      tracked Python file passes ruff check and ruff format --check under
-#      ruff.toml, and every tracked workflow passes actionlint;
+#      ruff.toml, every tracked workflow passes actionlint, and each line of
+#      a tracked shell script that runs rm with a recursive option redirects
+#      standard input from /dev/null;
 #   2. every tracked module under lean/GororobaMath/, taken from git's file
 #      list, and the audit command build with warnings as errors;
 #   3. the axiom audit accepts a generated file that imports the root
@@ -49,11 +51,12 @@ echo "check: shellcheck passed on $(wc -l <"$work/scripts.txt") script(s)"
 # a write-protected file (a git object, mode 444), and a gate started from a
 # terminal then waits for an answer. The rule is lexical and reads one line at
 # a time: it knows the options -r, -R, a bundle that holds either, and
-# --recursive, and it reports a removal whose redirection sits on another
-# line. A removal built from a variable is outside it. The samples below
+# --recursive, after any other option words, and it reports a removal whose
+# redirection sits on another line. A removal built from a variable is
+# outside it. The samples below
 # calibrate both patterns; printf joins each sample so that the scan, which
 # reads this script too, meets no sample as a line.
-removal='(^|[^[:alnum:]_-])rm[[:space:]]+(-[[:alnum:]]*[rR][[:alnum:]]*|--recursive)([[:space:]]|$)'
+removal='(^|[^[:alnum:]_-])rm[[:space:]]+(-[^[:space:]]*[[:space:]]+)*(-[[:alnum:]]*[rR][[:alnum:]]*|--recursive)([[:space:]]|$)'
 redirected='</dev/null'
 reads_terminal() {
   # Prints the lines of standard input that remove recursively without the
@@ -64,7 +67,7 @@ reads_terminal() {
     { grep -v -E '^[0-9]+:[[:space:]]*#' || [ $? -eq 1 ]; } |
     { grep -v -F "$redirected" || [ $? -eq 1 ]; }
 }
-for option in -r -R -fr -rf --recursive; do
+for option in -r -R -fr -rf --recursive "-f -r" "-v --recursive"; do
   [ -n "$(printf 'rm %s scratch\n' "$option" | reads_terminal)" ] &&
     [ -n "$(printf 'rm %s scratch # <note>\n' "$option" | reads_terminal)" ] &&
     [ -z "$(printf 'rm %s scratch </dev/null\n' "$option" | reads_terminal)" ] || {
@@ -72,10 +75,14 @@ for option in -r -R -fr -rf --recursive; do
     exit 1
   }
 done
-[ -z "$(printf 'rm scratch\nperform -r scratch\n# rm %s scratch\n' -r | reads_terminal)" ] || {
+[ -z "$(printf 'rm scratch\nrm -f scratch\nperform -r scratch\n# rm %s scratch\n' -r | reads_terminal)" ] || {
   echo "check: the recursive-removal rule reported a line that removes nothing recursively" >&2
   exit 1
 }
+if reads_terminal <"$work" >/dev/null 2>&1; then
+  echo "check: the recursive-removal rule accepted an input it cannot read (a directory)" >&2
+  exit 1
+fi
 : >"$work/terminal-removals.txt"
 while IFS= read -r script; do
   found=$(reads_terminal <"$script") || {
