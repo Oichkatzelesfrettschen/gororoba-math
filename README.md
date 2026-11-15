@@ -187,6 +187,47 @@ blocks whose bins are all decided. Each prints the gororoba-quantum commit it
 read and runs on demand, since it reads another repository; the second also
 needs that repository's Python packages.
 
+## Kernel replay evidence
+
+gororoba-open records a theorem as kernel checked from a replay of its
+proof source. `ci/kernel_replay_evidence.py` is the producer of that replay:
+for one source of `rocq/open` and the names of its declarations it
+compiles the dependency closure in a scratch directory, re-checks the proof
+object with `rocq check -silent -o`, runs `Print Assumptions` on each
+declaration, and writes the evidence JSON that
+`gororoba-db theorem identity record-kernel-evidence` ingests, together with
+the proof object and the compile, kernel and assumption logs a witness binds.
+gororoba-open reads that file and never runs Rocq.
+
+```sh
+opam exec --switch=rocq-9.3 -- python3 -I ci/kernel_replay_evidence.py \
+    --proof theories/X.v --declaration NAME --warning-policy fatal_default \
+    --out ../kernel-capture/X
+```
+
+The tree is `rocq/open` of the checkout `GOROROBA_MATH` names, or the
+directory `--tree` names. The producer accepts only Rocq 9.3.0 on OCaml 5.5.1,
+refuses a warning line, an error line and a local absolute path in any
+output, writes the evidence file last, and refuses an output directory inside
+the git repository that tracks the tree. Its header comment gives the fixed argument vectors and the
+environment variables it reads (`FLOCQ_ROOT`, `OPAM_SWITCH_PREFIX`;
+`COQPATH` and `ROCQPATH` are removed).
+
+```sh
+sh ci/check_kernel_replay_evidence.sh
+```
+
+calibrates it on a synthetic two-file tree under the switch `rocq-9.3`: a
+closed theorem, a theorem over a declared axiom and a source that imports
+Flocq must each produce evidence whose digests match the written files, whose
+assumption lists are empty, `postulate` and empty, and, for Flocq, whose object
+list holds the digest of every `.vo` of the switch's library in sorted order
+with `-R external/Flocq Flocq` before every target. A warning printed on a zero
+exit status, a source that fails to compile, a missing declaration, another
+Rocq version, a Flocq directory without `Core/Core.vo` and an output directory
+inside the tracking repository must each be refused with no evidence file. It
+runs on demand and compiles a few sources of a few lines each.
+
 ## License
 
 Apache-2.0, in [LICENSE](LICENSE), for the library and the proof trees. The

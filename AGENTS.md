@@ -37,6 +37,9 @@ gororoba repository shares; this file governs where the two differ.
   `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
   `GOROROBA_QUANTUM`.
+  `ci/kernel_replay_evidence.py` produces the kernel replay evidence that
+  gororoba-open ingests for a theorem receipt, and
+  `ci/check_kernel_replay_evidence.sh` calibrates it on demand.
 
 ## Statements and proofs
 
@@ -80,6 +83,14 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/open/kernel-assumptions.txt` and
   `rocq/quantum/kernel-assumptions.txt`. A change that adds or removes an
   axiom a tree rests on changes that tree's ledger in the same commit.
+- Kernel replay evidence for a gororoba-open receipt comes from
+  `ci/kernel_replay_evidence.py`, which compiles, kernel-checks and writes the
+  evidence file and the retained logs and object into a directory outside
+  every checkout; gororoba-open ingests the file and never runs Rocq. A
+  change to the compile or checker argument vectors, the closure order or
+  the Flocq handling of the script changes the evidence contract that
+  `theorem_replay.rs` of gororoba-open validates, so both land together, and
+  `ci/check_kernel_replay_evidence.sh` runs before the script lands.
 - Retained records in gororoba-open and gororoba-quantum cite sources of
   these trees by sha256. Before editing a source, `git grep` its digest in
   both repositories; a cited source keeps its bytes, and a change lands in a
