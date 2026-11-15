@@ -97,20 +97,28 @@ Claim: the inventories were written to describe the chain with period 16.
   names a right outside `chain_table 16 N`, another owner relation, or
   another delegation rule; (2) an inventory of another size from the same
   origin that differs from `chain_table 16 N`.
-- Search made (gororoba-open, all refs, 2026-11-15): the inventories and a
-  model file that declares `has_right` and `reachable_delegation` as
-  parameters arrive in the initial commit 63598e85 together with
-  `bin/coq_prepare_confine.py`, which rewrites `Theorem` to `Axiom` so the
-  files typecheck, and a `make coq` target that compiles the result. No
-  commit holds a generator of the statements (`git log --all -S` for
-  `reachable_delegation` and for `arena_` outside the ten files), and no
-  tracked document outside them names the threads or arenas. The claim is
-  therefore unfalsified and unconfirmed by any origin record.
+- Search made (gororoba-open, all refs, 2026-11-15, `git log --all
+  --name-only -S` for `reachable_delegation` and for `arena_`): the
+  inventories and a model file that declares `has_right` and
+  `reachable_delegation` as parameters arrive in the initial commit
+  63598e85 together with `bin/coq_prepare_confine.py`, which rewrites
+  `Theorem` to `Axiom` so the files typecheck, and a `make coq` target that
+  compiles the result. No commit holds a generator of the statements, and no
+  tracked file outside the ten names a thread or an arena. One origin record
+  speaks of the semantics: the roadmap of that commit
+  (`docs/ULTRA_ROADMAP.md`, section F) lists as open "Decide the actual
+  semantics for `has_right` / `reachable_delegation`" and "Prove a minimal
+  non-trivial theorem end-to-end (no axioms)"; later commits carry the same
+  two lines through registry files, and the current tree holds neither. So
+  the origin fixed no semantics: the owner relation, the closure and the
+  closed-world reading are decisions of this tree, the claim that the chain
+  was intended is unfalsified, and no origin record confirms it.
 
 ## Relation to the literature
 
 Read on 2026-11-15, at the pages cited, in the versions named; a statement
-about a paper below rests on those pages only.
+about a paper below rests on those pages only, and every page cited was
+opened in the PDF.
 
 - Lipton and Snyder, "A Linear Time Algorithm for Deciding Subject
   Security", Yale Research Report 72, June 1976 (the report version; the
@@ -144,7 +152,7 @@ about a paper below rests on those pages only.
   never leak authority to each other, where connected is a symmetric
   closure.
 - Miller, Yee and Shapiro, "Capability Myths Demolished", SRL-2003-02
-  (pp. 1 and 4-7 read). The Confinement Myth section, p. 5: "no capability
+  (pp. 1 and 4-7 read). Under "Achieving Confinement", p. 5: "no capability
   transfer can introduce a new connection between two objects that were not
   already connected by some path".
 
