@@ -120,7 +120,7 @@ for bundle in "$@"; do
 done
 
 work=$(mktemp -d)
-trap 'rm -r "$work"' EXIT
+trap 'rm -r "$work" </dev/null' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 mkdir -p "$work/ledger-root/proofs"
