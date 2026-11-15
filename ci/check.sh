@@ -44,26 +44,52 @@ while IFS= read -r script; do
 done <"$work/scripts.txt"
 echo "check: shellcheck passed on $(wc -l <"$work/scripts.txt") script(s)"
 
-# A recursive removal reads standard input from /dev/null: under a terminal rm
-# asks before it removes a write-protected file (a git object, mode 444), and
-# a gate run from a terminal then waits for an answer. The pattern is
-# calibrated on one line it must report and one it must pass; printf joins
-# the two samples so that neither is a line of this script the scan reads.
-bare_removal='rm -r[^<]*$'
-if ! printf 'rm %s scratch\n' -r | grep -q -E "$bare_removal" ||
-  printf 'rm %s scratch </dev/null\n' -r | grep -q -E "$bare_removal"; then
-  echo "check: the recursive-removal pattern failed its calibration" >&2
-  exit 1
-fi
-git ls-files -- '*.sh' Makefile | while IFS= read -r script; do
-  grep -n -E "$bare_removal" "$script" | grep -v -E '^[0-9]+:[[:space:]]*#' | sed "s|^|$script:|"
-done >"$work/bare-removals.txt"
-[ ! -s "$work/bare-removals.txt" ] || {
-  cat "$work/bare-removals.txt" >&2
-  echo "check: a recursive removal reads the terminal; append </dev/null" >&2
+# A line of a tracked shell script that runs rm with a recursive option also
+# holds the redirection </dev/null: under a terminal rm asks before it removes
+# a write-protected file (a git object, mode 444), and a gate started from a
+# terminal then waits for an answer. The rule is lexical and reads one line at
+# a time: it knows the options -r, -R, a bundle that holds either, and
+# --recursive, and it reports a removal whose redirection sits on another
+# line. A removal built from a variable is outside it. The samples below
+# calibrate both patterns; printf joins each sample so that the scan, which
+# reads this script too, meets no sample as a line.
+removal='(^|[^[:alnum:]_-])rm[[:space:]]+(-[[:alnum:]]*[rR][[:alnum:]]*|--recursive)([[:space:]]|$)'
+redirected='</dev/null'
+reads_terminal() {
+  # Prints the lines of standard input that remove recursively without the
+  # redirection. Status 2 reports a read error of the first grep, the one
+  # command here that reads a file; the later ones read its output.
+  matches=$(grep -n -E "$removal") || { [ $? -eq 1 ] || return 2; }
+  [ -z "$matches" ] || printf '%s\n' "$matches" |
+    { grep -v -E '^[0-9]+:[[:space:]]*#' || [ $? -eq 1 ]; } |
+    { grep -v -F "$redirected" || [ $? -eq 1 ]; }
+}
+for option in -r -R -fr -rf --recursive; do
+  [ -n "$(printf 'rm %s scratch\n' "$option" | reads_terminal)" ] &&
+    [ -n "$(printf 'rm %s scratch # <note>\n' "$option" | reads_terminal)" ] &&
+    [ -z "$(printf 'rm %s scratch </dev/null\n' "$option" | reads_terminal)" ] || {
+    echo "check: the recursive-removal rule failed its calibration on rm $option" >&2
+    exit 1
+  }
+done
+[ -z "$(printf 'rm scratch\nperform -r scratch\n# rm %s scratch\n' -r | reads_terminal)" ] || {
+  echo "check: the recursive-removal rule reported a line that removes nothing recursively" >&2
   exit 1
 }
-echo "check: every recursive removal reads /dev/null"
+: >"$work/terminal-removals.txt"
+while IFS= read -r script; do
+  found=$(reads_terminal <"$script") || {
+    echo "check: the recursive-removal rule could not read $script" >&2
+    exit 1
+  }
+  [ -z "$found" ] || printf '%s\n' "$found" | sed "s|^|$script:|" >>"$work/terminal-removals.txt"
+done <"$work/scripts.txt"
+[ ! -s "$work/terminal-removals.txt" ] || {
+  cat "$work/terminal-removals.txt" >&2
+  echo "check: a recursive removal can read the terminal; put </dev/null on its line" >&2
+  exit 1
+}
+echo "check: each recursive removal of $(wc -l <"$work/scripts.txt") script(s) reads /dev/null"
 
 git ls-files -- '*.py' >"$work/python.txt"
 if [ -s "$work/python.txt" ]; then

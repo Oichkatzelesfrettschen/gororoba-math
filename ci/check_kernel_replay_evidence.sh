@@ -48,8 +48,9 @@ work=$(mktemp -d "${TMPDIR:-/tmp}/gororoba-math-replay.XXXXXXXX")
 cleanup() {
   # POSIX rm asks before it removes a write-protected file when standard input
   # is a terminal, and the object files of the repositories under $work are
-  # mode 444, so a run from a terminal would wait here for an answer. With
-  # standard input at /dev/null rm removes them unasked.
+  # mode 444, so a run from a terminal waits here for an answer (measured,
+  # GNU coreutils on Ubuntu 26.04.1). With standard input at /dev/null rm
+  # removes them unasked.
   rm -r "$work" </dev/null
 }
 trap cleanup EXIT
