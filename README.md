@@ -29,15 +29,15 @@ theorems hold over every field of characteristic zero.
 `rocq/open` is the proof tree of gororoba-open (351 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
-36 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
+39 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
 tower over ordered domains and commutative rings with its basis, base change,
 order-three map and the kernel certificates of the canonical `A_5`
 points, basis-sign and associator normal
 forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
-and the terminal-channel separation) and seven that began here. The two
+and the terminal-channel separation) and ten that began here. The two
 imported trees arrived with their history; `rocq/open/README.md` describes
-that tree in the words of its origin, where it sat at `proofs/`. The seven
-sources that began here are
+that tree in the words of its origin, where it sat at `proofs/`. Seven of
+the sources that began here are
 `GaussianIntegerHom.v` (the homomorphism `(a, b) -> a + b i` from the
 Gaussian integers to a commutative ring with a square root of -1),
 `MatrixLeftInverseCertificate.v` (a matrix `L` with `L M = d I` makes the
@@ -57,6 +57,24 @@ itself is one where the image of 6 is a nonzero divisor) and
 `A5W8ArcMatrixRanks.v` (independent
 columns of eight 24 x 6 matrices over every such ring where the scalar of
 the certificate maps to a nonzero divisor).
+
+Three sources join the two trees, which each define the Cayley-Dickson
+tower recursively; `rocq/quantum/_RocqProject` reads `rocq/open/theories`
+as `OpenGororoba` for them. `TowerBridge.v` maps the real tower of
+`OpenGororoba.RecursiveCDTower` onto the real instance of the tower of
+`CdTowerDomain`, with a two-sided inverse, and the map preserves
+multiplication (`to_quantum_mul`). `SignBridge.v` proves that the sign
+functions of the two trees agree at every level `k`, each under the
+bound its spelling needs: the fuel-indexed function of
+`rocq/open/theories` for fuel at least `k` (`open_fuel_sign_sigma`), that
+of `rocq/open/verified` for fuel above `k` (`verified_fuel_sign_sigma`),
+the Boolean sign law for indices below `2^k` (`open_cube_sign_sigma`),
+and the Python semantics of `cd_sign` for such indices and fuel at least
+`k + 7` (`python_cd_sign_returns_open_sign`). `QuantumChannelFromOpen.v`
+derives `observed_means_exclude_common_binary_channel` of `rocq/quantum`,
+in its rational and its real form, from the general theorem
+`separated_centers_exclude_common_binary_channel` of `rocq/open`; the
+other statements of the two terminal-channel files are not rederived.
 
 ## Toolchain
 
@@ -128,7 +146,7 @@ sh ci/check_rocq.sh
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 36
+`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 39
 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
@@ -137,7 +155,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth.
 
-The script then re-checks all 387 project-listed modules with Rocq's kernel
+The script then re-checks all 390 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
