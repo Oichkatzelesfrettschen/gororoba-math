@@ -20,9 +20,12 @@ ideal circuit: the contrast is `+1` at both outputs of an aligned pair and
 `KernelMap.nullity_eq_alignedPairCount` proves that every labelling of the
 bins that meets this contract has exact nullity `alignedPairCount k i j`.
 The contract is a hypothesis: no definition here mirrors the circuit or
-`output_contrast`, and the statement that the ideal contrast of
-`kernel_map_circuit` meets the contract is a property of gororoba-quantum
-code that a comparison under `ci/` would check.
+`output_contrast`. `ci/compare_kernel_map_bins.sh` checks it on
+`pathion_kernel_map` of gororoba-quantum: for the six operands and two
+quarter-turn twins of that module, the ideal output contrast of
+`kernel_map_circuit`, with output bin `y` read as index `y` at level `5`,
+meets the contract under `Tower.misaligned`, and the comparison rejects the
+member `kmap_flip3_e1pe18` and a contrast with one bin negated.
 
 ## Main results
 

@@ -201,9 +201,22 @@ GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_estimator.sh
 
 compares `KernelMap.vHat`, `KernelMap.nHat` and `KernelMap.nullity`, evaluated
 over the rationals, with `pathion_kernel_map._pair_summary` on twelve fixed
-blocks whose bins are all decided. Each prints the gororoba-quantum commit it
-read and runs on demand, since it reads another repository; the second also
-needs that repository's Python packages.
+blocks whose bins are all decided, and
+
+```sh
+GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_kernel_map_bins.sh
+```
+
+checks the bin contract of `KernelMap.nullity_eq_alignedPairCount` on the
+ideal kernel map of `pathion_kernel_map`: for its six operands and two twins
+the `+1` bins of the ideal output contrast of `kernel_map_circuit` hold both
+indices of every aligned pair of `Tower.misaligned` and one index of every
+misaligned pair, and `Tower.alignedPairCount`, `KernelMap.nullity` and half
+the contrast sum agree; it rejects the member `kmap_flip3_e1pe18` and a
+contrast with one bin negated. Each prints the gororoba-quantum commit it
+read and runs on demand, since it reads another repository; the second and
+third also need that repository's Python packages and the built Lean
+library.
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/check_quantum_sources.sh
