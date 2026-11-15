@@ -3,7 +3,7 @@
 ROOT is the gororoba-quantum checkout named by GOROROBA_QUANTUM: the generators read gororoba_quantum/cd_core.py,
 gororoba_quantum/parallel.py and the evidence records there. ROCQ is the directory of the Rocq sources they render.
 
-A write (`--write`, `--generate`, or the default mode of span_certificate.py) goes only to rocq/quantum of this
+A write (`--write`, `--generate`) goes only to rocq/quantum of this
 checkout and to the JSON record beside the generator: ROCQ is then that directory resolved, which must lie inside
 this checkout and be no symbolic link, with no symbolic link among its `.v` files; QUANTUM_SOURCES_ROCQ, `--output`,
 `--rocq`, `--record` and every other option end the run with status 2 (an option is accepted in a write only when it
@@ -11,7 +11,9 @@ is the write flag or an abbreviation of it, which argparse also reads as a write
 read modes honor QUANTUM_SOURCES_ROCQ, which must name an
 existing directory (ci/check_quantum_sources.sh points it at a scratch copy to calibrate the comparison), and a read
 creates no file or directory. Importing the module ends the process with status 2 when GOROROBA_QUANTUM does not
-name a checkout that holds gororoba_quantum/cd_core.py.
+name a checkout that holds gororoba_quantum/cd_core.py. The default mode of span_certificate.py writes span.json and
+applies its own form of the rule: no QUANTUM_SOURCES_ROCQ, and `--out`, `--left-inverses` and `--g2` only as the
+tracked records.
 """
 
 from __future__ import annotations
@@ -70,9 +72,9 @@ def _rocq() -> Path:
 
 
 def confine_record(path: Path, own: Path) -> None:
-    """End the run with status 2 unless `path` is the record `own` that sits beside the generator, no link."""
+    """End the run with status 2 unless `path` is the tracked record `own`, no link."""
     if own.is_symlink() or path.resolve() != own.resolve():
-        raise refuse(f"a write of {path.name} goes to {own.name} beside the generator only")
+        raise refuse(f"a write reads and writes the tracked {own.name} only, not {path}")
 
 
 writing = any(_write_flag(token) for token in sys.argv[1:])

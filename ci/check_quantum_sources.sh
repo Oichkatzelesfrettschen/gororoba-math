@@ -23,7 +23,8 @@
 # without hypercomplex under $PYTHON that check is reported as skipped and
 # the status is unchanged. (3) Write containment: a write with
 # QUANTUM_SOURCES_ROCQ, with --output (also behind an abbreviated write flag),
-# with an unknown flag, into a linked
+# with an unknown flag, in the default mode of span_certificate.py with an
+# override or an untracked record, into a linked
 # source or into a linked rocq/quantum (run from a scratch copy of this
 # directory) must exit 2 and change nothing, and a plain --write in a
 # scratch copy with no link must exit 0 and restore a source with one
@@ -239,6 +240,15 @@ if [ "$rc" -eq 0 ] && cmp -s "$st3/rocq/quantum/CdSignPythonSemantics.v" "$root/
 else
   echo "check_quantum_sources: a plain write in a scratch copy exited $rc or did not restore the tracked bytes" >&2
   tail -n 5 "$work/admitted.log" >&2
+  status=1
+fi
+
+# The default mode of span_certificate.py writes span.json: refused with an override or an untracked input.
+QUANTUM_SOURCES_ROCQ="$work/elsewhere" refused "an override in the default mode of span_certificate" "$st3" span_certificate --left-inverses "$st3/ci/quantum-sources/left-inverses.json"
+refused "span_certificate with a left-inverse record outside the tracked one" "$st3" span_certificate --left-inverses "$work/elsewhere/left-inverses.json"
+refused "span_certificate with --out elsewhere" "$st3" span_certificate --left-inverses "$st3/ci/quantum-sources/left-inverses.json" --out "$work/out/span.json"
+if [ -e "$work/out" ] || [ -e "$st3/ci/quantum-sources/span.json" ]; then
+  echo "check_quantum_sources: a refused span write created a file" >&2
   status=1
 fi
 

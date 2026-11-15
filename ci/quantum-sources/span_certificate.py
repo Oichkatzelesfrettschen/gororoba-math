@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import random
 import sys
 from pathlib import Path
@@ -276,6 +277,13 @@ def main(argv: list[str] | None = None) -> int:
         return 0 if same else 1
     if arguments.left_inverses is None:
         parser.error("--left-inverses is required unless --smith is given")
+    if not (arguments.check or arguments.verify):
+        # The default mode writes the tracked record, so it reads only the tracked inputs and takes no override.
+        if os.environ.get("QUANTUM_SOURCES_ROCQ"):
+            raise quantum_checkout.refuse("a write of the span record takes no QUANTUM_SOURCES_ROCQ")
+        quantum_checkout.confine_record(arguments.out, SPAN_RECORD)
+        quantum_checkout.confine_record(arguments.left_inverses, gc.LEFT_INVERSES)
+        quantum_checkout.confine_record(arguments.g2, gc.G2_RECORD)
     tables = gc.derivation_tables(json.loads(arguments.g2.read_text(encoding="utf-8")))
     left_sparse = gc.derivation_left_inverse(json.loads(arguments.left_inverses.read_text(encoding="utf-8")))
     if arguments.verify:
@@ -286,8 +294,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"C V = I and P M + d V C = d I: {len(found)} defects, d = {record['d']}")
         return 1 if found else 0
     text = record_text(span_record(tables, left_sparse, [0]))
-    if not arguments.check:
-        quantum_checkout.confine_record(arguments.out, SPAN_RECORD)
     if arguments.check:
         same = arguments.out.is_file() and arguments.out.read_text(encoding="utf-8") == text
         print(f"{'ok' if same else 'DIFFERS'} {arguments.out.name}")

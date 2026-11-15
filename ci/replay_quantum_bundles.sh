@@ -74,6 +74,14 @@ quantum=${GOROROBA_QUANTUM:?replay_quantum_bundles: set GOROROBA_QUANTUM to a go
   exit 2
 }
 quantum=$(CDPATH='' cd -- "$quantum" && pwd)
+# A bundle script runs from its shadow root, so a relative GOROROBA_ROOT is made absolute here.
+if [ -n "${GOROROBA_ROOT:-}" ]; then
+  [ -d "$GOROROBA_ROOT" ] || {
+    echo "replay_quantum_bundles: GOROROBA_ROOT=$GOROROBA_ROOT is no directory" >&2
+    exit 2
+  }
+  GOROROBA_ROOT=$(CDPATH='' cd -- "$GOROROBA_ROOT" && pwd)
+fi
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 
 # bundle/ledger:source:digest, rows skipped while they hold that digest (see the header)
