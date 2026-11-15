@@ -286,6 +286,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"C V = I and P M + d V C = d I: {len(found)} defects, d = {record['d']}")
         return 1 if found else 0
     text = record_text(span_record(tables, left_sparse, [0]))
+    if not arguments.check:
+        quantum_checkout.confine_record(arguments.out, SPAN_RECORD)
     if arguments.check:
         same = arguments.out.is_file() and arguments.out.read_text(encoding="utf-8") == text
         print(f"{'ok' if same else 'DIFFERS'} {arguments.out.name}")
