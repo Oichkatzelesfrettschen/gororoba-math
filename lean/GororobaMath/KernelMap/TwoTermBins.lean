@@ -21,12 +21,13 @@ ideal circuit: the contrast is `+1` at both outputs of an aligned pair and
 bins that meets this contract has exact nullity `alignedPairCount k i j`.
 The contract is a hypothesis: no definition here mirrors the circuit or
 `output_contrast`. `ci/compare_kernel_map_bins.sh` evaluates
-`KernelMap.binContract` at level `5` on the ideal output contrast of
-`kernel_map_circuit` of `pathion_kernel_map` in gororoba-quantum, with output bin `y` read as index
-`y`, for every operand `e i + t e j` with `i ≠ j` and `t = ±1`; a run that
-returns `true` for an operand gives its exact nullity through
-`KernelMap.nullity_eq_alignedPairCount_of_binContract`. The comparison
-rejects the member `kmap_flip3_e1pe18` and a contrast with one bin negated.
+`KernelMap.binContract` on the ideal output contrast of `kernel_map_circuit`
+of `pathion_kernel_map` in gororoba-quantum, with output bin `y` read as
+index `y`, for every operand `e i + t e j` with `i ≠ j` and `t = ±1` at a
+level `5`, `6` or `7`, and on the coset-block circuits of the 64- and
+128-dimensional runs. A run that returns `true` for an operand gives its
+exact nullity through `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
+and the contract rejects the mutated references of each level.
 
 ## Main results
 
