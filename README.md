@@ -187,6 +187,31 @@ blocks whose bins are all decided. Each prints the gororoba-quantum commit it
 read and runs on demand, since it reads another repository; the second also
 needs that repository's Python packages.
 
+```sh
+GOROROBA_QUANTUM=../gororoba-quantum sh ci/check_quantum_sources.sh
+```
+
+renders the eight sources of `rocq/quantum` that `ci/quantum-sources/` generates
+(the sign semantics and source certificates, the N = 21 target-flip witnesses,
+the canonical kernel certificates, the Gaussian-integer certificates of the
+G_2 derivation tables, the W8 arc matrices and the derivation span, and the
+Stiefel witness) from the records and `cd_core.py` of that checkout, requires
+each rendering to equal the tracked file, and requires each generator to reject
+a copy of its source with one digit changed. It needs python-flint and qiskit
+under `PYTHON`.
+
+```sh
+GOROROBA_QUANTUM=../gororoba-quantum opam exec --switch=rocq-9.3 -- \
+  sh ci/replay_quantum_bundles.sh [BUNDLE...]
+```
+
+runs the retained Rocq replays of `docs/evidence/` in gororoba-quantum (and the
+`TargetFlipN21` compile and kernel check) against the files of `rocq/quantum`,
+after comparing each `proofs/` row of the bundle's ledger with the source it
+names. It runs on demand, since it reads another repository and compiles for
+minutes; a bundle that reads a gororoba-open checkout is skipped unless
+`GOROROBA_ROOT` names one.
+
 ## License
 
 Apache-2.0, in [LICENSE](LICENSE), for the library and the proof trees. The

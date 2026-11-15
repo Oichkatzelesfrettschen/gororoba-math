@@ -37,6 +37,27 @@ gororoba repository shares; this file governs where the two differ.
   `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
   `GOROROBA_QUANTUM`.
+- `ci/quantum-sources/` holds the generators of eight `rocq/quantum` sources
+  (`CdSignPythonSemantics.v`, `CdSignSourceCertificate.v`, `TargetFlipN21.v`,
+  `CdTowerCanonicalKernels.v`, `CdTowerG2Derivations.v`,
+  `A5W8ArcMatrixRanks.v`, `CdTowerG2DerivationSpan.v` and
+  `StiefelWitnessInvertible.v`), the JSON records three of them render
+  (`certificates.json`, `left-inverses.json`, `span.json`), and the helpers of
+  the span certificate. A generator reads `gororoba_quantum/cd_core.py`,
+  `parallel.py` and evidence records of the checkout `GOROROBA_QUANTUM`
+  names, so no admission check runs it. `ci/check_quantum_sources.sh` renders
+  each source again, requires it to equal the tracked file and rejects a copy
+  with one digit changed; `ci/replay_quantum_bundles.sh` runs the retained
+  replays of gororoba-quantum against `rocq/quantum`. Both run on demand.
+  The generator files here are the live ones: a source of `rocq/quantum`
+  that a generator renders changes through its generator, in the same commit,
+  and `--write` writes `rocq/quantum` of this checkout. A generator that a
+  retained ledger of gororoba-quantum binds (`cd_sign_rocq_ast.py`,
+  `cd_sign_source_ast.py`, `target_flip_certificate.py`,
+  `kernel_certificates.py` with `certificates.json`) keeps its bytes there,
+  unexecuted, as the record of the commit that ledger names. The rendered
+  sources keep their header and marker lines, which name the path of the
+  generator in gororoba-quantum, because the retained records cite those bytes.
 
 ## Statements and proofs
 
