@@ -54,8 +54,11 @@ gororoba repository shares; this file governs where the two differ.
   and `--write` writes `rocq/quantum` of this checkout. A generator that a
   retained ledger of gororoba-quantum binds (`cd_sign_rocq_ast.py`,
   `cd_sign_source_ast.py`, `target_flip_certificate.py`,
-  `kernel_certificates.py` with `certificates.json`) keeps its bytes there,
-  unexecuted, as the record of the commit that ledger names. The rendered
+  `kernel_certificates.py` with `certificates.json`, and
+  `gaussian_certificates.py`, `render_span.py`, `span_certificate.py` and
+  `span.json`, which the findings ledger of gororoba-quantum cites) keeps its
+  bytes there, as the record of the commit that ledger names, and no gate
+  there renders a source from it. The rendered
   sources keep their header and marker lines, which name the path of the
   generator in gororoba-quantum, because the retained records cite those bytes.
 
