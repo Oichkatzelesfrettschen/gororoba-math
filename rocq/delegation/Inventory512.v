@@ -3,7 +3,8 @@
    a change goes through the generator. Inventory holds the statements of
    that file, each with its proof, for every rights relation. inventory
    lists the rights they name, and inventory_is_chain_table identifies it
-   with chain_table 512 of Model.v. *)
+   with chain_table 16 512 of Model.v, the chain of 512 threads with an
+   arena every 16. *)
 
 From Stdlib Require Import String List.
 From GororobaDelegation Require Import Model.
@@ -7790,10 +7791,11 @@ Definition inventory : list (string * string * Action) :=
    ("Thread_511", "Thread 511", Receive);
    ("Thread_511", "Thread 511", Map)].
 
-Lemma inventory_is_chain_table : inventory = chain_table 512.
+Lemma inventory_is_chain_table : inventory = chain_table 16 512.
 Proof. vm_compute. reflexivity. Qed.
 
 Module Size <: SIZE.
+  Definition period := 16.
   Definition n := 512.
 End Size.
 
@@ -7802,9 +7804,11 @@ Module Statements := Inventory System.R.
 
 (* Each right an inventory statement names is held in the chain. *)
 Theorem inventory_held :
-  Forall (fun r => chain_right 512 (fst (fst r)) (snd (fst r)) (snd r))
+  Forall (fun r => chain_right 16 512 (fst (fst r)) (snd (fst r)) (snd r))
     inventory.
-Proof. rewrite inventory_is_chain_table. apply chain_table_held. Qed.
+Proof.
+  rewrite inventory_is_chain_table. apply chain_table_held. discriminate.
+Qed.
 
 (* So the conclusion of each inventory statement holds outright. *)
 Theorem inventory_reachable :
@@ -7812,5 +7816,6 @@ Theorem inventory_reachable :
                      (fst (fst r)) (snd (fst r)) (snd r))
     inventory.
 Proof.
-  rewrite inventory_is_chain_table. exact System.chain_table_reachable.
+  rewrite inventory_is_chain_table. apply System.chain_table_reachable.
+  discriminate.
 Qed.

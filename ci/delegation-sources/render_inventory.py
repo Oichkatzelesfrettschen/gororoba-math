@@ -8,7 +8,7 @@ INVENTORY is confine_theorems_N.v of gororoba-open
 has_right S O A -> reachable_delegation S O A, with no proofs. The rendering
 keeps the bytes of every statement, in order, inside a functor over a rights
 relation and follows each with its proof; it then lists the rights the
-statements name and proves that list equal to chain_table N of Model.v.
+statements name and proves that list equal to chain_table 16 N of Model.v.
 Writes the rendering to standard output and nothing else. Exit status: 0
 rendered, 1 the inventory holds a line that is no such statement, 2 usage.
 """
@@ -59,7 +59,8 @@ def render(rows, size):
    a change goes through the generator. Inventory holds the statements of
    that file, each with its proof, for every rights relation. inventory
    lists the rights they name, and inventory_is_chain_table identifies it
-   with chain_table {size} of Model.v. *)
+   with chain_table 16 {size} of Model.v, the chain of {size} threads with an
+   arena every 16. *)
 
 From Stdlib Require Import String List.
 From GororobaDelegation Require Import Model.
@@ -77,10 +78,11 @@ End Inventory.
 Definition inventory : list (string * string * Action) :=
   [{held}].
 
-Lemma inventory_is_chain_table : inventory = chain_table {size}.
+Lemma inventory_is_chain_table : inventory = chain_table 16 {size}.
 Proof. vm_compute. reflexivity. Qed.
 
 Module Size <: SIZE.
+  Definition period := 16.
   Definition n := {size}.
 End Size.
 
@@ -89,9 +91,11 @@ Module Statements := Inventory System.R.
 
 (* Each right an inventory statement names is held in the chain. *)
 Theorem inventory_held :
-  Forall (fun r => chain_right {size} (fst (fst r)) (snd (fst r)) (snd r))
+  Forall (fun r => chain_right 16 {size} (fst (fst r)) (snd (fst r)) (snd r))
     inventory.
-Proof. rewrite inventory_is_chain_table. apply chain_table_held. Qed.
+Proof.
+  rewrite inventory_is_chain_table. apply chain_table_held. discriminate.
+Qed.
 
 (* So the conclusion of each inventory statement holds outright. *)
 Theorem inventory_reachable :
@@ -99,7 +103,8 @@ Theorem inventory_reachable :
                      (fst (fst r)) (snd (fst r)) (snd r))
     inventory.
 Proof.
-  rewrite inventory_is_chain_table. exact System.chain_table_reachable.
+  rewrite inventory_is_chain_table. apply System.chain_table_reachable.
+  discriminate.
 Qed.
 """
 
