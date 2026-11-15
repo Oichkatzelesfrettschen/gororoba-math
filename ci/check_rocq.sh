@@ -5,7 +5,8 @@
 # switch of ci/install_rocq.sh:
 #   0. inventory: the export holds every path of HEAD's rocq/ tree; every
 #      .v of that tree sits in theories/ or verified/ of rocq/open, in
-#      rocq/quantum, or on one of the two name lists below (compiled by a
+#      rocq/quantum, in rocq/delegation, or on one of the two name lists
+#      below (compiled by a
 #      make target of rocq/open or by this script, which then has its .vo;
 #      held uncompiled).
 #      The producer of the kernel replay evidence that gororoba-open ingests
@@ -26,8 +27,13 @@
 #      deprecated import built through the same project options; every
 #      listed source has its .vo; the admission scanner of rocq/open accepts
 #      the tree.
-#   3. kernel: rocq check -silent -o re-checks every project-listed module
-#      of both trees from its compiled object; its context summary reports
+#   3. rocq/delegation: every tracked source is a line of _RocqProject,
+#      which compiles them with -w +default (the option lines are required
+#      and the build log holds no warning line); each rendered source lists
+#      in stated as many rights as it states theorems; every listed source
+#      has its .vo; the admission scanner of rocq/open accepts the tree.
+#   4. kernel: rocq check -silent -o re-checks every project-listed module
+#      of the three trees from its compiled object; its context summary reports
 #      nothing relying on type-in-type, an unsafe fixpoint or assumed
 #      positivity, and its axioms are exactly the lines of the tree's
 #      kernel-assumptions.txt, so a new axiom fails until its line is added.
@@ -87,7 +93,7 @@ if [ "$replay_status" -ne 0 ]; then
 fi
 echo "check_rocq: kernel replay evidence producer calibrated: $(tail -n 1 "$work/replay-calibration.log")"
 
-# Sources outside the three project-listed directories. A make target of
+# Sources outside the four project-listed directories. A make target of
 # rocq/open compiles each source of the first list (check-schur-geometry the
 # four Schur sources, extract ExtractQuaternion.v, check-plugins the two
 # plugin fixtures), except the nullity certificate: check-schur-geometry
@@ -108,11 +114,11 @@ held_uncompiled='rocq/open/extraction/ExtractFP24Admit.v
 rocq/open/extraction/ExtractR2VBDP4.v
 rocq/open/extraction/RustExtractSpike.v'
 
-# Fails unless the sources of the list $1 that lie outside the three
+# Fails unless the sources of the list $1 that lie outside the four
 # project-listed directories are exactly the two lists above, printing the
 # difference.
 outside_sources_match() {
-  grep -v -E '^rocq/(open/(theories|verified)|quantum)/' "$1" | LC_ALL=C sort >"$work/outside.txt"
+  grep -v -E '^rocq/(open/(theories|verified)|quantum|delegation)/' "$1" | LC_ALL=C sort >"$work/outside.txt"
   printf '%s\n%s\n' "$target_compiled" "$held_uncompiled" | LC_ALL=C sort >"$work/outside-named.txt"
   diff "$work/outside-named.txt" "$work/outside.txt"
 }
@@ -145,6 +151,10 @@ checked_axioms() {
 # type-in-type, on an unsafe fixpoint or on assumed positivity, and its
 # axioms are exactly the lines of the ledger $2; prints the difference.
 kernel_context_matches() {
+  grep -q '^\* Axioms:' "$1" || {
+    echo "the context summary lacks its Axioms section"
+    return 1
+  }
   for line in '* Constants/Inductives relying on type-in-type: <none>' \
     '* Constants/Inductives relying on unsafe (co)fixpoints: <none>' \
     '* Inductives whose positivity is assumed: <none>'; do
@@ -335,6 +345,77 @@ kernel_context_matches "$work/quantum-kernel.log" kernel-assumptions.txt >"$work
   exit 1
 }
 echo "check_rocq: rocq/quantum kernel check passed on $(grep -c . "$work/quantum-modules.txt") modules; axioms match the ledger ($(grep -c . kernel-assumptions.txt))"
+# rocq/delegation: the delegation model and the three rendered statement
+# inventories, under the logical root GororobaDelegation, with -w +default
+# (each warning of the default set is an error).
+cd "$work/rocq/delegation"
+grep '^rocq/delegation/' "$work/tracked-sources.txt" | sed 's|^rocq/delegation/||' >"$work/delegation-sources.txt"
+[ -s "$work/delegation-sources.txt" ] || {
+  echo "check_rocq: HEAD holds no source under rocq/delegation" >&2
+  exit 1
+}
+unlisted_sources _RocqProject "$work/delegation-sources.txt" >"$work/unlisted.txt" || {
+  echo "check_rocq: rocq/delegation/_RocqProject does not list:" >&2
+  cat "$work/unlisted.txt" >&2
+  exit 1
+}
+# The project file carries the fatal warning set, and each rendered source
+# pairs every theorem it states with a right in its list stated: a theorem
+# outside that list is outside the rights that inventory_is_chain_table
+# identifies with the chain. Calibrated on a copy with one more theorem.
+{ grep -q -x -F -- '-arg -w' _RocqProject && grep -q -x -F -- '-arg +default' _RocqProject; } || {
+  echo "check_rocq: rocq/delegation/_RocqProject lacks the option lines -arg -w and -arg +default" >&2
+  exit 1
+}
+# Succeeds when the source $1 holds as many Theorem lines as entries of
+# its list stated, and at least one. The generator spells every other
+# result of a rendered source Lemma.
+stated_covers() {
+  theorems=$(grep -c '^Theorem ' "$1" || true)
+  entries=$(grep -c '^  *\[\{0,1\}exist Stated ' "$1" || true)
+  [ "$theorems" -gt 0 ] && [ "$theorems" -eq "$entries" ]
+}
+grep -l '^Definition stated ' ./*.v >"$work/delegation-rendered.txt" || true
+[ "$(grep -c . "$work/delegation-rendered.txt")" -eq 3 ] || {
+  echo "check_rocq: rocq/delegation holds other than three sources with a list stated" >&2
+  exit 1
+}
+while IFS= read -r source; do
+  stated_covers "$source" || {
+    echo "check_rocq: $source states a theorem that its list stated omits, or the reverse" >&2
+    exit 1
+  }
+  {
+    cat "$source"
+    echo 'Theorem unlisted_calibration : True.'
+  } >"$work/stated-calibration.v"
+  if stated_covers "$work/stated-calibration.v"; then
+    echo "check_rocq: the stated-list check accepted a source with an unlisted theorem" >&2
+    exit 1
+  fi
+done <"$work/delegation-rendered.txt"
+run_logged "$work/delegation-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
+run_logged "$work/delegation-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs"
+if log_holds_warning "$work/delegation-makefile.log" "$work/delegation-all.log" >&2; then
+  echo "check_rocq: the rocq/delegation build printed a warning" >&2
+  exit 1
+fi
+uncompiled_sources _RocqProject || {
+  echo "check_rocq: rocq/delegation sources above have no .vo" >&2
+  exit 1
+}
+run_logged "$work/delegation-admissions.log" "$work/rocq/.cache/proof-admission-check/admission-check" "$work/rocq/delegation/"
+echo "check_rocq: rocq/delegation compiled all $(grep -c '\.v$' _RocqProject) listed sources with no admission"
+sed -n 's|^\(.*\)\.v$|GororobaDelegation.\1|p' _RocqProject | tr / . >"$work/delegation-modules.txt"
+# shellcheck disable=SC2046
+run_logged "$work/delegation-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
+  -Q . GororobaDelegation $(cat "$work/delegation-modules.txt")
+kernel_context_matches "$work/delegation-kernel.log" kernel-assumptions.txt >"$work/delegation-kernel.diff" || {
+  echo "check_rocq: the kernel check of rocq/delegation differs from rocq/delegation/kernel-assumptions.txt (< ledger, > checked):" >&2
+  cat "$work/delegation-kernel.diff" >&2
+  exit 1
+}
+echo "check_rocq: rocq/delegation kernel check passed on $(grep -c . "$work/delegation-modules.txt") modules; axioms match the ledger ($(grep -c . kernel-assumptions.txt || true))"
 wait "$open_kernel" || {
   open_kernel=
   tail -n 40 "$work/open-kernel.log" >&2

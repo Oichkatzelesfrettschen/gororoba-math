@@ -14,6 +14,10 @@ gororoba repository shares; this file governs where the two differ.
   it. A file sits under the directory of its subject
   (`CayleyDickson/`, `KernelMap/`) and declares its results in that subject's
   namespace.
+- `lean/ReplayFixture.lean` is the known-bad input of the kernel replay:
+  a declaration of type `False` added under `debug.skipKernelTC`, which
+  the build and the axiom audit both accept and `leanchecker` rejects. No
+  library module imports it.
 - `lean/AxiomAudit.lean` defines `#audit_axioms`; `lean/AuditFixture.lean` is
   its known-bad input and no library module imports it; `lean/audit/` holds
   the files the gate and the on-demand checks run. The gate takes the module
@@ -33,6 +37,13 @@ gororoba repository shares; this file governs where the two differ.
   (`-Q quantum GororobaQuantum`); no source imports it, so both names
   compile the same source, and the object this gate builds carries the
   unprefixed name.
+- `rocq/delegation/` is the delegation model (`Model.v`, logical root
+  `GororobaDelegation`) and three sources that
+  `ci/delegation-sources/render_inventory.py` renders from the statement
+  inventories of gororoba-open (`curated/01_theory_frameworks/
+  confine_theorems_N.v`); a rendered source changes through the generator,
+  and `ci/check_delegation_sources.sh` renders them again from the checkout
+  `GOROROBA_OPEN` names, on demand.
 - `ci/check.sh` is the Lean half of the admission gate and
   `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
@@ -40,6 +51,12 @@ gororoba repository shares; this file governs where the two differ.
   that `make rocq` compiled; `ci/audit/SignTable.v` is its Rocq source,
   kept outside `rocq/` because the gate admits there only project-listed
   sources.
+  `ci/flocq_manifest.py` checks `ci/flocq-manifest.json`, the sha256 of each
+  Flocq `.vo` of the rocq-9.3 switch of the host that produces kernel replay
+  evidence, and `ci/check_flocq_manifest.sh` calibrates it. Both run on
+  demand on that host: a second build of the same opam export yields other
+  object bytes (measured on the hosted runner, first at
+  `Calc/Bracket.vo`), so no admission check compares a switch with it.
   `ci/kernel_replay_evidence.py` produces the kernel replay evidence that
   gororoba-open ingests for a theorem receipt, and
   `ci/check_kernel_replay_evidence.sh` calibrates it; `ci/check_rocq.sh` runs
@@ -90,7 +107,16 @@ gororoba repository shares; this file governs where the two differ.
 - A declaration of the Lean library depends only on `propext`,
   `Classical.choice` and `Quot.sound`. A statement that waits on a proof
   stays on its branch; under `lean/`, `main` holds no `sorry`, no
-  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`.
+  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`,
+  and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
+  gate replays every tracked module through `leanchecker`, one call per
+  module, and keeps `lean/GororobaMath.lean` to `module` and its imports
+  of the library, since the root module's replay needs 27.5 GB; a
+  metaprogram can add a declaration that the build and the axiom audit
+  accept and the kernel rejects. The replay assumes what a module
+  imports, so a library module imports only the library and the package's
+  dependencies (Mathlib and what it requires), and
+  `lean/lakefile.toml` sets no `srcDir`; the gate checks both.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
@@ -108,8 +134,8 @@ gororoba repository shares; this file governs where the two differ.
 
 ## Rocq sources
 
-- A new source of `rocq/open/theories`, `rocq/open/verified` or
-  `rocq/quantum` is listed in the `_RocqProject` of its tree in the commit
+- A new source of `rocq/open/theories`, `rocq/open/verified`,
+  `rocq/quantum` or `rocq/delegation` is listed in the `_RocqProject` of its tree in the commit
   that adds it; `ci/check_rocq.sh` fails on a tracked source the project
   file omits and on a listed source without a compiled object. A source
   anywhere else under `rocq/` is named in one of the two lists at the top
@@ -121,13 +147,18 @@ gororoba repository shares; this file governs where the two differ.
   set an error; its `extract` recipe passes no warning option.
   `rocq/quantum` compiles with `-w @all`, the
   flag of its retained replays, under which `rocq` prints a warning and
-  exits 0; the gate fails on a warning line in the build log. No source of
-  `rocq/open/theories`, `rocq/open/verified` or `rocq/quantum` holds
-  `Admitted` or `admit` (`rocq/open/admission_check.rs`).
+  exits 0; the gate fails on a warning line in the build log. `@all`
+  names no warning set (measured, Rocq 9.3.0: a warning that is off by
+  default stays silent under it and prints under `-w all`), so that
+  build sees the default set. No source of
+  `rocq/open/theories`, `rocq/open/verified`, `rocq/quantum` or
+  `rocq/delegation` holds `Admitted` or `admit` (`rocq/open/admission_check.rs`).
 - `ci/check_rocq.sh` re-checks every project-listed module with the kernel
   checker (`rocq check -silent -o`) and compares the axioms it reports with
-  `rocq/open/kernel-assumptions.txt` and
-  `rocq/quantum/kernel-assumptions.txt`. A change that adds or removes an
+  `rocq/open/kernel-assumptions.txt`,
+  `rocq/quantum/kernel-assumptions.txt` and
+  `rocq/delegation/kernel-assumptions.txt` (empty).
+  `rocq/delegation` compiles with `-w +default`. A change that adds or removes an
   axiom a tree rests on changes that tree's ledger in the same commit.
 - Kernel replay evidence for a gororoba-open receipt comes from
   `ci/kernel_replay_evidence.py`, which compiles, kernel-checks and writes the
@@ -174,13 +205,24 @@ gororoba repository shares; this file governs where the two differ.
 
 - The root `Makefile` builds the working tree: `make lean`, and `make rocq`,
   which copies `rocq/` into `BUILD_DIR/rocq` (default `build`, ignored)
-  and compiles both trees there with the options of their `_RocqProject`
+  and compiles the three trees there with the options of their `_RocqProject`
   files. On a workstation `build` is a symbolic link to a directory
   outside the checkout, or `BUILD_DIR` names one, one per worktree; the
   targets refuse any other path inside the checkout, and `make clean`
   removes only a tree that carries the marker file `rocq-sync` wrote. A
   compile inside `rocq/` leaves objects beside the sources; git ignores
   them, and `ci/check_rocq.sh` never reads them, since it exports `HEAD`.
+
+## Skills
+
+The shared skills `write-lean-proofs` and `write-rocq-proofs`
+(`agent-config/skills/` in gororoba-infrastructure) hold the toolchain,
+trust, tactic, performance, version and library references for Lean 4.35
+and Rocq 9.3. Load the matching one before proof work here. Each carries
+`scripts/check-examples.sh`, which replays its measured rows on the
+installed toolchain; run it after a toolchain bump, and send the row it
+names to the gororoba-infrastructure session, since the skills land
+there.
 
 ## Landing
 
