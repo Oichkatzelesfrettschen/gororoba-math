@@ -45,12 +45,15 @@ for tool in git lake shellcheck ruff actionlint; do
 done
 
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
-work=$(mktemp -d)
-# A signal ends the script through the EXIT cleanup, once: a trap action that
-# returns lets the shell run on with the work directory gone.
-trap 'rm -r "$work" </dev/null' EXIT
+# A signal ends the script through the EXIT cleanup: a trap action that
+# returns lets the shell run on with the work directory gone. The traps are
+# set before the directory exists, and the cleanup keeps the status the
+# script ended with when the removal itself fails.
+work=
+trap 'status=$?; [ -z "$work" ] || rm -r "$work" </dev/null || :; exit "$status"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
+work=$(mktemp -d)
 
 cd "$root"
 git ls-files -- '*.sh' >"$work/scripts.txt"
