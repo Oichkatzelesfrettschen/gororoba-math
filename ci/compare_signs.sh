@@ -10,15 +10,17 @@
 # line. ROCQ_BUILD_TREE names the rocq directory of a build tree that
 # `make rocq` compiled (BUILD_DIR/rocq, holding open/ and quantum/ with their
 # .vo files); the script compiles one audit source against that tree and
-# changes nothing in it. A cmp of the first level's Lean table against a
+# changes nothing in it; a tracked source of rocq/quantum, rocq/open/theories
+# or rocq/open/verified that differs from its copy in the tree, or an object
+# older than its source, is status 2. A cmp of the first level's Lean table against a
 # copy of the first Rocq table with its first entry negated must report a
 # difference before any verdict counts.
 # Prints one line per level with the pair count and the tables compared,
 # then the gororoba-quantum commit and the sha256 of cd_core.py. Runs on
 # demand, outside ci/check.sh, because it reads another repository.
 # Exit status: 0 every table identical, 1 a table differs, 2 a tool, the
-# checkout, the build tree or its SignBridge.vo is missing, or the audit
-# source does not compile. Writes only under a temporary directory it
+# checkout, the build tree or its SignBridge.vo is missing or stale, a table
+# producer fails, or the audit source does not compile. Writes only under a temporary directory it
 # removes.
 set -eu
 
@@ -68,7 +70,20 @@ done
 
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d)
-trap 'rm -r "$work"' EXIT INT TERM
+trap 'rm -r "$work"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+
+# The tables come from the objects of the build tree, so every tracked source of the three project-listed
+# directories must equal its copy there and no object may be older than its source.
+git -C "$root" ls-files -- 'rocq/quantum/*.v' 'rocq/open/theories/*.v' 'rocq/open/verified/*.v' >"$work/sources.txt"
+while IFS= read -r source; do
+  copy="$tree/${source#rocq/}"
+  if ! cmp -s "$root/$source" "$copy" || [ ! -f "${copy%.v}.vo" ] || [ "${copy%.v}.vo" -ot "$copy" ]; then
+    echo "compare_signs: $copy differs from the tracked $source or has no current object; run make rocq again" >&2
+    exit 2
+  fi
+done <"$work/sources.txt"
 
 # One compilation prints, in level order, the sigma table and then the
 # open_cube_sign table of every level as Rocq string literals; awk cuts the
@@ -109,7 +124,10 @@ cd "$root/lean"
 status=0
 calibrated=0
 for level in "$@"; do
-  lake env lean --run audit/SignTable.lean "$level" >"$work/lean.txt"
+  lake env lean --run audit/SignTable.lean "$level" >"$work/lean.txt" || {
+    echo "compare_signs: the Lean table of level $level was not produced" >&2
+    exit 2
+  }
   "$PYTHON" -I -B -c '
 import sys
 sys.path.insert(0, sys.argv[1])
@@ -117,7 +135,10 @@ from cd_core import cd_sign
 size = 1 << int(sys.argv[2])
 for p in range(size):
     print(" ".join(str(cd_sign(size, p, q)) for q in range(size)))
-' "$quantum/gororoba_quantum" "$level" >"$work/python.txt"
+' "$quantum/gororoba_quantum" "$level" >"$work/python.txt" || {
+    echo "compare_signs: the Python table of level $level was not produced" >&2
+    exit 2
+  }
   pairs=$(awk '{ n += NF } END { print n + 0 }' "$work/lean.txt")
   if [ "$calibrated" -eq 0 ]; then
     awk 'NR == 1 { $1 = ($1 == "1" ? "-1" : "1") } { print }' "$work/rocq-sigma-$level.txt" >"$work/mutated.txt"
@@ -140,5 +161,6 @@ for p in range(size):
     status=1
   fi
 done
+echo "compare_signs: gororoba-math $(git -C "$root" rev-parse HEAD), every tracked Rocq source equal to the build tree"
 echo "compare_signs: gororoba-quantum $(git -C "$quantum" rev-parse HEAD), cd_core.py sha256 $(sha256sum "$core" | cut -d' ' -f1)"
 exit "$status"

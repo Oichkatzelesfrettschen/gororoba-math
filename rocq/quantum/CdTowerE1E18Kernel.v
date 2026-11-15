@@ -4,8 +4,8 @@
     back of 32 images and a scalar d, with three finite checks over Z. Here y = e_1 + e_18 (coordinate
     indices 1 and 18, first half first, as in CdTowerCanonicalKernels.v), n = 12 and d = 2, so over every
     commutative ring where the image of 2 is invertible the kernel is free of rank 12, the rank that
-    CayleyDickson.Tower.finrank_ker_pathion_1_18 of the Lean library states over the rationals and the
-    integers.
+    CayleyDickson.Tower.finrank_ker_pathion_1_18 of the Lean library states over the rationals and
+    finrank_ker_pathion_1_18_int over the integers.
 
     The tables follow the block structure of left multiplication by y. The involution x -> x xor 19 pairs the
     32 basis indices into 16 blocks {x, x xor 19}, and y maps the block of x onto the block {x xor 1, x xor 18}
