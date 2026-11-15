@@ -20,10 +20,9 @@ resets the count to `0`.
 Let `m' = i ^^^ j` with bit `p` and every bit below it cleared, for the
 highest degenerate split `p`, and `m' = i ^^^ j` when no split is
 degenerate (`Tower.clearedXorBit` is bit `s` of `m'`). The bit of the
-degenerate split itself is cleared: the reading that keeps it differs from
-the count on 11,550 of the 43,435 pairs `i < j` at `k ≤ 8`, and the reading
-fixed here on none. With `parity t` the parity of the number of set bits
-of `m'` at positions `t` to `k - 1` (that is, of `m' >>> t`),
+degenerate split itself is cleared. With `parity t` the parity of the
+number of set bits of `m'` at positions `t` to `k - 1` (that is, of
+`m' >>> t`),
 
   `alignedPairCount k i j = 4 * ∑ t ∈ [3, k), 2 ^ (k - 1 - t) * parity t`
 

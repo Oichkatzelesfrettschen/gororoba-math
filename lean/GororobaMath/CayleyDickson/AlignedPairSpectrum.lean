@@ -46,9 +46,9 @@ multiplicities.
   a nonzero count about `2 ^ (k - 1) - 4`.
 * `Tower.multiplicity_mirror`, `Tower.multiplicity_mirror_four_mul`: the
   number of ordered pairs `(i, j)` with count `n` equals the number with
-  count `2 ^ (k - 1) - 4 - n` for `0 < n` and `n + 4 < 2 ^ (k - 1)`; in the
-  issue's form, for `1 ≤ v ≤ 2 ^ (k - 3) - 2` with `n = 4 v` (a range that
-  is empty below `k = 5`). Ordered pairs, pairs `i < j` and pairs `i ≠ j`
+  count `2 ^ (k - 1) - 4 - n` for `0 < n` and `n + 4 < 2 ^ (k - 1)`, and
+  with `n = 4 v` for `1 ≤ v ≤ 2 ^ (k - 3) - 2` (a range that is empty below
+  `k = 5`). Ordered pairs, pairs `i < j` and pairs `i ≠ j`
   give the same equation, since the count is symmetric
   (`Tower.alignedPairCount_comm`) and vanishes on `i = j`.
 -/
@@ -229,7 +229,7 @@ theorem multiplicity_mirror (k n : ℕ) (hn : n ≠ 0) (hn' : n + 4 < 2 ^ (k - 1
   · rw [Nat.add_sub_cancel] at hn' ⊢
     exact multiplicity_succ_mirror k n hn hn'
 
-/-- The mirror in the form of the issue: for `1 ≤ v ≤ 2 ^ (k - 3) - 2`, as many
+/-- The mirror on multiples of `4`: for `1 ≤ v ≤ 2 ^ (k - 3) - 2`, as many
 ordered pairs have count `4 v` as have count `2 ^ (k - 1) - 4 - 4 v`. The
 range is empty below `k = 5`. -/
 theorem multiplicity_mirror_four_mul (k v : ℕ) (hv : 1 ≤ v) (hv' : v ≤ 2 ^ (k - 3) - 2) :
