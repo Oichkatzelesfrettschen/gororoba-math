@@ -204,13 +204,16 @@ echo "check: axiom audit rejected the fixture and the unknown root"
 
 # leanchecker replays the modules it is given and assumes their imports, so
 # every library module is named; Mathlib's objects are assumed, as its
-# prebuilt cache already is.
-# shellcheck disable=SC2046 # one module name per argument
-lake env leanchecker GororobaMath $(cat "$work/modules.txt") >"$work/replay.out" 2>&1 || {
-  cat "$work/replay.out" >&2
-  echo "check: the kernel replay rejected a library module" >&2
-  exit 1
-}
+# prebuilt cache already is. One module per call: each module named in one
+# call loads its imports again (measured, Lean 4.35.0 with Mathlib: 6.9 GB
+# for one module, 10.0 GB for two, 26.9 GB for the eight of this library).
+for module in GororobaMath $(cat "$work/modules.txt"); do
+  lake env leanchecker "$module" >"$work/replay.out" 2>&1 || {
+    cat "$work/replay.out" >&2
+    echo "check: the kernel replay rejected $module" >&2
+    exit 1
+  }
+done
 lake build --wfail ReplayFixture >"$work/replay-fixture-build.log" 2>&1 || {
   cat "$work/replay-fixture-build.log" >&2
   echo "check: the replay fixture failed to build" >&2
