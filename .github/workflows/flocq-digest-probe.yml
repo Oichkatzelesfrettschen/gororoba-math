@@ -53,6 +53,15 @@ jobs:
           (cd "$prefix/lib/coq/user-contrib/Flocq" && find . -name '*.vo' -type f | LC_ALL=C sort | xargs sha256sum) | tee "$out/flocq-sha256.txt"
           mkdir -p "$out/changes"
           cp "$prefix"/.opam-switch/install/*.changes "$out/changes/"
+          (cd "$prefix" && find lib/rocq-runtime bin -type f \( -name '*.cmxs' -o -name '*.cmxa' -o -name '*.a' -o -name '*.so' \) | LC_ALL=C sort | xargs sha256sum) > "$out/native-sha256.txt"
+          wc -l "$out/native-sha256.txt"
+          for f in bin/rocq lib/rocq-runtime/plugins/ltac/ltac_plugin.cmxs; do
+            printf '%s paths-of-opamroot: %s\n' "$f" "$(strings -a "$prefix/$f" | grep -c "$OPAMROOT" || true)"
+          done | tee "$out/embedded-paths.txt"
+          cp "$prefix/lib/rocq-runtime/plugins/ltac/ltac_plugin.cmxs" "$out/"
+          (cd "$prefix" && find lib -name '*.cmxs' -type f | LC_ALL=C sort | xargs md5sum) > "$out/cmxs-md5.txt"
+          { echo "image=${ImageVersion:-unset}"; gcc --version | head -1; as --version | head -1; ld --version | head -1; ldd --version | head -1; opam exec --switch=rocq-9.3 -- ocamlopt -config; } > "$out/toolchain.txt" 2>&1 || true
+          readelf -p .comment "$prefix/lib/rocq-runtime/plugins/ltac/ltac_plugin.cmxs" > "$out/cmxs-comment.txt" 2>&1 || true
           tar -C "$prefix/lib/coq/user-contrib" -cf "$out/Flocq.tar" Flocq
           tar -C "$prefix/lib/coq" -cf "$out/Corelib.tar" theories
           tar -C "$prefix/lib/coq/user-contrib" -czf "$out/Stdlib.tar.gz" Stdlib
@@ -61,5 +70,70 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: flocq-probe
+          path: ${{ env.OUT }}
+          retention-days: 5
+
+  cold:
+    name: cold-${{ matrix.name }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 150
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: a1
+            root: /home/runner/opamroot-a
+          - name: a2
+            root: /home/runner/opamroot-a
+          - name: b
+            root: /home/runner/work/deeper-b/opamroot
+          - name: ws
+            root: /home/runner/work/gororoba-math/gororoba-math/.opam
+    env:
+      OPAMROOT: ${{ matrix.root }}
+      OPAMYES: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+      - name: Build OCaml and rocq-core under the named OPAMROOT
+        run: |
+          set -eu
+          mkdir -p "$(dirname "$OPAMROOT")"
+          OPAMJOBS=$(getconf _NPROCESSORS_ONLN)
+          export OPAMJOBS
+          date -u +%FT%TZ
+          opam init --bare --disable-sandboxing --no-setup
+          opam switch create rocq-9.3 ocaml-base-compiler.5.5.1
+          opam repository add rocq-released https://rocq-prover.org/opam/released --switch=rocq-9.3
+          opam repository add gororoba-proof-ports "$PWD/rocq/open/opam" --switch=rocq-9.3
+          opam install --switch=rocq-9.3 rocq-core.9.3.0 rocq-stdlib.9.2.0 coq-flocq.4.2.2 dune.3.23.1
+          date -u +%FT%TZ
+      - name: Collect digests
+        run: |
+          set -eu
+          out="$RUNNER_TEMP/cold"
+          mkdir -p "$out"
+          prefix=$(opam var --switch=rocq-9.3 prefix)
+          echo "$OPAMROOT" > "$out/opamroot.txt"
+          opam list --switch=rocq-9.3 --installed --columns=name,version --color=never | tee "$out/opam-list.txt"
+          (cd "$prefix/lib/coq" && find . -name '*.vo' -type f | LC_ALL=C sort | xargs sha256sum) > "$out/vo-sha256.txt"
+          wc -l "$out/vo-sha256.txt"
+          (cd "$prefix" && find lib bin -type f \( -name '*.cmxs' -o -name '*.cmxa' -o -name '*.a' -o -name '*.so' -o -path 'bin/*' \) | LC_ALL=C sort | xargs sha256sum) > "$out/native-sha256.txt"
+          wc -l "$out/native-sha256.txt"
+          (cd "$prefix/lib/coq/user-contrib/Flocq" && find . -name '*.vo' -type f | LC_ALL=C sort | xargs sha256sum) > "$out/flocq-sha256.txt"
+          wc -l "$out/flocq-sha256.txt"
+          (cd "$prefix" && find lib -name '*.cmxs' -type f | LC_ALL=C sort | xargs md5sum) > "$out/cmxs-md5.txt"
+          cp "$prefix/lib/rocq-runtime/plugins/ltac/ltac_plugin.cmxs" "$out/"
+          { echo "image=${ImageVersion:-unset}"; uname -a; gcc --version | head -1; as --version | head -1; ld --version | head -1; ldd --version | head -1; opam exec --switch=rocq-9.3 -- ocamlopt -config; } > "$out/toolchain.txt" 2>&1 || true
+          cat "$out/toolchain.txt"
+          readelf -p .comment "$prefix/lib/rocq-runtime/plugins/ltac/ltac_plugin.cmxs" > "$out/cmxs-comment.txt" 2>&1 || true
+          echo "OUT=$out" >> "$GITHUB_ENV"
+      - name: Upload the cold-build record
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cold-${{ matrix.name }}
           path: ${{ env.OUT }}
           retention-days: 5
