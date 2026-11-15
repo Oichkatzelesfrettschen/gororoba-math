@@ -20,18 +20,23 @@ ideal circuit: the contrast is `+1` at both outputs of an aligned pair and
 `KernelMap.nullity_eq_alignedPairCount` proves that every labelling of the
 bins that meets this contract has exact nullity `alignedPairCount k i j`.
 The contract is a hypothesis: no definition here mirrors the circuit or
-`output_contrast`. `ci/compare_kernel_map_bins.sh` checks it on
-`pathion_kernel_map` of gororoba-quantum: for the six operands and two
-quarter-turn twins of that module, the ideal output contrast of
-`kernel_map_circuit`, with output bin `y` read as index `y` at level `5`,
-meets the contract under `Tower.misaligned`, and the comparison rejects the
-member `kmap_flip3_e1pe18` and a contrast with one bin negated.
+`output_contrast`. `ci/compare_kernel_map_bins.sh` evaluates
+`KernelMap.binContract` at level `5` on the ideal output contrast of
+`kernel_map_circuit` of `pathion_kernel_map` in gororoba-quantum, with output bin `y` read as index
+`y`, for every operand `e i + t e j` with `i ≠ j` and `t = ±1`; a run that
+returns `true` for an operand gives its exact nullity through
+`KernelMap.nullity_eq_alignedPairCount_of_binContract`. The comparison
+rejects the member `kmap_flip3_e1pe18` and a contrast with one bin negated.
 
 ## Main results
 
 * `KernelMap.nullity_eq_alignedPairCount`: under the bin contract,
   `nullity univ pos = alignedPairCount k i j` over every field of
   characteristic zero.
+* `KernelMap.binContract`, `KernelMap.nullity_eq_alignedPairCount_of_binContract`:
+  the contract as a decidable Boolean on a labelling `pos : BitVec k → Bool`,
+  the form that `ci/compare_kernel_map_bins.sh` evaluates, and the same
+  conclusion from `binContract k i j pos = true`.
 -/
 
 @[expose] public section
@@ -92,5 +97,27 @@ theorem nullity_eq_alignedPairCount {k : ℕ} {i j : BitVec k} (hij : i ≠ j)
   rw [nullity, hpos, hneg, alignedCount_eq_two_mul hij, hbij]
   push_cast
   ring
+
+/-- The bin contract of `nullity_eq_alignedPairCount` as a Boolean on a
+labelling `pos` of the bins: an index of an aligned pair is a `+1` bin, and
+the two indices of a misaligned pair carry different labels. -/
+def binContract (k : ℕ) (i j : BitVec k) (pos : BitVec k → Bool) : Bool :=
+  decide (∀ x : BitVec k,
+    if misaligned k i j x then pos (partner i j x) ≠ pos x else pos x = true)
+
+/-- **Exact nullity from the Boolean bin contract.** A labelling for which
+`binContract` evaluates to `true` has exact nullity `alignedPairCount k i j`. -/
+theorem nullity_eq_alignedPairCount_of_binContract {k : ℕ} {i j : BitVec k} (hij : i ≠ j)
+    (pos : BitVec k → Bool) (h : binContract k i j pos = true) :
+    nullity (K := K) Finset.univ (fun x => pos x = true) = alignedPairCount k i j := by
+  have hc := of_decide_eq_true h
+  refine nullity_eq_alignedPairCount hij _ (fun x hx => ?_) (fun x hx => ?_)
+  · have hx' := hc x
+    rw [hx] at hx'
+    simpa using hx'
+  · have hx' := hc x
+    rw [hx] at hx'
+    simp only [↓reduceIte] at hx'
+    cases hp : pos x <;> cases hq : pos (partner i j x) <;> simp_all
 
 end KernelMap
