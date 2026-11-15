@@ -19,12 +19,16 @@
 #      naming sorryAx, the declared axiom, the native_decide axiom and
 #      the unused private theorem closed by sorry, and a root that matches
 #      no module (lean/audit/UnknownRoot.lean);
-#   6. leanchecker, which reads the compiled objects in a second process
-#      and type-checks their declarations in the kernel again, accepts the
-#      root module and each tracked module, and rejects
+#   6. lean/lakefile.toml sets no srcDir, and no library source imports an
+#      object of another library of this package, so the replay of step 7
+#      assumes Mathlib alone;
+#   7. leanchecker, which reads the compiled objects in a second process
+#      and type-checks their theorems and definitions in the kernel again
+#      (it skips unsafe and partial declarations, which no theorem can
+#      use), accepts the root module and each tracked module, and rejects
 #      lean/ReplayFixture.lean, whose declaration of type False was added
-#      with the kernel switched off and shows in neither the build nor the
-#      axiom audit.
+#      with the kernel switched off and which the build and the axiom
+#      audit (lean/audit/ReplayFixture.lean) both accept.
 # Needs git, shellcheck, ruff, actionlint and lake (elan, with the toolchain
 # of lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
@@ -141,7 +145,17 @@ echo "check: $(wc -l <"$work/modules.txt") tracked module(s) built with no warni
   echo "import AxiomAudit"
   echo "#audit_axioms GororobaMath"
 } >"$work/AllModules.lean"
-lake env lean "$work/AllModules.lean"
+lake env lean "$work/AllModules.lean" >"$work/audit.out" 2>&1 || {
+  cat "$work/audit.out" >&2
+  exit 1
+}
+cat "$work/audit.out"
+# The audit's own summary line is required, so a file that only exits 0
+# (a command of the same name defined in the library, say) does not pass.
+grep -q -E 'axiom audit: GororobaMath: [1-9][0-9]* declarations, 0 outside the allow list$' "$work/audit.out" || {
+  echo "check: the axiom audit printed no summary line for GororobaMath" >&2
+  exit 1
+}
 
 # Prints each module of the sorted list file $2 that the Lean file $1 does
 # not import, and fails when it printed one. Lean reads the import header,
@@ -202,6 +216,38 @@ if lake env lean audit/UnknownRoot.lean >"$work/unknown.out" 2>&1; then
 fi
 echo "check: axiom audit rejected the fixture and the unknown root"
 
+# The replay below covers the modules of lean/GororobaMath/ and assumes what
+# they import. Two checks keep that assumption to Mathlib: Lake builds the
+# library from the tracked files (no srcDir moves its sources), and no
+# library module imports an object of another library of this package
+# (AuditFixture, ReplayFixture, AxiomAudit or a later one), which the replay
+# would not reach.
+if grep -q -E '^[[:space:]]*srcDir' lakefile.toml; then
+  echo "check: lean/lakefile.toml sets srcDir; the gate reads modules from lean/GororobaMath/" >&2
+  exit 1
+fi
+# Prints each object of this package outside GororobaMath that the Lean
+# file $1 imports: an object under a build directory that is not a
+# dependency's (packages/).
+foreign_imports() {
+  lake env lean --deps "$1" |
+    sed -n -e '/\/packages\//d' -e 's|^.*/build/lib/lean/\(.*\)\.olean$|\1|p' |
+    grep -v -E '^GororobaMath(/|$)' || true
+}
+git ls-files -- GororobaMath.lean ':(glob)GororobaMath/**/*.lean' >"$work/sources.txt"
+while IFS= read -r source; do
+  foreign=$(foreign_imports "$source")
+  [ -z "$foreign" ] || {
+    echo "check: $source imports an object the replay does not reach: $foreign" >&2
+    exit 1
+  }
+done <"$work/sources.txt"
+[ "$(foreign_imports audit/Fixture.lean | LC_ALL=C sort | tr '\n' ' ')" = "AuditFixture AxiomAudit " ] || {
+  echo "check: the import check did not report the two foreign imports of lean/audit/Fixture.lean" >&2
+  exit 1
+}
+echo "check: $(wc -l <"$work/sources.txt") library source(s) import only the library and its dependencies"
+
 # leanchecker replays the modules it is given and assumes their imports, so
 # every library module is named; Mathlib's objects are assumed, as its
 # prebuilt cache already is. One module per call: each module named in one
@@ -217,6 +263,12 @@ done
 lake build --wfail ReplayFixture >"$work/replay-fixture-build.log" 2>&1 || {
   cat "$work/replay-fixture-build.log" >&2
   echo "check: the replay fixture failed to build" >&2
+  exit 1
+}
+# The fixture shows the gap only while the axiom audit accepts it.
+lake env lean audit/ReplayFixture.lean >"$work/replay-fixture-audit.out" 2>&1 || {
+  cat "$work/replay-fixture-audit.out" >&2
+  echo "check: the axiom audit now rejects the replay fixture; the fixture no longer calibrates the replay" >&2
   exit 1
 }
 if lake env leanchecker ReplayFixture >"$work/replay-fixture.out" 2>&1; then

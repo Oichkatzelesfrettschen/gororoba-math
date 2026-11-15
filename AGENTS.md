@@ -98,7 +98,9 @@ gororoba repository shares; this file governs where the two differ.
   and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
   gate replays every library module through `leanchecker`, since a
   metaprogram can add a declaration that the build and the axiom audit
-  accept and the kernel rejects.
+  accept and the kernel rejects. The replay assumes what a module
+  imports, so a library module imports only the library and Mathlib, and
+  `lean/lakefile.toml` sets no `srcDir`; the gate checks both.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
