@@ -189,8 +189,9 @@ The shared skills `write-lean-proofs` and `write-rocq-proofs`
 trust, tactic, performance, version and library references for Lean 4.35
 and Rocq 9.3. Load the matching one before proof work here. Each carries
 `scripts/check-examples.sh`, which replays its measured rows on the
-installed toolchain; run it after a toolchain bump, and correct the row it
-names in the same change as the bump.
+installed toolchain; run it after a toolchain bump, and send the row it
+names to the gororoba-infrastructure session, since the skills land
+there.
 
 ## Landing
 
