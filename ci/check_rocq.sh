@@ -74,11 +74,15 @@ diff "$work/tree-files.txt" "$work/export-files.txt" >"$work/export.diff" || {
   exit 1
 }
 
-sh "$work/ci/check_kernel_replay_evidence.sh" >"$work/replay-calibration.log" 2>&1 || {
+replay_status=0
+sh "$work/ci/check_kernel_replay_evidence.sh" >"$work/replay-calibration.log" 2>&1 || replay_status=$?
+if [ "$replay_status" -ne 0 ]; then
   cat "$work/replay-calibration.log" >&2
-  echo "check_rocq: the kernel replay evidence calibration failed" >&2
+  echo "check_rocq: the kernel replay evidence calibration failed (status $replay_status)" >&2
+  # The calibration's status 2 (a tool or the switch is missing) is this script's status 2.
+  [ "$replay_status" -ne 2 ] || exit 2
   exit 1
-}
+fi
 echo "check_rocq: kernel replay evidence producer calibrated: $(tail -n 1 "$work/replay-calibration.log")"
 
 # Sources outside the three project-listed directories. A make target of
