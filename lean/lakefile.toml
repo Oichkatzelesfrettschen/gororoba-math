@@ -17,3 +17,6 @@ name = "AxiomAudit"
 
 [[lean_lib]]
 name = "AuditFixture"
+
+[[lean_lib]]
+name = "ReplayFixture"
