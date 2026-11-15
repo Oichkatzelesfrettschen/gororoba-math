@@ -182,6 +182,16 @@ gororoba repository shares; this file governs where the two differ.
   compile inside `rocq/` leaves objects beside the sources; git ignores
   them, and `ci/check_rocq.sh` never reads them, since it exports `HEAD`.
 
+## Skills
+
+The shared skills `write-lean-proofs` and `write-rocq-proofs`
+(`agent-config/skills/` in gororoba-infrastructure) hold the toolchain,
+trust, tactic, performance, version and library references for Lean 4.35
+and Rocq 9.3. Load the matching one before proof work here. Each carries
+`scripts/check-examples.sh`, which replays its measured rows on the
+installed toolchain; run it after a toolchain bump, and correct the row it
+names in the same change as the bump.
+
 ## Landing
 
 Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
