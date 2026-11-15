@@ -62,7 +62,7 @@ export GOROROBA_QUANTUM=$quantum
 export PYTHONDONTWRITEBYTECODE=1
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d)
-trap 'rm -r "$work"' EXIT
+trap 'rm -r "$work" </dev/null' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
