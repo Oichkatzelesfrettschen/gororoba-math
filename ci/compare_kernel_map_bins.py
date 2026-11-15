@@ -40,12 +40,18 @@ the contract is true in Lean, and `alignedPairCount`, `nullity` and the
 Python half-sum agree; it requires every operand accepted and every mutant
 rejected as stated above.
 
+COMPARE_JOBS > 1 sweeps the operands in that many worker processes; each
+keeps the `_k_matrix` cache of `pathion_kernel_map` for the operands it
+evaluates, 128 KiB per operand at LEVEL 7.
+
 Exit status: 0 every operand accepted and every mutant rejected, 1
 otherwise, 2 a usage error.
 """
 
 import json
+import os
 import sys
+from concurrent.futures import ProcessPoolExecutor
 from fractions import Fraction
 from pathlib import Path
 
@@ -74,6 +80,20 @@ def main (arguments : List String) : IO Unit := do
       IO.println s!"{{name}} {{binContract level a b pos}} {{alignedPairCount level a b}} {{exact}}"
     | _ => throw (IO.userError s!"malformed case line: {{line}}")
 """
+
+
+def _start_worker(quantum: str) -> None:
+    sys.path.insert(0, str(Path(quantum) / "gororoba_quantum"))
+
+
+def operand_contrast(job: tuple[tuple[int, int, int], int]):
+    """Ideal output contrast of the kernel map of one operand at dimension dim, in a worker process."""
+    import pathion_kernel_map as kernel_map
+
+    operand, dim = job
+    plus = kernel_map.ideal_law(kernel_map.kernel_map_circuit(operand, True, dim=dim))
+    minus = kernel_map.ideal_law(kernel_map.kernel_map_circuit(operand, False, dim=dim))
+    return kernel_map.output_contrast(plus, minus)
 
 
 def write_cases(level: int, scope: str, quantum: Path, lean_out: Path, data_out: Path, json_out: Path) -> None:
@@ -107,9 +127,15 @@ def write_cases(level: int, scope: str, quantum: Path, lean_out: Path, data_out:
         members = {operand: f"kmap_{kernel_map.operand_tag(operand)}" for operand in kernel_map.OPERANDS}
         members |= {twin: f"kmap_twin_{kernel_map.operand_tag(twin)}" for twin, _primary in kernel_map.TWINS}
     operands = [(i, j, t) for i in range(dim) for j in range(dim) if i != j for t in (1, -1)] if scope == "all" else []
+    workers = int(os.environ.get("COMPARE_JOBS", "1"))
+    if workers > 1:
+        with ProcessPoolExecutor(max_workers=workers, initializer=_start_worker, initargs=(str(quantum),)) as pool:
+            swept = list(pool.map(operand_contrast, [(operand, dim) for operand in operands], chunksize=64))
+    else:
+        swept = [contrast(operand) for operand in operands]
     cases = [
-        (members.get(operand, kernel_map.operand_tag(operand)), operand, contrast(operand), False, operand in members)
-        for operand in operands
+        (members.get(operand, kernel_map.operand_tag(operand)), operand, values, False, operand in members)
+        for operand, values in zip(operands, swept, strict=True)
     ]
     for wide in wide_coset.WIDE_OPERANDS:
         if wide.dim == dim:
