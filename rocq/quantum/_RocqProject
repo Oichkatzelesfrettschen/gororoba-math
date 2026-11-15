@@ -18,6 +18,8 @@ CdSignRowAnf.v
 CdSignSourceCertificate.v
 CdTowerBasisSign.v
 CdTowerCanonicalKernels.v
+CdTowerE1E18Kernel.v
+CdTowerRealKernels.v
 CdTowerDomain.v
 CdTowerDomainR.v
 CdTowerDomainZ.v

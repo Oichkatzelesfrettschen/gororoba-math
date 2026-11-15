@@ -29,14 +29,14 @@ theorems hold over every field of characteristic zero.
 `rocq/open` is the proof tree of gororoba-open (351 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
-39 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
+41 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
 tower over ordered domains and commutative rings with its basis, base change,
 order-three map and the kernel certificates of the canonical `A_5`
 points, basis-sign and associator normal
 forms, the Python-semantics certificate of `cd_sign`, the Stiefel witness
-and the terminal-channel separation) and ten that began here. The two
+and the terminal-channel separation) and twelve that began here. The two
 imported trees arrived with their history; `rocq/open/README.md` describes
-that tree in the words of its origin, where it sat at `proofs/`. Seven of
+that tree in the words of its origin, where it sat at `proofs/`. Nine of
 the sources that began here are
 `GaussianIntegerHom.v` (the homomorphism `(a, b) -> a + b i` from the
 Gaussian integers to a commutative ring with a square root of -1),
@@ -46,7 +46,14 @@ nonzero divisor), `MatrixSplittingCertificate.v` (matrices with
 `P M + V C = d I` make every solution of `M x = 0`, after multiplication by
 the image of `d`, a combination of the columns of `V`),
 `CdTowerLeibnizSystem.v` (the Leibniz rule of a linear map on the basis
-units of a level of the ring tower as linear forms in its coordinates), and
+units of a level of the ring tower as linear forms in its coordinates),
+`CdTowerE1E18Kernel.v` (the kernel certificate of `e_1 + e_18` in `A_5`, which no
+point of `CdTowerCanonicalKernels.v` is: twelve vectors, twelve functionals
+and a table of 32 images with `d = 2`, free of rank 12 where 2 is invertible),
+`CdTowerRealKernels.v` (the certificates of the twelve canonical points and of
+`e_1 + e_18`, base-changed to the reals and carried through `TowerBridge.v`:
+the kernel of left multiplication in `OpenGororoba.cd_tower 5` is free of rank
+8, 12 or 16, `left_kernel_free`), and
 three files generated in gororoba-quantum for the `A_5` program:
 `CdTowerG2Derivations.v` (14 derivations of the sedenions
 as Gaussian-integer tables, linearly independent over every ring that
@@ -75,6 +82,13 @@ derives `observed_means_exclude_common_binary_channel` of `rocq/quantum`,
 in its rational and its real form, from the general theorem
 `separated_centers_exclude_common_binary_channel` of `rocq/open`; the
 other statements of the two terminal-channel files are not rederived.
+A fourth source, `CdTowerRealKernels.v`, reads `TowerBridge.v` the same way: `to_quantum` is a
+bijection that preserves zero, sums, scalar multiples and products, so the
+kernel statements of the certificates (free of rank 8, 12 or 16 over every
+commutative ring where the image of `d` is invertible) become statements
+about `OpenGororoba.RecursiveCDTower.tower_mul` over the real numbers
+(`NAME_open_kernel_free`, for the twelve points of
+`CdTowerCanonicalKernels.v` and for `e_1 + e_18`).
 
 ## Toolchain
 
@@ -146,7 +160,7 @@ sh ci/check_rocq.sh
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 39
+`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 41
 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the three directories holds `Admitted` or `admit`. Of
@@ -156,7 +170,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 uncompiled, and the script names all eleven and fails on a twelfth. Before any
 build it runs the calibration of the kernel replay evidence producer (below).
 
-The script then re-checks all 390 project-listed modules with Rocq's kernel
+The script then re-checks all 392 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
@@ -172,11 +186,14 @@ rule that an index does not raise the universe of its type (the rule the
 in every development.
 
 ```sh
-GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_signs.sh
+GOROROBA_QUANTUM=../gororoba-quantum ROCQ_BUILD_TREE=build/rocq sh ci/compare_signs.sh
 ```
 
-compares `Tower.sign` with `cd_core.cd_sign` on every index pair of levels
-3 to 6, and
+compares `Tower.sign` with `cd_core.cd_sign` and with the two Rocq sign
+functions of `SignBridge.v` (`CdTowerBasisSign.sigma` and `open_cube_sign`)
+on every index pair of levels 3 to 6; `ROCQ_BUILD_TREE` names the `rocq`
+directory of a tree that `make rocq` compiled, and `ci/audit/SignTable.v`
+prints the two Rocq tables, and
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_estimator.sh
