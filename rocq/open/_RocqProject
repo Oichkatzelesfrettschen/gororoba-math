@@ -311,6 +311,7 @@ theories/WilmotRetractionTheorem.v
 theories/AlternatorTraceExclusion.v
 theories/CDFidelity.v
 verified/C1474_FuelAdequacy.v
+verified/C029_SedenionOctonionSubalgebras.v
 theories/NullityTwelveQuadraticLocus.v
 theories/SedenionFoldTransport.v
 theories/FiniteProbability.v
