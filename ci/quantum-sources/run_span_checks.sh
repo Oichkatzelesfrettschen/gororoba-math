@@ -40,6 +40,9 @@ cat time.tmp >> "$rec"
 grep -q '^\* Axioms: <none>$' span-kernel-check-output.txt || fail "the kernel checker reports an axiom"
 echo "kernel check: Axioms: <none>" >> "$rec"
 mutants=$(mktemp -d "$PWD/mutants-span.XXXXXX")
+trap 'rm -r "$mutants"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 "$PYTHON" make_span_mutants.py CdTowerG2DerivationSpan.v "$mutants"
 # The mutant compiles are independent: each runs as its own job in its own directory and leaves its exit
 # status in status.txt; the loop below reads the statuses after every job has ended.
