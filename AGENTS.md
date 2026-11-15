@@ -111,7 +111,9 @@ gororoba repository shares; this file governs where the two differ.
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
   estimator.
-- A new statement goes to one prover by its kind. A statement quantified
+- A new result, a statement that the README or a record cites, goes to
+  one prover by its kind; a helper lemma goes where its result is. A
+  result quantified
   over a class of rings or fields, or over every level `k`, goes to Lean
   on Mathlib, also where its proof evaluates a finite table (as the
   fixed-level counts of `TwoTerm.lean` do). A statement about concrete
@@ -120,8 +122,9 @@ gororoba repository shares; this file governs where the two differ.
   either tree stay where they are. The same mathematical claim, read
   through each side's convention docstring, is proved once from now on: a
   later proof of it in the other prover is a bridge theorem whose comment
-  names the original by repository path and theorem name, and a
-  definition both provers hold has the comparison of the item above.
+  names the original by repository path and theorem name, and a new
+  definition that both provers hold lands with a comparison as in the
+  item above.
 - A headline theorem is one the "Lean library" table of `README.md`
   names. Each has a challenge module: a short file that restates its
   statement and the definitions it needs, with `sorry` as the proof, and
