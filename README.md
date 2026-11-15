@@ -26,7 +26,27 @@ theorems hold over every field of characteristic zero.
 
 ## Rocq trees
 
-`rocq/open` is the proof tree of gororoba-open (351 sources under
+`rocq/delegation` holds four sources under the logical root
+`GororobaDelegation`; `rocq/delegation/README.md` describes them. `Model.v`
+defines three semantics of delegation of rights between named subjects
+(`reachable_delegation`, the closure under a `Grant` step;
+`restricted_delegation`, where a step conveys only actions that satisfy a
+predicate; `single_delegation`, where a step conveys only held rights) and,
+for the chain of `n` threads with an arena every `p` threads, proves the
+reachable set under each for every `n` and `p` (`chain_reachable_iff`,
+`chain_restricted_iff`, `chain_single_iff`). `Inventory512.v`,
+`Inventory1024.v` and `Inventory2048.v` are rendered by
+`ci/delegation-sources/render_inventory.py` from the statement inventories
+`confine_theorems_N.v` that gororoba-open keeps under
+`curated/01_theory_frameworks/` (2,590, 5,182 and 10,366 statements, there
+without proofs and over two undefined parameters): each holds every
+statement of its inventory with its proof, pairs each right with the
+theorem about it, and proves that
+the rights the statements name are the table of the chain of that size with
+period 16 (`inventory_is_chain_table`). The tree declares no axiom and its
+ledger is empty.
+
+`rocq/open` is the proof tree of gororoba-open (354 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
 41 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
@@ -127,10 +147,11 @@ make rocq
 build the files as they stand in the checkout, edits included, with GNU
 make. `make lean` runs `lake build --wfail` in `lean/`, whose build tree is
 `lean/.lake`. `make rocq` copies `rocq/` into `build/rocq` and compiles
-`rocq/open` (`make all`) and then `rocq/quantum` there, so the source
-directories hold no build product. `make rocq-open` builds the first tree
-alone; `make rocq-quantum` is the same as `make rocq`, since `rocq/quantum`
-reads the objects of `rocq/open`. `BUILD_DIR` names another build
+`rocq/open` (`make all`), then `rocq/quantum`, and `rocq/delegation` there,
+so the source directories hold no build product. `make rocq-open` builds
+the first tree alone, `make rocq-quantum` the first two, since
+`rocq/quantum` reads the objects of `rocq/open`, and `make rocq-delegation`
+the third alone. `BUILD_DIR` names another build
 directory, which lies outside the checkout (any path inside it other than
 `build` is refused), `ROCQ_JOBS` the number of parallel compilations and
 `ROCQ_SWITCH` the opam switch. `build`, `lean/.lake` and the compiler's
@@ -164,19 +185,20 @@ sh ci/check_rocq.sh
 ```
 
 runs the Rocq half on an export of `HEAD` outside the checkout: every
-tracked source of `rocq/open/theories`, `rocq/open/verified` and
-`rocq/quantum` is listed in its `_RocqProject` and compiles (351 and 41
-sources), `rocq/open` passes `make all check-schur-geometry check-admissions
+tracked source of `rocq/open/theories`, `rocq/open/verified`,
+`rocq/quantum` and `rocq/delegation` is listed in its `_RocqProject` and
+compiles (354, 41 and 4 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
-warning, and none of the three directories holds `Admitted` or `admit`. Of
+warning, and none of the four directories holds `Admitted` or `admit`. Of
 the eleven sources elsewhere under `rocq/open`, those make targets compile
 seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
 uncompiled, and the script names all eleven and fails on a twelfth. Before any
 build it runs the calibration of the kernel replay evidence producer (below).
 
-The script then re-checks all 392 project-listed modules with Rocq's kernel
+The script then re-checks all 399 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
+`rocq/delegation/kernel-assumptions.txt` is empty.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
 library: functional extensionality, excluded middle and the two axioms of
 the classical real numbers. `rocq/open/kernel-assumptions.txt` holds 135:
@@ -209,6 +231,18 @@ over the rationals, with `pathion_kernel_map._pair_summary` on twelve fixed
 blocks whose bins are all decided. Each prints the gororoba-quantum commit it
 read and runs on demand, since it reads another repository; the second also
 needs that repository's Python packages.
+
+```sh
+GOROROBA_OPEN=../gororoba-open sh ci/check_delegation_sources.sh
+```
+
+renders the three inventory sources of `rocq/delegation` again from the
+statement inventories of that checkout, whose sha256 it records, requires
+each rendering to equal the tracked source and the statements of each
+tracked source to be the bytes of its inventory with a final newline
+added, and requires the generator
+to refuse a statement whose conclusion names another right than its
+hypothesis.
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum sh ci/check_quantum_sources.sh
