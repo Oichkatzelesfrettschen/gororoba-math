@@ -197,20 +197,26 @@ the canonical kernel certificates, the Gaussian-integer certificates of the
 G_2 derivation tables, the W8 arc matrices and the derivation span, and the
 Stiefel witness) from the records and `cd_core.py` of that checkout, requires
 each rendering to equal the tracked file, and requires each generator to reject
-a copy of its source with one digit changed. It needs python-flint and qiskit
-under `PYTHON`.
+a copy of its source with one digit changed (eight copies, one per rendered
+source). It needs python-flint under `PYTHON`; a missing module or tool exits
+with status 2, a rendering difference with status 1. A write of a generator
+(`--write`, `--generate`) goes only to `rocq/quantum` of this checkout and to the
+JSON record beside it; a destination override is honored only with `--check`.
 
 ```sh
 GOROROBA_QUANTUM=../gororoba-quantum opam exec --switch=rocq-9.3 -- \
-  sh ci/replay_quantum_bundles.sh [BUNDLE...]
+  sh ci/replay_quantum_bundles.sh [--ledgers-only] [BUNDLE...]
 ```
 
-runs the retained Rocq replays of `docs/evidence/` in gororoba-quantum (and the
-`TargetFlipN21` compile and kernel check) against the files of `rocq/quantum`,
-after comparing each `proofs/` row of the bundle's ledger with the source it
-names. It runs on demand, since it reads another repository and compiles for
-minutes; a bundle that reads a gororoba-open checkout is skipped unless
-`GOROROBA_ROOT` names one.
+compares, for each retained bundle of `docs/evidence/` in gororoba-quantum, the
+`proofs/NAME.v` rows of its ledgers with the files of `rocq/quantum` (the
+`proofs/theories/` and `proofs/verified/` rows belong to gororoba-open and are
+compared with `GOROROBA_ROOT` when it is set), then runs the bundle's replay and
+the `TargetFlipN21` compile and kernel check. `--ledgers-only` stops after the
+comparison and needs no Rocq. A `BUNDLE` is one plain path component naming a
+bundle; any other word exits with status 2. It runs on demand, since it reads
+another repository and compiles for minutes; a bundle that reads a gororoba-open
+checkout is skipped unless `GOROROBA_ROOT` names one.
 
 ## License
 

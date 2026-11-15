@@ -47,11 +47,24 @@ gororoba repository shares; this file governs where the two differ.
   `parallel.py` and evidence records of the checkout `GOROROBA_QUANTUM`
   names, so no admission check runs it. `ci/check_quantum_sources.sh` renders
   each source again, requires it to equal the tracked file and rejects a copy
-  with one digit changed; `ci/replay_quantum_bundles.sh` runs the retained
-  replays of gororoba-quantum against `rocq/quantum`. Both run on demand.
-  The generator files here are the live ones: a source of `rocq/quantum`
-  that a generator renders changes through its generator, in the same commit,
-  and `--write` writes `rocq/quantum` of this checkout. A generator that a
+  with one digit changed; `ci/replay_quantum_bundles.sh` compares the
+  ledgers of the retained bundles of gororoba-quantum with `rocq/quantum`
+  (`--ledgers-only` stops there and needs no Rocq) and runs their replays.
+  Both run on demand. The generator files here are the live ones: a source
+  of `rocq/quantum` that a generator renders changes through its generator,
+  in the same commit. A write (`--write`, `--generate`, and the default mode
+  of `span_certificate.py`) goes only to `rocq/quantum` of this checkout and
+  to the JSON record beside the generator: the generators refuse
+  `QUANTUM_SOURCES_ROCQ` and every option but the write flag in a write, and
+  refuse a `rocq/quantum` that is a link or holds a linked `.v`; only
+  `--check` honors `QUANTUM_SOURCES_ROCQ` (an existing directory, nothing
+  created), which the calibration of `ci/check_quantum_sources.sh` uses. The
+  helper scripts `make_mutants.py` and `make_span_mutants.py` write to the
+  directory named on their command line, a scratch directory by use. A
+  replay script of a retained bundle runs from a shadow root: it holds copies
+  of the bundle and of `rocq/quantum`, and symbolic links to the entries of
+  the gororoba-quantum checkout that the bundle's ledgers name, which the
+  script could write; it is not given `GOROROBA_QUANTUM`. A generator that a
   retained ledger of gororoba-quantum binds (`cd_sign_rocq_ast.py`,
   `cd_sign_source_ast.py`, `target_flip_certificate.py`,
   `kernel_certificates.py` with `certificates.json`, and
