@@ -68,6 +68,10 @@ if [ "$ledgers_only" -eq 0 ]; then
     exit 2
   }
 fi
+# A replay runs from a temporary directory, so an executable named by a relative path is made absolute.
+case $rocq in
+*/*) [ "$ledgers_only" -eq 1 ] || rocq=$(CDPATH='' cd -- "$(dirname "$rocq")" && pwd)/$(basename "$rocq") ;;
+esac
 quantum=${GOROROBA_QUANTUM:?replay_quantum_bundles: set GOROROBA_QUANTUM to a gororoba-quantum checkout}
 [ -d "$quantum/docs/evidence" ] || {
   echo "replay_quantum_bundles: $quantum/docs/evidence does not exist" >&2

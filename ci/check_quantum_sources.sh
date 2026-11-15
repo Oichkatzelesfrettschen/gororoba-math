@@ -199,6 +199,11 @@ cp "$root"/ci/quantum-sources/*.py "$st2/ci/quantum-sources/"
 cp "$root"/rocq/quantum/*.v "$work/realdir/"
 mkdir "$st2/rocq"
 ln -s "$work/realdir" "$st2/rocq/quantum"
+# A copy with no link holds the option cases, so that only the option guard can refuse them.
+st3="$work/selftest-plain"
+mkdir -p "$st3/ci/quantum-sources" "$st3/rocq/quantum"
+cp "$root"/ci/quantum-sources/*.py "$st3/ci/quantum-sources/"
+cp "$root"/rocq/quantum/*.v "$st3/rocq/quantum/"
 contained=0
 refused() { # NAME DIRECTORY-OF-THE-COPY GENERATOR ARGUMENT...; the environment of the caller applies
   name=$1
@@ -214,23 +219,20 @@ refused() { # NAME DIRECTORY-OF-THE-COPY GENERATOR ARGUMENT...; the environment 
     status=1
   fi
 }
-QUANTUM_SOURCES_ROCQ="$work/outside" refused "an override" "$st" cd_sign_rocq_ast --write
-refused "--output" "$st" target_flip_certificate --write --output "$work/out/y.v"
-refused "an unknown flag" "$st" cd_sign_rocq_ast --write --bogus
-refused "an abbreviated write flag with --output" "$st" target_flip_certificate --writ --output "$work/out/y.v"
+QUANTUM_SOURCES_ROCQ="$work/elsewhere" refused "an override" "$st3" cd_sign_rocq_ast --write
+refused "--output" "$st3" target_flip_certificate --write --output "$work/out/y.v"
+refused "an unknown flag" "$st3" cd_sign_rocq_ast --write --bogus
+refused "an abbreviated write flag with --output" "$st3" target_flip_certificate --writ --output "$work/out/y.v"
 refused "a linked source" "$st" cd_sign_rocq_ast --write
 refused "a linked rocq/quantum" "$st2" cd_sign_rocq_ast --write
 QUANTUM_SOURCES_ROCQ="$work/missing" refused "an override that names no directory in a check" "$st" cd_sign_rocq_ast --check
-if [ -e "$work/outside" ] || [ -e "$work/out" ] || ! cmp -s "$work/elsewhere/linked.v" "$work/elsewhere/original.v" ||
+if [ -e "$work/out" ] || ! cmp -s "$st3/rocq/quantum/CdSignPythonSemantics.v" "$root/rocq/quantum/CdSignPythonSemantics.v" ||
+  ! cmp -s "$st3/rocq/quantum/TargetFlipN21.v" "$root/rocq/quantum/TargetFlipN21.v" || ! cmp -s "$work/elsewhere/linked.v" "$work/elsewhere/original.v" ||
   ! cmp -s "$work/realdir/CdSignPythonSemantics.v" "$root/rocq/quantum/CdSignPythonSemantics.v"; then
   echo "check_quantum_sources: a refused write created or changed a file" >&2
   status=1
 fi
 # The guard admits the one write it is for: a scratch copy with no link, a source with one changed digit.
-st3="$work/selftest-plain"
-mkdir -p "$st3/ci/quantum-sources" "$st3/rocq/quantum"
-cp "$root"/ci/quantum-sources/*.py "$st3/ci/quantum-sources/"
-cp "$root"/rocq/quantum/*.v "$st3/rocq/quantum/"
 "$PYTHON" -B "$root/ci/quantum-sources/perturb.py" "$root/rocq/quantum/CdSignPythonSemantics.v" "$st3/rocq/quantum/CdSignPythonSemantics.v"
 admitted=0
 rc=0
