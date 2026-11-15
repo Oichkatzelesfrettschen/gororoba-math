@@ -46,8 +46,10 @@ gororoba repository shares; this file governs where the two differ.
   the span certificate. A generator reads `gororoba_quantum/cd_core.py`,
   `parallel.py` and evidence records of the checkout `GOROROBA_QUANTUM`
   names, so no admission check runs it. `ci/check_quantum_sources.sh` renders
-  each source again, requires it to equal the tracked file and rejects a copy
-  with one digit changed; `ci/replay_quantum_bundles.sh` compares the
+  each source again, requires it to equal the tracked file, rejects a copy
+  with one digit changed and a `cd_core.py` with one changed shift, refuses
+  unsafe writes, and compares the Stiefel package cross-check with the retained
+  record; `ci/replay_quantum_bundles.sh` compares the
   ledgers of the retained bundles of gororoba-quantum with `rocq/quantum`
   (`--ledgers-only` stops there and needs no Rocq) and runs their replays.
   Both run on demand. The generator files here are the live ones: a source
@@ -67,10 +69,11 @@ gororoba repository shares; this file governs where the two differ.
   script could write; it is not given `GOROROBA_QUANTUM`. A generator that a
   retained ledger of gororoba-quantum binds (`cd_sign_rocq_ast.py`,
   `cd_sign_source_ast.py`, `target_flip_certificate.py`,
-  `kernel_certificates.py` with `certificates.json`, and
-  `gaussian_certificates.py`, `render_span.py`, `span_certificate.py` and
-  `span.json`, which the findings ledger of gororoba-quantum cites) keeps its
-  bytes there, as the record of the commit that ledger names, and no gate
+  `kernel_certificates.py` with `certificates.json`; and
+  `span_certificate.py`, `render_span.py` and `span.json`, which row A5-500 of
+  the findings ledger of gororoba-quantum cites, with `gaussian_certificates.py`,
+  which both import, and `left-inverses.json`, which they read) keeps its bytes
+  there, as the record of the commit that ledger names or cites, and no gate
   there renders a source from it. The rendered
   sources keep their header and marker lines, which name the path of the
   generator in gororoba-quantum, because the retained records cite those bytes.
