@@ -16,7 +16,13 @@
 #   5. the axiom audit rejects its known-bad inputs: lean/AuditFixture.lean,
 #      naming sorryAx, the declared axiom, the native_decide axiom and
 #      the unused private theorem closed by sorry, and a root that matches
-#      no module (lean/audit/UnknownRoot.lean).
+#      no module (lean/audit/UnknownRoot.lean);
+#   6. leanchecker, which reads the compiled objects in a second process
+#      and type-checks their declarations in the kernel again, accepts the
+#      root module and each tracked module, and rejects
+#      lean/ReplayFixture.lean, whose declaration of type False was added
+#      with the kernel switched off and shows in neither the build nor the
+#      axiom audit.
 # Needs git, shellcheck, ruff, actionlint and lake (elan, with the toolchain
 # of lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
@@ -141,4 +147,27 @@ if lake env lean audit/UnknownRoot.lean >"$work/unknown.out" 2>&1; then
   exit 1
 fi
 echo "check: axiom audit rejected the fixture and the unknown root"
+
+# shellcheck disable=SC2046 # one module name per argument
+lake env leanchecker GororobaMath $(cat "$work/modules.txt") >"$work/replay.out" 2>&1 || {
+  cat "$work/replay.out" >&2
+  echo "check: the kernel replay rejected a library module" >&2
+  exit 1
+}
+lake build --wfail ReplayFixture >"$work/replay-fixture-build.log" 2>&1 || {
+  cat "$work/replay-fixture-build.log" >&2
+  echo "check: the replay fixture failed to build" >&2
+  exit 1
+}
+if lake env leanchecker ReplayFixture >"$work/replay-fixture.out" 2>&1; then
+  cat "$work/replay-fixture.out" >&2
+  echo "check: the kernel replay accepted its known-bad fixture" >&2
+  exit 1
+fi
+grep -q -F "while replaying declaration 'ReplayFixture.bogus'" "$work/replay-fixture.out" || {
+  cat "$work/replay-fixture.out" >&2
+  echo "check: the kernel replay failed on its fixture without naming ReplayFixture.bogus" >&2
+  exit 1
+}
+echo "check: kernel replay accepted $(wc -l <"$work/modules.txt") tracked module(s) and rejected the fixture"
 echo "check: passed"

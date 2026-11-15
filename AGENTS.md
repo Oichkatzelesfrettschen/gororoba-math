@@ -14,6 +14,10 @@ gororoba repository shares; this file governs where the two differ.
   it. A file sits under the directory of its subject
   (`CayleyDickson/`, `KernelMap/`) and declares its results in that subject's
   namespace.
+- `lean/ReplayFixture.lean` is the known-bad input of the kernel replay:
+  a declaration of type `False` added under `debug.skipKernelTC`, which
+  the build and the axiom audit both accept and `leanchecker` rejects. No
+  library module imports it.
 - `lean/AxiomAudit.lean` defines `#audit_axioms`; `lean/AuditFixture.lean` is
   its known-bad input and no library module imports it; `lean/audit/` holds
   the files the gate and the on-demand checks run. The gate takes the module
@@ -90,7 +94,11 @@ gororoba repository shares; this file governs where the two differ.
 - A declaration of the Lean library depends only on `propext`,
   `Classical.choice` and `Quot.sound`. A statement that waits on a proof
   stays on its branch; under `lean/`, `main` holds no `sorry`, no
-  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`.
+  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`,
+  and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
+  gate replays every library module through `leanchecker`, since a
+  metaprogram can add a declaration that the build and the axiom audit
+  accept and the kernel rejects.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
