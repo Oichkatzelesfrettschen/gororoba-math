@@ -7,4 +7,5 @@ public import GororobaMath.CayleyDickson.TwoTerm
 public import GororobaMath.CayleyDickson.TwoTermNullity
 public import GororobaMath.CayleyDickson.TwoTermRecursion
 public import GororobaMath.CayleyDickson.AlignedPairSpectrum
+public import GororobaMath.CayleyDickson.AssociatorSpace
 public import GororobaMath.KernelMap.Estimator
