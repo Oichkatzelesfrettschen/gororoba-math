@@ -14,6 +14,10 @@ gororoba repository shares; this file governs where the two differ.
   it. A file sits under the directory of its subject
   (`CayleyDickson/`, `KernelMap/`) and declares its results in that subject's
   namespace.
+- `lean/ReplayFixture.lean` is the known-bad input of the kernel replay:
+  a declaration of type `False` added under `debug.skipKernelTC`, which
+  the build and the axiom audit both accept and `leanchecker` rejects. No
+  library module imports it.
 - `lean/AxiomAudit.lean` defines `#audit_axioms`; `lean/AuditFixture.lean` is
   its known-bad input and no library module imports it; `lean/audit/` holds
   the files the gate and the on-demand checks run. The gate takes the module
@@ -90,7 +94,16 @@ gororoba repository shares; this file governs where the two differ.
 - A declaration of the Lean library depends only on `propext`,
   `Classical.choice` and `Quot.sound`. A statement that waits on a proof
   stays on its branch; under `lean/`, `main` holds no `sorry`, no
-  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`.
+  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`,
+  and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
+  gate replays every tracked module through `leanchecker`, one call per
+  module, and keeps `lean/GororobaMath.lean` to `module` and its imports
+  of the library, since the root module's replay needs 27.5 GB; a
+  metaprogram can add a declaration that the build and the axiom audit
+  accept and the kernel rejects. The replay assumes what a module
+  imports, so a library module imports only the library and the package's
+  dependencies (Mathlib and what it requires), and
+  `lean/lakefile.toml` sets no `srcDir`; the gate checks both.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
@@ -121,7 +134,10 @@ gororoba repository shares; this file governs where the two differ.
   set an error; its `extract` recipe passes no warning option.
   `rocq/quantum` compiles with `-w @all`, the
   flag of its retained replays, under which `rocq` prints a warning and
-  exits 0; the gate fails on a warning line in the build log. No source of
+  exits 0; the gate fails on a warning line in the build log. `@all`
+  names no warning set (measured, Rocq 9.3.0: a warning that is off by
+  default stays silent under it and prints under `-w all`), so that
+  build sees the default set. No source of
   `rocq/open/theories`, `rocq/open/verified` or `rocq/quantum` holds
   `Admitted` or `admit` (`rocq/open/admission_check.rs`).
 - `ci/check_rocq.sh` re-checks every project-listed module with the kernel
@@ -181,6 +197,17 @@ gororoba repository shares; this file governs where the two differ.
   removes only a tree that carries the marker file `rocq-sync` wrote. A
   compile inside `rocq/` leaves objects beside the sources; git ignores
   them, and `ci/check_rocq.sh` never reads them, since it exports `HEAD`.
+
+## Skills
+
+The shared skills `write-lean-proofs` and `write-rocq-proofs`
+(`agent-config/skills/` in gororoba-infrastructure) hold the toolchain,
+trust, tactic, performance, version and library references for Lean 4.35
+and Rocq 9.3. Load the matching one before proof work here. Each carries
+`scripts/check-examples.sh`, which replays its measured rows on the
+installed toolchain; run it after a toolchain bump, and send the row it
+names to the gororoba-infrastructure session, since the skills land
+there.
 
 ## Landing
 

@@ -152,7 +152,12 @@ excludes `sorry`, `native_decide` and declared axioms. The gate builds and
 audits every tracked module under `lean/GororobaMath/`, taken from git's
 file list, and separately requires `lean/GororobaMath.lean` to import each
 one; it also requires the audit to reject `lean/AuditFixture.lean`, which
-holds one of each.
+holds one of each. Last it replays every tracked module
+through `leanchecker`, which type-checks the compiled theorems and
+definitions again in a second process (unsafe and partial declarations
+are skipped; the kernel rejects a theorem that uses one), and requires that replay to reject
+`lean/ReplayFixture.lean`: a declaration of type `False` added with the
+kernel switched off, which the build and the axiom audit both accept.
 
 ```sh
 sh ci/check_rocq.sh
