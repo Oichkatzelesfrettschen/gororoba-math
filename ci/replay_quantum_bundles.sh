@@ -19,12 +19,14 @@
 # ledger the script does not name is a frozen record of an earlier
 # gororoba-open state, and its gororoba-open rows are not compared. Rows of other trees (docs/,
 # scripts/, results/, crates/, data/) are the bundle script's to check.
-# One row is skipped by name: the ledger source_hashes.sha256 of
+# One row is skipped by name and digest: the ledger source_hashes.sha256 of
 # cd-sign-python-translation holds a digest of CdSignSourceCertificate.v
 # that predates the source (gororoba-quantum documents it as a stale
 # manifest, STALE_ROWS below); the closure ledgers of that bundle hold the
 # current digest and are compared. --ledgers-only stops after this
-# comparison, needs no Rocq, and prints one line per bundle.
+# comparison, needs no Rocq, and prints one line per bundle; without
+# GOROROBA_ROOT that line reports the gororoba-open rows as not compared,
+# and TargetFlipN21, which has no ledger, is refused as a name.
 #
 # Replay. The bundle's script runs unchanged from a shadow root made of a
 # copy of the bundle directory, a copy of rocq/quantum as proofs/, and
@@ -74,8 +76,8 @@ quantum=${GOROROBA_QUANTUM:?replay_quantum_bundles: set GOROROBA_QUANTUM to a go
 quantum=$(CDPATH='' cd -- "$quantum" && pwd)
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 
-# bundle/ledger:source, rows skipped by name (see the header)
-STALE_ROWS='cd-sign-python-translation/source_hashes.sha256:CdSignSourceCertificate.v'
+# bundle/ledger:source:digest, rows skipped while they hold that digest (see the header)
+STALE_ROWS='cd-sign-python-translation/source_hashes.sha256:CdSignSourceCertificate.v:37f2109eacff0065a03ec01d80fb27e70c036cfafc3a46fae1cd5f49770d56ef'
 
 if [ "$#" -eq 0 ]; then
   explicit=0
@@ -95,6 +97,10 @@ for bundle in "$@"; do
     exit 2
     ;;
   esac
+  if [ "$bundle" = TargetFlipN21 ] && [ "$ledgers_only" -eq 1 ]; then
+    echo "replay_quantum_bundles: TargetFlipN21 has no ledger" >&2
+    exit 2
+  fi
   if [ "$bundle" != TargetFlipN21 ] && { [ -L "$quantum/docs/evidence/$bundle" ] || [ ! -f "$quantum/docs/evidence/$bundle/replay_rocq.sh" ]; }; then
     echo "replay_quantum_bundles: $bundle has no replay_rocq.sh in docs/evidence of the checkout" >&2
     exit 2
@@ -127,7 +133,7 @@ check_ledgers() {
         if (path ~ /^proofs\/[A-Za-z0-9_]+\.v$/) {
           name = substr(path, 8)
           skip = 0
-          for (i = 1; i <= n; i++) if (s[i] == key ":" name) skip = 1
+          for (i = 1; i <= n; i++) if (s[i] == key ":" name ":" digest) skip = 1
           if (skip) print "skipped" > "/dev/stderr"
           else print digest "  " path >> rows
         } else if (scripted && path ~ /^proofs\//) print digest "  " path >> open
@@ -143,6 +149,7 @@ check_ledgers() {
     return 1
   fi
   where="left to the bundle script"
+  [ "$ledgers_only" -eq 0 ] || [ "$open_rows" -eq 0 ] || where="NOT COMPARED: GOROROBA_ROOT is unset and no script runs"
   if [ "$open_rows" -gt 0 ] && [ -n "${GOROROBA_ROOT:-}" ]; then
     if ! (cd "$GOROROBA_ROOT" && sha256sum -c --quiet "$work/open-rows.txt" >"$work/ledger.out" 2>&1); then
       cat "$work/ledger.out" >&2

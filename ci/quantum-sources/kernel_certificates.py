@@ -35,6 +35,7 @@ import math
 import os
 import re
 import sys
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -352,10 +353,18 @@ def render(records: list[dict[str, Any]]) -> str:
 
 
 def replace_text(path: Path, text: str) -> None:
-    """Write text beside path and rename it over path, so a reader sees the old bytes or the new ones."""
-    scratch = path.with_name(path.name + ".new")
-    scratch.write_text(text, encoding="utf-8")
-    os.replace(scratch, path)
+    """Replace `path` with `text` through a scratch file created exclusively beside it, so that a reader sees the
+    old bytes or the new ones, with the mode of an existing `path` (0644 otherwise)."""
+    mode = path.stat().st_mode & 0o777 if path.is_file() else 0o644
+    descriptor, scratch = tempfile.mkstemp(prefix=path.name + ".", dir=path.parent)
+    try:
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            stream.write(text)
+        os.chmod(scratch, mode)
+        os.replace(scratch, path)
+    except BaseException:
+        Path(scratch).unlink(missing_ok=True)
+        raise
 
 
 def main() -> int:

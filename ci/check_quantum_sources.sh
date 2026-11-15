@@ -10,10 +10,13 @@
 # more against a scratch copy of rocq/quantum, made through
 # QUANTUM_SOURCES_ROCQ, in which that source holds one changed digit, and
 # must reject it with status 1. Four further calibrations follow. (1) Input
-# side: a scratch copy of the gororoba_quantum package in which cd_core.py
-# holds `half >>= 2` for `half >>= 1`, passed as the quantum checkout, must
-# be rejected by the generators that read cd_core.py (cd_sign_rocq_ast,
-# cd_sign_source_ast, stiefel_witness_certificate). (2) The
+# side: a scratch quantum checkout (the gororoba_quantum package and docs/
+# by links, cd_core.py by copy) must be accepted with status 0 by the four
+# generators whose rendering depends on cd_core.py (cd_sign_rocq_ast,
+# cd_sign_source_ast, stiefel_witness_certificate, kernel_certificates);
+# the same checkout with `half >>= 2` for `half >>= 1` in cd_core.py must
+# be rejected by each with status 1 and its own rejection message
+# (cd_sign_source_ast rejects by raising its UnsupportedValue). (2) The
 # stiefel_witness_certificate --package-cross-check output, an independent
 # implementation (python-hypercomplex), must equal the retained
 # docs/evidence/stiefel_witness/package_cross_check.json of the checkout;
@@ -22,7 +25,9 @@
 # QUANTUM_SOURCES_ROCQ, with --output (also behind an abbreviated write flag),
 # with an unknown flag, into a linked
 # source or into a linked rocq/quantum (run from a scratch copy of this
-# directory) must exit 2 and change nothing. (4) make_mutants.py and
+# directory) must exit 2 and change nothing, and a plain --write in a
+# scratch copy with no link must exit 0 and restore a source with one
+# changed digit to the tracked bytes. (4) make_mutants.py and
 # make_span_mutants.py (the controls run_span_checks.sh compiles) must
 # build their mutants from the tracked sources, and make_span_mutants.py must
 # fail on a source that lacks its anchor. Prints one line per check, then the
@@ -131,17 +136,32 @@ for entry in "$quantum"/gororoba_quantum/*; do
   [ "$(basename "$entry")" = cd_core.py ] || ln -s "$entry" "$qin/gororoba_quantum/$(basename "$entry")"
 done
 ln -s "$quantum/docs" "$qin/docs"
-sed 's/half >>= 1/half >>= 2/' "$core" >"$qin/gororoba_quantum/cd_core.py"
+# generator:text of its rejection of a changed cd_core.py
+input_pairs='cd_sign_rocq_ast:regenerate cd_sign_ast
+cd_sign_source_ast:UnsupportedValue: the loop shift of cd_sign
+stiefel_witness_certificate:differs from a fresh render
+kernel_certificates:L V = 0'
+inputs_accepted=0
 inputs_rejected=0
-for generator in cd_sign_rocq_ast cd_sign_source_ast stiefel_witness_certificate; do
-  rc=0
-  GOROROBA_QUANTUM=$qin "$PYTHON" -B -W error "$root/ci/quantum-sources/$generator.py" --check >"$work/$generator.in.log" 2>&1 || rc=$?
-  if [ "$rc" -eq 1 ] && ! tool_failure "$work/$generator.in.log" 1; then
-    inputs_rejected=$((inputs_rejected + 1))
-  else
-    echo "check_quantum_sources: $generator exited $rc on a cd_core.py with a changed shift, not 1" >&2
-    status=1
-  fi
+cp "$core" "$qin/gororoba_quantum/cd_core.py"
+for changed in 0 1; do
+  [ "$changed" -eq 0 ] || sed 's/half >>= 1/half >>= 2/' "$core" >"$qin/gororoba_quantum/cd_core.py"
+  while IFS=: read -r generator message; do
+    rc=0
+    GOROROBA_QUANTUM=$qin "$PYTHON" -B -W error "$root/ci/quantum-sources/$generator.py" --check >"$work/$generator.in$changed.log" 2>&1 || rc=$?
+    if [ "$changed" -eq 0 ] && [ "$rc" -eq 0 ]; then
+      inputs_accepted=$((inputs_accepted + 1))
+    elif [ "$changed" -eq 1 ] && [ "$rc" -eq 1 ] && grep -q -F "$message" "$work/$generator.in$changed.log" &&
+      ! tool_failure "$work/$generator.in$changed.log" 1; then
+      inputs_rejected=$((inputs_rejected + 1))
+    else
+      echo "check_quantum_sources: $generator exited $rc on the scratch checkout (cd_core.py changed: $changed), or without its rejection message" >&2
+      tail -n 5 "$work/$generator.in$changed.log" >&2
+      status=1
+    fi
+  done <<EOF_PAIRS
+$input_pairs
+EOF_PAIRS
 done
 
 # (2) Package cross-check against the retained record.
@@ -200,8 +220,25 @@ refused "an abbreviated write flag with --output" "$st" target_flip_certificate 
 refused "a linked source" "$st" cd_sign_rocq_ast --write
 refused "a linked rocq/quantum" "$st2" cd_sign_rocq_ast --write
 QUANTUM_SOURCES_ROCQ="$work/missing" refused "an override that names no directory in a check" "$st" cd_sign_rocq_ast --check
-if [ -e "$work/outside" ] || [ -e "$work/out" ] || ! cmp -s "$work/elsewhere/linked.v" "$work/elsewhere/original.v"; then
+if [ -e "$work/outside" ] || [ -e "$work/out" ] || ! cmp -s "$work/elsewhere/linked.v" "$work/elsewhere/original.v" ||
+  ! cmp -s "$work/realdir/CdSignPythonSemantics.v" "$root/rocq/quantum/CdSignPythonSemantics.v"; then
   echo "check_quantum_sources: a refused write created or changed a file" >&2
+  status=1
+fi
+# The guard admits the one write it is for: a scratch copy with no link, a source with one changed digit.
+st3="$work/selftest-plain"
+mkdir -p "$st3/ci/quantum-sources" "$st3/rocq/quantum"
+cp "$root"/ci/quantum-sources/*.py "$st3/ci/quantum-sources/"
+cp "$root"/rocq/quantum/*.v "$st3/rocq/quantum/"
+"$PYTHON" -B "$root/ci/quantum-sources/perturb.py" "$root/rocq/quantum/CdSignPythonSemantics.v" "$st3/rocq/quantum/CdSignPythonSemantics.v"
+admitted=0
+rc=0
+"$PYTHON" -B -W error "$st3/ci/quantum-sources/cd_sign_rocq_ast.py" --write >"$work/admitted.log" 2>&1 || rc=$?
+if [ "$rc" -eq 0 ] && cmp -s "$st3/rocq/quantum/CdSignPythonSemantics.v" "$root/rocq/quantum/CdSignPythonSemantics.v"; then
+  admitted=1
+else
+  echo "check_quantum_sources: a plain write in a scratch copy exited $rc or did not restore the tracked bytes" >&2
+  tail -n 5 "$work/admitted.log" >&2
   status=1
 fi
 
@@ -219,6 +256,6 @@ fi
   status=1
 }
 
-echo "check_quantum_sources: $count generators checked, $rejected perturbed copies rejected, $inputs_rejected perturbed inputs rejected, $contained refused writes, $mutants_ok mutant scripts built"
+echo "check_quantum_sources: $count generators checked, $rejected perturbed copies rejected, $inputs_accepted scratch inputs accepted, $inputs_rejected perturbed inputs rejected, $contained refused writes, $admitted plain write admitted, $mutants_ok mutant scripts built"
 echo "check_quantum_sources: gororoba-quantum $(git -C "$quantum" rev-parse HEAD 2>/dev/null || echo unknown), cd_core.py sha256 $(sha256sum "$core" | cut -d' ' -f1)"
 exit "$status"

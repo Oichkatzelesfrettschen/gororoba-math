@@ -249,6 +249,9 @@ opam exec --switch=rocq-9.3 -- sh ci/quantum-sources/run_span_checks.sh "$B"
 `run_span_checks.sh` compiles the span sources itself, takes `$HOME/.opam/rocq-9.3/bin/rocq`,
 writes `span-checks-record.txt` in `$B`, ends with one verdict line and exits 0
 when every expectation held.
+The `make` above runs one job at a time: measured with `-j4`, it stopped on a
+missing dependency of `CdTowerDomain` (hypothesis: the generated makefile
+lacks an edge for the empty logical root; untraced).
 
 ## License
 
