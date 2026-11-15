@@ -85,6 +85,27 @@ after `lake exe cache get` took 161 s. A file that imports Mathlib outside
 the module system peaks at 6.8 GB, against 3.8 GB as `module` with `public
 import Mathlib`.
 
+## Building
+
+```sh
+make lean
+make rocq
+```
+
+build the files as they stand in the checkout, edits included, with GNU
+make. `make lean` runs `lake build --wfail` in `lean/`, whose build tree is
+`lean/.lake`. `make rocq` copies `rocq/` into `build/rocq` and compiles
+`rocq/open` (`make all`) and then `rocq/quantum` there, so the source
+directories hold no build product. `make rocq-open` builds the first tree
+alone; `make rocq-quantum` is the same as `make rocq`, since `rocq/quantum`
+reads the objects of `rocq/open`. `BUILD_DIR` names another build
+directory, which lies outside the checkout (any path inside it other than
+`build` is refused), `ROCQ_JOBS` the number of parallel compilations and
+`ROCQ_SWITCH` the opam switch. `build`, `lean/.lake` and the compiler's
+products are ignored by git. The warning options are the option lines of
+each tree's `_RocqProject`. `make clean` removes a build tree that
+`make rocq` created and no other directory. `make help` lists the targets.
+
 ## Checks
 
 ```sh
