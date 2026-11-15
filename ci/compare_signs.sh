@@ -161,6 +161,8 @@ for p in range(size):
     status=1
   fi
 done
-echo "compare_signs: gororoba-math $(git -C "$root" rev-parse HEAD), every tracked Rocq source equal to the build tree"
+state=
+[ -z "$(git -C "$root" status --porcelain -- rocq ci/audit ci/compare_signs.sh lean)" ] || state=" with uncommitted changes"
+echo "compare_signs: gororoba-math $(git -C "$root" rev-parse HEAD)$state, every tracked Rocq source equal to the build tree"
 echo "compare_signs: gororoba-quantum $(git -C "$quantum" rev-parse HEAD), cd_core.py sha256 $(sha256sum "$core" | cut -d' ' -f1)"
 exit "$status"
