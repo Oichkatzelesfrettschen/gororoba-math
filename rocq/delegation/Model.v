@@ -3,7 +3,10 @@
    Convention. A subject is named by a string ("Thread_7"), an object by a
    string ("Thread 7", "arena_0"), and a right is a triple of a subject, an
    object and an action. A subject that holds Grant on an object delegates
-   through the subject that object names (its owner).
+   through the subject that object names (its owner): the holder reaches
+   what the owner reaches. Authority flows to the holder, the direction of
+   the take rule of the take-grant model; the action keeps the spelling
+   Grant of the inventories (README.md, "Relation to the literature").
 
    Three semantics of delegation over one rights relation:
    - reachable_delegation: the least relation that contains the held rights

@@ -27,27 +27,23 @@ theorems hold over every field of characteristic zero.
 ## Rocq trees
 
 `rocq/delegation` holds four sources under the logical root
-`GororobaDelegation`. `Model.v` defines delegation of rights between named
-subjects: `reachable_delegation` is the least relation that contains the
-held rights of a rights relation and is closed under one step through an
-object on which the subject holds `Grant`. For the chain of `n` threads
-(thread `i` holds `Send`, `Receive` and `Map` on its own object, `Send` and
-`Grant` on the object of thread `i + 1`, and thread `16 k` holds `Map` on
-arena `k`) it proves that a thread reaches exactly the rights held at or
-above its index (`chain_reachable_iff`), hence no right on a lower thread's
-object (`chain_confined_thread`), an arena only from at or below its holder
-(`chain_confined_arena`), and `Grant` only strictly upward
-(`chain_grant_strictly_up`). `Inventory512.v`, `Inventory1024.v` and
-`Inventory2048.v` are rendered by `ci/delegation-sources/render_inventory.py`
-from the statement inventories `confine_theorems_N.v` that gororoba-open
-keeps under `curated/01_theory_frameworks/` (2,590, 5,182 and 10,366
-statements, there without proofs and over two undefined parameters): each
-holds every statement of its inventory, byte for byte, with its proof, in a
-functor over a rights relation, proves that the rights the statements name
-are the table of the chain of that size (`inventory_is_chain_table`), and
-concludes each of them reachable with no hypothesis
-(`inventory_reachable`). The tree declares no axiom and its ledger is
-empty.
+`GororobaDelegation`; `rocq/delegation/README.md` describes them. `Model.v`
+defines three semantics of delegation of rights between named subjects
+(`reachable_delegation`, the closure under a `Grant` step;
+`restricted_delegation`, where a step conveys only actions that satisfy a
+predicate; `single_delegation`, where a step conveys only held rights) and,
+for the chain of `n` threads with an arena every `p` threads, proves the
+reachable set under each for every `n` and `p` (`chain_reachable_iff`,
+`chain_restricted_iff`, `chain_single_iff`). `Inventory512.v`,
+`Inventory1024.v` and `Inventory2048.v` are rendered by
+`ci/delegation-sources/render_inventory.py` from the statement inventories
+`confine_theorems_N.v` that gororoba-open keeps under
+`curated/01_theory_frameworks/` (2,590, 5,182 and 10,366 statements, there
+without proofs and over two undefined parameters): each holds every
+statement of its inventory, byte for byte, with its proof, and proves that
+the rights the statements name are the table of the chain of that size with
+period 16 (`inventory_is_chain_table`). The tree declares no axiom and its
+ledger is empty.
 
 `rocq/open` is the proof tree of gororoba-open (351 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
