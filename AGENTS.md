@@ -110,6 +110,20 @@ gororoba repository shares; this file governs where the two differ.
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
   estimator.
+- A statement lives in one prover by its kind (owner, 2026-11-15). A
+  general theorem, over every level `k` and every ring of its class, is
+  proved in Lean on Mathlib. A finite certificate, an exact computation
+  and any definition that is extracted to code are proved in Rocq. A
+  definition both provers hold has the comparison of the item above, and
+  a statement is proved once: the other prover cites it by repository
+  path and theorem name.
+- Each headline theorem of the Lean library has a challenge file: a short
+  module that restates its statement and the definitions it needs, with
+  `sorry` for the proof, and a `comparator.json` beside it that names
+  the library theorem as the solution. `lake comparator` checks on demand
+  that the library theorem has that statement (measured on a theorem over
+  Mathlib's quaternions: 7.4 s). The existing theorems are owed theirs
+  (https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/31).
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another
