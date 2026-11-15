@@ -34,16 +34,20 @@ always associate and are never aligned (`Tower.misaligned_special`).
   terms of the alignment sign of `c` under `e a + e b`, at every level.
 * `Tower.card_associates`: for nonzero distinct `a` and `b`, the number
   of associating indices is `2 * alignedPairCount k a b + 4`.
-* `Tower.finrank_assocSpace_e`: for nonzero distinct `a` and `b`, the
-  associator space of `e a` and `e b` is free of rank
-  `2 * alignedPairCount k a b + 4` over every nontrivial commutative ring
+* `Tower.assocSpaceEquivFun`, `Tower.free_assocSpace_e`: when `2` is a
+  non-zero-divisor, the associator space of `e a` and `e b` is linearly
+  equivalent to the functions on the associating indices, hence a free
+  module, for all `a` and `b`.
+* `Tower.finrank_assocSpace_e`: for nonzero distinct `a` and `b`, its rank
+  is `2 * alignedPairCount k a b + 4` over every nontrivial commutative ring
   with the identity as star in which `2` is a non-zero-divisor;
   `Tower.finrank_assocSpace_e_of_charZero` is the statement over a field
   of characteristic zero.
 
 Excluded cases: for `a = b` flexibility makes the space the whole level,
-and for `a = 0` or `b = 0` the factor `e 0 = 1` does the same; the
-formula `2 * alignedPairCount k a b + 4` describes neither.
+and for `a = 0` or `b = 0` the factor `e 0 = 1` does the same, so the rank
+there is `2 ^ k`. With `alignedPairCount k a b = 0` in those cases the
+formula gives `4`, which agrees only at `k = 2`.
 -/
 
 @[expose] public section
@@ -275,6 +279,23 @@ theorem mem_assocSpace_e_iff (h2 : IsLeftRegular (2 : R)) {k : ℕ} (a b : BitVe
   refine forall_congr' fun x => ?_
   rw [repr_associatorMap, assocCoeff_mul_eq_zero_iff h2, Basis.equivFun_apply]
   cases associates a b x <;> simp
+
+variable (R) in
+/-- The associator space of `e a` and `e b` is linearly equivalent to the
+functions on the indices that associate, when `2` is a non-zero-divisor. -/
+noncomputable def assocSpaceEquivFun (h2 : IsLeftRegular (2 : R)) {k : ℕ} (a b : BitVec k) :
+    assocSpace R k (e R k a) (e R k b) ≃ₗ[R] ({x // associates a b x = true} → R) :=
+  ((basis R k).equivFun.submoduleMap (assocSpace R k (e R k a) (e R k b))).trans
+    ((LinearEquiv.ofEq _ _ (by
+      ext z
+      rw [Submodule.mem_map_equiv, mem_assocSpace_e_iff h2, LinearEquiv.apply_symm_apply])).trans
+      (zeroOffEquiv (associates a b)))
+
+/-- The associator space of `e a` and `e b` is a free module when `2` is a
+non-zero-divisor. -/
+theorem free_assocSpace_e (h2 : IsLeftRegular (2 : R)) {k : ℕ} (a b : BitVec k) :
+    Module.Free R (assocSpace R k (e R k a) (e R k b)) :=
+  Module.Free.of_equiv (assocSpaceEquivFun R h2 a b).symm
 
 /-- **Associator dimension.** For nonzero distinct indices `a` and `b`, the
 associator space of `e a` and `e b` has rank
