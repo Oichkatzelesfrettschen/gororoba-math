@@ -8,7 +8,9 @@
 #      rocq/quantum, or on one of the two name lists below (compiled by a
 #      make target of rocq/open or by this script, which then has its .vo;
 #      held uncompiled).
-#      The producer of the kernel replay evidence that gororoba-open ingests
+#      The Flocq objects of the switch equal ci/flocq-manifest.json
+#      (ci/flocq_manifest.py --check). The producer of the kernel replay
+#      evidence that gororoba-open ingests
 #      (ci/kernel_replay_evidence.py) then runs its calibration from the
 #      export (ci/check_kernel_replay_evidence.sh): known-good and known-bad
 #      synthetic trees under the same switch.
@@ -63,7 +65,7 @@ open_kernel=
 trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$work"' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-git -C "$root" archive HEAD rocq ci/kernel_replay_evidence.py ci/check_kernel_replay_evidence.sh | tar -x -C "$work"
+git -C "$root" archive HEAD rocq ci/kernel_replay_evidence.py ci/check_kernel_replay_evidence.sh ci/flocq_manifest.py ci/flocq-manifest.json | tar -x -C "$work"
 # git archive leaves out a path that a .gitattributes file marks
 # export-ignore, and a recipe of rocq/open skips a source or a golden file
 # that is absent, so the export is compared with the tree of HEAD before
@@ -75,6 +77,18 @@ diff "$work/tree-files.txt" "$work/export-files.txt" >"$work/export.diff" || {
   cat "$work/export.diff" >&2
   exit 1
 }
+
+# The Flocq objects the switch holds are the ones ci/flocq-manifest.json
+# records by sha256, the list gororoba-open compares a replay's objects with.
+flocq_status=0
+opam exec --switch="$switch" -- python3 -I "$work/ci/flocq_manifest.py" --check >"$work/flocq-manifest.log" 2>&1 || flocq_status=$?
+if [ "$flocq_status" -ne 0 ]; then
+  cat "$work/flocq-manifest.log" >&2
+  echo "check_rocq: the Flocq objects of the switch differ from ci/flocq-manifest.json, or the check was refused (status $flocq_status)" >&2
+  [ "$flocq_status" -ne 2 ] || exit 2
+  exit 1
+fi
+echo "check_rocq: the Flocq objects of the switch equal ci/flocq-manifest.json"
 
 replay_status=0
 sh "$work/ci/check_kernel_replay_evidence.sh" >"$work/replay-calibration.log" 2>&1 || replay_status=$?

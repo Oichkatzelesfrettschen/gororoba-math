@@ -40,6 +40,9 @@ gororoba repository shares; this file governs where the two differ.
   that `make rocq` compiled; `ci/audit/SignTable.v` is its Rocq source,
   kept outside `rocq/` because the gate admits there only project-listed
   sources.
+  `ci/flocq_manifest.py` checks `ci/flocq-manifest.json`, the sha256 of each
+  Flocq `.vo` of the rocq-9.3 switch, and `ci/check_flocq_manifest.sh`
+  calibrates it; `ci/check_rocq.sh` runs the check from its export of `HEAD`.
   `ci/kernel_replay_evidence.py` produces the kernel replay evidence that
   gororoba-open ingests for a theorem receipt, and
   `ci/check_kernel_replay_evidence.sh` calibrates it; `ci/check_rocq.sh` runs
