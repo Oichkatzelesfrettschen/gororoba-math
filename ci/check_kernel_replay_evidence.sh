@@ -13,16 +13,24 @@
 #   - a theorem over a declared axiom: the report lists that axiom;
 #   - a source that imports Flocq: the recorded objects equal, in sorted
 #     order, the .vo files the switch's Flocq library holds, each with its
-#     digest, and every command maps external/Flocq to Flocq before its target.
+#     digest, every command maps external/Flocq to Flocq before its target,
+#     and flocq_producer names the manifest entry that lists those objects.
+#     The Flocq object bytes depend on the install prefix and the native
+#     toolchain, so the calibration records the running switch as the one
+#     producer of a scratch manifest (ci/flocq_manifest.py --record) and
+#     passes it with --flocq-manifest; no hosted runner is a recorded producer.
 # Known-bad cases must be refused: a source whose compilation prints a
 # warning but exits 0, a source that fails to compile, a declaration name the
 # source lacks, a Rocq that reports another version, a Flocq library
-# directory without Core/Core.vo, an output directory inside the checkout, a
+# directory without Core/Core.vo, a manifest with no entry for the switch's
+# objects, with two such entries, of the wrong schema or unreadable, an output
+# directory inside the checkout, a
 # git that fails, an output directory that is a symbolic link or becomes one
 # during the replay, and a summary that cannot be printed (each leaves no
 # evidence file); and mutated copies of the known-good evidence (swapped -R
-# pairs, lexical compilation order, a truncated Flocq object list, and more),
-# each of which the verifier must reject.
+# pairs, lexical compilation order, a truncated Flocq object list, a Flocq
+# producer that is missing or renamed, and more), each of which the verifier
+# must reject.
 # ci/check_rocq.sh runs it from its export of HEAD. It compiles a few
 # sources of a few lines each and writes only under a temporary directory it
 # removes, also on INT (status 130) and TERM (status 143). Exit status: 0 every
@@ -135,7 +143,7 @@ def load(path):
 
 def common(evidence, warning, order, module, flocq, tree):
     keys = ["schema_version", "toolchain", "project_sha256", "sources", "proof_object_sha256"]
-    keys += ["flocq_objects"] if flocq else []
+    keys += ["flocq_objects", "flocq_producer"] if flocq else []
     keys += ["compilation", "checker", "assumptions"]
     check(list(evidence) == keys, f"evidence fields {list(evidence)}")
     check(evidence["schema_version"] == 1, "schema_version")
@@ -188,12 +196,19 @@ def library_objects(library):
     return sorted(found, key=lambda entry: entry["path"])
 
 
-def flocq(evidence, library, tree):
+def manifest_producer(manifest, objects):
+    names = [entry["name"] for entry in load(manifest)["producers"] if entry["flocq_objects"] == objects]
+    check(len(names) == 1, f"{len(names)} manifest entries list the library's objects")
+    return names[0]
+
+
+def flocq(evidence, library, tree, manifest):
     order = ["theories/Prelude.v", "verified/C900_Test.v"]
     common(evidence, "+default", order, "OpenGororobaVerified.C900_Test", True, tree)
     expected = library_objects(library)
     check("external/Flocq/Core/Core.vo" in [entry["path"] for entry in expected], "library lacks Core/Core.vo")
     check(evidence["flocq_objects"] == expected, "recorded objects differ from the library's .vo files")
+    check(evidence["flocq_producer"] == manifest_producer(manifest, expected), "flocq_producer")
 
 
 def swap(arguments, first):
@@ -241,6 +256,8 @@ FLOCQ_MUTANTS = [
     ("Flocq object digest", lambda e: set_item(e["flocq_objects"][0], "sha256", "0" * 64)),
     ("Flocq mapping dropped from a command", unmap_flocq),
     ("Flocq objects absent", lambda e: e.pop("flocq_objects")),
+    ("Flocq producer absent", lambda e: e.pop("flocq_producer")),
+    ("Flocq producer renamed", lambda e: set_item(e, "flocq_producer", "other-producer")),
 ]
 
 
@@ -269,14 +286,14 @@ def main(argv):
             out, log, tree = rest
             axiom(load(f"{out}/C900_Test.evidence.json"), load(log), tree)
         elif mode == "flocq":
-            out, library, tree = rest
-            flocq(load(f"{out}/C900_Test.evidence.json"), library, tree)
+            out, library, tree, manifest = rest
+            flocq(load(f"{out}/C900_Test.evidence.json"), library, tree, manifest)
         elif mode == "mutants":
-            out, log, tree, flocq_out, library, flocq_tree = rest
+            out, log, tree, flocq_out, library, flocq_tree, manifest = rest
             summary = load(log)
             total = reject_all(CLOSED_MUTANTS, load(f"{out}/C900_Test.evidence.json"), lambda e: closed(e, out, summary, tree))
             total += reject_all(
-                FLOCQ_MUTANTS, load(f"{flocq_out}/C900_Test.evidence.json"), lambda e: flocq(e, library, flocq_tree)
+                FLOCQ_MUTANTS, load(f"{flocq_out}/C900_Test.evidence.json"), lambda e: flocq(e, library, flocq_tree, manifest)
             )
             print(total)
         else:
@@ -311,24 +328,33 @@ produce "$work/axiom" "$work/out-axiom" "$work/axiom.log" --proof verified/C900_
   fail "the declared axiom was not reported"
 echo "check_kernel_replay_evidence: declared axiom reported"
 
-# Known-good: a source that imports Flocq.
+# Known-good: a source that imports Flocq, produced against a scratch manifest
+# that records the running switch as its one producer.
+mkdir -p "$work/manifest/ci"
+cp "$here/flocq_manifest.py" "$work/manifest/ci/flocq_manifest.py"
+opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/manifest/ci/flocq_manifest.py" --record \
+  >"$work/record.log" 2>&1 || {
+  cat "$work/record.log" >&2
+  fail "ci/flocq_manifest.py could not record the running switch"
+}
+manifest="$work/manifest/ci/flocq-manifest.json"
 tree "$work/flocq"
 printf '%s\n' 'From Flocq Require Import Core.' 'From OpenGororoba Require Import Prelude.' \
   'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq/verified/C900_Test.v"
 produce "$work/flocq" "$work/out-flocq" "$work/flocq.log" --proof verified/C900_Test.v --declaration fixture \
-  --warning-policy fatal_default || {
+  --warning-policy fatal_default --flocq-manifest "$manifest" || {
   cat "$work/flocq.log" >&2
   fail "the producer refused the fixture that imports Flocq"
 }
 library=$(opam var --switch="$switch" lib)/coq/user-contrib/Flocq
-"$PYTHON" -I -B "$work/verify.py" flocq "$work/out-flocq" "$library" "$work/flocq" ||
+"$PYTHON" -I -B "$work/verify.py" flocq "$work/out-flocq" "$library" "$work/flocq" "$manifest" ||
   fail "the Flocq evidence differs from its expectation"
 echo "check_kernel_replay_evidence: Flocq objects recorded"
 
 # Known-bad: mutated copies of the known-good evidence. The verifier accepts the
 # unmutated records first, then rejects each mutation and prints their count.
 mutants=$("$PYTHON" -I -B "$work/verify.py" mutants "$work/out-good" "$work/good.log" "$work/good" \
-  "$work/out-flocq" "$library" "$work/flocq") || fail "the verifier accepted a mutated evidence record"
+  "$work/out-flocq" "$library" "$work/flocq" "$manifest") || fail "the verifier accepted a mutated evidence record"
 echo "check_kernel_replay_evidence: $mutants mutated evidence records rejected"
 
 # Known-bad: a warning on an exit status of 0.
@@ -354,6 +380,50 @@ fi
 grep -q 'Flocq Core.vo is missing' "$work/no-flocq.log" || fail "no-flocq: the refusal names another cause"
 [ ! -e "$work/out-no-flocq/C900_Test.evidence.json" ] || fail "no-flocq: a refused run left an evidence file"
 echo "check_kernel_replay_evidence: missing Flocq library refused"
+
+# Known-bad: a manifest that cannot name this producer. The scratch copies
+# below differ from the recorded manifest in one way each.
+cat >"$work/edit_manifest.py" <<'EOF'
+import copy
+import json
+import sys
+
+source, target, mode = sys.argv[1:]
+with open(source) as handle:
+    document = json.load(handle)
+producers = document["producers"]
+if mode == "digest":
+    producers[0]["flocq_objects"][0]["sha256"] = "0" * 64
+elif mode == "twin":
+    twin = copy.deepcopy(producers[0])
+    twin["name"] = "twin-" + twin["name"]
+    twin["toolchain"]["ltac_plugin_md5"] = "0" * 32
+    producers.append(twin)
+elif mode == "schema":
+    document["schema_version"] = 1
+else:
+    sys.exit(f"edit_manifest: unknown mode {mode}")
+with open(target, "w") as handle:
+    json.dump(document, handle, indent=2)
+EOF
+# refused_manifest NAME MANIFEST CAUSE: the producer must exit 1 on the Flocq tree
+# with a message that holds CAUSE and leave no evidence file.
+refused_manifest() {
+  if produce "$work/flocq" "$work/out-$1" "$work/$1.log" --proof verified/C900_Test.v --declaration fixture \
+    --warning-policy fatal_default --flocq-manifest "$2"; then
+    fail "$1: the producer accepted the manifest"
+  fi
+  [ ! -e "$work/out-$1/C900_Test.evidence.json" ] || fail "$1: a refused run left an evidence file"
+  grep -q "$3" "$work/$1.log" || fail "$1: the refusal names another cause: $(head -n 1 "$work/$1.log")"
+  echo "check_kernel_replay_evidence: $1 refused"
+}
+"$PYTHON" -I -B "$work/edit_manifest.py" "$manifest" "$work/manifest-digest.json" digest
+refused_manifest manifest-no-producer "$work/manifest-digest.json" '^kernel_replay_evidence: 0 producers'
+"$PYTHON" -I -B "$work/edit_manifest.py" "$manifest" "$work/manifest-twin.json" twin
+refused_manifest manifest-two-producers "$work/manifest-twin.json" '^kernel_replay_evidence: 2 producers'
+"$PYTHON" -I -B "$work/edit_manifest.py" "$manifest" "$work/manifest-schema.json" schema
+refused_manifest manifest-schema "$work/manifest-schema.json" 'not a schema_version 2 document'
+refused_manifest manifest-missing "$work/manifest-absent.json" 'cannot read the Flocq manifest'
 
 # Known-bad: a Rocq of another version, found first on PATH.
 mkdir "$work/fake"
@@ -445,4 +515,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 3 known-good and $((12 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 3 known-good and $((16 + mutants)) known-bad cases behaved"

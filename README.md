@@ -318,10 +318,14 @@ literal expectations: the complete compiler, checker and assumption argument
 vectors, the compilation order, the digests of the written files and the
 sources, the assumption lists (empty, `postulate` and empty) and, for Flocq,
 an object list equal to the sorted `.vo` files of the switch's library with
-`-R external/Flocq Flocq` before every target. The verifier is itself
-calibrated: 18 mutated copies of that evidence (swapped `-R` pairs, a lexical
-or reversed compilation order, a truncated Flocq list, altered digests, among
-others) must each be rejected. A warning printed on a zero exit status, a
+`-R external/Flocq Flocq` before every target, and a `flocq_producer` that
+names the entry of a scratch manifest (`ci/flocq_manifest.py --record` of the
+running switch) which lists those objects. The verifier is itself
+calibrated: 20 mutated copies of that evidence (swapped `-R` pairs, a lexical
+or reversed compilation order, a truncated Flocq list, altered digests, a
+missing or renamed Flocq producer, among others) must each be rejected, and a
+manifest with no entry, two entries, the wrong schema or no file for the
+switch's objects must be refused. A warning printed on a zero exit status, a
 source that fails to compile, a missing declaration, another Rocq version, a
 Flocq directory without `Core/Core.vo`, an output directory inside the
 tracking repository, a failing git, an output directory that is a symbolic
