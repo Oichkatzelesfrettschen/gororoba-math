@@ -8,7 +8,8 @@
 #   make rocq-quantum   rocq/open, which rocq/quantum reads, then
 #                       rocq/quantum with -w @all; a warning line from the
 #                       makefile generator or the build fails the target
-#   make rocq           both Rocq trees (the same as rocq-quantum)
+#   make rocq-delegation  rocq/delegation with -w +default
+#   make rocq           the three Rocq trees
 #   make gate           ci/check.sh and ci/check_rocq.sh on HEAD
 #   make clean          remove the Rocq build tree $(BUILD_DIR)/rocq
 #
@@ -47,7 +48,7 @@ ROCQ_PRODUCTS := '*.vo' '*.vok' '*.vos' '*.glob' '*.aux' '.*.cache' \
 	'/open/html/' '/open/metrics/' '/quantum-build.log' \
 	'/.gororoba-math-build-tree'
 
-.PHONY: help lean rocq rocq-sync rocq-open rocq-quantum gate clean
+.PHONY: help lean rocq rocq-sync rocq-open rocq-quantum rocq-delegation gate clean
 
 help:
 	@sed -n '1,/^$$/p' Makefile
@@ -101,7 +102,13 @@ rocq-quantum: rocq-open
 	exit "$$status"
 	@echo "rocq-quantum: compiled $$(grep -c '\.v$$' rocq/quantum/_RocqProject) listed sources, no warning"
 
-rocq: rocq-quantum
+# rocq/delegation imports the standard library alone.
+rocq-delegation: rocq-sync
+	cd "$(ROCQ_TREE)/delegation" && $(OPAM) rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
+	$(OPAM) make --no-print-directory -C "$(ROCQ_TREE)/delegation" -f Makefile.rocq --jobs=$(ROCQ_JOBS)
+	@echo "rocq-delegation: compiled $$(grep -c '\.v$$' rocq/delegation/_RocqProject) listed sources"
+
+rocq: rocq-quantum rocq-delegation
 
 gate:
 	sh ci/check.sh

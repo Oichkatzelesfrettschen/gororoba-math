@@ -33,6 +33,13 @@ gororoba repository shares; this file governs where the two differ.
   (`-Q quantum GororobaQuantum`); no source imports it, so both names
   compile the same source, and the object this gate builds carries the
   unprefixed name.
+- `rocq/delegation/` is the delegation model (`Model.v`, logical root
+  `GororobaDelegation`) and three sources that
+  `ci/delegation-sources/render_inventory.py` renders from the statement
+  inventories of gororoba-open (`curated/01_theory_frameworks/
+  confine_theorems_N.v`); a rendered source changes through the generator,
+  and `ci/check_delegation_sources.sh` renders them again from the checkout
+  `GOROROBA_OPEN` names, on demand.
 - `ci/check.sh` is the Lean half of the admission gate and
   `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
@@ -108,8 +115,8 @@ gororoba repository shares; this file governs where the two differ.
 
 ## Rocq sources
 
-- A new source of `rocq/open/theories`, `rocq/open/verified` or
-  `rocq/quantum` is listed in the `_RocqProject` of its tree in the commit
+- A new source of `rocq/open/theories`, `rocq/open/verified`,
+  `rocq/quantum` or `rocq/delegation` is listed in the `_RocqProject` of its tree in the commit
   that adds it; `ci/check_rocq.sh` fails on a tracked source the project
   file omits and on a listed source without a compiled object. A source
   anywhere else under `rocq/` is named in one of the two lists at the top
@@ -122,12 +129,14 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum` compiles with `-w @all`, the
   flag of its retained replays, under which `rocq` prints a warning and
   exits 0; the gate fails on a warning line in the build log. No source of
-  `rocq/open/theories`, `rocq/open/verified` or `rocq/quantum` holds
-  `Admitted` or `admit` (`rocq/open/admission_check.rs`).
+  `rocq/open/theories`, `rocq/open/verified`, `rocq/quantum` or
+  `rocq/delegation` holds `Admitted` or `admit` (`rocq/open/admission_check.rs`).
 - `ci/check_rocq.sh` re-checks every project-listed module with the kernel
   checker (`rocq check -silent -o`) and compares the axioms it reports with
-  `rocq/open/kernel-assumptions.txt` and
-  `rocq/quantum/kernel-assumptions.txt`. A change that adds or removes an
+  `rocq/open/kernel-assumptions.txt`,
+  `rocq/quantum/kernel-assumptions.txt` and
+  `rocq/delegation/kernel-assumptions.txt` (empty).
+  `rocq/delegation` compiles with `-w +default`. A change that adds or removes an
   axiom a tree rests on changes that tree's ledger in the same commit.
 - Kernel replay evidence for a gororoba-open receipt comes from
   `ci/kernel_replay_evidence.py`, which compiles, kernel-checks and writes the
@@ -174,7 +183,7 @@ gororoba repository shares; this file governs where the two differ.
 
 - The root `Makefile` builds the working tree: `make lean`, and `make rocq`,
   which copies `rocq/` into `BUILD_DIR/rocq` (default `build`, ignored)
-  and compiles both trees there with the options of their `_RocqProject`
+  and compiles the three trees there with the options of their `_RocqProject`
   files. On a workstation `build` is a symbolic link to a directory
   outside the checkout, or `BUILD_DIR` names one, one per worktree; the
   targets refuse any other path inside the checkout, and `make clean`
