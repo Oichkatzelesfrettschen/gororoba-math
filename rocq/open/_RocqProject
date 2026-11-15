@@ -146,6 +146,7 @@ verified/C022_OrdinalAnalogy.v
 verified/C023_AssociatorNotHolonomy.v
 verified/C028_SedenionAutGroup.v
 verified/C029_FermionGenerations.v
+verified/C029_FermionGenerationArithmetic.v
 verified/C033_SU5GeneratorsWellDefined.v
 verified/C035_CasimirQuarter.v
 verified/C036_TrialityClusteringBound.v
@@ -207,6 +208,7 @@ verified/C1141_ZDGraphGeneralStructure.v
 verified/C1142_XORScatterGatherDuality.v
 theories/TightBindingTopology.v
 verified/C1233_ChernSumZero.v
+verified/C1233_ChernZeroUnderTRS.v
 verified/C1234_ValleyChernAntisymmetry.v
 verified/C1236_FlatBandGroupVelocity.v
 verified/C1262_FlatBandFractionHalf.v
