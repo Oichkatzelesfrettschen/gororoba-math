@@ -208,19 +208,27 @@ over the rationals, with `pathion_kernel_map._pair_summary` on twelve fixed
 blocks whose bins are all decided, and
 
 ```sh
-GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_kernel_map_bins.sh
+GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_kernel_map_bins.sh [LEVEL [SCOPE]]
 ```
 
 evaluates `KernelMap.binContract` on the ideal kernel map of
-`pathion_kernel_map` for every two-term operand `e_i + t e_j` of `A_5`
-(`i != j`, `t = +1` or `-1`; 1,984 operands, its six operands and two twins
-among them), with the `+1` bins of the ideal output contrast of
-`kernel_map_circuit` as `pos` and bin `y` read as index `y`, and requires
-`Tower.alignedPairCount`, `KernelMap.nullity` and half the contrast sum to
-agree; the contract rejects the member `kmap_flip3_e1pe18` and a contrast
-with one bin negated. It refuses a gororoba-quantum checkout whose
-`gororoba_quantum` directory is modified and prints the digest of each
-module it imports. Each prints the gororoba-quantum commit it
+`pathion_kernel_map` at level `LEVEL` (5, 6 or 7; default 5). It runs
+`kernel_map_circuit` at dimension `2^LEVEL` for every two-term operand
+`e_i + t e_j` (`i != j`, `t = +1` or `-1`): 1,984 operands at level 5, with
+the module's six operands and two twins among them, 8,064 at level 6 and
+32,512 at level 7. At levels 6 and 7 it also runs each operand of
+`pathion_wide_coset.WIDE_OPERANDS` through the coset-block circuits that the
+64- and 128-dimensional runs execute; `SCOPE wide` takes only those. The
+`+1` bins of the ideal output contrast are `pos`, with bin `y` read as index
+`y`, and the script requires `Tower.alignedPairCount`, `KernelMap.nullity`
+and half the contrast sum to agree. At every level the contract must reject
+`e_1 + e_18` with one SELECT sign negated and a contrast with one bin
+negated; at levels 6 and 7 it must also reject the cocycle-free wide
+operand. The script refuses a gororoba-quantum checkout whose
+`gororoba_quantum` directory is modified or changes during the run, and it
+prints that directory's git tree. Level 5 takes about a minute and level 6
+about four minutes on the build host; level 7 with `SCOPE all` needs about
+35 minutes and more than 4 GiB (issue 36). Each prints the gororoba-quantum commit it
 read and runs on demand, since it reads another repository; the second and
 third also need that repository's Python packages and the built Lean
 library.
