@@ -101,7 +101,8 @@ gororoba repository shares; this file governs where the two differ.
   of the library, since the root module's replay needs 27.5 GB; a
   metaprogram can add a declaration that the build and the axiom audit
   accept and the kernel rejects. The replay assumes what a module
-  imports, so a library module imports only the library and Mathlib, and
+  imports, so a library module imports only the library and the package's
+  dependencies (Mathlib and what it requires), and
   `lean/lakefile.toml` sets no `srcDir`; the gate checks both.
 - A definition that mirrors code in another gororoba repository names that
   function in its docstring and has a comparison under `ci/` that runs both
