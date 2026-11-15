@@ -110,7 +110,7 @@ gate:
 # Removes a tree that rocq-sync created, recognized by its marker file, and
 # nothing else; a BUILD_DIR that is a link keeps its target directory.
 clean:
-	@if [ -f "$(MARKER)" ]; then rm -r -- "$(ROCQ_TREE)"; \
+	@if [ -f "$(MARKER)" ]; then rm -r -- "$(ROCQ_TREE)" </dev/null; \
 	elif [ -e "$(ROCQ_TREE)" ]; then \
 		echo "clean: $(ROCQ_TREE) is not a build tree of this Makefile; left in place" >&2; exit 1; \
 	fi

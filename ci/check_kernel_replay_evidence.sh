@@ -46,7 +46,11 @@ here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 producer="$here/kernel_replay_evidence.py"
 work=$(mktemp -d "${TMPDIR:-/tmp}/gororoba-math-replay.XXXXXXXX")
 cleanup() {
-  rm -r "$work"
+  # POSIX rm asks before it removes a write-protected file when standard input
+  # is a terminal, and the object files of the repositories under $work are
+  # mode 444, so a run from a terminal would wait here for an answer. With
+  # standard input at /dev/null rm removes them unasked.
+  rm -r "$work" </dev/null
 }
 trap cleanup EXIT
 trap 'exit 130' INT

@@ -31,7 +31,7 @@ done
 
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d)
-trap 'rm -r "$work"' EXIT INT TERM
+trap 'rm -r "$work" </dev/null' EXIT INT TERM
 
 cd "$root"
 git ls-files -- '*.sh' >"$work/scripts.txt"
@@ -43,6 +43,27 @@ while IFS= read -r script; do
   shellcheck -S error "$script"
 done <"$work/scripts.txt"
 echo "check: shellcheck passed on $(wc -l <"$work/scripts.txt") script(s)"
+
+# A recursive removal reads standard input from /dev/null: under a terminal rm
+# asks before it removes a write-protected file (a git object, mode 444), and
+# a gate run from a terminal then waits for an answer. The pattern is
+# calibrated on one line it must report and one it must pass; printf joins
+# the two samples so that neither is a line of this script the scan reads.
+bare_removal='rm -r[^<]*$'
+if ! printf 'rm %s scratch\n' -r | grep -q -E "$bare_removal" ||
+  printf 'rm %s scratch </dev/null\n' -r | grep -q -E "$bare_removal"; then
+  echo "check: the recursive-removal pattern failed its calibration" >&2
+  exit 1
+fi
+git ls-files -- '*.sh' Makefile | while IFS= read -r script; do
+  grep -n -E "$bare_removal" "$script" | grep -v -E '^[0-9]+:[[:space:]]*#' | sed "s|^|$script:|"
+done >"$work/bare-removals.txt"
+[ ! -s "$work/bare-removals.txt" ] || {
+  cat "$work/bare-removals.txt" >&2
+  echo "check: a recursive removal reads the terminal; append </dev/null" >&2
+  exit 1
+}
+echo "check: every recursive removal reads /dev/null"
 
 git ls-files -- '*.py' >"$work/python.txt"
 if [ -s "$work/python.txt" ]; then
