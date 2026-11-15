@@ -46,7 +46,11 @@ done
 
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d)
-trap 'rm -r "$work" </dev/null' EXIT INT TERM
+# A signal ends the script through the EXIT cleanup, once: a trap action that
+# returns lets the shell run on with the work directory gone.
+trap 'rm -r "$work" </dev/null' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 cd "$root"
 git ls-files -- '*.sh' >"$work/scripts.txt"
