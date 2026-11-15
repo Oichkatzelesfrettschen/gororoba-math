@@ -167,7 +167,8 @@ warning, and none of the three directories holds `Admitted` or `admit`. Of
 the eleven sources elsewhere under `rocq/open`, those make targets compile
 seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 `ExtractFP24Admit.v`, `ExtractR2VBDP4.v` and `RustExtractSpike.v` stay
-uncompiled, and the script names all eleven and fails on a twelfth.
+uncompiled, and the script names all eleven and fails on a twelfth. Before any
+build it runs the calibration of the kernel replay evidence producer (below).
 
 The script then re-checks all 392 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
@@ -269,6 +270,63 @@ when every expectation held.
 The `make` above runs one job at a time: measured with `-j4`, it stopped on a
 missing dependency of `CdTowerDomain` (hypothesis: the generated makefile
 lacks an edge for the empty logical root; untraced).
+
+## Kernel replay evidence
+
+gororoba-open records a theorem as kernel checked from a replay of its
+proof source. `ci/kernel_replay_evidence.py` is the producer of that replay:
+for one source of `rocq/open` and the names of its declarations it
+compiles the dependency closure in a scratch directory, re-checks the proof
+object with `rocq check -silent -o`, runs `Print Assumptions` on each
+declaration, and writes the evidence JSON that
+`gororoba-db theorem identity record-kernel-evidence` ingests, together with
+the proof object and the compile, kernel and assumption logs a witness binds.
+gororoba-open reads that file and never runs Rocq.
+
+```sh
+opam exec --switch=rocq-9.3 -- python3 -I ci/kernel_replay_evidence.py \
+    --proof theories/X.v --declaration NAME --warning-policy fatal_default \
+    --out ../kernel-capture/X
+```
+
+The tree is `rocq/open` of the checkout `GOROROBA_MATH` names, or the
+directory `--tree` names. The producer accepts only Rocq 9.3.0 on OCaml 5.5.1,
+refuses a warning line, an error line and a local absolute path in any
+output, writes the evidence file last (and removes it when the summary cannot
+be printed), and refuses an output directory inside the git repository that
+tracks the tree. It creates the output directory before the replay, refuses a
+symbolic link, and checks the directory again before the first write. A git
+failure other than "no repository" or "path not tracked" refuses the run. It
+removes its scratch directory on SIGTERM (status 143). Its header comment gives
+the fixed argument vectors and the environment variables it reads
+(`FLOCQ_ROOT`, `OPAM_SWITCH_PREFIX`; `COQPATH` and `ROCQPATH` are removed).
+
+```sh
+sh ci/check_kernel_replay_evidence.sh
+```
+
+calibrates it on a synthetic three-file tree under the switch `rocq-9.3`: a
+closed theorem over a chain of two imported sources whose dependency order
+differs from their lexical order, a theorem over a declared axiom and a source
+that imports Flocq must each produce evidence that a verifier compares with
+literal expectations: the complete compiler, checker and assumption argument
+vectors, the compilation order, the digests of the written files and the
+sources, the assumption lists (empty, `postulate` and empty) and, for Flocq,
+an object list equal to the sorted `.vo` files of the switch's library with
+`-R external/Flocq Flocq` before every target. The verifier is itself
+calibrated: 18 mutated copies of that evidence (swapped `-R` pairs, a lexical
+or reversed compilation order, a truncated Flocq list, altered digests, among
+others) must each be rejected. A warning printed on a zero exit status, a
+source that fails to compile, a missing declaration, another Rocq version, a
+Flocq directory without `Core/Core.vo`, an output directory inside the
+tracking repository, a failing git, an output directory that is a symbolic
+link or becomes one during the replay, and a summary that cannot be printed
+must each be refused with no evidence file. The verifier checks use no `assert`,
+so `python3 -O` runs them unchanged. The script removes its temporary directory
+on exit, INT (status 130) and TERM (status 143). It compiles a few sources of a
+few lines each, and `sh ci/check_rocq.sh` runs it from its export of `HEAD`
+before the tree build and passes its status 2 (a tool or the switch is
+missing) through as 2.
 
 ## License
 

@@ -8,6 +8,10 @@
 #      rocq/quantum, or on one of the two name lists below (compiled by a
 #      make target of rocq/open or by this script, which then has its .vo;
 #      held uncompiled).
+#      The producer of the kernel replay evidence that gororoba-open ingests
+#      (ci/kernel_replay_evidence.py) then runs its calibration from the
+#      export (ci/check_kernel_replay_evidence.sh): known-good and known-bad
+#      synthetic trees under the same switch.
 #   1. rocq/open: every tracked source of theories/ and verified/ is a line
 #      of _RocqProject, which compiles them with -w +default (each warning
 #      of the default set is an error); make all, check-schur-geometry,
@@ -36,11 +40,11 @@
 # script peaked at 11.9 GB of memory (systemd scope accounting, 12-thread
 # x86-64 host), and a run capped at 12 GB was killed in the build of
 # rocq/open; lower ROCQ_JOBS on a host with less.
-# Needs git, opam, tar, make, rustc and getconf on PATH. Exit status: 0 every
+# Needs git, opam, tar, make, rustc, getconf and python3 on PATH. Exit status: 0 every
 # check passed, 1 a check failed, 2 a tool or the switch is missing.
 set -eu
 
-for tool in git opam tar make rustc getconf; do
+for tool in git opam tar make rustc getconf python3; do
   command -v "$tool" >/dev/null || {
     echo "check_rocq: $tool is not on PATH (README.md, Toolchain)" >&2
     exit 2
@@ -56,8 +60,10 @@ opam switch list --short | grep -q -x -F "$switch" || {
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d "${ROCQ_BUILD_DIR:-${TMPDIR:-/tmp}}/gororoba-math-rocq.XXXXXXXX")
 open_kernel=
-trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$work"' EXIT INT TERM
-git -C "$root" archive HEAD rocq | tar -x -C "$work"
+trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$work"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+git -C "$root" archive HEAD rocq ci/kernel_replay_evidence.py ci/check_kernel_replay_evidence.sh | tar -x -C "$work"
 # git archive leaves out a path that a .gitattributes file marks
 # export-ignore, and a recipe of rocq/open skips a source or a golden file
 # that is absent, so the export is compared with the tree of HEAD before
@@ -69,6 +75,17 @@ diff "$work/tree-files.txt" "$work/export-files.txt" >"$work/export.diff" || {
   cat "$work/export.diff" >&2
   exit 1
 }
+
+replay_status=0
+sh "$work/ci/check_kernel_replay_evidence.sh" >"$work/replay-calibration.log" 2>&1 || replay_status=$?
+if [ "$replay_status" -ne 0 ]; then
+  cat "$work/replay-calibration.log" >&2
+  echo "check_rocq: the kernel replay evidence calibration failed (status $replay_status)" >&2
+  # The calibration's status 2 (a tool or the switch is missing) is this script's status 2.
+  [ "$replay_status" -ne 2 ] || exit 2
+  exit 1
+fi
+echo "check_rocq: kernel replay evidence producer calibrated: $(tail -n 1 "$work/replay-calibration.log")"
 
 # Sources outside the three project-listed directories. A make target of
 # rocq/open compiles each source of the first list (check-schur-geometry the
