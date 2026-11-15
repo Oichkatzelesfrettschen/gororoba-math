@@ -152,7 +152,7 @@ excludes `sorry`, `native_decide` and declared axioms. The gate builds and
 audits every tracked module under `lean/GororobaMath/`, taken from git's
 file list, and separately requires `lean/GororobaMath.lean` to import each
 one; it also requires the audit to reject `lean/AuditFixture.lean`, which
-holds one of each. Last it replays the root module and every tracked module
+holds one of each. Last it replays every tracked module
 through `leanchecker`, which type-checks the compiled theorems and
 definitions again in a second process (unsafe and partial declarations,
 which no theorem can use, are skipped), and requires that replay to reject

@@ -25,10 +25,12 @@
 #   7. leanchecker, which reads the compiled objects in a second process
 #      and type-checks their theorems and definitions in the kernel again
 #      (it skips unsafe and partial declarations, which no theorem can
-#      use), accepts the root module and each tracked module, and rejects
+#      use), accepts each tracked module, one call per module, and rejects
 #      lean/ReplayFixture.lean, whose declaration of type False was added
 #      with the kernel switched off and which the build and the axiom
-#      audit (lean/audit/ReplayFixture.lean) both accept.
+#      audit (lean/audit/ReplayFixture.lean) both accept. The root module
+#      is left out of the replay and holds only `module` and its imports
+#      of the library, which this step checks.
 # Needs git, shellcheck, ruff, actionlint and lake (elan, with the toolchain
 # of lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
@@ -250,10 +252,17 @@ echo "check: $(wc -l <"$work/sources.txt") library source(s) import only the lib
 
 # leanchecker replays the modules it is given and assumes their imports, so
 # every library module is named; Mathlib's objects are assumed, as its
-# prebuilt cache already is. One module per call: each module named in one
-# call loads its imports again (measured, Lean 4.35.0 with Mathlib: 6.9 GB
-# for one module, 10.0 GB for two, 26.9 GB for the eight of this library).
-for module in GororobaMath $(cat "$work/modules.txt"); do
+# prebuilt cache already is. One module per call keeps the peak at 6.9 GB
+# (measured, Lean 4.35.0 with Mathlib v4.35.0, each of the seven modules
+# under a 14 GB limit). The root module is left out: its replay needs
+# 27.5 GB and ends with SIGTERM under a 20 GB limit (measured; cause not
+# isolated), and the check below keeps it free of declarations.
+if grep -v -x -E '(module|(public )?import GororobaMath(\.[A-Za-z0-9_]+)+)?' GororobaMath.lean >"$work/root-extra.txt"; then
+  cat "$work/root-extra.txt" >&2
+  echo "check: lean/GororobaMath.lean holds a line other than module and its imports of the library; the replay leaves the root module out" >&2
+  exit 1
+fi
+for module in $(cat "$work/modules.txt"); do
   lake env leanchecker "$module" >"$work/replay.out" 2>&1 || {
     cat "$work/replay.out" >&2
     echo "check: the kernel replay rejected $module" >&2

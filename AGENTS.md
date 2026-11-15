@@ -96,7 +96,9 @@ gororoba repository shares; this file governs where the two differ.
   stays on its branch; under `lean/`, `main` holds no `sorry`, no
   `native_decide` and no declared axiom outside `lean/AuditFixture.lean`,
   and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
-  gate replays every library module through `leanchecker`, since a
+  gate replays every tracked module through `leanchecker`, one call per
+  module, and keeps `lean/GororobaMath.lean` to `module` and its imports
+  of the library, since the root module's replay needs 27.5 GB; a
   metaprogram can add a declaration that the build and the axiom audit
   accept and the kernel rejects. The replay assumes what a module
   imports, so a library module imports only the library and Mathlib, and
