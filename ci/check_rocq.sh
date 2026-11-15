@@ -64,7 +64,7 @@ opam switch list --short | grep -q -x -F "$switch" || {
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d "${ROCQ_BUILD_DIR:-${TMPDIR:-/tmp}}/gororoba-math-rocq.XXXXXXXX")
 open_kernel=
-trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$work"' EXIT
+trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$work" </dev/null' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 git -C "$root" archive HEAD rocq ci/kernel_replay_evidence.py ci/check_kernel_replay_evidence.sh | tar -x -C "$work"
