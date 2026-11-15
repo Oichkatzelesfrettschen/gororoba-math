@@ -1,4 +1,4 @@
-(** * C029: the octonion subalgebras of the sedenions spanned by basis units.
+(** * C029: which of the 15 coordinate-hyperplane subalgebras of the sedenions are octonion subalgebras.
 
     Convention. The product is [sed_mul] and the octonion product is
     [oct_mul] of [theories/Sedenion.v], both Cayley-Dickson doublings
@@ -8,16 +8,19 @@
     index [8 + k] is [oct_coord (sed_hi s) k], where octonion index
     [k < 4] is the quaternion coordinate [qa, qb, qc, qd] of [oct_lo]
     and [k >= 4] that of [oct_hi]. [sed_e i] is the unit at index [i].
-    The product of two units is a signed unit at the xor of the indices;
-    the signs enter only through the tables [tab1 .. tab15] below, and the
-    lemmas that use them are checked on all real coordinates.
+    The tables [tab1 .. tab15] below choose, for each octonion unit, a
+    target index and a sign of the embedding; the signs of products come
+    from the definitions of [oct_mul] and [sed_mul], which the proofs
+    unfold, so every lemma holds for all real coordinates.
 
     The family. For [u] in [1..15] the set [{k < 16 | parity(u land k) = 0}]
     is a 3-dimensional subspace of F_2^4 containing 0, so it holds 8
-    indices; all 15 such subspaces arise from the 15 nonzero [u]. [in_sub u]
-    is the real span of the 8 units with those indices. Over the reals the
-    set of all subalgebras isomorphic to the octonions is infinite; the
-    count here is of the 15 coordinate-defined members.
+    indices. [in_sub u] is the real span of the 8 units with those indices;
+    the family is these 15 spans, and no theorem here depends on the two
+    background facts that the 15 nonzero [u] exhaust the 3-dimensional
+    subspaces of F_2^4 and that the set of all real subalgebras isomorphic
+    to the octonions is infinite. This file does not prove that every
+    unit-spanned octonion subalgebra of the sedenions is one of the 15.
 
     Results.
     - Each [in_sub u] is closed under [sed_mul] (all 15).
@@ -26,8 +29,9 @@
       members are isomorphic to the octonions.
     - For [9 <= u <= 15] a pair of members [x], [y] of [in_sub u] violates
       left alternativity [(x x) y = x (x y)], which holds in the octonions
-      ([oct_left_alt_gen]); no product-preserving map from CDOct has image
-      containing [in_sub u], so these 7 are not isomorphic to the octonions.
+      ([oct_left_alt_gen]); [no_mult_map_onto_large] shows no
+      product-preserving map from CDOct has image containing [in_sub u],
+      so these 7 are not isomorphic to the octonions.
     - Hence exactly 8 of the 15 members are octonion subalgebras, and the
       15 members are pairwise distinct subspaces.
     - The high half, the diagonal, and an index set not closed under xor
@@ -876,39 +880,62 @@ Proof.
   rewrite oct_left_alt_gen. reflexivity.
 Qed.
 
+(** No product-preserving map from the octonions, linear or not and
+    injective or not, has an image that contains a member [u] of 9..15. *)
+Lemma no_mult_map_onto_large : forall u, (9 <= u <= 15)%nat ->
+  forall phi : CDOct -> CDSed,
+    (forall a b, phi (oct_mul a b) = sed_mul (phi a) (phi b)) ->
+    (forall s, in_sub u s -> exists a, phi a = s) -> False.
+Proof.
+  intros u Hu phi Hm Him.
+  assert (Hc : u = 9%nat \/ u = 10%nat \/ u = 11%nat \/ u = 12%nat \/ u = 13%nat \/ u = 14%nat \/ u = 15%nat) by lia.
+  destruct Hc as [ -> | [ -> | [ -> | [ -> | [ -> | [ -> | -> ] ] ] ] ] ].
+  - destruct (Him (emb tab9 (oct_add (oct_e 1) (oct_e 4))) (emb_in_sub_9 _)) as [a Ha].
+    destruct (Him (emb tab9 (oct_e 2)) (emb_in_sub_9 _)) as [b Hb].
+    pose proof (left_alt_transfer phi Hm a b) as Ht.
+    rewrite Ha, Hb in Ht. exact (not_left_alt_9 Ht).
+  - destruct (Him (emb tab10 (oct_add (oct_e 1) (oct_e 4))) (emb_in_sub_10 _)) as [a Ha].
+    destruct (Him (emb tab10 (oct_e 2)) (emb_in_sub_10 _)) as [b Hb].
+    pose proof (left_alt_transfer phi Hm a b) as Ht.
+    rewrite Ha, Hb in Ht. exact (not_left_alt_10 Ht).
+  - destruct (Him (emb tab11 (oct_add (oct_e 1) (oct_e 4))) (emb_in_sub_11 _)) as [a Ha].
+    destruct (Him (emb tab11 (oct_e 2)) (emb_in_sub_11 _)) as [b Hb].
+    pose proof (left_alt_transfer phi Hm a b) as Ht.
+    rewrite Ha, Hb in Ht. exact (not_left_alt_11 Ht).
+  - destruct (Him (emb tab12 (oct_add (oct_e 1) (oct_e 4))) (emb_in_sub_12 _)) as [a Ha].
+    destruct (Him (emb tab12 (oct_e 2)) (emb_in_sub_12 _)) as [b Hb].
+    pose proof (left_alt_transfer phi Hm a b) as Ht.
+    rewrite Ha, Hb in Ht. exact (not_left_alt_12 Ht).
+  - destruct (Him (emb tab13 (oct_add (oct_e 1) (oct_e 4))) (emb_in_sub_13 _)) as [a Ha].
+    destruct (Him (emb tab13 (oct_e 2)) (emb_in_sub_13 _)) as [b Hb].
+    pose proof (left_alt_transfer phi Hm a b) as Ht.
+    rewrite Ha, Hb in Ht. exact (not_left_alt_13 Ht).
+  - destruct (Him (emb tab14 (oct_add (oct_e 1) (oct_e 4))) (emb_in_sub_14 _)) as [a Ha].
+    destruct (Him (emb tab14 (oct_e 2)) (emb_in_sub_14 _)) as [b Hb].
+    pose proof (left_alt_transfer phi Hm a b) as Ht.
+    rewrite Ha, Hb in Ht. exact (not_left_alt_14 Ht).
+  - destruct (Him (emb tab15 (oct_add (oct_e 1) (oct_e 4))) (emb_in_sub_15 _)) as [a Ha].
+    destruct (Him (emb tab15 (oct_e 2)) (emb_in_sub_15 _)) as [b Hb].
+    pose proof (left_alt_transfer phi Hm a b) as Ht.
+    rewrite Ha, Hb in Ht. exact (not_left_alt_15 Ht).
+Qed.
+
+
 Lemma not_iso_large : forall u, (9 <= u <= 15)%nat -> ~ oct_sub_iso u.
 Proof.
   intros u Hu [phi [Hm [_ [_ [_ Him]]]]].
-  assert (Hc : u = 9%nat \/ u = 10%nat \/ u = 11%nat \/ u = 12%nat \/ u = 13%nat \/ u = 14%nat \/ u = 15%nat) by lia.
-  destruct Hc as [ -> | [ -> | [ -> | [ -> | [ -> | [ -> | -> ] ] ] ] ] ].
-  - destruct (proj1 (Him (emb tab9 (oct_add (oct_e 1) (oct_e 4)))) (emb_in_sub_9 _)) as [a Ha].
-    destruct (proj1 (Him (emb tab9 (oct_e 2))) (emb_in_sub_9 _)) as [b Hb].
-    pose proof (left_alt_transfer phi Hm a b) as Ht.
-    rewrite Ha, Hb in Ht. exact (not_left_alt_9 Ht).
-  - destruct (proj1 (Him (emb tab10 (oct_add (oct_e 1) (oct_e 4)))) (emb_in_sub_10 _)) as [a Ha].
-    destruct (proj1 (Him (emb tab10 (oct_e 2))) (emb_in_sub_10 _)) as [b Hb].
-    pose proof (left_alt_transfer phi Hm a b) as Ht.
-    rewrite Ha, Hb in Ht. exact (not_left_alt_10 Ht).
-  - destruct (proj1 (Him (emb tab11 (oct_add (oct_e 1) (oct_e 4)))) (emb_in_sub_11 _)) as [a Ha].
-    destruct (proj1 (Him (emb tab11 (oct_e 2))) (emb_in_sub_11 _)) as [b Hb].
-    pose proof (left_alt_transfer phi Hm a b) as Ht.
-    rewrite Ha, Hb in Ht. exact (not_left_alt_11 Ht).
-  - destruct (proj1 (Him (emb tab12 (oct_add (oct_e 1) (oct_e 4)))) (emb_in_sub_12 _)) as [a Ha].
-    destruct (proj1 (Him (emb tab12 (oct_e 2))) (emb_in_sub_12 _)) as [b Hb].
-    pose proof (left_alt_transfer phi Hm a b) as Ht.
-    rewrite Ha, Hb in Ht. exact (not_left_alt_12 Ht).
-  - destruct (proj1 (Him (emb tab13 (oct_add (oct_e 1) (oct_e 4)))) (emb_in_sub_13 _)) as [a Ha].
-    destruct (proj1 (Him (emb tab13 (oct_e 2))) (emb_in_sub_13 _)) as [b Hb].
-    pose proof (left_alt_transfer phi Hm a b) as Ht.
-    rewrite Ha, Hb in Ht. exact (not_left_alt_13 Ht).
-  - destruct (proj1 (Him (emb tab14 (oct_add (oct_e 1) (oct_e 4)))) (emb_in_sub_14 _)) as [a Ha].
-    destruct (proj1 (Him (emb tab14 (oct_e 2))) (emb_in_sub_14 _)) as [b Hb].
-    pose proof (left_alt_transfer phi Hm a b) as Ht.
-    rewrite Ha, Hb in Ht. exact (not_left_alt_14 Ht).
-  - destruct (proj1 (Him (emb tab15 (oct_add (oct_e 1) (oct_e 4)))) (emb_in_sub_15 _)) as [a Ha].
-    destruct (proj1 (Him (emb tab15 (oct_e 2))) (emb_in_sub_15 _)) as [b Hb].
-    pose proof (left_alt_transfer phi Hm a b) as Ht.
-    rewrite Ha, Hb in Ht. exact (not_left_alt_15 Ht).
+  apply (no_mult_map_onto_large u Hu phi Hm).
+  intros s Hs. exact (proj1 (Him s) Hs).
+Qed.
+
+(** The embedding table of a non-octonionic member is not multiplicative. *)
+Lemma emb_tab9_not_multiplicative :
+  ~ (forall x y, emb tab9 (oct_mul x y) = sed_mul (emb tab9 x) (emb tab9 y)).
+Proof.
+  intros Hm.
+  pose proof (left_alt_transfer (emb tab9) Hm
+                (oct_add (oct_e 1) (oct_e 4)) (oct_e 2)) as Ht.
+  exact (not_left_alt_9 Ht).
 Qed.
 
 Theorem C029_octonion_subalgebra_iff : forall u, (1 <= u <= 15)%nat ->
@@ -1000,7 +1027,8 @@ Proof.
   | destruct Hs as [H1 H2]; discriminate (H1 eq_refl) ].
 Qed.
 
-(** * The low half is the member 8. *)
+(** * The low half is the member 8: [emb tab8] is the embedding that sends
+    an octonion to the sedenion with high half zero. *)
 
 Lemma emb_tab8_lo : forall x, emb tab8 x = mkSed x oct_zero.
 Proof.
