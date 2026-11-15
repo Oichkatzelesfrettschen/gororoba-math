@@ -209,26 +209,41 @@ opam exec --switch=rocq-9.3 -- python3 -I ci/kernel_replay_evidence.py \
 The tree is `rocq/open` of the checkout `GOROROBA_MATH` names, or the
 directory `--tree` names. The producer accepts only Rocq 9.3.0 on OCaml 5.5.1,
 refuses a warning line, an error line and a local absolute path in any
-output, writes the evidence file last, and refuses an output directory inside
-the git repository that tracks the tree. Its header comment gives the fixed argument vectors and the
-environment variables it reads (`FLOCQ_ROOT`, `OPAM_SWITCH_PREFIX`;
-`COQPATH` and `ROCQPATH` are removed).
+output, writes the evidence file last (and removes it when the summary cannot
+be printed), and refuses an output directory inside the git repository that
+tracks the tree. It creates the output directory before the replay, refuses a
+symbolic link, and checks the directory again before the first write. A git
+failure other than "no repository" or "path not tracked" refuses the run. It
+removes its scratch directory on SIGTERM (status 143). Its header comment gives
+the fixed argument vectors and the environment variables it reads
+(`FLOCQ_ROOT`, `OPAM_SWITCH_PREFIX`; `COQPATH` and `ROCQPATH` are removed).
 
 ```sh
 sh ci/check_kernel_replay_evidence.sh
 ```
 
-calibrates it on a synthetic two-file tree under the switch `rocq-9.3`: a
-closed theorem, a theorem over a declared axiom and a source that imports
-Flocq must each produce evidence whose digests match the written files, whose
-assumption lists are empty, `postulate` and empty, and, for Flocq, whose object
-list holds the digest of every `.vo` of the switch's library in sorted order
-with `-R external/Flocq Flocq` before every target. A warning printed on a zero
-exit status, a source that fails to compile, a missing declaration, another
-Rocq version, a Flocq directory without `Core/Core.vo` and an output directory
-inside the tracking repository must each be refused with no evidence file. It
-compiles a few sources of a few lines each, and `sh ci/check_rocq.sh` runs it
-from its export of `HEAD` before the tree build.
+calibrates it on a synthetic three-file tree under the switch `rocq-9.3`: a
+closed theorem over a chain of two imported sources whose dependency order
+differs from their lexical order, a theorem over a declared axiom and a source
+that imports Flocq must each produce evidence that a verifier compares with
+literal expectations: the complete compiler, checker and assumption argument
+vectors, the compilation order, the digests of the written files and the
+sources, the assumption lists (empty, `postulate` and empty) and, for Flocq,
+an object list equal to the sorted `.vo` files of the switch's library with
+`-R external/Flocq Flocq` before every target. The verifier is itself
+calibrated: 18 mutated copies of that evidence (swapped `-R` pairs, a lexical
+or reversed compilation order, a truncated Flocq list, altered digests, among
+others) must each be rejected. A warning printed on a zero exit status, a
+source that fails to compile, a missing declaration, another Rocq version, a
+Flocq directory without `Core/Core.vo`, an output directory inside the
+tracking repository, a failing git, an output directory that is a symbolic
+link or becomes one during the replay, and a summary that cannot be printed
+must each be refused with no evidence file. The verifier checks use no `assert`,
+so `python3 -O` runs them unchanged. The script removes its temporary directory
+on exit, INT (status 130) and TERM (status 143). It compiles a few sources of a
+few lines each, and `sh ci/check_rocq.sh` runs it from its export of `HEAD`
+before the tree build and passes its status 2 (a tool or the switch is
+missing) through as 2.
 
 ## License
 

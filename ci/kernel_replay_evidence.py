@@ -26,11 +26,16 @@ into OUTDIR:
 - `ROOT/STEM.vo`, the proof object, below the `theories` or `verified` root of
   the source, which a witness binds as its proof object.
 
-The evidence file is written last, so a refused or failed run leaves none.
-Nothing is written inside the checkout: an OUTDIR below the git repository that
-tracks the tree's `_RocqProject` is refused. The tool prints one JSON summary on stdout, with the
-digest of every written file and the assumptions each declaration reports,
-from which a witness is filled in.
+The evidence file is written last and is removed again when the summary
+cannot be printed, so a refused or failed run leaves none. Nothing is written
+inside the checkout: an OUTDIR below the git repository that tracks the tree's
+`_RocqProject` is refused, and so is a git failure that leaves the repository
+unknown. OUTDIR is created and checked before the replay starts (not a symbolic
+link, its resolved path outside the checkout and disjoint from the tree, empty)
+and checked again, against the directory first seen, immediately before the
+first write. The tool prints one JSON summary on stdout, with the digest of
+every written file and the assumptions each declaration reports, from which a
+witness is filled in.
 
 The fixed contract. A source `ROOT/PATH.v` has the logical module
 `OpenGororoba.PATH` under `theories` and `OpenGororobaVerified.PATH` under
@@ -56,13 +61,14 @@ scratch directory and the installation is visible.
 Needs python3 (standard library only), git and the opam switch.
 
 Exit status: 0 evidence written, 1 a refusal or a failed Rocq command, 2 a
-usage error.
+usage error, 143 after SIGTERM (the scratch directory is removed first).
 """
 
 import argparse
 import hashlib
 import json
 import os
+import signal
 import stat
 import subprocess  # noqa: S404 - the producer's job is to run the pinned rocq
 import sys
@@ -521,7 +527,16 @@ def valid_declaration_name(name: str) -> bool:
     )
 
 
-def produce(tree: Path, proof: str, declarations: list[str], policy: str, out: Path) -> dict:
+def produce(
+    tree: Path,
+    proof: str,
+    declarations: list[str],
+    policy: str,
+    out: Path,
+    checkout: Path | None,
+    identity: tuple[int, int],
+) -> tuple[dict, Path]:
+    """The summary of the written files and the path of the evidence file."""
     if policy not in WARNING_ARGUMENTS:
         raise Refusal("trusted replay requires a fatal warning policy")
     warning = WARNING_ARGUMENTS[policy]
@@ -606,16 +621,21 @@ def produce(tree: Path, proof: str, declarations: list[str], policy: str, out: P
         f"{stem}.assumptions.txt": (assumptions["stdout"] + assumptions["stderr"]).encode("utf-8"),
         str(PurePosixPath(relative).with_suffix(".vo")): proof_object,
     }
-    out.mkdir(parents=True, exist_ok=True)
+    encoded = (json.dumps(evidence, indent=2) + "\n").encode("ascii")
+    check_output(out, checkout, tree, identity)
     for name, data in outputs.items():
         target = out / name
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
-    encoded = (json.dumps(evidence, indent=2) + "\n").encode("ascii")
-    (out / f"{stem}.evidence.json").write_bytes(encoded)
+    evidence_path = out / f"{stem}.evidence.json"
+    try:
+        evidence_path.write_bytes(encoded)
+    except BaseException:
+        evidence_path.unlink(missing_ok=True)
+        raise
     files = {name: sha256_hex(data) for name, data in outputs.items()}
     files[f"{stem}.evidence.json"] = sha256_hex(encoded)
-    return {
+    summary = {
         "proof_path": proof_path,
         "toolchain": TOOLCHAIN,
         "project_sha256": project_sha256,
@@ -623,30 +643,89 @@ def produce(tree: Path, proof: str, declarations: list[str], policy: str, out: P
         "files": files,
         "assumptions": reported,
     }
+    return summary, evidence_path
+
+
+def git_output(tree: Path, arguments: list[str]) -> subprocess.CompletedProcess:
+    """One git command in the tree, with messages in the C locale so a refusal can read them."""
+    environment = {**os.environ, "LC_ALL": "C"}
+    return subprocess.run(  # noqa: S603
+        ["git", "-C", str(tree), *arguments],  # noqa: S607
+        capture_output=True,
+        check=False,
+        env=environment,
+    )
 
 
 def checkout_of(tree: Path) -> Path | None:
-    """The top level of the git repository that tracks the tree's `_RocqProject`, if any."""
-    tracked = subprocess.run(  # noqa: S603
-        ["git", "-C", str(tree), "ls-files", "--error-unmatch", "--", "_RocqProject"],  # noqa: S607
-        capture_output=True,
-        check=False,
-    )
-    if tracked.returncode != 0:
+    """The top level of the git repository that tracks the tree's `_RocqProject`, if any.
+
+    Only git's two answers "no repository" and "path not tracked" give None; every other
+    failure leaves the checkout unknown and refuses the run.
+    """
+    tracked = git_output(tree, ["ls-files", "--error-unmatch", "--", "_RocqProject"])
+    message = tracked.stderr.decode("utf-8", errors="replace")
+    if tracked.returncode == 1 and "did not match any file(s) known to git" in message:
         return None
-    top = subprocess.run(  # noqa: S603
-        ["git", "-C", str(tree), "rev-parse", "--show-toplevel"],  # noqa: S607
-        capture_output=True,
-        check=False,
-    )
-    return Path(top.stdout.decode("utf-8").strip()).resolve() if top.returncode == 0 else None
+    if tracked.returncode == 128 and "not a git repository" in message:
+        return None
+    if tracked.returncode != 0:
+        raise Refusal(f"cannot tell whether git tracks the tree (git exit {tracked.returncode}): {trim(message)}")
+    top = git_output(tree, ["rev-parse", "--show-toplevel"])
+    location = top.stdout.decode("utf-8", errors="replace").strip()
+    if top.returncode != 0 or not location:
+        raise Refusal(f"cannot find the checkout that tracks the tree (git exit {top.returncode})")
+    return Path(location).resolve()
 
 
 def inside(path: Path, root: Path) -> bool:
     return path == root or root in path.parents
 
 
+def check_output(out: Path, checkout: Path | None, tree: Path, identity: tuple[int, int] | None) -> tuple[int, int]:
+    """Refuse an output directory that is unsafe to write; return its (device, inode).
+
+    The directory must be a real directory that `out` reaches through no symbolic link, lie
+    outside the checkout and disjoint from the tree, hold nothing, and, once `identity` is
+    known, be the directory first seen.
+    """
+    found = out.lstat()
+    if not stat.S_ISDIR(found.st_mode):
+        raise Refusal("the output directory must be a directory and not a symbolic link")
+    if out.resolve(strict=True) != out:
+        raise Refusal("the output directory path contains a symbolic link")
+    if checkout is not None and inside(out, checkout):
+        raise Refusal("the output directory lies inside the checkout that holds the tree")
+    if inside(out, tree) or inside(tree, out):
+        raise Refusal("the output directory and the tree must be disjoint")
+    if any(out.iterdir()):
+        raise Refusal("the output directory must be absent or empty")
+    if identity is not None and (found.st_dev, found.st_ino) != identity:
+        raise Refusal("the output directory was replaced during the replay")
+    return found.st_dev, found.st_ino
+
+
+def prepare_output(name: str, checkout: Path | None, tree: Path) -> tuple[Path, tuple[int, int]]:
+    """Create the output directory and return its resolved path and identity."""
+    requested = Path(name)
+    if requested.is_symlink():
+        raise Refusal("the output directory must be a directory and not a symbolic link")
+    out = requested.resolve()
+    if checkout is not None and inside(out, checkout):
+        raise Refusal("the output directory lies inside the checkout that holds the tree")
+    if inside(out, tree) or inside(tree, out):
+        raise Refusal("the output directory and the tree must be disjoint")
+    out.mkdir(parents=True, exist_ok=True)
+    return out, check_output(out, checkout, tree, None)
+
+
+def terminate(signal_number: int, frame: object) -> None:
+    """Unwind to the scratch directory's cleanup when SIGTERM arrives."""
+    raise SystemExit(128 + signal_number)
+
+
 def main(arguments: list[str]) -> int:
+    signal.signal(signal.SIGTERM, terminate)
     parser = argparse.ArgumentParser(description="Produce the kernel replay evidence of one proof source.")
     parser.add_argument("--tree", help="proof tree directory, default $GOROROBA_MATH/rocq/open")
     parser.add_argument("--proof", required=True, help="proof source below the tree, such as theories/X.v")
@@ -667,19 +746,23 @@ def main(arguments: list[str]) -> int:
         tree_name = str(Path(os.environ["GOROROBA_MATH"]) / "rocq/open")
     try:
         tree = Path(tree_name).resolve(strict=True)
-        out = Path(options.out).resolve()
         checkout = checkout_of(tree)
-        if checkout is not None and inside(out, checkout):
-            raise Refusal("the output directory lies inside the checkout that holds the tree")
-        if inside(out, tree) or inside(tree, out):
-            raise Refusal("the output directory and the tree must be disjoint")
-        if out.exists() and (not out.is_dir() or any(out.iterdir())):
-            raise Refusal("the output directory must be absent or empty")
-        summary = produce(tree, options.proof, options.declaration, options.warning_policy, out)
+        out, identity = prepare_output(options.out, checkout, tree)
+        summary, evidence_path = produce(
+            tree, options.proof, options.declaration, options.warning_policy, out, checkout, identity
+        )
     except (Refusal, OSError, UnicodeDecodeError) as error:
         print(f"kernel_replay_evidence: {error}", file=sys.stderr)
         return 1
-    print(json.dumps(summary, indent=2))
+    try:
+        sys.stdout.write(json.dumps(summary, indent=2) + "\n")
+        sys.stdout.flush()
+    except BaseException as error:
+        evidence_path.unlink(missing_ok=True)
+        if not isinstance(error, OSError):
+            raise
+        print(f"kernel_replay_evidence: cannot print the summary: {error}", file=sys.stderr)
+        return 1
     return 0
 
 

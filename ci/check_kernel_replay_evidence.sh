@@ -2,24 +2,32 @@
 # Usage: sh ci/check_kernel_replay_evidence.sh
 # Calibrates ci/kernel_replay_evidence.py, the producer of the replay evidence
 # that gororoba-open's `gororoba-db theorem identity record-kernel-evidence`
-# ingests, on a synthetic two-file proof tree under the opam switch rocq-9.3.
-# Known-good inputs must produce evidence in the ingested shape:
-#   - a closed theorem over one imported source: two compilations in
-#     dependency order, the checker, the assumption query, the proof object
-#     digest equal to the written .vo, and an empty assumption list;
+# ingests, on a synthetic three-file proof tree under the opam switch rocq-9.3.
+# Known-good inputs must produce evidence in the ingested shape, and a
+# verifier compares each record with literal expectations:
+#   - a closed theorem over a chain of two imported sources, whose dependency
+#     order (Prelude, D900_Base, C900_Test) differs from their lexical order:
+#     three compilations in dependency order, the checker and the assumption
+#     query, each with its complete argument vector, the source and proof
+#     object digests equal to the written files, and an empty assumption list;
 #   - a theorem over a declared axiom: the report lists that axiom;
-#   - a source that imports Flocq: every .vo of the switch's Flocq library is
-#     recorded with its digest in sorted order, and every command maps
-#     external/Flocq to Flocq before its target.
-# Known-bad inputs must be refused with no evidence file written: a source
-# whose compilation prints a warning but exits 0, a source that fails to
-# compile, a declaration name the source lacks, a Rocq that reports another
-# version, a Flocq library directory without Core/Core.vo, and an output
-# directory inside the checkout.
+#   - a source that imports Flocq: the recorded objects equal, in sorted
+#     order, the .vo files the switch's Flocq library holds, each with its
+#     digest, and every command maps external/Flocq to Flocq before its target.
+# Known-bad cases must be refused: a source whose compilation prints a
+# warning but exits 0, a source that fails to compile, a declaration name the
+# source lacks, a Rocq that reports another version, a Flocq library
+# directory without Core/Core.vo, an output directory inside the checkout, a
+# git that fails, an output directory that is a symbolic link or becomes one
+# during the replay, and a summary that cannot be printed (each leaves no
+# evidence file); and mutated copies of the known-good evidence (swapped -R
+# pairs, lexical compilation order, a truncated Flocq object list, and more),
+# each of which the verifier must reject.
 # ci/check_rocq.sh runs it from its export of HEAD. It compiles a few
 # sources of a few lines each and writes only under a temporary directory it
-# removes. Exit status: 0 every case behaved, 1 a case misbehaved, 2 a tool or
-# the switch is missing.
+# removes, also on INT (status 130) and TERM (status 143). Exit status: 0 every
+# case behaved, 1 a case misbehaved, 2 a tool or the switch is missing. The
+# last line of its output counts the cases.
 set -eu
 
 PYTHON=${PYTHON:-python3}
@@ -37,7 +45,12 @@ opam switch list --short | grep -q -x -F "$switch" || {
 here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 producer="$here/kernel_replay_evidence.py"
 work=$(mktemp -d "${TMPDIR:-/tmp}/gororoba-math-replay.XXXXXXXX")
-trap 'rm -r "$work"' EXIT INT TERM
+cleanup() {
+  rm -r "$work"
+}
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 fail() {
   echo "check_kernel_replay_evidence: $*" >&2
@@ -53,13 +66,17 @@ produce() {
   opam exec --switch="$switch" -- "$PYTHON" -I -B "$producer" --tree "$tree" --out "$out" "$@" >"$log" 2>&1
 }
 
-# tree DIR: the fixture proof tree, a prerequisite and a theorem that imports it.
+# tree DIR: the fixture proof tree. The theorem imports D900_Base, which
+# imports the prerequisite, so the dependency order Prelude, D900_Base,
+# C900_Test differs from the lexical order Prelude, C900_Test, D900_Base.
 tree() {
   mkdir -p "$1/theories" "$1/verified"
   printf '%s\n' '-R theories OpenGororoba' '-R verified OpenGororobaVerified' \
-    theories/Prelude.v verified/C900_Test.v >"$1/_RocqProject"
+    theories/Prelude.v verified/C900_Test.v verified/D900_Base.v >"$1/_RocqProject"
   printf '%s\n' 'Definition prerequisite : True := I.' >"$1/theories/Prelude.v"
   printf '%s\n' 'From OpenGororoba Require Import Prelude.' \
+    'Definition base : True := prerequisite.' >"$1/verified/D900_Base.v"
+  printf '%s\n' 'From OpenGororobaVerified Require Import D900_Base.' \
     'Theorem fixture : True. Proof. exact I. Qed.' >"$1/verified/C900_Test.v"
 }
 
@@ -75,6 +92,197 @@ refused() {
   echo "check_kernel_replay_evidence: $1 refused"
 }
 
+
+# The verifier compares evidence with literal expectations; it shares no code
+# with the producer. A failed comparison raises Mismatch (never an assert, which
+# an optimized interpreter removes) and ends the process with status 1.
+cat >"$work/verify.py" <<'EOF'
+import copy
+import hashlib
+import json
+import os
+import sys
+
+TOOLCHAIN = "Rocq 9.3.0; OCaml 5.5.1"
+PAIRS = ["-R", "theories", "OpenGororoba", "-R", "verified", "OpenGororobaVerified"]
+FLOCQ = ["-R", "external/Flocq", "Flocq"]
+CLOSED_ORDER = ["theories/Prelude.v", "verified/D900_Base.v", "verified/C900_Test.v"]
+
+
+class Mismatch(Exception):
+    pass
+
+
+def check(condition, message):
+    if not condition:
+        raise Mismatch(message)
+
+
+def digest(path):
+    with open(path, "rb") as handle:
+        return hashlib.sha256(handle.read()).hexdigest()
+
+
+def load(path):
+    with open(path) as handle:
+        return json.load(handle)
+
+
+def common(evidence, warning, order, module, flocq, tree):
+    keys = ["schema_version", "toolchain", "project_sha256", "sources", "proof_object_sha256"]
+    keys += ["flocq_objects"] if flocq else []
+    keys += ["compilation", "checker", "assumptions"]
+    check(list(evidence) == keys, f"evidence fields {list(evidence)}")
+    check(evidence["schema_version"] == 1, "schema_version")
+    check(evidence["toolchain"] == TOOLCHAIN, "toolchain")
+    external = FLOCQ if flocq else []
+    compiles = [["compile", "-q", "-w", warning, *PAIRS, *external, target] for target in order]
+    check([c["arguments"] for c in evidence["compilation"]] == compiles, "compilation vectors or order")
+    check(
+        evidence["checker"]["arguments"] == ["check", "-silent", "-o", *PAIRS, *external, module],
+        "checker vector",
+    )
+    check(
+        evidence["assumptions"]["arguments"]
+        == ["compile", "-q", "-w", warning, *PAIRS, *external, "KernelReceiptAssumptions.v"],
+        "assumption vector",
+    )
+    commands = [*evidence["compilation"], evidence["checker"], evidence["assumptions"]]
+    check(all(c["exit_code"] == 0 for c in commands), "exit status")
+    check("CONTEXT SUMMARY" in evidence["checker"]["stdout"] + evidence["checker"]["stderr"], "checker summary")
+    check(evidence["project_sha256"] == digest(f"{tree}/_RocqProject"), "project digest")
+    expected = [{"path": f"proofs/{t}", "sha256": digest(f"{tree}/{t}")} for t in sorted(order)]
+    check(evidence["sources"] == expected, "sources or their digests")
+
+
+def closed(evidence, out, summary, tree):
+    common(evidence, "+all", CLOSED_ORDER, "OpenGororobaVerified.C900_Test", False, tree)
+    check(evidence["proof_object_sha256"] == digest(f"{out}/verified/C900_Test.vo"), "proof object digest")
+    check(
+        evidence["assumptions"]["stdout"] == "Declaration: fixture\nClosed under the global context\n",
+        "assumption output",
+    )
+    check(summary["assumptions"] == {"fixture": []}, "reported assumptions")
+    for name, value in summary["files"].items():
+        check(digest(f"{out}/{name}") == value, f"digest of {name}")
+
+
+def axiom(evidence, summary, tree):
+    common(evidence, "+default", ["verified/C900_Test.v"], "OpenGororobaVerified.C900_Test", False, tree)
+    check(summary["assumptions"] == {"fixture": ["postulate"]}, f"reported assumptions {summary['assumptions']}")
+
+
+def library_objects(library):
+    found = []
+    for directory, _, names in os.walk(library):
+        for name in names:
+            if name.endswith(".vo"):
+                path = os.path.join(directory, name)
+                relative = os.path.relpath(path, library).replace(os.sep, "/")
+                found.append({"path": f"external/Flocq/{relative}", "sha256": digest(path)})
+    return sorted(found, key=lambda entry: entry["path"])
+
+
+def flocq(evidence, library, tree):
+    order = ["theories/Prelude.v", "verified/C900_Test.v"]
+    common(evidence, "+default", order, "OpenGororobaVerified.C900_Test", True, tree)
+    expected = library_objects(library)
+    check("external/Flocq/Core/Core.vo" in [entry["path"] for entry in expected], "library lacks Core/Core.vo")
+    check(evidence["flocq_objects"] == expected, "recorded objects differ from the library's .vo files")
+
+
+def swap(arguments, first):
+    arguments[first : first + 6] = arguments[first + 3 : first + 6] + arguments[first : first + 3]
+
+
+def set_item(sequence, index, value):
+    sequence[index] = value
+
+
+def truncate(arguments):
+    del arguments[4:]
+
+
+def sort_lexically(evidence):
+    evidence["compilation"].sort(key=lambda c: c["arguments"][-1])
+
+
+def core_only(evidence):
+    evidence["flocq_objects"] = [o for o in evidence["flocq_objects"] if o["path"] == "external/Flocq/Core/Core.vo"]
+
+
+def unmap_flocq(evidence):
+    del evidence["compilation"][0]["arguments"][-4:-1]
+
+
+CLOSED_MUTANTS = [
+    ("compile -R pairs swapped", lambda e: swap(e["compilation"][0]["arguments"], 4)),
+    ("checker -R pairs swapped", lambda e: swap(e["checker"]["arguments"], 3)),
+    ("assumption -R pairs swapped", lambda e: swap(e["assumptions"]["arguments"], 4)),
+    ("compilation in lexical order", sort_lexically),
+    ("compilation reversed", lambda e: e["compilation"].reverse()),
+    ("warning argument changed", lambda e: set_item(e["compilation"][0]["arguments"], 3, "+default")),
+    ("compile vector cut to its prefix", lambda e: truncate(e["compilation"][1]["arguments"])),
+    ("checker module dropped", lambda e: e["checker"]["arguments"].pop()),
+    ("assumption exit status", lambda e: set_item(e["assumptions"], "exit_code", 1)),
+    ("proof object digest", lambda e: set_item(e, "proof_object_sha256", "0" * 64)),
+    ("source digest", lambda e: set_item(e["sources"][0], "sha256", "0" * 64)),
+    ("project digest", lambda e: set_item(e, "project_sha256", "0" * 64)),
+]
+FLOCQ_MUTANTS = [
+    ("Flocq objects cut to Core/Core.vo", core_only),
+    ("last Flocq object dropped", lambda e: e["flocq_objects"].pop()),
+    ("Flocq objects unsorted", lambda e: e["flocq_objects"].reverse()),
+    ("Flocq object digest", lambda e: set_item(e["flocq_objects"][0], "sha256", "0" * 64)),
+    ("Flocq mapping dropped from a command", unmap_flocq),
+    ("Flocq objects absent", lambda e: e.pop("flocq_objects")),
+]
+
+
+def reject_all(mutants, evidence, verify):
+    verify(evidence)
+    for name, mutate in mutants:
+        mutated = copy.deepcopy(evidence)
+        mutate(mutated)
+        if mutated == evidence:
+            sys.exit(f"verify mutants: {name} changed nothing")
+        try:
+            verify(mutated)
+        except Mismatch:
+            continue
+        sys.exit(f"verify mutants: the verifier accepted: {name}")
+    return len(mutants)
+
+
+def main(argv):
+    mode, rest = argv[0], argv[1:]
+    try:
+        if mode == "closed":
+            out, log, tree = rest
+            closed(load(f"{out}/C900_Test.evidence.json"), out, load(log), tree)
+        elif mode == "axiom":
+            out, log, tree = rest
+            axiom(load(f"{out}/C900_Test.evidence.json"), load(log), tree)
+        elif mode == "flocq":
+            out, library, tree = rest
+            flocq(load(f"{out}/C900_Test.evidence.json"), library, tree)
+        elif mode == "mutants":
+            out, log, tree, flocq_out, library, flocq_tree = rest
+            summary = load(log)
+            total = reject_all(CLOSED_MUTANTS, load(f"{out}/C900_Test.evidence.json"), lambda e: closed(e, out, summary, tree))
+            total += reject_all(
+                FLOCQ_MUTANTS, load(f"{flocq_out}/C900_Test.evidence.json"), lambda e: flocq(e, library, flocq_tree)
+            )
+            print(total)
+        else:
+            sys.exit(f"verify: unknown mode {mode}")
+    except Mismatch as error:
+        sys.exit(f"verify {mode}: {error}")
+
+
+main(sys.argv[1:])
+EOF
+
 # Known-good: the closed fixture.
 tree "$work/good"
 produce "$work/good" "$work/out-good" "$work/good.log" --proof verified/C900_Test.v --declaration fixture \
@@ -82,25 +290,8 @@ produce "$work/good" "$work/out-good" "$work/good.log" --proof verified/C900_Tes
   cat "$work/good.log" >&2
   fail "the producer refused the known-good fixture"
 }
-"$PYTHON" -I -B - "$work/out-good" "$work/good.log" <<'EOF' || fail "the known-good evidence has the wrong shape"
-import hashlib, json, sys
-out, log = sys.argv[1:]
-evidence = json.load(open(f"{out}/C900_Test.evidence.json"))
-summary = json.load(open(log))
-digest = lambda path: hashlib.sha256(open(path, "rb").read()).hexdigest()
-assert list(evidence) == ["schema_version", "toolchain", "project_sha256", "sources", "proof_object_sha256",
-                          "compilation", "checker", "assumptions"], list(evidence)
-assert evidence["schema_version"] == 1 and evidence["toolchain"] == "Rocq 9.3.0; OCaml 5.5.1"
-assert [s["path"] for s in evidence["sources"]] == ["proofs/theories/Prelude.v", "proofs/verified/C900_Test.v"]
-assert [c["arguments"][-1] for c in evidence["compilation"]] == ["theories/Prelude.v", "verified/C900_Test.v"]
-assert all(c["exit_code"] == 0 and c["arguments"][:4] == ["compile", "-q", "-w", "+all"] for c in evidence["compilation"])
-assert evidence["proof_object_sha256"] == digest(f"{out}/verified/C900_Test.vo")
-assert "CONTEXT SUMMARY" in evidence["checker"]["stdout"] + evidence["checker"]["stderr"]
-assert evidence["assumptions"]["stdout"] == "Declaration: fixture\nClosed under the global context\n"
-assert summary["assumptions"] == {"fixture": []}
-for name, value in summary["files"].items():
-    assert digest(f"{out}/{name}") == value, name
-EOF
+"$PYTHON" -I -B "$work/verify.py" closed "$work/out-good" "$work/good.log" "$work/good" ||
+  fail "the known-good evidence differs from its expectation"
 echo "check_kernel_replay_evidence: closed fixture accepted"
 
 # Known-good: a declared axiom is reported.
@@ -111,11 +302,8 @@ produce "$work/axiom" "$work/out-axiom" "$work/axiom.log" --proof verified/C900_
   cat "$work/axiom.log" >&2
   fail "the producer refused the fixture with a declared axiom"
 }
-"$PYTHON" -I -B - "$work/axiom.log" <<'EOF' || fail "the declared axiom was not reported"
-import json, sys
-summary = json.load(open(sys.argv[1]))
-assert summary["assumptions"] == {"fixture": ["postulate"]}, summary["assumptions"]
-EOF
+"$PYTHON" -I -B "$work/verify.py" axiom "$work/out-axiom" "$work/axiom.log" "$work/axiom" ||
+  fail "the declared axiom was not reported"
 echo "check_kernel_replay_evidence: declared axiom reported"
 
 # Known-good: a source that imports Flocq.
@@ -128,20 +316,15 @@ produce "$work/flocq" "$work/out-flocq" "$work/flocq.log" --proof verified/C900_
   fail "the producer refused the fixture that imports Flocq"
 }
 library=$(opam var --switch="$switch" lib)/coq/user-contrib/Flocq
-"$PYTHON" -I -B - "$work/out-flocq" "$library" <<'EOF' || fail "the Flocq evidence has the wrong shape"
-import hashlib, json, sys
-out, library = sys.argv[1:]
-evidence = json.load(open(f"{out}/C900_Test.evidence.json"))
-objects = evidence["flocq_objects"]
-assert list(evidence)[5] == "flocq_objects" and [o["path"] for o in objects] == sorted(o["path"] for o in objects)
-assert "external/Flocq/Core/Core.vo" in [o["path"] for o in objects]
-for entry in objects:
-    data = open(f"{library}/{entry['path'][len('external/Flocq/'):]}", "rb").read()
-    assert hashlib.sha256(data).hexdigest() == entry["sha256"], entry["path"]
-commands = [*evidence["compilation"], evidence["checker"], evidence["assumptions"]]
-assert all(c["arguments"][-4:-1] == ["-R", "external/Flocq", "Flocq"] for c in commands)
-EOF
+"$PYTHON" -I -B "$work/verify.py" flocq "$work/out-flocq" "$library" "$work/flocq" ||
+  fail "the Flocq evidence differs from its expectation"
 echo "check_kernel_replay_evidence: Flocq objects recorded"
+
+# Known-bad: mutated copies of the known-good evidence. The verifier accepts the
+# unmutated records first, then rejects each mutation and prints their count.
+mutants=$("$PYTHON" -I -B "$work/verify.py" mutants "$work/out-good" "$work/good.log" "$work/good" \
+  "$work/out-flocq" "$library" "$work/flocq") || fail "the verifier accepted a mutated evidence record"
+echo "check_kernel_replay_evidence: $mutants mutated evidence records rejected"
 
 # Known-bad: a warning on an exit status of 0.
 tree "$work/warning"
@@ -190,4 +373,57 @@ fi
 [ ! -e "$work/repo/out" ] || fail "a refused run created a directory in the checkout"
 grep -q 'inside the checkout' "$work/inside.log" || fail "checkout: the refusal names another cause"
 echo "check_kernel_replay_evidence: output inside the checkout refused"
-echo "check_kernel_replay_evidence: 3 known-good and 6 known-bad cases behaved"
+
+# Known-bad: a git that fails leaves the checkout unknown, so the run is refused
+# before it writes anything.
+mkdir "$work/fakegit"
+printf '%s\n' '#!/bin/sh' 'echo "fatal: calibration failure" >&2' 'exit 128' >"$work/fakegit/git"
+chmod +x "$work/fakegit/git"
+if PATH="$work/fakegit:$PATH" produce "$work/repo/rocq/open" "$work/repo/out-git" "$work/git.log" \
+  --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_all; then
+  fail "the producer accepted a failing git"
+fi
+[ ! -e "$work/repo/out-git" ] || fail "a failing git left a directory in the checkout"
+grep -q 'cannot tell whether git tracks the tree' "$work/git.log" || fail "git: the refusal names another cause"
+echo "check_kernel_replay_evidence: failing git refused"
+
+# Known-bad: an output directory that is a symbolic link into the checkout.
+mkdir "$work/repo/linked"
+ln -s "$work/repo/linked" "$work/out-link"
+if produce "$work/good" "$work/out-link" "$work/link.log" --proof verified/C900_Test.v --declaration fixture   --warning-policy fatal_all; then
+  fail "the producer accepted a symbolic link as the output directory"
+fi
+[ -z "$(ls -A "$work/repo/linked")" ] || fail "a refused run wrote through the symbolic link"
+grep -q 'symbolic link' "$work/link.log" || fail "link: the refusal names another cause"
+echo "check_kernel_replay_evidence: symbolic-link output directory refused"
+
+# Known-bad: the output directory becomes a symbolic link into the checkout
+# while the replay runs. The wrapper rocq swaps it at the first compilation.
+mkdir "$work/swap" "$work/repo/swapped"
+cat >"$work/swap/rocq" <<'EOF'
+#!/bin/sh
+if [ "$1" = compile ] && [ ! -L "$SWAP_OUT" ]; then
+  rmdir "$SWAP_OUT" && ln -s "$SWAP_TARGET" "$SWAP_OUT"
+fi
+exec "$REAL_BIN/rocq" "$@"
+EOF
+chmod +x "$work/swap/rocq"
+if REAL_BIN=$(opam var --switch="$switch" bin) SWAP_OUT="$work/out-swap" SWAP_TARGET="$work/repo/swapped" \
+  PATH="$work/swap:$PATH" "$PYTHON" -I -B "$producer" --tree "$work/good" --out "$work/out-swap" \
+  --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_all >"$work/swap.log" 2>&1; then
+  fail "the producer wrote after the output directory was replaced"
+fi
+[ -L "$work/out-swap" ] || fail "swap: the wrapper did not replace the output directory"
+[ -z "$(ls -A "$work/repo/swapped")" ] || fail "swap: a run wrote through the replaced directory"
+grep -q 'symbolic link' "$work/swap.log" || fail "swap: the refusal names another cause"
+echo "check_kernel_replay_evidence: output directory replaced during the replay refused"
+
+# Known-bad: a summary that cannot be printed leaves no evidence file.
+if opam exec --switch="$switch" -- "$PYTHON" -I -B "$producer" --tree "$work/good" --out "$work/out-full" \
+  --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_all >/dev/full 2>"$work/full.log"; then
+  fail "the producer reported success with an unwritable summary"
+fi
+[ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
+grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
+echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
+echo "check_kernel_replay_evidence: 3 known-good and $((10 + mutants)) known-bad cases behaved"
