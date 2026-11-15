@@ -100,7 +100,8 @@ gororoba repository shares; this file governs where the two differ.
 - A declaration of the Lean library depends only on `propext`,
   `Classical.choice` and `Quot.sound`. A statement that waits on a proof
   stays on its branch; under `lean/`, `main` holds no `sorry`, no
-  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`,
+  `native_decide` and no declared axiom outside `lean/AuditFixture.lean`
+  (a challenge module, below, holds `sorry` by design),
   and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
   gate replays every tracked module through `leanchecker`, one call per
   module, and keeps `lean/GororobaMath.lean` to `module` and its imports
@@ -116,6 +117,32 @@ gororoba repository shares; this file governs where the two differ.
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
   estimator.
+- A new result, a statement that the README or a record cites, goes to
+  one prover by its kind; a helper lemma goes where its result is. A
+  result quantified
+  over a class of rings or fields, or over every level `k`, goes to Lean
+  on Mathlib, also where its proof evaluates a finite table (as the
+  fixed-level counts of `TwoTerm.lean` do). A statement about concrete
+  data (a rendered certificate, a rank, a kernel basis, a sign table) and
+  any definition that is extracted to code go to Rocq. Results already in
+  either tree stay where they are. The same mathematical claim, read
+  through each side's convention docstring, is proved once from now on: a
+  later proof of it in the other prover is a bridge theorem whose comment
+  names the original by repository path and theorem name, and a new
+  definition that both provers hold lands with a comparison as in the
+  item above.
+- A headline theorem is one the "Lean library" table of `README.md`
+  names. Each has a challenge module: a short file that restates its
+  statement and the definitions it needs, with `sorry` as the proof, and
+  a JSON configuration beside it (challenge module, solution module,
+  theorem names, permitted axioms). `lake comparator --config FILE`
+  checks on demand that the library theorem has that statement (measured
+  on a theorem over Mathlib's quaternions: 7.4 s). Challenge modules form
+  a library of their own outside `lean/GororobaMath/`, which no library
+  module imports and the admission gate does not build; their `sorry`
+  is the one use the rule above allows beside `lean/AuditFixture.lean`.
+  The existing theorems are owed theirs
+  (https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/31).
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another
