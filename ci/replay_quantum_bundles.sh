@@ -1,43 +1,71 @@
 #!/bin/sh
 # Usage: GOROROBA_QUANTUM=PATH [ROCQ=PATH] [GOROROBA_ROOT=PATH] \
-#          sh ci/replay_quantum_bundles.sh [BUNDLE...]
+#          sh ci/replay_quantum_bundles.sh [--ledgers-only] [BUNDLE...]
 # Runs the retained Rocq replays of the gororoba-quantum checkout at
 # $GOROROBA_QUANTUM against the sources of this checkout's rocq/quantum.
-# Each BUNDLE names a directory docs/evidence/BUNDLE of that checkout that
-# holds a replay_rocq.sh, or TargetFlipN21 (compile with -w +all, no
-# warning, rocq check on rocq/quantum/TargetFlipN21.v). With no BUNDLE every
-# such bundle runs, one after the other. A bundle's script runs unchanged
-# from a shadow root whose proofs/ holds the files of rocq/quantum and whose
-# other entries are links to the gororoba-quantum checkout, so its reads of
-# proofs/NAME.v land here; before it runs, every proofs/ row of the bundle's
-# source_hashes.sha256 is compared with the shadow copy, so a source that
-# differs from the digest its record holds fails the bundle. A bundle whose
-# script reads GOROROBA_ROOT (a gororoba-open checkout at the commit its
-# README names) is skipped, with a line saying so, while GOROROBA_ROOT is
-# unset, and a named bundle that needs it ends the run with status 2.
-# ROCQ names the rocq executable (default rocq on PATH); a switch is used
-# as `opam exec --switch=rocq-9.3 -- sh ci/replay_quantum_bundles.sh`. The
-# bundle scripts require the toolchain banner of their toolchain.txt. The
+# A BUNDLE is one path component (letters, digits, '.', '_', '-', no leading
+# '-' or '.') that names a directory docs/evidence/BUNDLE of that checkout
+# holding a replay_rocq.sh, or TargetFlipN21 (compile with -w +all, no
+# warning, rocq check on rocq/quantum/TargetFlipN21.v); any other word ends
+# the run with status 2 before anything is created. With no BUNDLE every such
+# bundle runs, one after the other.
+#
+# Ledger comparison. Before a bundle runs, each row of the *.sha256 files of
+# its directory that reads `DIGEST  proofs/NAME.v` is compared with
+# rocq/quantum/NAME.v. A row under a deeper directory (proofs/theories/,
+# proofs/verified/, proofs/evidence/) names a gororoba-open source: when the
+# bundle's script names that ledger, the row is compared with the same path
+# under $GOROROBA_ROOT if that is set, and otherwise left to the script; a
+# ledger the script does not name is a frozen record of an earlier
+# gororoba-open state, and its gororoba-open rows are not compared. Rows of other trees (docs/,
+# scripts/, results/, crates/, data/) are the bundle script's to check.
+# One row is skipped by name: the ledger source_hashes.sha256 of
+# cd-sign-python-translation holds a digest of CdSignSourceCertificate.v
+# that predates the source (gororoba-quantum documents it as a stale
+# manifest, STALE_ROWS below); the closure ledgers of that bundle hold the
+# current digest and are compared. --ledgers-only stops after this
+# comparison, needs no Rocq, and prints one line per bundle.
+#
+# Replay. The bundle's script runs unchanged from a shadow root made of a
+# copy of the bundle directory, a copy of rocq/quantum as proofs/, and
+# symbolic links to the entries of the gororoba-quantum checkout that the
+# bundle's ledgers name (and to docs/ entries other than docs/evidence). A
+# link cannot be read-only: a retained script, which writes only to its own
+# mktemp directories, could still write the linked entries of the checkout,
+# and it reads GOROROBA_ROOT and ROCQ from the environment. GOROROBA_QUANTUM
+# is not passed to it. A bundle whose script reads GOROROBA_ROOT is skipped,
+# with a line saying so, while GOROROBA_ROOT is unset, and a named bundle
+# that needs it ends the run with status 2. ROCQ names the rocq executable
+# (default rocq on PATH); a switch is used as
+# `opam exec --switch=rocq-9.3 -- sh ci/replay_quantum_bundles.sh`. The
 # folding_proofs bundle also compares its stdout with its retained
 # rocq_replay.log. Runs on demand, outside the admission gate, because it
 # reads another repository and needs Rocq. Peak memory is that of one
 # bundle's compile (the Stiefel bundle takes about nine minutes).
 # Exit status: 0 at least one bundle passed and none failed, 1 a bundle
-# failed or none ran, 2 a tool, the checkout or a name is missing. Writes
-# only under a temporary directory it removes.
+# failed or none ran, 2 a tool, the checkout or a name is missing or
+# refused. Writes only under a temporary directory it removes, also on INT
+# and TERM.
 set -eu
 
-for tool in git cp cmp grep sha256sum mktemp sh; do
+ledgers_only=0
+if [ "${1:-}" = --ledgers-only ]; then
+  ledgers_only=1
+  shift
+fi
+for tool in git cp cmp grep awk sha256sum mktemp sh; do
   command -v "$tool" >/dev/null || {
     echo "replay_quantum_bundles: $tool is not on PATH" >&2
     exit 2
   }
 done
 rocq=${ROCQ:-rocq}
-command -v "$rocq" >/dev/null || {
-  echo "replay_quantum_bundles: $rocq is not on PATH; set ROCQ or run under opam exec" >&2
-  exit 2
-}
+if [ "$ledgers_only" -eq 0 ]; then
+  command -v "$rocq" >/dev/null || {
+    echo "replay_quantum_bundles: $rocq is not on PATH; set ROCQ or run under opam exec" >&2
+    exit 2
+  }
+fi
 quantum=${GOROROBA_QUANTUM:?replay_quantum_bundles: set GOROROBA_QUANTUM to a gororoba-quantum checkout}
 [ -d "$quantum/docs/evidence" ] || {
   echo "replay_quantum_bundles: $quantum/docs/evidence does not exist" >&2
@@ -45,17 +73,86 @@ quantum=${GOROROBA_QUANTUM:?replay_quantum_bundles: set GOROROBA_QUANTUM to a go
 }
 quantum=$(CDPATH='' cd -- "$quantum" && pwd)
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
-work=$(mktemp -d)
-trap 'rm -r "$work"' EXIT INT TERM
+
+# bundle/ledger:source, rows skipped by name (see the header)
+STALE_ROWS='cd-sign-python-translation/source_hashes.sha256:CdSignSourceCertificate.v'
 
 if [ "$#" -eq 0 ]; then
   explicit=0
   set -- $(for script in "$quantum"/docs/evidence/*/replay_rocq.sh; do
     basename "$(dirname "$script")"
-  done) TargetFlipN21
+  done)
+  [ "$ledgers_only" -eq 1 ] || set -- "$@" TargetFlipN21
 else
   explicit=1
 fi
+
+# Accepts only a single plain path component naming a bundle; nothing is created before this passes.
+for bundle in "$@"; do
+  case $bundle in
+  "" | -* | .* | *[!A-Za-z0-9_.-]*)
+    echo "replay_quantum_bundles: $bundle is no bundle name" >&2
+    exit 2
+    ;;
+  esac
+  if [ "$bundle" != TargetFlipN21 ] && { [ -L "$quantum/docs/evidence/$bundle" ] || [ ! -f "$quantum/docs/evidence/$bundle/replay_rocq.sh" ]; }; then
+    echo "replay_quantum_bundles: $bundle has no replay_rocq.sh in docs/evidence of the checkout" >&2
+    exit 2
+  fi
+done
+
+work=$(mktemp -d)
+trap 'rm -r "$work"' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
+mkdir -p "$work/ledger-root/proofs"
+cp "$root"/rocq/quantum/*.v "$work/ledger-root/proofs/"
+
+# Compares the ledger rows of bundle $1 as the header says; prints one summary line and returns its status.
+check_ledgers() {
+  dir="$quantum/docs/evidence/$1"
+  : >"$work/rows.txt"
+  : >"$work/open-rows.txt"
+  : >"$work/skipped.txt"
+  for ledger in "$dir"/*.sha256; do
+    [ -f "$ledger" ] || continue
+    scripted=0
+    ! grep -q -F "$(basename "$ledger")" "$dir/replay_rocq.sh" || scripted=1
+    awk -v key="$1/$(basename "$ledger")" -v stale="$STALE_ROWS" -v rows="$work/rows.txt" -v open="$work/open-rows.txt" -v scripted="$scripted" '
+      BEGIN { n = split(stale, s, " ") }
+      {
+        digest = $1
+        path = $0
+        sub(/^[0-9a-f]+ [ *]/, "", path)
+        if (path ~ /^proofs\/[A-Za-z0-9_]+\.v$/) {
+          name = substr(path, 8)
+          skip = 0
+          for (i = 1; i <= n; i++) if (s[i] == key ":" name) skip = 1
+          if (skip) print "skipped" > "/dev/stderr"
+          else print digest "  " path >> rows
+        } else if (scripted && path ~ /^proofs\//) print digest "  " path >> open
+      }' "$ledger" 2>>"$work/skipped.txt"
+  done
+  skipped=$(grep -c skipped "$work/skipped.txt" 2>/dev/null || true)
+  : >"$work/skipped.txt"
+  quantum_rows=$(grep -c . "$work/rows.txt" || true)
+  open_rows=$(grep -c . "$work/open-rows.txt" || true)
+  if [ "$quantum_rows" -gt 0 ] && ! (cd "$work/ledger-root" && sha256sum -c --quiet "$work/rows.txt" >"$work/ledger.out" 2>&1); then
+    cat "$work/ledger.out" >&2
+    echo "replay_quantum_bundles: ledger FAIL $1: a proofs/ row differs from rocq/quantum" >&2
+    return 1
+  fi
+  where="left to the bundle script"
+  if [ "$open_rows" -gt 0 ] && [ -n "${GOROROBA_ROOT:-}" ]; then
+    if ! (cd "$GOROROBA_ROOT" && sha256sum -c --quiet "$work/open-rows.txt" >"$work/ledger.out" 2>&1); then
+      cat "$work/ledger.out" >&2
+      echo "replay_quantum_bundles: ledger FAIL $1: a gororoba-open row differs from GOROROBA_ROOT" >&2
+      return 1
+    fi
+    where="checked against GOROROBA_ROOT"
+  fi
+  echo "replay_quantum_bundles: ledger ok $1: $quantum_rows rocq/quantum rows, $open_rows gororoba-open rows ($where), $skipped stale row skipped"
+}
 
 # Builds the shadow root of bundle $1 in $work/shadow-$1.
 make_shadow() {
@@ -63,13 +160,16 @@ make_shadow() {
   mkdir -p "$shadow/proofs" "$shadow/docs/evidence"
   cp "$root"/rocq/quantum/*.v "$shadow/proofs/"
   cp -R "$quantum/docs/evidence/$1" "$shadow/docs/evidence/$1"
-  for entry in "$quantum"/* "$quantum"/.[!.]*; do
-    [ -e "$entry" ] || continue
-    case "$(basename "$entry")" in
-    proofs | .git | docs) ;;
-    *) ln -s "$entry" "$shadow/$(basename "$entry")" ;;
+  for ledger in "$quantum/docs/evidence/$1"/*.sha256 "$quantum/docs/evidence/$1"/SHA256SUMS; do
+    [ -f "$ledger" ] || continue
+    awk '{ path = $0; sub(/^[0-9a-f]+ [ *]/, "", path); split(path, part, "/"); if (part[1] != path) print part[1] }' "$ledger"
+  done | sort -u >"$work/linked.txt"
+  while IFS= read -r entry; do
+    case $entry in
+    proofs | docs | .git | "" | .* | -*) continue ;;
     esac
-  done
+    [ -e "$quantum/$entry" ] && [ ! -e "$shadow/$entry" ] && ln -s "$quantum/$entry" "$shadow/$entry"
+  done <"$work/linked.txt"
   for entry in "$quantum"/docs/*; do
     [ "$(basename "$entry")" = evidence ] || ln -s "$entry" "$shadow/docs/$(basename "$entry")"
   done
@@ -89,15 +189,12 @@ replay() {
     )
     return
   fi
+  check_ledgers "$1" || return 1
+  [ "$ledgers_only" -eq 0 ] || return 0
   make_shadow "$1"
   shadow="$work/shadow-$1"
-  ledger="$shadow/docs/evidence/$1/source_hashes.sha256"
-  if [ -f "$ledger" ] && grep -q -E '  \*?proofs/' "$ledger"; then
-    grep -E '  \*?proofs/' "$ledger" >"$work/rows.txt"
-    (cd "$shadow" && sha256sum -c --quiet "$work/rows.txt") || return 1
-  fi
   log="$work/$1.out"
-  (cd "$shadow" && ROCQ="$rocq" GOROROBA_ROOT="${GOROROBA_ROOT:-}" sh "docs/evidence/$1/replay_rocq.sh") >"$log" 2>"$log.err" ||
+  (cd "$shadow" && env -u GOROROBA_QUANTUM ROCQ="$rocq" GOROROBA_ROOT="${GOROROBA_ROOT:-}" sh "docs/evidence/$1/replay_rocq.sh") >"$log" 2>"$log.err" ||
     {
       tail -n 20 "$log.err" >&2
       return 1
@@ -109,11 +206,7 @@ passed=0
 failed=0
 skipped=0
 for bundle in "$@"; do
-  if [ "$bundle" != TargetFlipN21 ] && [ ! -f "$quantum/docs/evidence/$bundle/replay_rocq.sh" ]; then
-    echo "replay_quantum_bundles: $bundle has no replay_rocq.sh in $quantum/docs/evidence" >&2
-    exit 2
-  fi
-  if [ "$bundle" != TargetFlipN21 ] && [ -z "${GOROROBA_ROOT:-}" ] &&
+  if [ "$ledgers_only" -eq 0 ] && [ "$bundle" != TargetFlipN21 ] && [ -z "${GOROROBA_ROOT:-}" ] &&
     grep -q GOROROBA_ROOT "$quantum/docs/evidence/$bundle/replay_rocq.sh"; then
     if [ "$explicit" -eq 1 ]; then
       echo "replay_quantum_bundles: $bundle reads GOROROBA_ROOT, which is unset" >&2
