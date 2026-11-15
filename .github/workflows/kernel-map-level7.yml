@@ -1,0 +1,50 @@
+name: kernel-map-level7
+
+# Probe of issue 36, not for merge: ci/compare_kernel_map_bins.sh 7 over all
+# 32,512 two-term operands of level 7 and the wide operands, on a hosted
+# runner, against the public gororoba-quantum at a pinned commit. The
+# library builds from the prebuilt Mathlib; the operand sweep runs in a
+# pool of COMPARE_JOBS workers, each holding the _k_matrix cache of its share.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: compare
+    runs-on: ubuntu-26.04
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Oichkatzelesfrettschen/gororoba-quantum
+          ref: 0e87aa122f892eada826d8bf5b54549de24b74bc
+          path: gororoba-quantum
+          persist-credentials: false
+      # Installs elan with the toolchain of lean/lean-toolchain, fetches the
+      # prebuilt Mathlib and builds the library that the comparison imports.
+      - uses: leanprover/lean-action@ba3fdfe5c4476c925da13bf11a005ddb47e47aee # v1.7.1
+        with:
+          lake-package-directory: lean
+          auto-config: "false"
+          build: "true"
+          use-mathlib-cache: "true"
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14.7"
+      - name: Install the gororoba-quantum requirements
+        run: python -m pip install --quiet -r gororoba-quantum/requirements.txt
+      - name: Compare the bin contract at level 7
+        env:
+          GLIBC_TUNABLES: glibc.rtld.optional_static_tls=4096
+          COMPARE_JOBS: "4"
+        run: |
+          nproc
+          free -m
+          start=$(date +%s)
+          PYTHON=$(command -v python) GOROROBA_QUANTUM="$GITHUB_WORKSPACE/gororoba-quantum" sh ci/compare_kernel_map_bins.sh 7
+          echo "compare_kernel_map_bins: wall $(( $(date +%s) - start )) s"
