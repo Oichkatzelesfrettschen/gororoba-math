@@ -65,6 +65,11 @@ CALIBRATION_UNLISTED = (
 )
 
 
+def resolve_dir(path: Path) -> Path:
+    """Absolute form of a directory argument; the Rocq subprocess runs in another directory."""
+    return path.resolve()
+
+
 class CensusError(Exception):
     """A condition under which no verdict is given."""
 
@@ -199,7 +204,7 @@ def run_checks(objects: Path, decls: dict[str, list[tuple[str, str]]]) -> dict[t
             str(objects / "verified"),
             "OpenGororobaVerified",
             "-R",
-            str(flocq_root()),
+            str(resolve_dir(flocq_root())),
             "Flocq",
             str(driver),
         ]
@@ -232,10 +237,13 @@ def main() -> int:
     parser.add_argument("--tsv", type=Path, help="write the listed declarations (file, theorem, statement) here")
     args = parser.parse_args()
     try:
-        stems = verified_sources(args.tree / "_RocqProject")
-        check_coherence(args.tree, args.objects, stems)
-        decls = declarations(args.objects, stems)
-        types = run_checks(args.objects, decls)
+        if resolve_dir(Path("relative-directory")) != Path.cwd() / "relative-directory":
+            raise CensusError("calibration: a relative directory must resolve against the caller's directory")
+        tree, objects = resolve_dir(args.tree), resolve_dir(args.objects)
+        stems = verified_sources(tree / "_RocqProject")
+        check_coherence(tree, objects, stems)
+        decls = declarations(objects, stems)
+        types = run_checks(objects, decls)
         listed = {key: not ROOT_REFERENCE.search(text) for key, text in types.items()}
         for stem, name in CALIBRATION_LISTED:
             if listed.get((stem, name)) is not True:
