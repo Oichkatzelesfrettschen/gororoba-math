@@ -36,6 +36,13 @@ script checks, from the repository root it sits under:
    contribute no name; the theorem counts when its proof ends with Qed or
    Defined, or when it is given by a term with :=, and an Abort or Admitted
    ending does not count.
+4. Each Lean row has a challenge configuration: a tracked lean/Challenge/*.json
+   whose solution_module is the row's module, whose theorem_names hold the
+   row's theorem, whose permitted_axioms are exactly propext, Quot.sound and
+   Classical.choice, and whose challenge_module Challenge.NAME is the tracked
+   file lean/Challenge/NAME.lean. lake comparator, which checks that the
+   statements agree, runs on demand; this check keeps a row from landing
+   without the configuration that comparator reads.
 
 Calibration. Before the verdict on the repository counts, the script runs the
 same checks on known-bad copies of the inputs, one per defect class above
@@ -49,6 +56,7 @@ Exit status: 0 every check passed; 1 a check failed (each failure printed);
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -58,6 +66,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HEADER = ["prover", "path", "theorem", "partner", "tracking"]
+PERMITTED_AXIOMS = ("propext", "Quot.sound", "Classical.choice")
 ISSUE_URL = re.compile(r"^https://github\.com/Oichkatzelesfrettschen/gororoba-math/issues/[0-9]+$")
 PARTNER = re.compile(r"^(rocq/(?:open|quantum|delegation)/[A-Za-z0-9_/]+\.v):([A-Za-z0-9_.']+)(?: narrower: (.+))?$")
 LEAN_DECL = re.compile(
@@ -115,6 +124,8 @@ class Inputs:
     rocq: dict[str, str]
     projects: dict[str, set[str]] = field(default_factory=dict)
     exempt: dict[tuple[str, str], str] = field(default_factory=lambda: dict(NON_DECLARATION_TOKENS))
+    challenges: dict[str, dict] = field(default_factory=dict)
+    challenge_modules: set[str] = field(default_factory=set)
 
 
 def blank(chunk: str) -> str:
@@ -398,6 +409,31 @@ def check(inputs: Inputs) -> list[str]:
         tokens = table.get(path, [])
         if not any(theorem == token or theorem.endswith("." + token) for token in tokens):
             failures.append(f"ci/headline-results.tsv: {theorem} is not named in the README row of {path}")
+    failures.extend(check_challenges(inputs, lean_rows))
+    return failures
+
+
+def check_challenges(inputs: Inputs, lean_rows: set[tuple[str, str]]) -> list[str]:
+    """Each Lean row has a challenge configuration that names its theorem with the three permitted axioms."""
+    failures: list[str] = []
+    for config, data in sorted(inputs.challenges.items()):
+        axioms = data.get("permitted_axioms")
+        if not isinstance(axioms, list) or sorted(axioms) != sorted(PERMITTED_AXIOMS):
+            failures.append(f"{config}: permitted_axioms is {axioms!r}, not exactly {', '.join(PERMITTED_AXIOMS)}")
+        module = data.get("challenge_module", "")
+        if not isinstance(module, str) or not module.startswith("Challenge."):
+            failures.append(f"{config}: challenge_module {module!r} is not Challenge.NAME")
+        elif "lean/" + module.replace(".", "/") + ".lean" not in inputs.challenge_modules:
+            failures.append(f"{config}: challenge_module {module} is not a tracked file under lean/Challenge/")
+    for path, theorem in sorted(lean_rows):
+        module = path.removeprefix("lean/").removesuffix(".lean").replace("/", ".")
+        covering = [
+            config
+            for config, data in inputs.challenges.items()
+            if data.get("solution_module") == module and theorem in (data.get("theorem_names") or [])
+        ]
+        if not covering:
+            failures.append(f"ci/headline-results.tsv: {theorem} has no challenge configuration naming it for {module}")
     return failures
 
 
@@ -416,7 +452,23 @@ def read_inputs() -> Inputs:
         projects[tree] = {line.strip() for line in lines if line.strip().endswith(".v")}
     rows_text = (ROOT / "ci/headline-results.tsv").read_text(encoding="utf-8")
     rows = [line.split("\t") for line in rows_text.splitlines() if line]
-    return Inputs(rows, (ROOT / "README.md").read_text(encoding="utf-8"), lean, rocq, projects)
+    challenge_files = subprocess.run(  # noqa: S603
+        ["git", "-C", str(ROOT), "ls-files", "--", "lean/Challenge"],  # noqa: S607
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.split()
+    challenges = {p: json.loads((ROOT / p).read_text(encoding="utf-8")) for p in challenge_files if p.endswith(".json")}
+    modules = {p for p in challenge_files if p.endswith(".lean")}
+    return Inputs(
+        rows,
+        (ROOT / "README.md").read_text(encoding="utf-8"),
+        lean,
+        rocq,
+        projects,
+        challenges=challenges,
+        challenge_modules=modules,
+    )
 
 
 @dataclass
@@ -569,6 +621,26 @@ def mutants(good: Inputs) -> dict[str, Inputs]:
         ["/-- doc /- nested -/ text", f"theorem {site.lean_name.group('name')} : True := trivial", "-/"], rename=True
     )
     cases["a Lean private theorem with the row's name"] = with_lean([], private=True)
+    covering = next(
+        config for config, data in good.challenges.items() if site.first[2] in data.get("theorem_names", [])
+    )
+    cases["a row whose challenge configuration is gone"] = replace(
+        good, challenges={k: v for k, v in good.challenges.items() if k != covering}
+    )
+    lacking = dict(good.challenges[covering])
+    lacking["theorem_names"] = [t for t in lacking["theorem_names"] if t != site.first[2]]
+    cases["a challenge configuration that lacks the row's theorem"] = replace(
+        good, challenges={**good.challenges, covering: lacking}
+    )
+    extra = dict(good.challenges[covering])
+    extra["permitted_axioms"] = [*extra["permitted_axioms"], "sorryAx"]
+    cases["a challenge configuration that permits an extra axiom"] = replace(
+        good, challenges={**good.challenges, covering: extra}
+    )
+    module_file = "lean/" + good.challenges[covering]["challenge_module"].replace(".", "/") + ".lean"
+    cases["a challenge configuration whose challenge module is untracked"] = replace(
+        good, challenge_modules=good.challenge_modules - {module_file}
+    )
     return cases
 
 
@@ -604,7 +676,7 @@ def controls(good: Inputs) -> dict[str, Inputs]:
 def main() -> int:
     try:
         good = read_inputs()
-    except (OSError, subprocess.CalledProcessError) as error:
+    except (OSError, subprocess.CalledProcessError, json.JSONDecodeError) as error:
         print(f"check_headline_results: {error}", file=sys.stderr)
         return 2
     for label, bad in mutants(good).items():
@@ -621,7 +693,10 @@ def main() -> int:
         print(failure, file=sys.stderr)
     if failures:
         return 1
-    print(f"check_headline_results: {len(good.rows) - 1} rows match the library, README.md and the Rocq trees")
+    print(
+        f"check_headline_results: {len(good.rows) - 1} rows match the library, README.md, the Rocq trees "
+        f"and {len(good.challenges)} challenge configurations"
+    )
     return 0
 
 

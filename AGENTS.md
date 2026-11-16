@@ -160,7 +160,13 @@ gororoba repository shares; this file governs where the two differ.
     and a statement that a theorem receipt of gororoba-open rests on are
     Rocq artifacts: gororoba-open runs no prover and admits the kernel
     replay evidence that `ci/kernel_replay_evidence.py` writes from a Rocq
-    build, and `vm_compute` evaluates certificates. Built-in `Extraction`
+    build, and `vm_compute` evaluates certificates. Evaluation is faster in
+    Rocq and the kernel re-check slower: on the sign-anticommutativity table
+    of level `k`, `vm_compute` ran 3.4 to 8.5 times faster than Lean's
+    `decide +kernel` for `k` from 5 to 8, and `rocq check` of the level-8
+    object took 51 s against 19 s for Lean's kernel decision (measured
+    2026-11-16, Rocq 9.3.0, Lean 4.35.0, one 4-vCPU host), so a large
+    certificate states both costs. Built-in `Extraction`
     and CertiRocq (on its Rocq 9.1 switch) tie running code to Gallina
     terms within the trusted base that the skill `extract-verified-rocq-code`
     records, and Lean's compiled code carries no such tie. Flocq is the
@@ -207,7 +213,10 @@ gororoba repository shares; this file governs where the two differ.
   the same environment that imports the solution module declaring it, so
   `lean/Challenge.lean` imports the challenge modules among which no such
   clash arises, and the `Challenge.*` glob of `lean/lakefile.toml`
-  builds every module.
+  builds every module. `ci/check_headline_results.py` requires each Lean
+  row to have a tracked configuration that names its theorem and solution
+  module, permits exactly `propext`, `Quot.sound` and `Classical.choice`,
+  and names a tracked challenge module.
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another
