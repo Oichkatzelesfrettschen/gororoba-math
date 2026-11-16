@@ -7,9 +7,15 @@
    every lane of an admitted transform is FP24-exact in FLX(17); the tight
    admission boundary is B = 181 (dp4_admit_boundary).
 
-   The emitted C uses the CertiCoq runtime; the trust boundary is the CertiRocq
-   compiler pipeline (proved correct in CertiRocq.Compiler), not this file.
-   ASCII only. *)
+   The emitted C is correct relative to a trusted base, not to a proved
+   pipeline. CertiRocq 0.9.1+9.1 verifies large parts of its compiler and not
+   others (its README), holds no correctness theorem for its C back ends, and
+   both back ends admit the validity obligation of to_float. The base also
+   holds the CertiRocq runtime, the generated glue, the C compiler with its
+   flags, and the runtime objects of the switch; make extract-r2vb-check
+   compares the emitted sources and headers, the glue and the runtime sources
+   with extraction/golden/, and records the switch packages, the runtime
+   object and the compiler. ASCII only. *)
 From CertiRocq.Plugin Require Import CertiRocq.
 From OpenGororoba Require Import R2VBTransformDP4.
 

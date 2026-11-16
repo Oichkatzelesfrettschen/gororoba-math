@@ -178,54 +178,82 @@ extract-check: extract
 	  (echo "DIFF: extraction output differs from golden file"; exit 1); \
 	else echo "SKIP: no golden file yet"; fi
 
-# Verified Gallina -> C emission via CertiRocq (rocq-certirocq 0.9.1+9.1).
-# Compiles the proven fp24_value_admit gate to Clight/C; output lands in
-# extraction/ (gitignored, reproducible).  Run under the rocq-certirocq switch.
+# Gallina -> C emission via CertiRocq (rocq-certirocq 0.9.1+9.1), run under
+# the rocq-certirocq switch. The C is correct relative to a trusted base that
+# holds the unproved C back end, the CertiRocq runtime, the generated glue, the
+# C compiler with its flags and the runtime objects of the switch (the headers
+# of extraction/ExtractFP24Admit.v and extraction/ExtractR2VBDP4.v).
+# extraction/ExtractFP24Admit.v compiles sint_range_admit, the signed carry
+# gate of FP24Representable.v; outputs land in extraction/ (ignored by git).
+FP24_C := OpenGororoba.FP24Representable.sint_range_admit
 extract-c: all
-	@echo "Emitting verified C from Rocq via CertiRocq..."
-	@if [ -f extraction/ExtractFP24Admit.v ]; then \
-	  rocq compile $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified \
-	    extraction/ExtractFP24Admit.v && \
-	  mv -f OpenGororoba.FP24Representable.fp24_value_admit.c \
-	        OpenGororoba.FP24Representable.fp24_value_admit.h extraction/ 2>/dev/null && \
-	  echo "Emitted extraction/OpenGororoba.FP24Representable.fp24_value_admit.{c,h}"; \
-	fi
+	@echo "Emitting C of $(FP24_C) from Rocq via CertiRocq..."
+	@rocq compile $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified \
+	  extraction/ExtractFP24Admit.v
+	@mv -f $(FP24_C).c $(FP24_C).h extraction/
+	@echo "Emitted extraction/$(FP24_C).{c,h}"
 
-# Verified Gallina -> C emission of the R2VB DP4 transform kernel.  Pinned
-# command: rocq compile of extraction/ExtractR2VBDP4.v under the
-# rocq-certirocq switch emits dp4 and dp4_operand_admit plus the Z/positive/
-# bool constructor glue; outputs land in extraction/ and their hashes in
-# extraction/golden/r2vb_dp4_extraction.sha256.
+# Emission of the R2VB DP4 transform kernel: rocq compile of
+# extraction/ExtractR2VBDP4.v under the rocq-certirocq switch emits dp4 and
+# dp4_operand_admit plus the Z/positive/bool constructor glue; outputs land in
+# extraction/.
+R2VB_C := OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4.h \
+  OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.h \
+  r2vb_dp4_glue.c r2vb_dp4_glue.h
 extract-r2vb-c:
-	@echo "Emitting verified R2VB DP4 C from Rocq via CertiRocq..."
-	@rocq compile $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified 	  extraction/ExtractR2VBDP4.v && 	mv -f OpenGororoba.R2VBTransformDP4.dp4.c 	      OpenGororoba.R2VBTransformDP4.dp4.h 	      OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c 	      OpenGororoba.R2VBTransformDP4.dp4_operand_admit.h 	      r2vb_dp4_glue.c r2vb_dp4_glue.h extraction/ && 	echo "Emitted extraction/OpenGororoba.R2VBTransformDP4.*.{c,h} and glue"
+	@echo "Emitting R2VB DP4 C from Rocq via CertiRocq..."
+	@rocq compile $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified \
+	  extraction/ExtractR2VBDP4.v
+	@mv -f $(R2VB_C) extraction/
+	@echo "Emitted extraction/OpenGororoba.R2VBTransformDP4.*.{c,h} and glue"
 
-# Hash the emitted artifacts and compare against the retained golden hashes.
+# Compare the emitted sources and headers and the glue
+# (golden/r2vb_dp4_extraction.sha256), and every .c and .h of the CertiRocq
+# runtime (golden/certirocq_runtime.sha256: package bytes, equal on two hosts
+# measured 2026-11-16), with the retained hashes. The runtime objects and the
+# C compiler depend on the host, so extraction/r2vb_dp4_record.txt records
+# them with the switch packages instead of comparing them.
 extract-r2vb-check: extract-r2vb-c
-	@cd extraction && sha256sum 	  OpenGororoba.R2VBTransformDP4.dp4.c 	  OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c 	  r2vb_dp4_glue.c > /tmp/r2vb_dp4_extraction.sha256.new && 	diff -u golden/r2vb_dp4_extraction.sha256 /tmp/r2vb_dp4_extraction.sha256.new && 	echo "MATCH: R2VB extraction hashes match golden" || 	(echo "DIFF: R2VB extraction hashes differ from golden"; exit 1)
+	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
+	cd extraction && \
+	sha256sum $(R2VB_C) >r2vb_dp4_extraction.sha256.new && \
+	(cd "$$RT" && LC_ALL=C ls -- *.c *.h | while IFS= read -r f; do sha256sum -- "$$f"; done) \
+	  >certirocq_runtime.sha256.new && \
+	diff -u golden/r2vb_dp4_extraction.sha256 r2vb_dp4_extraction.sha256.new && \
+	diff -u golden/certirocq_runtime.sha256 certirocq_runtime.sha256.new && \
+	{ opam list --installed --columns=name,version rocq-core rocq-certirocq coq-flocq ocaml-base-compiler && \
+	  (cd "$$RT" && sha256sum -- *.o) && gcc --version | head -n 1; } >r2vb_dp4_record.txt && \
+	echo "MATCH: R2VB extraction and CertiRocq runtime hashes match golden; record in extraction/r2vb_dp4_record.txt" || \
+	{ echo "DIFF: R2VB extraction or CertiRocq runtime hashes differ from golden"; exit 1; }
 
 # Build and run the correspondence harnesses: the extracted dp4 against a
 # native integer reference over nine fixtures spanning the B = 181 admission
 # boundary, and the extracted gate against its native predicate over five
-# known-good and four known-bad rows.
+# known-good and four known-bad rows. CertiRocq puns function pointers into
+# value (long), so int-conversion and implicit-declaration are permitted for
+# these translation units. extraction/r2vb_dp4_test_record.txt records the
+# compiler command and the digests of both binaries.
+R2VB_CFLAGS := -O1 -std=gnu11 -Wno-int-conversion -Wno-implicit-function-declaration
 test-r2vb-correspondence:
-	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; 	gcc -O1 -std=gnu11 -Wno-int-conversion -Wno-implicit-function-declaration 	  -I "$$RT" -o extraction/test_r2vb_dp4 	  extraction/test_r2vb_dp4_correspondence.c 	  extraction/OpenGororoba.R2VBTransformDP4.dp4.c 	  extraction/r2vb_dp4_glue.c "$$RT"/gc_stack.o && 	gcc -O1 -std=gnu11 -Wno-int-conversion -Wno-implicit-function-declaration 	  -I "$$RT" -o extraction/test_r2vb_dp4_admit 	  extraction/test_r2vb_dp4_admit_correspondence.c 	  extraction/OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c 	  extraction/r2vb_dp4_glue.c "$$RT"/gc_stack.o && 	./extraction/test_r2vb_dp4 && ./extraction/test_r2vb_dp4_admit
+	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
+	gcc $(R2VB_CFLAGS) -I "$$RT" -o extraction/test_r2vb_dp4 \
+	  extraction/test_r2vb_dp4_correspondence.c extraction/OpenGororoba.R2VBTransformDP4.dp4.c \
+	  extraction/r2vb_dp4_glue.c "$$RT"/gc_stack.o && \
+	gcc $(R2VB_CFLAGS) -I "$$RT" -o extraction/test_r2vb_dp4_admit \
+	  extraction/test_r2vb_dp4_admit_correspondence.c extraction/OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c \
+	  extraction/r2vb_dp4_glue.c "$$RT"/gc_stack.o && \
+	{ gcc --version | head -n 1 && echo "gcc $(R2VB_CFLAGS) -I RUNTIME ... RUNTIME/gc_stack.o" && \
+	  sha256sum extraction/test_r2vb_dp4 extraction/test_r2vb_dp4_admit; } >extraction/r2vb_dp4_test_record.txt && \
+	./extraction/test_r2vb_dp4 && ./extraction/test_r2vb_dp4_admit
 
-# Compile-check the emitted C against the CertiRocq runtime headers.  CertiCoq
-# puns function pointers into value (long), valid CompCert-C, so int-conversion
-# and implicit-declaration are permitted for this translation unit.
+# Compile-check the emitted FP24 C against the CertiRocq runtime headers; a
+# missing emission fails.
 extract-c-check: extract-c
-	@if [ ! -f extraction/OpenGororoba.FP24Representable.fp24_value_admit.c ]; then \
-	  echo "SKIP: no FP24 C extraction emitted"; \
-	  exit 0; \
-	fi; \
-	RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
+	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
 	echo "Compile-checking emitted C against $$RT ..."; \
-	gcc -c -std=gnu11 -Wno-int-conversion -Wno-implicit-function-declaration \
-	    -I "$$RT" -o /dev/null \
-	    extraction/OpenGororoba.FP24Representable.fp24_value_admit.c && \
+	gcc -c $(R2VB_CFLAGS) -I "$$RT" -o /dev/null extraction/$(FP24_C).c && \
 	echo "MATCH: emitted C compiles clean" || \
-	(echo "FAIL: emitted C did not compile"; exit 1)
+	{ echo "FAIL: emitted C did not compile"; exit 1; }
 
 count:
 	@echo "Theory files:  $$(ls theories/*.v 2>/dev/null | wc -l)"
@@ -235,4 +263,4 @@ count:
 	@echo "Interfaces .vos: $$(ls theories/*.vos verified/*.vos 2>/dev/null | wc -l)"
 	@echo "Checked .vok:    $$(ls theories/*.vok verified/*.vok 2>/dev/null | wc -l)"
 
-.PHONY: all vos vok clean check check-plugins extract extract-check extract-c extract-c-check count rocq-makefile-check
+.PHONY: all vos vok clean check check-plugins extract extract-check extract-c extract-c-check extract-r2vb-c extract-r2vb-check test-r2vb-correspondence count rocq-makefile-check

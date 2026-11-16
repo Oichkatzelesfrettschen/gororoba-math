@@ -14,6 +14,15 @@ Makefile.rocq
 Makefile.rocq.*
 extraction/*.vo
 extraction/*.glob
+# CertiRocq emission, its comparison files, records and correspondence binaries.
+extraction/OpenGororoba.*.c
+extraction/OpenGororoba.*.h
+extraction/r2vb_dp4_glue.[ch]
+extraction/*.sha256.new
+extraction/r2vb_dp4_record.txt
+extraction/r2vb_dp4_test_record.txt
+extraction/test_r2vb_dp4
+extraction/test_r2vb_dp4_admit
 # Stale generated SQLite planning exports (canonical source is registry/ at repo root)
 registry/
 # Output of the Coq 9.1 makefile generator; CoqMakefile.conf and the

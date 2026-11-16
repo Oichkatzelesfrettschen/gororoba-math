@@ -8,8 +8,12 @@
    inclusive value gate (fp24_value_admit) sit alongside it; the strict B <= 127
    IDCT-operand policy is a separate function and is not this gate.
 
-   The emitted C uses the CertiCoq runtime; the trust boundary is the CertiRocq
-   compiler pipeline (proved correct in CertiRocq.Compiler), not this file.
+   The emitted C is correct relative to a trusted base, not to a proved
+   pipeline. CertiRocq 0.9.1+9.1 verifies large parts of its compiler and not
+   others (its README), holds no correctness theorem for its C back ends, and
+   both back ends admit the validity obligation of to_float. The base also
+   holds the CertiRocq runtime, the C compiler with its flags, and the
+   runtime objects of the switch.
    R300_MP_FP24_EXACT_INT = 131072 = 2^17 in r300_numeric_domain.c.  ASCII only. *)
 From CertiRocq.Plugin Require Import CertiRocq.
 From OpenGororoba Require Import FP24Representable.
