@@ -31,20 +31,22 @@ def re : (k : ℕ) → Tower R k → R
   | 0, x => x
   | k + 1, ⟨a, _⟩ => re k a
 
-variable [TrivialStar R] [PartialOrder R] [StarOrderedRing R] [NoZeroDivisors R]
+variable [TrivialStar R] [PartialOrder R] [IsOrderedAddMonoid R] [NoZeroDivisors R]
 
 /-- When `a * z = 0` with `a` and `z` nonzero, both are pure. -/
-theorem re_eq_zero_of_mul_eq_zero {k : ℕ} {a z : Tower R k} (h : a * z = 0) (ha : a ≠ 0)
-    (hz : z ≠ 0) : re k a = 0 ∧ re k z = 0 := by
+theorem re_eq_zero_of_mul_eq_zero (hsq : ∀ x : R, 0 ≤ x * x) {k : ℕ} {a z : Tower R k}
+    (h : a * z = 0) (ha : a ≠ 0) (hz : z ≠ 0) : re k a = 0 ∧ re k z = 0 := by
   sorry
 
 /-- The left and right annihilators of every element coincide, at every
 level. -/
-theorem mul_eq_zero_iff_rev {k : ℕ} (a z : Tower R k) : a * z = 0 ↔ z * a = 0 := by
+theorem mul_eq_zero_iff_rev (hsq : ∀ x : R, 0 ≤ x * x) {k : ℕ} (a z : Tower R k) :
+    a * z = 0 ↔ z * a = 0 := by
   sorry
 
 /-- A right inverse is a left inverse, at every level. -/
-theorem mul_eq_one_rev {k : ℕ} {a b : Tower R k} (h : a * b = 1) : b * a = 1 := by
+theorem mul_eq_one_rev (hsq : ∀ x : R, 0 ≤ x * x) {k : ℕ} {a b : Tower R k} (h : a * b = 1) :
+    b * a = 1 := by
   sorry
 
 end Tower
