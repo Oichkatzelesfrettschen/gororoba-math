@@ -3,6 +3,7 @@ module
 
 public import Challenge.AlignedPairClosedForm
 public import Challenge.AlignedPairSpectrum
+public import Challenge.AnnihilatorSymmetry
 public import Challenge.AssociatorSpace
 public import Challenge.NonAssociative
 public import Challenge.TwoTermBins

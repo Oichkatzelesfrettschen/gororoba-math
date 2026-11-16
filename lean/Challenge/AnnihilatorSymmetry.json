@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.AnnihilatorSymmetry",
+  "solution_module": "GororobaMath.CayleyDickson.AnnihilatorSymmetry",
+  "theorem_names": [
+    "CayleyDickson.Tower.mul_eq_zero_iff_rev",
+    "CayleyDickson.Tower.mul_eq_one_rev",
+    "CayleyDickson.Tower.re_eq_zero_of_mul_eq_zero"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
