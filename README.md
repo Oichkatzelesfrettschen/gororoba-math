@@ -24,6 +24,21 @@ uses.
 | `GororobaMath.KernelMap.Estimator` | the bias identity of the hardware nullity estimator, `N_hat - N = \|B+\|\|B-\|/\|B\| (Vbar+ - Vbar-)/V_hat` for every observed contrast with `V_hat` nonzero (`nHat_sub_nullity`), and the forced reading `N_hat = \|B\|/2` of a block with no bin of ideal contrast `-1` (`nHat_eq_card_div_two_of_negBins_eq_empty`) | `docs/evidence/pathion-kernel-map/nhat-bias/README.md` in gororoba-quantum, claims 1 and 3 |
 | `GororobaMath.KernelMap.TwoTermBins` | a labelling of the `2^k` bins in which every index of an aligned pair is a `+1` bin and every misaligned pair holds one bin of each sign has `KernelMap.nullity = alignedPairCount k i j` (`KernelMap.nullity_eq_alignedPairCount`), and the same from the Boolean contract `KernelMap.binContract` (`KernelMap.nullity_eq_alignedPairCount_of_binContract`) | the ideal output contrast of `pathion_kernel_map.kernel_map_circuit`, by the comparison below |
 
+`lean/Challenge/` holds the challenge modules of the headline theorems of
+`AlignedPairSpectrum`, `AlignedPairClosedForm`, `AssociatorSpace` and
+`KernelMap.TwoTermBins`, one per solution module. `Challenge.NAME` restates
+the theorems the table names with `sorry` as each proof, together with the
+definitions the solution module introduces and those statements use, and
+imports the library modules the solution imports. `NAME.json` beside it names
+the challenge module, the solution module, the theorems and the permitted
+axioms (`propext`, `Quot.sound`, `Classical.choice`). From `lean/`, with
+`bubblewrap` installed, `lake comparator --config Challenge/NAME.json`
+checks that each named theorem of the solution has that statement and those
+axioms. No library module imports `Challenge` and the admission gate does
+not build it. The theorems of the other rows are owed their challenge modules
+in the same layout
+([issue 31](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/31)).
+
 The tower theorems hold for every level and every coefficient ring, so they
 cover the 64- and 128-dimensional runs as well as `A_5`. The estimator
 theorems hold over every field of characteristic zero.

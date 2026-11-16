@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.AssociatorSpace",
+  "solution_module": "GororobaMath.CayleyDickson.AssociatorSpace",
+  "theorem_names": [
+    "CayleyDickson.Tower.free_assocSpace_e",
+    "CayleyDickson.Tower.finrank_assocSpace_e"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

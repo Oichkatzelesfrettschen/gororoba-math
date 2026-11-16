@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.TwoTermBins",
+  "solution_module": "GororobaMath.KernelMap.TwoTermBins",
+  "theorem_names": [
+    "KernelMap.nullity_eq_alignedPairCount",
+    "KernelMap.nullity_eq_alignedPairCount_of_binContract"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
