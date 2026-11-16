@@ -362,7 +362,7 @@ echo "check_kernel_replay_evidence: Flocq objects recorded"
 import sys
 
 sys.path.insert(0, sys.argv[1])
-from kernel_replay_evidence import command_imports_flocq
+from kernel_replay_evidence import command_imports_flocq, split_whitespace, uses_flocq
 
 table = [
     ("From Flocq Require Import Core", True),
@@ -380,8 +380,19 @@ table = [
     ('#[local, warnings("-w")] Require Import Flocq.Core.Core', True),
     ("Timeout 10 Require Import Flocq.Core.Core", True),
     ("#[local Require Import Flocq.Core.Core", False),
+    ("Instructions From Flocq Require Import Core", True),
+    ("Profile Require Import Flocq.Core.Core", True),
+    ("Time Timeout 5 Profile From Flocq Require Import Core", True),
+    ("#[local] Time Require Import Flocq.Core.Core", True),
+    ("From OpenGororoba Require Import Prelude", False),
 ]
-wrong = [command for command, expected in table if command_imports_flocq(command.split()) != expected]
+# Each row runs through the word splitter alone and through the source reader
+# (source_commands, then split_whitespace), as the producer reads a source.
+wrong = [
+    command
+    for command, expected in table
+    if command_imports_flocq(split_whitespace(command)) != expected or uses_flocq([command + "."]) != expected
+]
 if wrong:
     print("\n".join(wrong), file=sys.stderr)
     sys.exit(1)
@@ -398,7 +409,17 @@ produce "$work/flocq-prefixed" "$work/out-flocq-prefixed" "$work/flocq-prefixed.
 }
 "$PYTHON" -I -B "$work/verify.py" flocq "$work/out-flocq-prefixed" "$library" "$work/flocq-prefixed" "$manifest" ||
   fail "the evidence of the prefixed Flocq import differs from its expectation"
-echo "check_kernel_replay_evidence: Flocq import rule matches the consumer; prefixed import recorded"
+tree "$work/flocq-attribute"
+printf '%s\n' '#[warnings="-deprecated"] From Flocq Require Import Core.' 'From OpenGororoba Require Import Prelude.' \
+  'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-attribute/verified/C900_Test.v"
+produce "$work/flocq-attribute" "$work/out-flocq-attribute" "$work/flocq-attribute.log" --proof verified/C900_Test.v \
+  --declaration fixture --warning-policy fatal_default --flocq-manifest "$manifest" || {
+  cat "$work/flocq-attribute.log" >&2
+  fail "the producer refused the fixture whose Flocq import carries an attribute"
+}
+"$PYTHON" -I -B "$work/verify.py" flocq "$work/out-flocq-attribute" "$library" "$work/flocq-attribute" "$manifest" ||
+  fail "the evidence of the attributed Flocq import differs from its expectation"
+echo "check_kernel_replay_evidence: Flocq import rule matches the consumer; prefixed and attributed imports recorded"
 
 # Known-bad: mutated copies of the known-good evidence. The verifier accepts the
 # unmutated records first, then rejects each mutation and prints their count.
