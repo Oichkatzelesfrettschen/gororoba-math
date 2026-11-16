@@ -87,17 +87,25 @@ rocq-sync:
 # show that an allowed warning stopped. A source with a new warning has
 # left its object behind, and a second run would find it up to date and
 # print nothing, so the objects of each source the ratchet names are
-# removed. The shell text sets ratchet=1 when the ratchet fails.
+# removed. A log the ratchet cannot attribute (exit 2) names no source, so
+# every object of the tree is removed. The shell text leaves the ratchet's
+# exit status in ratchet.
 define rocq_ratchet_sh
 ratchet=0; \
-	if ! $(PYTHON) -I ci/rocq_warning_pairs.py --tree $(1) --new-only \
+	$(PYTHON) -I ci/rocq_warning_pairs.py --tree $(1) --new-only \
 		--allowed ci/rocq-warnings/allowed.tsv --causes ci/rocq-warnings/causes.tsv \
-		"$(ROCQ_TREE)/$(1)-build.log" 2>"$(ROCQ_TREE)/$(1)-ratchet.log"; then \
-		ratchet=1; cat "$(ROCQ_TREE)/$(1)-ratchet.log" >&2; \
+		"$(ROCQ_TREE)/$(1)-build.log" 2>"$(ROCQ_TREE)/$(1)-ratchet.log" || ratchet=$$?; \
+	if [ "$$ratchet" -eq 1 ]; then \
+		cat "$(ROCQ_TREE)/$(1)-ratchet.log" >&2; \
 		sed -n 's/^+ //p' "$(ROCQ_TREE)/$(1)-ratchet.log" | cut -f 1 | while IFS= read -r source; do \
 			base="$(ROCQ_TREE)/$(1)/$${source%.v}"; rm -f -- "$$base.vo" "$$base.vok" "$$base.vos" "$$base.glob"; \
 		done; \
 		echo "rocq-$(1): a warning outside ci/rocq-warnings/allowed.tsv; the objects of the sources it names are removed" >&2; \
+	elif [ "$$ratchet" -ne 0 ]; then \
+		cat "$(ROCQ_TREE)/$(1)-ratchet.log" >&2; \
+		find "$(ROCQ_TREE)/$(1)" -type f \( -name '*.vo' -o -name '*.vok' -o -name '*.vos' -o -name '*.glob' \) \
+			-exec rm -f -- {} +; \
+		echo "rocq-$(1): the warning ratchet could not attribute the build log; every object of the tree is removed" >&2; \
 	fi
 endef
 # The build of tree $(1) writes its log, which the warning ratchet reads.
