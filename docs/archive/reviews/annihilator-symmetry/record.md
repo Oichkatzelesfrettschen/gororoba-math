@@ -31,10 +31,16 @@ codex justified claims 1 and 2, and judged claim 3 narrow, claim 4 half false, a
 |---|---|
 | Codex findings 2, 3 and 4 are confirmed and fixed | No change. |
 | `StarOrderedRing` is the sum-of-squares order, so 6fadf1a narrowed the hypotheses | Fixed in c43061e (row 1 above). |
-| A definition both provers hold lands with a comparison under `ci/` (AGENTS.md); `Tower.dot` and `Tower.re` were compared by reading only | Boundary: issue 48 owes `ci/compare_dot.sh`, evaluating both sides on the same integer vectors with a mutated reference. |
+| A definition both provers hold lands with a comparison under `ci/` (AGENTS.md); `Tower.dot` and `Tower.re` were compared by reading only | Fixed in 1ced819: `ci/compare_dot.sh` evaluates both sides on 36 integer vector pairs at levels 0 to 5; the 72 values agree and a reference whose `dot` keeps one half and whose `re` reads the other is rejected (issue 48). |
 | The third calibration's rejection named another theorem; the body's axiom line was garbled; ℚ had no example | The calibration run now logs the diff of each altered copy, and each is rejected on the theorem it alters; `#print axioms` was rerun at c43061e; a ℚ example is added. |
 | The first verification launch ran `rm -rf` on the workstation | It removed the session's own output directory; the owner is told, and later runs write fresh directories. |
 
 ## Validation of c43061e
 
 Lean 4.35.0, Mathlib v4.35.0, on the Windows workstation: `lake build --wfail GororobaMath` exit 0; `#print axioms` of the three headline theorems: `propext`, `Classical.choice`, `Quot.sound`; `lake env leanchecker GororobaMath.CayleyDickson.AnnihilatorSymmetry` exit 0; the module builds under `--wfail` with Mathlib's standard linter set on (the setting of the warnings pull request); `lake comparator --config Challenge/AnnihilatorSymmetry.json` accepts and rejects three copies, each differing from the challenge in one line (the logged diffs) and each rejected on the theorem it alters.
+
+## Hosted Codex, round 1 on 81996a2
+
+| Finding | Severity | Reconciliation |
+|---|---|---|
+| `Tower.dot` and `Tower.re` duplicate the Rocq definitions and lack the comparison under `ci/` that AGENTS.md requires | P1 | Fixed in 1ced819 (the Advisor raised the same point): `ci/compare_dot.sh` and `ci/compare_dot.py`, listed in the AGENTS.md item on mirrored definitions. |
