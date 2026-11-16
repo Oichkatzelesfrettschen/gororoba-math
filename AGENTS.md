@@ -178,10 +178,18 @@ gororoba repository shares; this file governs where the two differ.
   headline result is proved in both provers: the same claim, read through
   each side's convention docstring. The second proof is a bridge theorem in
   a new file whose comment names the first by path and theorem name, and
-  the row's `partner` names it, marked `narrower` with the reason when the
-  other prover states less (the Rocq tower is a functor over commutative
-  rings); until it lands the row reads `owed` and its tracking issue orders
-  the backlog. A new row lands with its partner. A definition that both provers
+  the row's `partner` names it as `PATH:NAME` (`NAME` with the modules
+  that enclose it), followed by ` narrower: REASON` when the other prover
+  states less (the Rocq tower is a functor over commutative rings); until
+  it lands the row reads `owed` and its tracking column holds the issue
+  that orders the backlog, and a row with a partner holds `-` there.
+  `ci/check_headline_results.py`, which `ci/check.sh` runs, checks that
+  each row names a theorem of the library, that the rows are the theorems
+  the README table names, and that each partner names a theorem of a
+  project-listed Rocq source. Every identifier-shaped token of a Result
+  cell of that table resolves to a declaration of its module or is listed,
+  with its reason, in the script's `NON_DECLARATION_TOKENS`, so a prose
+  edit that adds such a token adds its entry. A new row lands with its partner. A definition that both provers
   hold lands with a comparison under `ci/` as in the item above. Any other
   claim is proved once. A result already in either tree stays where it is,
   and its translation to the other prover is a bridge in a new file, never
