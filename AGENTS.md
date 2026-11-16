@@ -204,7 +204,10 @@ gororoba repository shares; this file governs where the two differ.
 - State a theorem at the generality its proof has: every level `k`, every
   ring, every characteristic-zero field. A statement about `A_5` alone is the
   instance `k = 5` of a tower theorem where one exists.
-- The library builds with warnings as errors (`lake build --wfail`).
+- The library builds with warnings as errors (`lake build --wfail`), with
+  Mathlib's standard linter set on (`lean/lakefile.toml`); its header
+  linter, which checks Mathlib's copyright and authors header, is off,
+  since each file here carries one SPDX line.
 
 ## Rocq sources
 
