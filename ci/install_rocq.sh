@@ -19,17 +19,21 @@
 # package version, and opam.ocaml.org and rocq-prover.org supply the
 # metadata and checksums of those versions at the time of the run.
 # System packages (Ubuntu names, as .github/workflows/rocq.yml installs them):
-# opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap. The export
-# holds conf-clang, whose depext prompt waits for an answer that OPAMYES does
-# not give (measured on a host without clang: opam waited 24 minutes), so the
-# script checks for clang before opam runs.
+# opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap. opam
+# offers to install a missing system package through a prompt that OPAMYES
+# does not answer, since launching the host package manager needs the unsafe
+# confirmation level (observed: a run on a host without clang waited at that
+# prompt). The script sets OPAMASSUMEDEPEXTS, so opam skips that step and a
+# missing package fails its conf-* package instead, and before opam installs
+# the packages of the export it requires clang whenever the export selects
+# conf-clang, so a switch that already holds every root needs no clang.
 # Exit status: 0 the switch holds every root package, 1 an opam step failed,
 # 2 a tool is missing. Reaches opam.ocaml.org and rocq-prover.org.
 set -eu
 
-for tool in git opam getconf clang; do
+for tool in git opam getconf; do
   command -v "$tool" >/dev/null || {
-    echo "install_rocq: $tool is not on PATH (system packages: see the header of this script)" >&2
+    echo "install_rocq: $tool is not on PATH" >&2
     exit 2
   }
 done
@@ -39,7 +43,8 @@ ports="$root/rocq/open/opam"
 export="$ports/qualified-rocq-9.3.export"
 switch=rocq-9.3
 OPAMJOBS=${OPAMJOBS:-$(getconf _NPROCESSORS_ONLN)}
-export OPAMJOBS OPAMYES=1
+OPAMASSUMEDEPEXTS=1
+export OPAMJOBS OPAMYES=1 OPAMASSUMEDEPEXTS
 
 # The root packages of the export, one "name.version" per line. The parser
 # reads the lines between "roots: [" and "]", so an export that opens the
@@ -69,6 +74,10 @@ if ! opam switch list --short | grep -q -x -F "$switch"; then
   opam switch create "$switch" ocaml-base-compiler.5.5.1
 fi
 if [ -n "$(missing_roots)" ]; then
+  if grep -q '"conf-clang\.' "$export" && ! command -v clang >/dev/null; then
+    echo "install_rocq: the export selects conf-clang and clang is not on PATH (system packages: see the header of this script)" >&2
+    exit 2
+  fi
   if ! opam repository list --switch="$switch" --short | grep -q -x rocq-released; then
     opam repository add rocq-released https://rocq-prover.org/opam/released --switch="$switch"
   fi
