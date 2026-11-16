@@ -82,31 +82,36 @@ rocq-sync:
 			"$$(dirname "$$stem")/.$$(basename "$$stem").aux"; \
 	done
 
-# The build of tree $(1) writes its log, which the warning ratchet reads.
-# --output-sync=target keeps each compilation's lines together, and
-# --no-print-directory keeps the build directory's name out of the log.
-define rocq_build
-	@status=0; $(OPAM) make --no-print-directory --output-sync=target -C "$(ROCQ_TREE)/$(1)" $(2) --jobs=$(ROCQ_JOBS) \
-		>"$(ROCQ_TREE)/$(1)-build.log" 2>&1 || status=$$?; \
-	if [ "$$status" -ne 0 ]; then tail -n 60 "$(ROCQ_TREE)/$(1)-build.log" >&2; exit "$$status"; fi
-endef
 # The ratchet of ci/check_rocq.sh on the log of tree $(1), new pairs only:
 # an incremental build recompiles only changed sources, so its log cannot
 # show that an allowed warning stopped. A source with a new warning has
 # left its object behind, and a second run would find it up to date and
 # print nothing, so the objects of each source the ratchet names are
-# removed.
-define rocq_ratchet
-	@if ! $(PYTHON) -I ci/rocq_warning_pairs.py --tree $(1) --new-only \
+# removed. The shell text sets ratchet=1 when the ratchet fails.
+define rocq_ratchet_sh
+ratchet=0; \
+	if ! $(PYTHON) -I ci/rocq_warning_pairs.py --tree $(1) --new-only \
 		--allowed ci/rocq-warnings/allowed.tsv --causes ci/rocq-warnings/causes.tsv \
 		"$(ROCQ_TREE)/$(1)-build.log" 2>"$(ROCQ_TREE)/$(1)-ratchet.log"; then \
-		cat "$(ROCQ_TREE)/$(1)-ratchet.log" >&2; \
+		ratchet=1; cat "$(ROCQ_TREE)/$(1)-ratchet.log" >&2; \
 		sed -n 's/^+ //p' "$(ROCQ_TREE)/$(1)-ratchet.log" | cut -f 1 | while IFS= read -r source; do \
 			base="$(ROCQ_TREE)/$(1)/$${source%.v}"; rm -f -- "$$base.vo" "$$base.vok" "$$base.vos" "$$base.glob"; \
 		done; \
 		echo "rocq-$(1): a warning outside ci/rocq-warnings/allowed.tsv; the objects of the sources it names are removed" >&2; \
-		exit 1; \
 	fi
+endef
+# The build of tree $(1) writes its log, which the warning ratchet reads.
+# --output-sync=target keeps each compilation's lines together, and
+# --no-print-directory keeps the build directory's name out of the log.
+# The ratchet runs after a failed build as well: a source that compiled
+# with a new warning before another source failed keeps no object, so the
+# next build compiles it again and prints its warning.
+define rocq_build
+	@status=0; $(OPAM) make --no-print-directory --output-sync=target -C "$(ROCQ_TREE)/$(1)" $(2) --jobs=$(ROCQ_JOBS) \
+		>"$(ROCQ_TREE)/$(1)-build.log" 2>&1 || status=$$?; \
+	$(call rocq_ratchet_sh,$(1)); \
+	if [ "$$status" -ne 0 ]; then tail -n 60 "$(ROCQ_TREE)/$(1)-build.log" >&2; exit "$$status"; fi; \
+	exit "$$ratchet"
 endef
 # rocq makefile prints a warning only about its own input; the compile
 # options do not reach it.
@@ -119,20 +124,17 @@ endef
 
 rocq-open: rocq-sync
 	$(call rocq_build,open,all)
-	$(call rocq_ratchet,open)
 	@echo "rocq-open: compiled $$(grep -c '\.v$$' rocq/open/_RocqProject) listed sources, no warning outside the allow-list"
 
 rocq-quantum: rocq-open
 	$(call rocq_makefile,quantum)
 	$(call rocq_build,quantum,-f Makefile.rocq)
-	$(call rocq_ratchet,quantum)
 	@echo "rocq-quantum: compiled $$(grep -c '\.v$$' rocq/quantum/_RocqProject) listed sources, no warning outside the allow-list"
 
 # rocq/delegation imports the standard library alone.
 rocq-delegation: rocq-sync
 	$(call rocq_makefile,delegation)
 	$(call rocq_build,delegation,-f Makefile.rocq)
-	$(call rocq_ratchet,delegation)
 	@echo "rocq-delegation: compiled $$(grep -c '\.v$$' rocq/delegation/_RocqProject) listed sources, no warning outside the allow-list"
 
 rocq: rocq-quantum rocq-delegation
