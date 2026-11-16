@@ -25,6 +25,11 @@ universe u
 
 variable {R : Type u} [NonAssocRing R] [StarRing R]
 
+/-- The embedding `x ↦ (x, 0)` of level `k` into level `k + 1` preserves
+products. -/
+theorem mk_zero_mul_mk_zero {k : ℕ} (a c : Tower R k) : mk a 0 * mk c 0 = mk (a * c) 0 := by
+  sorry
+
 /-- Over a ring in which `2 ≠ 0`, no basis element equals its negative. -/
 theorem e_ne_neg_e (h2 : (2 : R) ≠ 0) : ∀ (k : ℕ) (p : BitVec k), e R k p ≠ -e R k p := by
   sorry
