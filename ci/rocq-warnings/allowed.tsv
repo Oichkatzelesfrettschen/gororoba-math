@@ -679,6 +679,9 @@ quantum	CdSignPythonSemantics.v	disj-pattern-notation
 quantum	CdSignRowAnf.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdSignSourceCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdSignSourceCertificate.v	disj-pattern-notation
+quantum	CdTowerBasisBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerBasisBridge.v	disj-pattern-notation
+quantum	CdTowerBasisBridge.v	using-fallback-loc
 quantum	CdTowerBasisSign.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerBasisSign.v	disj-pattern-notation
 quantum	CdTowerCanonicalKernels.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -702,6 +705,10 @@ quantum	CdTowerKernelCertificate.v	deprecated-transitive-library-file-since-Stdl
 quantum	CdTowerKernelCertificate.v	using-fallback-loc
 quantum	CdTowerLeibnizSystem.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerLeibnizSystem.v	using-fallback-loc
+quantum	CdTowerNonAssociative.v	bad-template-constraint
+quantum	CdTowerNonAssociative.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerNonAssociative.v	disj-pattern-notation
+quantum	CdTowerNonAssociative.v	using-fallback-loc
 quantum	CdTowerOrderThreeMap.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerOrderThreeMap.v	disj-pattern-notation
 quantum	CdTowerOrderThreeMap.v	using-fallback-loc

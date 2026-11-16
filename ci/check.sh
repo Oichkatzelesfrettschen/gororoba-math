@@ -32,12 +32,20 @@
 #      audit (lean/audit/ReplayFixture.lean) both accept. The root module
 #      is left out of the replay and holds only `module` and its imports
 #      of the library, which this step checks.
-# Needs git, shellcheck, ruff, actionlint and lake (elan, with the toolchain
-# of lean/lean-toolchain) on PATH. Exit status: 0 every check passed, 1 a check failed,
+#   8. ci/check_headline_results.py calibrates itself on known-bad copies of
+#      its inputs and then requires every row of ci/headline-results.tsv to
+#      name a theorem of the library, the rows to equal the theorems the
+#      "Lean library" table of README.md names, and each partner to be owed
+#      with its tracking issue or to name a theorem of a project-listed Rocq
+#      source.
+# Needs git, shellcheck, ruff, actionlint, lake (elan, with the toolchain
+# of lean/lean-toolchain) and Python 3 (PYTHON, default python3) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
 set -eu
 
-for tool in git lake shellcheck ruff actionlint; do
+PYTHON=${PYTHON:-python3}
+export PYTHON
+for tool in git lake shellcheck ruff actionlint "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "check: $tool is not on PATH (README.md, Toolchain)" >&2
     exit 2
@@ -126,6 +134,8 @@ if [ -s "$work/python.txt" ]; then
   done <"$work/python.txt"
   echo "check: ruff passed on $(wc -l <"$work/python.txt") Python file(s)"
 fi
+
+"$PYTHON" -I ci/check_headline_results.py
 
 git ls-files -- '.github/workflows/*.yml' >"$work/workflows.txt"
 if [ -s "$work/workflows.txt" ]; then

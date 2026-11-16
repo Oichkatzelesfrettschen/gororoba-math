@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.TowerModule",
+  "solution_module": "GororobaMath.CayleyDickson.TowerModule",
+  "theorem_names": [
+    "CayleyDickson.Tower.finrank_eq",
+    "CayleyDickson.Tower.repr_e_mul"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

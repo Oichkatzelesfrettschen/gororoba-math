@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.TwoTerm",
+  "solution_module": "GororobaMath.CayleyDickson.TwoTerm",
+  "theorem_names": [
+    "CayleyDickson.Tower.two_term_mul_add_eq_zero",
+    "CayleyDickson.Tower.two_term_mul_sub_eq_zero"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

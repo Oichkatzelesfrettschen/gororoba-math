@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.TwoTermNullity",
+  "solution_module": "GororobaMath.CayleyDickson.TwoTermNullity",
+  "theorem_names": [
+    "CayleyDickson.Tower.free_ker_mulLeft_e_add_e",
+    "CayleyDickson.Tower.finrank_ker_mulLeft_e_add_e"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

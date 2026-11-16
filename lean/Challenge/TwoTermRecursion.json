@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.TwoTermRecursion",
+  "solution_module": "GororobaMath.CayleyDickson.TwoTermRecursion",
+  "theorem_names": [
+    "CayleyDickson.Tower.alignedPairCount_succ_of_msb_eq",
+    "CayleyDickson.Tower.alignedPairCount_succ_eq_zero",
+    "CayleyDickson.Tower.alignedPairCount_succ_add"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
