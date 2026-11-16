@@ -221,12 +221,21 @@ gororoba repository shares; this file governs where the two differ.
   neither names.
 - The three trees compile their project-listed sources, and `rocq/open`
   its checkpoints, plugin fixtures and `extraction/ExtractQuaternion.v`,
-  with `-w all,+default`: each warning of Rocq's default set is an error
-  and every other warning prints (measured, Rocq 9.3.0). Two compile paths
-  stay outside the comparison below: the mutation harnesses of
-  `rocq/open/tests` compile mutants that must fail, under `-w +default`,
-  and `ci/kernel_replay_evidence.py` keeps the warning options of its
-  evidence contract with gororoba-open.
+  with `-w all,+default`, and so does the script's compile of
+  `checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v`:
+  each warning of Rocq's default set is an error and every other warning
+  prints (measured, Rocq 9.3.0). Three compiles of the gate stay outside
+  the comparison below: the ratchet's own calibration fixtures; the
+  mutation harnesses of `rocq/open/tests`, which compile the unaltered
+  law and each mutant under `-w +default` into logs of their own (a
+  retained record of gororoba-open cites
+  `schur_acceleration_mutations.rs` by digest, so its options keep their
+  bytes, and the unaltered law is a checkpoint the gate also compiles
+  under the policy); and `ci/check_kernel_replay_evidence.sh`, whose
+  producer keeps the warning options of its evidence contract with
+  gororoba-open. The on-demand scripts (`ci/compare_dot.sh`,
+  `ci/compare_signs.sh`, `ci/replay_quantum_bundles.sh`) and the
+  CertiRocq targets run outside the gate.
   `ci/rocq_warning_pairs.py` reads the build logs of each tree and compares
   the (source, warning) pairs they print with `ci/rocq-warnings/allowed.tsv`,
   and `ci/rocq-warnings/causes.tsv` gives each listed warning its cause and

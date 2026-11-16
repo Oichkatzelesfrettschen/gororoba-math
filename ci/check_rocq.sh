@@ -41,8 +41,9 @@
 #   5. warnings: ci/rocq_warning_pairs.py reads the build logs of each tree
 #      and compares the (source, warning) pairs they print with
 #      ci/rocq-warnings/allowed.tsv: a pair the list lacks is a new warning
-#      and a listed pair no log prints is a fixed one whose row must go, so
-#      the list only shrinks. The comparison of every tree runs before the
+#      and a listed pair no log prints is a fixed one whose row must go in
+#      the same commit; a new source adds rows only for warning names that
+#      ci/rocq-warnings/causes.tsv lists (AGENTS.md). The comparison of every tree runs before the
 #      script fails on it, so one run reports all of them.
 #      ROCQ_WARNINGS_OUT, when set, names a directory that receives the
 #      observed pairs of each tree.

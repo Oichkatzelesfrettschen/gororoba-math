@@ -19,7 +19,7 @@ relative to the tree directory, with a leading './' that this script drops.
 
 Verdicts. Exit 0: the observed pairs equal the allowed pairs of the tree. Exit 1:
 a pair is observed and not allowed (a new warning), or allowed and not observed
-(a fixed warning whose row must leave the list, so the list only shrinks); each
+(a fixed warning whose row must leave the list in the same commit); each
 is printed. Exit 2: a log line that begins with 'Warning' sits outside a block
 that a File line opens, a block lacks its name tag, a file is unreadable, a row
 of either table is malformed, or a warning of the allow-list has no row in the
