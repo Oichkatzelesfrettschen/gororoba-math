@@ -52,8 +52,9 @@ pair of alternative vectors, and Lemmas 8.7 and 8.8 double the associator
 dimensions of such a pair. `Tower.finrank_assocSpace_e` proves
 `dim Ass[e a, e b] = 2 * N k a b + 4` for distinct imaginary basis vectors,
 the identity under which those lemmas read as the mixed case. The theorems
-of this file are statements about the count on bit vectors and name no ring; through `Tower.finrank_ker_mulLeft_e_add_e`
-they describe the kernel rank over every ring of the first paragraph.
+of this file are statements about the count on bit vectors and name no ring;
+through `Tower.finrank_ker_mulLeft_e_add_e` they describe the kernel rank over
+every ring of the first paragraph.
 
 ## Main results
 
@@ -519,7 +520,8 @@ theorem alignedPairCount_top_left (k : ℕ) (j : BitVec (k + 1)) :
 /-- The unit that the last doubling adjoins has the index `2 ^ k`. -/
 theorem cons_true_zero_eq_twoPow (k : ℕ) : BitVec.cons true 0#k = BitVec.twoPow (k + 1) k := by
   apply BitVec.eq_of_toNat_eq
-  simp [BitVec.toNat_twoPow, Nat.mod_eq_of_lt (Nat.pow_lt_pow_right (by norm_num : 1 < 2) (Nat.lt_succ_self k))]
+  simp [BitVec.toNat_twoPow,
+    Nat.mod_eq_of_lt (Nat.pow_lt_pow_right (by norm_num : 1 < 2) (Nat.lt_succ_self k))]
 
 theorem alignedPairCount_top_right (k : ℕ) (i : BitVec (k + 1)) :
     alignedPairCount (k + 1) i (BitVec.cons true 0#k) = 0 := by

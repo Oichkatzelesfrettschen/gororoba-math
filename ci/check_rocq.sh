@@ -15,22 +15,21 @@
 #      synthetic trees under the same switch; its Flocq case records the
 #      switch with ci/flocq_manifest.py, which the export carries.
 #   1. rocq/open: every tracked source of theories/ and verified/ is a line
-#      of _RocqProject, which compiles them with -w +default (each warning
-#      of the default set is an error); make all, check-schur-geometry,
+#      of _RocqProject, which compiles them with -w all,+default (each
+#      warning of the default set is an error and every other warning
+#      prints; measured, Rocq 9.3.0); make all, check-schur-geometry,
 #      check-admissions (the scanner's unit tests, then no Admitted or admit
 #      in theories/ and verified/), check-plugins and extract-check pass;
 #      every listed source has its .vo.
 #   2. rocq/quantum: every tracked source is a line of _RocqProject; the
-#      generated makefile compiles each with -w @all against
-#      rocq/open/verified and rocq/open/theories. Under -w @all rocq prints a warning and exits 0
-#      (measured, Rocq 9.3.0), so the check that fails the build is the
-#      search of the log for a warning line, calibrated on a source with a
-#      deprecated import built through the same project options; every
-#      listed source has its .vo; the admission scanner of rocq/open accepts
-#      the tree.
+#      generated makefile compiles each with -w all,+default against
+#      rocq/open/verified and rocq/open/theories, calibrated through the
+#      same project options on a source whose deprecated import is in the
+#      default set (its compile must fail) and one whose import prints a
+#      warning outside it (the ratchet must report it); every listed source
+#      has its .vo; the admission scanner of rocq/open accepts the tree.
 #   3. rocq/delegation: every tracked source is a line of _RocqProject,
-#      which compiles them with -w +default (the option lines are required
-#      and the build log holds no warning line); each rendered source lists
+#      which compiles them with -w all,+default; each rendered source lists
 #      in stated as many rights as it states theorems; every listed source
 #      has its .vo; the admission scanner of rocq/open accepts the tree.
 #   4. kernel: rocq check -silent -o re-checks every project-listed module
@@ -39,6 +38,15 @@
 #      positivity, and its axioms are exactly the lines of the tree's
 #      kernel-assumptions.txt, so a new axiom fails until its line is added.
 #      Calibrated on a source that declares an axiom.
+#   5. warnings: ci/rocq_warning_pairs.py reads the build logs of each tree
+#      and compares the (source, warning) pairs they print with
+#      ci/rocq-warnings/allowed.tsv: a pair the list lacks is a new warning
+#      and a listed pair no log prints is a fixed one whose row must go in
+#      the same commit; a new source adds rows only for warning names that
+#      ci/rocq-warnings/causes.tsv lists (AGENTS.md). The comparison of every tree runs before the
+#      script fails on it, so one run reports all of them.
+#      ROCQ_WARNINGS_OUT, when set, names a directory that receives the
+#      observed pairs of each tree.
 # The switch is named rocq-9.3, the name the mutation harnesses of
 # check-schur-geometry pass to their own subprocesses.
 # Environment: ROCQ_JOBS (default the online
@@ -47,11 +55,14 @@
 # script peaked at 11.9 GB of memory (systemd scope accounting, 12-thread
 # x86-64 host), and a run capped at 12 GB was killed in the build of
 # rocq/open; lower ROCQ_JOBS on a host with less.
-# Needs git, opam, tar, make, rustc, getconf and python3 on PATH. Exit status: 0 every
-# check passed, 1 a check failed, 2 a tool or the switch is missing.
+# Needs git, opam, tar, make, rustc, getconf and python3 (or PYTHON) on PATH.
+# Exit status: 0 every check passed, 1 a check failed, 2 a tool or the
+# switch is missing.
 set -eu
+PYTHON=${PYTHON:-python3}
+export PYTHON
 
-for tool in git opam tar make rustc getconf python3; do
+for tool in git opam tar make rustc getconf "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "check_rocq: $tool is not on PATH (README.md, Toolchain)" >&2
     exit 2
@@ -70,7 +81,8 @@ open_kernel=
 trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$work" </dev/null' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
-git -C "$root" archive HEAD rocq ci/kernel_replay_evidence.py ci/check_kernel_replay_evidence.sh ci/flocq_manifest.py | tar -x -C "$work"
+git -C "$root" archive HEAD rocq ci/kernel_replay_evidence.py ci/check_kernel_replay_evidence.sh ci/flocq_manifest.py \
+  ci/rocq_warning_pairs.py ci/rocq-warnings | tar -x -C "$work"
 # git archive leaves out a path that a .gitattributes file marks
 # export-ignore, and a recipe of rocq/open skips a source or a golden file
 # that is absent, so the export is compared with the tree of HEAD before
@@ -170,6 +182,34 @@ kernel_context_matches() {
 log_holds_warning() {
   grep -n '[Ww]arning' "$@"
 }
+# Fails unless the project file $1 carries the option lines of the warning
+# set: -arg -w, then -arg all,+default.
+warning_options_set() {
+  grep -A 1 -x -F -- '-arg -w' "$1" | grep -q -x -F -- '-arg all,+default'
+}
+# Compares the (source, warning) pairs that the logs $2... of the tree $1
+# print with the allow-list. A difference is printed and recorded, and the
+# script fails on it at its end; a log the ratchet cannot read fails now.
+ratchet_failed=
+warnings_match() {
+  tree=$1
+  shift
+  ratchet_status=0
+  "$PYTHON" -I "$work/ci/rocq_warning_pairs.py" --tree "$tree" \
+    --allowed "$work/ci/rocq-warnings/allowed.tsv" --causes "$work/ci/rocq-warnings/causes.tsv" \
+    --observed "$work/warnings-$tree.tsv" "$@" || ratchet_status=$?
+  if [ -n "${ROCQ_WARNINGS_OUT:-}" ] && [ -f "$work/warnings-$tree.tsv" ]; then
+    cp "$work/warnings-$tree.tsv" "$ROCQ_WARNINGS_OUT/warnings-$tree.tsv"
+  fi
+  case $ratchet_status in
+    0) ;;
+    1) ratchet_failed="$ratchet_failed rocq/$tree" ;;
+    *)
+      echo "check_rocq: the warning ratchet could not read the logs of rocq/$tree" >&2
+      exit 1
+      ;;
+  esac
+}
 
 grep '\.v$' "$work/tree-files.txt" >"$work/tracked-sources.txt"
 if grep -n '[[:space:]]' "$work/tracked-sources.txt" >&2; then
@@ -240,15 +280,21 @@ listing_rejects _RocqProject "$work/open-sources-bad.txt" &&
   echo "check_rocq: the listing check did not reject a name that extends a listed one, or an empty project file" >&2
   exit 1
 }
+warning_options_set _RocqProject || {
+  echo "check_rocq: rocq/open/_RocqProject lacks the option lines -arg -w and -arg all,+default" >&2
+  exit 1
+}
+# --output-sync=target keeps the lines of each compilation together, so a
+# warning block of one source never interleaves with another's.
 for target in all check-schur-geometry check-admissions check-plugins extract-check; do
-  run_logged "$work/open-$target.log" opam exec --switch="$switch" -- make --jobs="$jobs" "$target"
+  run_logged "$work/open-$target.log" opam exec --switch="$switch" -- make --output-sync=target --jobs="$jobs" "$target"
   echo "check_rocq: rocq/open $target passed"
 done
 uncompiled_sources _RocqProject || {
   echo "check_rocq: rocq/open sources above have no .vo" >&2
   exit 1
 }
-run_logged "$work/open-nullity-certificate.log" opam exec --switch="$switch" -- rocq compile -q -w +default \
+run_logged "$work/open-nullity-certificate.log" opam exec --switch="$switch" -- rocq compile -q -w all,+default \
   -Q theories OpenGororoba -Q checkpoints/schur-geometry OpenGororobaCheckpoint \
   checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v
 echo "check_rocq: rocq/open nullity certificate compiled"
@@ -263,6 +309,7 @@ done >"$work/uncompiled-targets.txt"
   exit 1
 }
 echo "check_rocq: rocq/open compiled all $(grep -c '\.v$' _RocqProject) listed sources and the $(printf '%s\n' "$target_compiled" | grep -c .) sources outside the project file"
+warnings_match open "$work"/open-*.log
 
 # The kernel checker re-checks every listed module and its dependencies
 # from the compiled objects, independently of the compiler, and lists the
@@ -285,40 +332,62 @@ unlisted_sources _RocqProject "$work/quantum-sources.txt" >"$work/unlisted.txt" 
   cat "$work/unlisted.txt" >&2
   exit 1
 }
+warning_options_set _RocqProject || {
+  echo "check_rocq: rocq/quantum/_RocqProject lacks the option lines -arg -w and -arg all,+default" >&2
+  exit 1
+}
 # The tree has two logical roots and installs no package, the case in which
 # rocq makefile asks for --no-rocq-package-warning; any other line it prints
 # that names a warning still fails the check below.
 run_logged "$work/quantum-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
-run_logged "$work/quantum-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs"
-# Calibration: a source with a deprecated import, built through the option
-# lines of this project file and the makefile rocq generates from them,
-# must leave a warning line in its log. A project file whose options
-# silence warnings, or a generator that appends such an option, fails here.
-mkdir "$work/rocq/warning-calibration"
+run_logged "$work/quantum-all.log" opam exec --switch="$switch" -- make --output-sync=target -f Makefile.rocq --jobs="$jobs"
+# Calibration through the option lines of this project file and the
+# makefile rocq generates from them: a source whose import is deprecated in
+# the default set must fail to compile, and a source whose import prints a
+# warning outside the default set must give the ratchet a pair it reports
+# as new. A project file whose options silence warnings, or a generator that
+# appends such an option, fails here.
+mkdir "$work/rocq/warning-calibration" "$work/rocq/warning-calibration-fatal"
 (
-  cd "$work/rocq/warning-calibration"
+  cd "$work/rocq/warning-calibration-fatal"
   grep -v '\.v$' ../quantum/_RocqProject >_RocqProject
   echo DeprecatedPrefix.v >>_RocqProject
   echo 'From Coq Require Import List.' >DeprecatedPrefix.v
+  run_logged "$work/warning-calibration-fatal.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
+  if opam exec --switch="$switch" -- make -f Makefile.rocq >"$work/warning-calibration-fatal-all.log" 2>&1; then
+    echo "check_rocq: the options of rocq/quantum/_RocqProject let a deprecated import of the default set compile" >&2
+    exit 1
+  fi
+)
+(
+  cd "$work/rocq/warning-calibration"
+  grep -v '\.v$' ../quantum/_RocqProject >_RocqProject
+  echo DisjPattern.v >>_RocqProject
+  echo 'From Stdlib Require Import QArith.' >DisjPattern.v
   echo DeclaredAxiom.v >>_RocqProject
   echo 'Axiom calibration_axiom : False.' >DeclaredAxiom.v
   run_logged "$work/warning-calibration.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
   run_logged "$work/warning-calibration-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq
 )
-log_holds_warning "$work/warning-calibration-all.log" >/dev/null || {
-  echo "check_rocq: the options of rocq/quantum/_RocqProject printed no warning for a deprecated import, so the log search cannot fail the build" >&2
+calibration_status=0
+"$PYTHON" -I "$work/ci/rocq_warning_pairs.py" --tree quantum \
+  --allowed "$work/ci/rocq-warnings/allowed.tsv" --causes "$work/ci/rocq-warnings/causes.tsv" \
+  --observed "$work/warnings-calibration.tsv" "$work/warning-calibration-all.log" 2>/dev/null >&2 || calibration_status=$?
+[ "$calibration_status" -eq 1 ] && grep -q -x -F "$(printf 'quantum\tDisjPattern.v\tdisj-pattern-notation')" "$work/warnings-calibration.tsv" || {
+  echo "check_rocq: the ratchet did not report the warning outside the default set that the calibration source prints" >&2
   exit 1
 }
-if log_holds_warning "$work/quantum-makefile.log" "$work/quantum-all.log" >&2; then
-  echo "check_rocq: the rocq/quantum build printed a warning" >&2
+if log_holds_warning "$work/quantum-makefile.log" >&2; then
+  echo "check_rocq: rocq makefile printed a warning for rocq/quantum" >&2
   exit 1
 fi
+warnings_match quantum "$work/quantum-all.log"
 uncompiled_sources _RocqProject || {
   echo "check_rocq: rocq/quantum sources above have no .vo" >&2
   exit 1
 }
 run_logged "$work/quantum-admissions.log" "$work/rocq/.cache/proof-admission-check/admission-check" "$work/rocq/quantum/"
-echo "check_rocq: rocq/quantum compiled all $(grep -c '\.v$' _RocqProject) listed sources with no warning and no admission"
+echo "check_rocq: rocq/quantum compiled all $(grep -c '\.v$' _RocqProject) listed sources with no admission"
 
 # Kernel check and assumption ledgers. Calibration first: the checker must
 # report an axiom that a source declares, and the comparison must reject
@@ -347,8 +416,8 @@ kernel_context_matches "$work/quantum-kernel.log" kernel-assumptions.txt >"$work
 }
 echo "check_rocq: rocq/quantum kernel check passed on $(grep -c . "$work/quantum-modules.txt") modules; axioms match the ledger ($(grep -c . kernel-assumptions.txt))"
 # rocq/delegation: the delegation model and the three rendered statement
-# inventories, under the logical root GororobaDelegation, with -w +default
-# (each warning of the default set is an error).
+# inventories, under the logical root GororobaDelegation, with
+# -w all,+default (each warning of the default set is an error).
 cd "$work/rocq/delegation"
 grep '^rocq/delegation/' "$work/tracked-sources.txt" | sed 's|^rocq/delegation/||' >"$work/delegation-sources.txt"
 [ -s "$work/delegation-sources.txt" ] || {
@@ -364,8 +433,8 @@ unlisted_sources _RocqProject "$work/delegation-sources.txt" >"$work/unlisted.tx
 # pairs every theorem it states with a right in its list stated: a theorem
 # outside that list is outside the rights that inventory_is_chain_table
 # identifies with the chain. Calibrated on a copy with one more theorem.
-{ grep -q -x -F -- '-arg -w' _RocqProject && grep -q -x -F -- '-arg +default' _RocqProject; } || {
-  echo "check_rocq: rocq/delegation/_RocqProject lacks the option lines -arg -w and -arg +default" >&2
+warning_options_set _RocqProject || {
+  echo "check_rocq: rocq/delegation/_RocqProject lacks the option lines -arg -w and -arg all,+default" >&2
   exit 1
 }
 # Succeeds when the source $1 holds as many Theorem lines as entries of
@@ -396,11 +465,12 @@ while IFS= read -r source; do
   fi
 done <"$work/delegation-rendered.txt"
 run_logged "$work/delegation-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
-run_logged "$work/delegation-all.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs"
-if log_holds_warning "$work/delegation-makefile.log" "$work/delegation-all.log" >&2; then
-  echo "check_rocq: the rocq/delegation build printed a warning" >&2
+run_logged "$work/delegation-all.log" opam exec --switch="$switch" -- make --output-sync=target -f Makefile.rocq --jobs="$jobs"
+if log_holds_warning "$work/delegation-makefile.log" >&2; then
+  echo "check_rocq: rocq makefile printed a warning for rocq/delegation" >&2
   exit 1
 fi
+warnings_match delegation "$work/delegation-all.log"
 uncompiled_sources _RocqProject || {
   echo "check_rocq: rocq/delegation sources above have no .vo" >&2
   exit 1
@@ -430,4 +500,9 @@ kernel_context_matches "$work/open-kernel.log" ../open/kernel-assumptions.txt >"
   exit 1
 }
 echo "check_rocq: rocq/open kernel check passed on $(grep -c . "$work/open-modules.txt") modules; axioms match the ledger ($(grep -c . ../open/kernel-assumptions.txt))"
+[ -z "$ratchet_failed" ] || {
+  echo "check_rocq: the warnings of$ratchet_failed differ from ci/rocq-warnings/allowed.tsv (printed above)" >&2
+  exit 1
+}
+echo "check_rocq: warnings match the allow-list ($(($(grep -c . "$work/ci/rocq-warnings/allowed.tsv") - 1)) pairs)"
 echo "check_rocq: passed"
