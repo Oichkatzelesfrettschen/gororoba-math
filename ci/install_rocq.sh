@@ -18,13 +18,18 @@
 # and which this script does not compare afterwards. The export pins each
 # package version, and opam.ocaml.org and rocq-prover.org supply the
 # metadata and checksums of those versions at the time of the run.
+# System packages (Ubuntu names, as .github/workflows/rocq.yml installs them):
+# opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap. The export
+# holds conf-clang, whose depext prompt waits for an answer that OPAMYES does
+# not give (measured on a host without clang: opam waited 24 minutes), so the
+# script checks for clang before opam runs.
 # Exit status: 0 the switch holds every root package, 1 an opam step failed,
 # 2 a tool is missing. Reaches opam.ocaml.org and rocq-prover.org.
 set -eu
 
-for tool in git opam getconf; do
+for tool in git opam getconf clang; do
   command -v "$tool" >/dev/null || {
-    echo "install_rocq: $tool is not on PATH" >&2
+    echo "install_rocq: $tool is not on PATH (system packages: see the header of this script)" >&2
     exit 2
   }
 done
