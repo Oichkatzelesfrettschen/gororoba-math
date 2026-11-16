@@ -28,6 +28,7 @@ CdTowerG2DerivationSpan.v
 CdTowerG2Derivations.v
 CdTowerKernelCertificate.v
 CdTowerLeibnizSystem.v
+CdTowerMulStarSelf.v
 CdTowerNonAssociative.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
