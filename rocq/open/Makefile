@@ -188,13 +188,17 @@ extract-check: extract
 ROCQ_EXTRACT_ARGS = $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified
 GCC_VERSION = v=$$(gcc --version) && printf '%s\n' "$$v" | head -n 1
 FP24_C := OpenGororoba.FP24Representable.sint_range_admit
-extract-c: all
+extract-c:
 	@echo "Emitting C of $(FP24_C) from Rocq via CertiRocq..."
 	@rm -f $(FP24_C).c $(FP24_C).h extraction/$(FP24_C).c extraction/$(FP24_C).h
+	@rocq compile $(ROCQ_EXTRACT_ARGS) theories/FP24Representable.v
 	@rocq compile $(ROCQ_EXTRACT_ARGS) extraction/ExtractFP24Admit.v
 	@mv $(FP24_C).c $(FP24_C).h extraction/
 	@echo "Emitted extraction/$(FP24_C).{c,h}"
 
+# extract-c compiles the one theory it reads under the running switch first,
+# as extract-r2vb-c does below.
+#
 # Emission of the R2VB DP4 transform kernel: the two theories it reads are
 # compiled first under the running switch, so no object of another build is
 # read, then extraction/ExtractR2VBDP4.v emits dp4 and dp4_operand_admit plus
