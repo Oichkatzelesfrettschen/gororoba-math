@@ -1,0 +1,50 @@
+name: challenge-comparator
+
+# Probe of the challenge modules of pull request 26, not for merge: builds
+# the library and the Challenge library, then runs lake comparator on each
+# configuration under lean/Challenge/. The comparator builds and exports
+# inside a bubblewrap sandbox, which needs unprivileged user namespaces.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: compare
+    runs-on: ubuntu-26.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: leanprover/lean-action@ba3fdfe5c4476c925da13bf11a005ddb47e47aee # v1.7.1
+        with:
+          lake-package-directory: lean
+          auto-config: "false"
+          build: "true"
+          use-mathlib-cache: "true"
+      - name: Install bubblewrap and allow unprivileged user namespaces
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq bubblewrap
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0 || true
+          bwrap --version
+      - name: Build the challenge modules
+        working-directory: lean
+        run: lake build Challenge
+      - name: Run lake comparator on each configuration
+        working-directory: lean
+        run: |
+          status=0
+          for config in Challenge/*.json; do
+            echo "comparator: $config"
+            start=$(date +%s)
+            if lake comparator --config "$config"; then
+              echo "comparator: $config accepted in $(( $(date +%s) - start )) s"
+            else
+              echo "comparator: $config rejected, exit $?"
+              status=1
+            fi
+          done
+          exit "$status"
