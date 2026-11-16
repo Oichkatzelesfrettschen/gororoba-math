@@ -20,3 +20,11 @@ name = "AuditFixture"
 
 [[lean_lib]]
 name = "ReplayFixture"
+
+# Challenge modules: each restates headline theorems of the library with
+# `sorry` as the proof; `lake comparator --config Challenge/NAME.json`
+# checks the library against them. No library module imports them and the
+# admission gate does not build them.
+[[lean_lib]]
+name = "Challenge"
+globs = ["Challenge.*"]

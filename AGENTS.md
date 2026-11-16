@@ -129,7 +129,10 @@ gororoba repository shares; this file governs where the two differ.
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
-  estimator.
+  estimator. `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
+  the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
+  on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
+  level 5, 6 or 7, and on the coset-block circuits of the wide runs.
 - A new result, a statement that the README or a record cites, goes to
   one prover by its kind; a helper lemma goes where its result is. A
   result quantified
