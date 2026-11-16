@@ -354,20 +354,41 @@ def project_dependencies(
     ordered.append(proof_path)
 
 
-def uses_flocq(contents: list[str]) -> bool:
-    for source in contents:
-        for command in source_commands(source):
-            words = split_whitespace(command)
-            if (
-                len(words) > 2
-                and words[0] == "From"
-                and words[2] == "Require"
-                and (words[1] == "Flocq" or words[1].startswith("Flocq."))
-            ):
-                return True
-            if words and words[0] == "Require" and any(word.startswith("Flocq.") for word in words[1:]):
-                return True
+def command_imports_flocq(words: list[str]) -> bool:
+    """Whether the words of one vernacular command import Flocq.
+
+    The rule is that of command_imports_flocq in gororoba-open
+    crates/provenance_store/src/theorem_replay.rs, which validates the
+    evidence: attributes (#[...], possibly spread over several words) and the
+    control prefixes Time, Instructions, Profile and Timeout N are skipped,
+    then the command imports Flocq when it reads From Flocq[.X] Require ...,
+    From X Require ... Flocq.Y ..., or Require ... Flocq.Y .... An attribute
+    without its closing bracket makes no import.
+    """
+    rest = words
+    while True:
+        if rest and rest[0].startswith("#["):
+            end = next((index for index, word in enumerate(rest) if word.endswith("]")), None)
+            if end is None:
+                return False
+            rest = rest[end + 1 :]
+        elif rest and rest[0] in ("Time", "Instructions", "Profile"):
+            rest = rest[1:]
+        elif len(rest) >= 2 and rest[0] == "Timeout":
+            rest = rest[2:]
+        else:
+            break
+    if len(rest) >= 3 and rest[0] == "From" and rest[2] == "Require":
+        return rest[1] == "Flocq" or rest[1].startswith("Flocq.") or any(m.startswith("Flocq.") for m in rest[3:])
+    if rest and rest[0] == "Require":
+        return any(module.startswith("Flocq.") for module in rest[1:])
     return False
+
+
+def uses_flocq(contents: list[str]) -> bool:
+    return any(
+        command_imports_flocq(split_whitespace(command)) for source in contents for command in source_commands(source)
+    )
 
 
 def configured_flocq_root(tree: Path) -> Path:

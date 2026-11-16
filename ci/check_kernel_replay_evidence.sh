@@ -19,6 +19,10 @@
 #     toolchain, so the calibration records the running switch as the one
 #     producer of a scratch manifest (ci/flocq_manifest.py --record) and
 #     passes it with --flocq-manifest; no hosted runner is a recorded producer.
+#     The same holds for the source whose Flocq import carries the control
+#     prefix Time, and the producer's Flocq import rule gives the consumer's
+#     answer on each command of its test table (gororoba-open
+#     theorem_replay.rs, command_imports_flocq).
 # Known-bad cases must be refused: a source whose compilation prints a
 # warning but exits 0, a source that fails to compile, a declaration name the
 # source lacks, a Rocq that reports another version, a Flocq library
@@ -351,6 +355,72 @@ library=$(opam var --switch="$switch" lib)/coq/user-contrib/Flocq
   fail "the Flocq evidence differs from its expectation"
 echo "check_kernel_replay_evidence: Flocq objects recorded"
 
+# The Flocq import rule of the producer equals that of the consumer
+# (command_imports_flocq in gororoba-open theorem_replay.rs): the table is the
+# consumer's test table, prefixed and quoted forms included.
+"$PYTHON" -I -B - "$here" <<'EOF' || fail "the Flocq import rule differs from the consumer's table"
+import sys
+
+sys.path.insert(0, sys.argv[1])
+from kernel_replay_evidence import command_imports_flocq, split_whitespace, uses_flocq
+
+table = [
+    ("From Flocq Require Import Core", True),
+    ("From Flocq.Core Require Import Raux", True),
+    ("Require Import Flocq.Core.Core", True),
+    ("Time From Flocq Require Import Core", True),
+    ('#[warnings("-w")] From Flocq Require Import Core', True),
+    ("Time Require Import Flocq.Core.Core", True),
+    ("From Stdlib Require Import List", False),
+    ("Require Import Stdlib.Reals.Reals", False),
+    ("Definition Flocq_unrelated := 0", False),
+    ("Require", False),
+    ('idtac "Example: Require Import Flocq.Core.Core"', False),
+    ('Definition note := "From Flocq Require Import Core"', False),
+    ('#[local, warnings("-w")] Require Import Flocq.Core.Core', True),
+    ("Timeout 10 Require Import Flocq.Core.Core", True),
+    ("#[local Require Import Flocq.Core.Core", False),
+    ("Instructions From Flocq Require Import Core", True),
+    ("Profile Require Import Flocq.Core.Core", True),
+    ("Time Timeout 5 Profile From Flocq Require Import Core", True),
+    ("#[local] Time Require Import Flocq.Core.Core", True),
+    ("From OpenGororoba Require Import Prelude", False),
+]
+# Each row runs through the word splitter alone and through the source reader
+# (source_commands, then split_whitespace), as the producer reads a source.
+wrong = [
+    command
+    for command, expected in table
+    if command_imports_flocq(split_whitespace(command)) != expected or uses_flocq([command + "."]) != expected
+]
+if wrong:
+    print("\n".join(wrong), file=sys.stderr)
+    sys.exit(1)
+EOF
+
+# Known-good: the same fixture with its Flocq import behind a control prefix.
+tree "$work/flocq-prefixed"
+printf '%s\n' 'Time From Flocq Require Import Core.' 'From OpenGororoba Require Import Prelude.' \
+  'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-prefixed/verified/C900_Test.v"
+produce "$work/flocq-prefixed" "$work/out-flocq-prefixed" "$work/flocq-prefixed.log" --proof verified/C900_Test.v \
+  --declaration fixture --warning-policy fatal_default --flocq-manifest "$manifest" || {
+  cat "$work/flocq-prefixed.log" >&2
+  fail "the producer refused the fixture whose Flocq import carries a prefix"
+}
+"$PYTHON" -I -B "$work/verify.py" flocq "$work/out-flocq-prefixed" "$library" "$work/flocq-prefixed" "$manifest" ||
+  fail "the evidence of the prefixed Flocq import differs from its expectation"
+tree "$work/flocq-attribute"
+printf '%s\n' '#[warnings="-deprecated"] From Flocq Require Import Core.' 'From OpenGororoba Require Import Prelude.' \
+  'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-attribute/verified/C900_Test.v"
+produce "$work/flocq-attribute" "$work/out-flocq-attribute" "$work/flocq-attribute.log" --proof verified/C900_Test.v \
+  --declaration fixture --warning-policy fatal_default --flocq-manifest "$manifest" || {
+  cat "$work/flocq-attribute.log" >&2
+  fail "the producer refused the fixture whose Flocq import carries an attribute"
+}
+"$PYTHON" -I -B "$work/verify.py" flocq "$work/out-flocq-attribute" "$library" "$work/flocq-attribute" "$manifest" ||
+  fail "the evidence of the attributed Flocq import differs from its expectation"
+echo "check_kernel_replay_evidence: Flocq import rule matches the consumer; prefixed and attributed imports recorded"
+
 # Known-bad: mutated copies of the known-good evidence. The verifier accepts the
 # unmutated records first, then rejects each mutation and prints their count.
 mutants=$("$PYTHON" -I -B "$work/verify.py" mutants "$work/out-good" "$work/good.log" "$work/good" \
@@ -515,4 +585,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 3 known-good and $((16 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 5 known-good and $((16 + mutants)) known-bad cases behaved"
