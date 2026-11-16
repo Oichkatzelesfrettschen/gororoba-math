@@ -705,6 +705,9 @@ quantum	CdTowerKernelCertificate.v	deprecated-transitive-library-file-since-Stdl
 quantum	CdTowerKernelCertificate.v	using-fallback-loc
 quantum	CdTowerLeibnizSystem.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerLeibnizSystem.v	using-fallback-loc
+quantum	CdTowerModuleBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerModuleBridge.v	disj-pattern-notation
+quantum	CdTowerModuleBridge.v	using-fallback-loc
 quantum	CdTowerNonAssociative.v	bad-template-constraint
 quantum	CdTowerNonAssociative.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerNonAssociative.v	disj-pattern-notation
@@ -727,6 +730,9 @@ quantum	CdTowerRingBasis.v	bad-template-constraint
 quantum	CdTowerRingBasis.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerRingBasis.v	using-fallback-loc
 quantum	CdTowerRingDomain.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerTwoTermBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerTwoTermBridge.v	disj-pattern-notation
+quantum	CdTowerTwoTermBridge.v	using-fallback-loc
 quantum	CdTwistedProduct.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTwistedProduct.v	disj-pattern-notation
 quantum	CdTwistedProduct.v	using-fallback-loc
