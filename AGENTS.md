@@ -219,15 +219,20 @@ gororoba repository shares; this file governs where the two differ.
   of `ci/check_rocq.sh` (compiled by a make target of `rocq/open` or by
   the script, or held uncompiled), and the script fails on a tracked source
   neither names.
-- `rocq/open` compiles its project-listed sources, checkpoints and plugin
-  fixtures with `-w +default`, which makes each warning of Rocq's default
-  set an error; its `extract` recipe passes no warning option.
-  `rocq/quantum` compiles with `-w @all`, the
-  flag of its retained replays, under which `rocq` prints a warning and
-  exits 0; the gate fails on a warning line in the build log. `@all`
+- The three trees compile their project-listed sources, and `rocq/open`
+  its checkpoints and plugin fixtures, with `-w all,+default`: each
+  warning of Rocq's default set is an error and every other warning prints
+  (measured, Rocq 9.3.0); the `extract` recipe passes no warning option.
+  `ci/rocq_warning_pairs.py` reads the build logs of each tree and compares
+  the (source, warning) pairs they print with `ci/rocq-warnings/allowed.tsv`,
+  and `ci/rocq-warnings/causes.tsv` gives each listed warning its cause and
+  the condition that removes it. The gate fails on a pair the list lacks
+  and on a listed pair that no log prints, so the list only shrinks: a fix
+  removes its rows in the same commit. A source that a retained record cites
+  keeps its bytes, so its warnings leave the list through a successor file.
+  The retained replays of gororoba-quantum keep their own `-w @all`, which
   names no warning set (measured, Rocq 9.3.0: a warning that is off by
-  default stays silent under it and prints under `-w all`), so that
-  build sees the default set. No source of
+  default stays silent under it and prints under `-w all`). No source of
   `rocq/open/theories`, `rocq/open/verified`, `rocq/quantum` or
   `rocq/delegation` holds `Admitted` or `admit` (`rocq/open/admission_check.rs`).
 - `ci/check_rocq.sh` re-checks every project-listed module with the kernel
@@ -235,7 +240,7 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/open/kernel-assumptions.txt`,
   `rocq/quantum/kernel-assumptions.txt` and
   `rocq/delegation/kernel-assumptions.txt` (empty).
-  `rocq/delegation` compiles with `-w +default`. A change that adds or removes an
+  A change that adds or removes an
   axiom a tree rests on changes that tree's ledger in the same commit.
 - Kernel replay evidence for a gororoba-open receipt comes from
   `ci/kernel_replay_evidence.py`, which compiles, kernel-checks and writes the

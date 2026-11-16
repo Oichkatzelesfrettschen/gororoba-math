@@ -1,6 +1,6 @@
 -Q . GororobaDelegation
 -arg -w
--arg +default
+-arg all,+default
 Model.v
 Inventory512.v
 Inventory1024.v
