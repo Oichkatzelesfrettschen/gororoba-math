@@ -195,8 +195,10 @@ gororoba repository shares; this file governs where the two differ.
   a library of their own outside `lean/GororobaMath/`, which no library
   module imports and the admission gate does not build; their `sorry`
   is the one use the rule above allows beside `lean/AuditFixture.lean`.
-  The existing theorems are owed theirs
-  (https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/31).
+  A challenge module that restates a definition the library declares
+  cannot share an environment with a library import, so
+  `lean/Challenge.lean` imports only the modules that coexist, and the
+  `Challenge.*` glob of `lean/lakefile.toml` builds every module.
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another
@@ -276,6 +278,10 @@ gororoba repository shares; this file governs where the two differ.
   checkout's. A worktree that changes either, the toolchain bump above
   included, replaces the link with a `packages` directory of its own before
   `lake update` or `lake exe cache get`, since both rewrite the packages.
+- `lake comparator` refuses a `packages` symbolic link (`already exists
+  (error code: 17)` on `.lake/packages`, measured with Lean 4.35.0), so a
+  worktree that runs it holds a `packages` directory of its own, a copy
+  or a hard-linked copy of the primary checkout's.
 - `git worktree remove` deletes the `lean/.lake` link and leaves the tree
   it pointed at; the tree is removed with its worktree. The build-host
   record of gororoba-infrastructure names the directories.
