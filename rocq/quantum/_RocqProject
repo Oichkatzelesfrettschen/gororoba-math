@@ -16,6 +16,7 @@ CdSignAstTranslation.v
 CdSignPythonSemantics.v
 CdSignRowAnf.v
 CdSignSourceCertificate.v
+CdTowerBasisBridge.v
 CdTowerBasisSign.v
 CdTowerCanonicalKernels.v
 CdTowerE1E18Kernel.v
