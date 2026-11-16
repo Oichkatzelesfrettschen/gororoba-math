@@ -12,10 +12,12 @@ over a commutative ring whose star is the identity. `Tower.dot k x y` is the
 trace form, the sum over the `2 ^ k` coordinates of the products of
 corresponding coordinates, and `Tower.re k x` is the coordinate of `1`.
 
-Over a commutative ring with a compatible linear order (`ℤ`, `ℚ`, `ℝ`),
-`dot k x x` is a sum of squares and vanishes only at `x = 0`. The proof is
-that of Biss, Dugger and Isaksen, Large annihilators in Cayley-Dickson
-algebras, Lemmas 9.4 and 9.5 and Corollary 9.3: the norm law
+Over a commutative ring with no zero divisors and a partial order under which
+`star x * x ≥ 0` (`StarOrderedRing`; with the identity as star, every square is
+nonnegative: `ℤ`, `ℚ`, `ℝ`), `dot k x x` is a sum of squares and vanishes only at
+`x = 0`. The proof is that of Biss, Dugger and Isaksen, Large annihilators in
+Cayley-Dickson algebras (arXiv:math/0511691), Lemma 9.4 and Corollary 9.3: the
+norm law
 `x * star x = star x * x = dot x x • 1` (`Tower.mul_star_eq_dot`), the
 adjoint identities `dot (x * y) z = dot y (star x * z) = dot x (z * star y)`
 (`Tower.dot_mul_adjoint`), and the products `dot (a * z) z = dot z z * re a`
@@ -32,10 +34,19 @@ divides: each cancellation is of the nonzero scalar `dot x x`.
   when nonzero, are pure.
 * `Tower.mul_eq_one_rev`: `a * b = 1 → b * a = 1` (direct finiteness).
 
-They generalize `kernel_equality`, `purity_left` and `direct_finiteness` of
-`rocq/quantum/CdAnnihilatorSymmetry.v`, stated there for the integer pair
-tower of `CdImaginarySumConference.v` (the instance `R = ℤ`), to every
-linearly ordered commutative ring.
+They are the Lean form of `kernel_equality`, `purity_left` and
+`direct_finiteness` of the functor `CdTower` of `rocq/quantum/CdTowerDomain.v`,
+proved there over an abstract `OrderedDomain`: a commutative ring with a
+relation under which squares are nonnegative, sums of nonnegative terms are
+nonnegative and vanish only termwise, with no zero divisors and `1 ≠ 0`. The
+hypotheses here give those facts for Mathlib's rings through
+`star_mul_self_nonneg`, `add_eq_zero_iff_of_nonneg` and `mul_eq_zero`; the
+Rocq signature asks for no antisymmetry of its relation, so it is the wider
+of the two. `rocq/quantum/CdAnnihilatorSymmetry.v` is the integer instance.
+In characteristic 2 every level is commutative and the swap holds trivially;
+over a commutative ring with a square root of `-1` and `2 ≠ 0`, with the
+identity as star, it fails from level 2 on (`kernel_swap_iff_two_zero` of
+`rocq/quantum/CdTowerRing.v`), so some order hypothesis is needed.
 -/
 
 @[expose] public section
@@ -129,28 +140,9 @@ theorem dot_one_right : ∀ (k : ℕ) (x : Tower R k), dot k x 1 = re k x
     change dot k a 1 + dot k b 0 = re k a
     rw [dot_one_right k a, dot_zero_right, add_zero]
 
-section Ordered
+section Cancel
 
-variable [LinearOrder R] [IsStrictOrderedRing R]
-
-omit [StarRing R] in
-theorem dot_self_nonneg : ∀ (k : ℕ) (x : Tower R k), 0 ≤ dot k x x
-  | 0, x => mul_self_nonneg (show R from x)
-  | k + 1, ⟨a, b⟩ => add_nonneg (dot_self_nonneg k a) (dot_self_nonneg k b)
-
-theorem eq_zero_of_dot_self_eq_zero : ∀ {k : ℕ} {x : Tower R k}, dot k x x = 0 → x = 0
-  | 0, x, h => by
-    have hx : (show R from x) = 0 :=
-      mul_self_eq_zero.1 (show (show R from x) * (show R from x) = 0 from h)
-    exact hx
-  | k + 1, ⟨a, b⟩, h => by
-    have h' : dot k a a + dot k b b = 0 := h
-    rw [add_eq_zero_iff_of_nonneg (dot_self_nonneg k a) (dot_self_nonneg k b)] at h'
-    change mk a b = mk 0 0
-    rw [eq_zero_of_dot_self_eq_zero h'.1, eq_zero_of_dot_self_eq_zero h'.2]
-
-theorem dot_self_ne_zero {k : ℕ} {x : Tower R k} (hx : x ≠ 0) : dot k x x ≠ 0 :=
-  fun h => hx (eq_zero_of_dot_self_eq_zero h)
+variable [NoZeroDivisors R]
 
 /-- A nonzero scalar cancels from `r • x = 0`. -/
 theorem eq_zero_of_smul_eq_zero {r : R} (hr : r ≠ 0) : ∀ {k : ℕ} {x : Tower R k}, r • x = 0 → x = 0
@@ -164,7 +156,7 @@ theorem eq_zero_of_smul_eq_zero {r : R} (hr : r ≠ 0) : ∀ {k : ℕ} {x : Towe
     change mk a b = mk 0 0
     rw [eq_zero_of_smul_eq_zero hr h'.1, eq_zero_of_smul_eq_zero hr h'.2]
 
-end Ordered
+end Cancel
 
 variable [TrivialStar R]
 
@@ -244,11 +236,32 @@ theorem dot_mul_self_left (k : ℕ) (a z : Tower R k) : dot k (a * z) a = dot k 
 
 section Ordered
 
-variable [LinearOrder R] [IsStrictOrderedRing R]
+variable [PartialOrder R] [StarOrderedRing R] [NoZeroDivisors R]
 
-/-- Lemmas 9.4 and 9.5 of Biss, Dugger and Isaksen: when `a * z = 0` with
-`a` and `z` nonzero, both are pure. The Rocq original is `purity_left` of
-`rocq/quantum/CdAnnihilatorSymmetry.v`, over the integers. -/
+omit [NoZeroDivisors R] in
+theorem dot_self_nonneg : ∀ (k : ℕ) (x : Tower R k), 0 ≤ dot k x x
+  | 0, x => by
+    change 0 ≤ base x * base x
+    have h := star_mul_self_nonneg (base x)
+    rwa [star_trivial] at h
+  | k + 1, ⟨a, b⟩ => add_nonneg (dot_self_nonneg k a) (dot_self_nonneg k b)
+
+theorem eq_zero_of_dot_self_eq_zero : ∀ {k : ℕ} {x : Tower R k}, dot k x x = 0 → x = 0
+  | 0, x, h => by
+    have hx : base x = 0 := mul_self_eq_zero.1 (show base x * base x = 0 from h)
+    exact hx
+  | k + 1, ⟨a, b⟩, h => by
+    have h' : dot k a a + dot k b b = 0 := h
+    rw [add_eq_zero_iff_of_nonneg (dot_self_nonneg k a) (dot_self_nonneg k b)] at h'
+    change mk a b = mk 0 0
+    rw [eq_zero_of_dot_self_eq_zero h'.1, eq_zero_of_dot_self_eq_zero h'.2]
+
+theorem dot_self_ne_zero {k : ℕ} {x : Tower R k} (hx : x ≠ 0) : dot k x x ≠ 0 :=
+  fun h => hx (eq_zero_of_dot_self_eq_zero h)
+
+/-- Lemma 9.4 of Biss, Dugger and Isaksen: when `a * z = 0` with `a` and
+`z` nonzero, both are pure. The Rocq original is `purity_left` of the
+functor `CdTower` in `rocq/quantum/CdTowerDomain.v`. -/
 theorem re_eq_zero_of_mul_eq_zero {k : ℕ} {a z : Tower R k} (h : a * z = 0) (ha : a ≠ 0)
     (hz : z ≠ 0) : re k a = 0 ∧ re k z = 0 := by
   have hr := dot_mul_self_right k a z
@@ -268,14 +281,13 @@ theorem mul_eq_zero_rev {k : ℕ} {a z : Tower R k} (h : a * z = 0) : z * a = 0 
 
 /-- Corollary 9.3 of Biss, Dugger and Isaksen: the left and right
 annihilators of every element coincide, at every level. The Rocq original is
-`kernel_equality` of `rocq/quantum/CdAnnihilatorSymmetry.v`, over the
-integers. -/
+`kernel_equality` of the functor `CdTower` in `rocq/quantum/CdTowerDomain.v`. -/
 theorem mul_eq_zero_iff_rev {k : ℕ} (a z : Tower R k) : a * z = 0 ↔ z * a = 0 :=
   ⟨mul_eq_zero_rev, mul_eq_zero_rev⟩
 
 /-- Direct finiteness: a right inverse is a left inverse. The Rocq original
-is `direct_finiteness` of `rocq/quantum/CdAnnihilatorSymmetry.v`, over the
-integers. -/
+is `direct_finiteness` of the functor `CdTower` in
+`rocq/quantum/CdTowerDomain.v`. -/
 theorem mul_eq_one_rev {k : ℕ} {a b : Tower R k} (h : a * b = 1) : b * a = 1 := by
   by_cases ha : a = 0
   · have h01 : (0 : Tower R k) = 1 := by rw [← h, ha, zero_mul]
@@ -285,6 +297,12 @@ theorem mul_eq_one_rev {k : ℕ} {a b : Tower R k} (h : a * b = 1) : b * a = 1 :
   have hw' := mul_eq_zero_rev hw
   rw [sub_mul, smul_mul_assoc', (mul_star_eq_dot k a).2, ← smul_sub] at hw'
   exact sub_eq_zero.1 (eq_zero_of_smul_eq_zero (dot_self_ne_zero ha) hw')
+
+/-- The hypotheses hold over the integers. -/
+example (a z : Tower ℤ 5) (h : a * z = 0) : z * a = 0 := (mul_eq_zero_iff_rev a z).1 h
+
+/-- The hypotheses hold over the reals. -/
+example (a b : Tower ℝ 7) (h : a * b = 1) : b * a = 1 := mul_eq_one_rev h
 
 end Ordered
 
