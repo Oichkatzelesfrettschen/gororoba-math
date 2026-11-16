@@ -38,6 +38,9 @@ axioms. No library module imports `Challenge` and the admission gate does
 not build it. The theorems of the other rows are owed their challenge modules
 in the same layout
 ([issue 31](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/31)).
+`ci/headline-results.tsv` lists the theorems this table names as the
+headline results, each with its Rocq partner or `owed`
+([issue 46](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46)).
 
 The tower theorems hold for every level and every coefficient ring, so they
 cover the 64- and 128-dimensional runs as well as `A_5`. The estimator
