@@ -133,23 +133,60 @@ gororoba repository shares; this file governs where the two differ.
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
   level 5, 6 or 7, and on the coset-block circuits of the wide runs.
-- A new result, a statement that the README or a record cites, goes to
-  one prover by its kind; a helper lemma goes where its result is. A
-  result quantified
-  over a class of rings or fields, or over every level `k`, goes to Lean
-  on Mathlib, also where its proof evaluates a finite table (as the
-  fixed-level counts of `TwoTerm.lean` do). A statement about concrete
-  data (a rendered certificate, a rank, a kernel basis, a sign table) and
-  any definition that is extracted to code go to Rocq. Results already in
-  either tree stay where they are. The same mathematical claim, read
-  through each side's convention docstring, is proved once from now on: a
-  later proof of it in the other prover is a bridge theorem whose comment
-  names the original by repository path and theorem name, and a new
-  definition that both provers hold lands with a comparison as in the
-  item above.
-- A headline theorem is one the "Lean library" table of `README.md`
-  names. Each has a challenge module: a short file that restates its
-  statement and the definitions it needs, with `sorry` as the proof, and
+- A new result, a statement that the README or a record cites, is placed
+  on two axes, checked in this order; a helper lemma goes where its result
+  is.
+  - Pinned bytes. A source that a retained record cites by sha256 keeps its
+    bytes and its tree ("Rocq sources").
+  - Statement. A statement quantified over a class of rings, fields or
+    modules, or over every level `k`, and a statement of real or complex
+    analysis are proved in Lean on Mathlib. The Lean
+    tower over `NonAssocRing` with `StarRing` is the general carrier:
+    Mathlib holds no Cayley-Dickson or octonion development, and MathComp's
+    rings are associative. A statement about one fixed algebra or one fixed
+    coefficient type (a fixed level, the integers, the rationals) that
+    instances a Lean theorem stays beside that theorem, also where its
+    proof evaluates a finite table (as the fixed-level counts of
+    `TwoTerm.lean` do). Any other such statement is proved in the prover
+    that holds every definition it mentions; when both hold them, in Lean
+    when its proof is symbolic and in Rocq when it is a decision by
+    evaluation. A finite group or combinatorial structure goes
+    to the prover whose library holds it: MathComp's finite groups in Rocq,
+    Mathlib's group theory in Lean.
+  - Evidence. A certificate that a proof evaluates (a rendered table, a
+    rank, a kernel basis, a sign table), a definition that is extracted or
+    compiled to running code, a statement about floating-point behavior,
+    and a statement that a theorem receipt of gororoba-open rests on are
+    Rocq artifacts: gororoba-open runs no prover and admits the kernel
+    replay evidence that `ci/kernel_replay_evidence.py` writes from a Rocq
+    build, and `vm_compute` evaluates certificates. Built-in `Extraction`
+    and CertiRocq (on its Rocq 9.1 switch) tie running code to Gallina
+    terms within the trusted base that the skill `extract-verified-rocq-code`
+    records, and Lean's compiled code carries no such tie. Flocq is the
+    IEEE 754 model in which a floating-point statement is written.
+  - A claim that lands on both axes has both artifacts, joined by an
+    instance bridge: the general theorem in Lean, the certificate or
+    receipt statement in Rocq, and a Rocq theorem whose comment names the
+    Lean theorem by path and name and the values substituted for its
+    parameters, and whose statement is the substituted proposition. Neither
+    artifact replaces the other.
+- A headline result is a row of `ci/headline-results.tsv` (prover, path,
+  theorem, partner, tracking issue). Its rows are the theorems the "Lean
+  library" table of `README.md` names, and further rows by pull request;
+  the generated inventories of `rocq/delegation` are never rows. A
+  headline result is proved in both provers: the same claim, read through
+  each side's convention docstring. The second proof is a bridge theorem in
+  a new file whose comment names the first by path and theorem name, and
+  the row's `partner` names it, marked `narrower` with the reason when the
+  other prover states less (the Rocq tower is a functor over commutative
+  rings); until it lands the row reads `owed` and its tracking issue orders
+  the backlog. A new row lands with its partner. A definition that both provers
+  hold lands with a comparison under `ci/` as in the item above. Any other
+  claim is proved once. A result already in either tree stays where it is,
+  and its translation to the other prover is a bridge in a new file, never
+  an edit of a cited source.
+- Each Lean row of `ci/headline-results.tsv` has a challenge module: a
+  short file that restates its statement and the definitions it needs, with `sorry` as the proof, and
   a JSON configuration beside it (challenge module, solution module,
   theorem names, permitted axioms). `lake comparator --config FILE`
   checks on demand that the library theorem has that statement (measured
@@ -254,10 +291,11 @@ gororoba repository shares; this file governs where the two differ.
 
 ## Skills
 
-The shared skills `write-lean-proofs` and `write-rocq-proofs`
+The shared skills `write-lean-proofs`, `write-rocq-proofs` and
+`extract-verified-rocq-code`
 (`agent-config/skills/` in gororoba-infrastructure) hold the toolchain,
 trust, tactic, performance, version and library references for Lean 4.35
-and Rocq 9.3. Load the matching one before proof work here. Each carries
+and Rocq 9.3, and the extraction routes with their trusted bases. Load the matching one before proof work here. Each carries
 `scripts/check-examples.sh`, which replays its measured rows on the
 installed toolchain; run it after a toolchain bump, and send the row it
 names to the gororoba-infrastructure session, since the skills land
