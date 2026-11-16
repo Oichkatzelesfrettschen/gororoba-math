@@ -70,7 +70,7 @@ the rights the statements name are the table of the chain of that size with
 period 16 (`inventory_is_chain_table`). The tree declares no axiom and its
 ledger is empty.
 
-`rocq/open` is the proof tree of gororoba-open (364 sources under
+`rocq/open` is the proof tree of gororoba-open (365 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
 41 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
@@ -211,7 +211,7 @@ sh ci/check_rocq.sh
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified`,
 `rocq/quantum` and `rocq/delegation` is listed in its `_RocqProject` and
-compiles (364, 41 and 4 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
+compiles (365, 41 and 4 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the four directories holds `Admitted` or `admit`. Of
 the eleven sources elsewhere under `rocq/open`, those make targets compile
@@ -220,7 +220,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 uncompiled, and the script names all eleven and fails on a twelfth. Before any
 build it runs the calibration of the kernel replay evidence producer (below).
 
-The script then re-checks all 409 project-listed modules with Rocq's kernel
+The script then re-checks all 410 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/delegation/kernel-assumptions.txt` is empty.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
