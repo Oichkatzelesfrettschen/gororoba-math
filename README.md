@@ -21,11 +21,12 @@ uses.
 | `GororobaMath.CayleyDickson.AlignedPairSpectrum` | for `k >= 3` every count satisfies `N + 4 <= 2^(k-1)` (`Tower.alignedPairCount_add_four_le_of_three_le`), every multiple `4v` with `4v + 4 <= 2^(k-1)` is the count of a pair of nonzero distinct indices (`Tower.exists_alignedPairCount_eq`), and the counts are exactly those multiples (`Tower.range_alignedPairCount`); flipping the top bit of `j` sends a nonzero count `n` to `2^(k-1) - 4 - n` (`Tower.alignedPairCount_add_flip`), so as many ordered pairs have count `n` as have count `2^(k-1) - 4 - n` (`Tower.multiplicity_mirror`) | the spectrum and multiplicities of the two-term nullities |
 | `GororobaMath.CayleyDickson.AlignedPairClosedForm` | `N(k, i, j) = 4 * sum over t in [3, k) of 2^(k-1-t) * parity(m' >> t)`, with `m'` the exclusive or of the indices with every bit at or below the highest degenerate split cleared (`Tower.alignedPairCount_eq_closedForm`) | the closed form computed for issue 15 |
 | `GororobaMath.CayleyDickson.AssociatorSpace` | the associator space `{x : (a x) b = a (x b)}` as a kernel (`Tower.assocSpace`); for nonzero distinct basis indices it is free (`Tower.free_assocSpace_e`) of rank `2 N(k, a, b) + 4` over every nontrivial commutative ring with the identity as star in which `2` is a non-zero-divisor (`Tower.finrank_assocSpace_e`) | Lemmas 8.7 and 8.8 of Biss, Dugger and Isaksen read on basis vectors |
+| `GororobaMath.CayleyDickson.NonAssociative` | the embedding `x -> (x, 0)` of level `k` into level `k + 1` preserves products (`Tower.mk_zero_mul_mk_zero`); over every ring with a star in which `2 != 0`, no basis element equals its negative (`Tower.e_ne_neg_e`), `(e_1 e_2) e_4 = e_7` and `e_1 (e_2 e_4) = -e_7` in the octonions (`Tower.octonion_e1_e2_e4_mul_assoc_ne`), and every level `k >= 3` has a triple with `(a b) c != a (b c)` (`Tower.exists_mul_assoc_ne`), dimension 128 included (`Tower.exists_mul_assoc_ne_level_seven`) | the claim of a nonempty associator violation set at every dimension from 8 on, which `rocq/open/verified/C956_RoutonAVT.v` states and `ci/census/header-verdicts.tsv` marks as overclaimed; one violating triple per level, no count |
 | `GororobaMath.KernelMap.Estimator` | the bias identity of the hardware nullity estimator, `N_hat - N = \|B+\|\|B-\|/\|B\| (Vbar+ - Vbar-)/V_hat` for every observed contrast with `V_hat` nonzero (`nHat_sub_nullity`), and the forced reading `N_hat = \|B\|/2` of a block with no bin of ideal contrast `-1` (`nHat_eq_card_div_two_of_negBins_eq_empty`) | `docs/evidence/pathion-kernel-map/nhat-bias/README.md` in gororoba-quantum, claims 1 and 3 |
 | `GororobaMath.KernelMap.TwoTermBins` | a labelling of the `2^k` bins in which every index of an aligned pair is a `+1` bin and every misaligned pair holds one bin of each sign has `KernelMap.nullity = alignedPairCount k i j` (`KernelMap.nullity_eq_alignedPairCount`), and the same from the Boolean contract `KernelMap.binContract` (`KernelMap.nullity_eq_alignedPairCount_of_binContract`) | the ideal output contrast of `pathion_kernel_map.kernel_map_circuit`, by the comparison below |
 
 `lean/Challenge/` holds the challenge modules of the headline theorems of
-`AlignedPairSpectrum`, `AlignedPairClosedForm`, `AssociatorSpace` and
+`AlignedPairSpectrum`, `AlignedPairClosedForm`, `AssociatorSpace`, `NonAssociative` and
 `KernelMap.TwoTermBins`, one per solution module. `Challenge.NAME` restates
 the theorems the table names with `sorry` as each proof, together with the
 definitions the solution module introduces and those statements use, and
@@ -65,7 +66,7 @@ the rights the statements name are the table of the chain of that size with
 period 16 (`inventory_is_chain_table`). The tree declares no axiom and its
 ledger is empty.
 
-`rocq/open` is the proof tree of gororoba-open (365 sources under
+`rocq/open` is the proof tree of gororoba-open (364 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
 41 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
@@ -206,7 +207,7 @@ sh ci/check_rocq.sh
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified`,
 `rocq/quantum` and `rocq/delegation` is listed in its `_RocqProject` and
-compiles (365, 41 and 4 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
+compiles (364, 41 and 4 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the four directories holds `Admitted` or `admit`. Of
 the eleven sources elsewhere under `rocq/open`, those make targets compile
@@ -215,7 +216,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 uncompiled, and the script names all eleven and fails on a twelfth. Before any
 build it runs the calibration of the kernel replay evidence producer (below).
 
-The script then re-checks all 410 project-listed modules with Rocq's kernel
+The script then re-checks all 409 project-listed modules with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/delegation/kernel-assumptions.txt` is empty.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard

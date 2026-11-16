@@ -1,0 +1,15 @@
+{
+  "challenge_module": "Challenge.NonAssociative",
+  "solution_module": "GororobaMath.CayleyDickson.NonAssociative",
+  "theorem_names": [
+    "CayleyDickson.Tower.e_ne_neg_e",
+    "CayleyDickson.Tower.octonion_e1_e2_e4_mul_assoc_ne",
+    "CayleyDickson.Tower.exists_mul_assoc_ne",
+    "CayleyDickson.Tower.exists_mul_assoc_ne_level_seven"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

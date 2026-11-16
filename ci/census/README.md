@@ -19,4 +19,6 @@ that claims a count or a structure. The census is a lower bound: a theorem over 
 definition local to its file is not listed, and the table makes no statement about
 declarations the census omits. The `addressed_by` column names the successor
 module that proves the claimed structure or scopes the claim; `owed` marks a
-successor not yet landed.
+successor not yet landed. A claim over every level of the Cayley-Dickson tower
+goes to the Lean library (`AGENTS.md`, "Lean library"), so its row names the
+Lean module and theorem.
