@@ -89,13 +89,13 @@ theorem smul_mul_star [TrivialStar R] : ∀ (k : ℕ) (r : R) (x y : Tower R k),
   | k + 1, r, ⟨a, b⟩, ⟨c, d⟩ => by
     have hm := smul_mul_star k r
     refine ⟨?_, ?_, ?_⟩
-    · show mk a b * mk (r • c) (r • d) = r • (mk a b * mk c d)
+    · change mk a b * mk (r • c) (r • d) = r • (mk a b * mk c d)
       rw [mk_mul_mk, mk_mul_mk, smul_mk, (hm a c).1, (hm d d).2.2, (hm (star d) b).2.1,
         (hm d a).2.1, (hm c c).2.2, (hm b (star c)).1, smul_sub, smul_add]
-    · show mk (r • a) (r • b) * mk c d = r • (mk a b * mk c d)
+    · change mk (r • a) (r • b) * mk c d = r • (mk a b * mk c d)
       rw [mk_mul_mk, mk_mul_mk, smul_mk, (hm a c).2.1, (hm (star d) b).1, (hm d a).1,
         (hm b (star c)).2.1, smul_sub, smul_add]
-    · show star (mk (r • a) (r • b)) = r • star (mk a b)
+    · change star (mk (r • a) (r • b)) = r • star (mk a b)
       rw [star_mk, star_mk, smul_mk, (hm a a).2.2, smul_neg]
 
 variable [TrivialStar R]
@@ -165,7 +165,7 @@ theorem basis_apply : ∀ (k : ℕ) (p : BitVec k), basis R k p = e R k p
     unfold basis
     exact @Basis.singleton_apply (BitVec 0) R uniqueBitVecZero _ p
   | k + 1, p => by
-    show (((basis R k).prod (basis R k)).map (linearEquivProd (Tower R k) R).symm).reindex
+    change (((basis R k).prod (basis R k)).map (linearEquivProd (Tower R k) R).symm).reindex
       (sumEquiv k) p = e R (k + 1) p
     rw [Basis.reindex_apply, Basis.map_apply, sumEquiv_symm_apply]
     cases h : p.msb
