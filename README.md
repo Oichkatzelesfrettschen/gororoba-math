@@ -27,8 +27,9 @@ uses.
 | `GororobaMath.KernelMap.TwoTermBins` | a labelling of the `2^k` bins in which every index of an aligned pair is a `+1` bin and every misaligned pair holds one bin of each sign has `KernelMap.nullity = alignedPairCount k i j` (`KernelMap.nullity_eq_alignedPairCount`), and the same from the Boolean contract `KernelMap.binContract` (`KernelMap.nullity_eq_alignedPairCount_of_binContract`) | the ideal output contrast of `pathion_kernel_map.kernel_map_circuit`, by the comparison below |
 
 `lean/Challenge/` holds the challenge modules of the headline theorems of
-`AlignedPairSpectrum`, `AlignedPairClosedForm`, `AnnihilatorSymmetry`,
-`AssociatorSpace`, `NonAssociative` and `KernelMap.TwoTermBins`, one per solution module. `Challenge.NAME` restates
+`CayleyDickson.Basic`, `Tower`, `TwoTerm`, `TowerModule`, `TwoTermNullity`, `TwoTermRecursion`,
+`AlignedPairSpectrum`, `AlignedPairClosedForm`, `AnnihilatorSymmetry`, `AssociatorSpace`,
+`NonAssociative`, `KernelMap.Estimator` and `KernelMap.TwoTermBins`, one per solution module. `Challenge.NAME` restates
 the theorems the table names with `sorry` as each proof, together with the
 definitions the solution module introduces and those statements use, and
 imports the library modules the solution imports. `NAME.json` beside it names
@@ -37,9 +38,10 @@ axioms (`propext`, `Quot.sound`, `Classical.choice`). From `lean/`, with
 `bubblewrap` installed, `lake comparator --config Challenge/NAME.json`
 checks that each named theorem of the solution has that statement and those
 axioms. No library module imports `Challenge` and the admission gate does
-not build it. The theorems of the other rows are owed their challenge modules
-in the same layout
-([issue 31](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/31)).
+not build it. The challenge modules of `Basic`, `Tower`, `TowerModule`, `TwoTerm` and
+`Estimator` declare constants that the library modules above them in the import chain also declare, so
+`lake build Challenge` builds the modules one at a time (the `Challenge.*` glob) and no single file
+imports them all.
 `ci/headline-results.tsv` lists the theorems this table names as the
 headline results, each with its Rocq partner or `owed`
 ([issue 46](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46)).
