@@ -106,11 +106,11 @@ rocq/open/verified/C1467_XORSignCocycle.v:164	unordered_assoc_triads	statement i
 rocq/open/verified/C1467_XORSignCocycle.v:168	triad_total	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
 rocq/open/verified/C1636_Cariow2013SedenionSchedule.v:164	C1636_cariow2013_multiplier_count	header overclaims	header attributes 16 diagonal plus 106 sparse products to the schedule; the statement is 16+106=122<256 and no count of the schedule products is derived	C1636_ScheduleProductCount.v
 rocq/open/verified/C1138_WickDampingMaximum.v:23	exp_monotone	statement is the claim	helper lemma: monotonicity of exp, from which the module derives the decrease of the damping factor	
-rocq/open/verified/C1141_ZDGraphCountingIdentities.v:39	testbit_below_pow2	statement is the claim	helper lemma on bits of an index below 2^k, named by the involution-pair section	
-rocq/open/verified/C1141_ZDGraphCountingIdentities.v:48	land_below_pow2	statement is the claim	helper lemma on bits of an index below 2^k, named by the involution-pair section	
-rocq/open/verified/C1141_ZDGraphCountingIdentities.v:59	lxor_pow2_above	statement is the claim	helper lemma: i xor 2^k = i + 2^k below 2^k, the involution pair the module header states	
-rocq/open/verified/C1141_ZDGraphCountingIdentities.v:100	div2_of_double	statement is the claim	helper lemma of the edge-count arithmetic	
-rocq/open/verified/C1141_ZDGraphCountingIdentities.v:178	zd_giant_density_strictly_increasing	statement is the claim	module header defines the density as (dim-4)/(dim-3); the statement is its cross-multiplied increase at dim = 2h	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:47	testbit_below_pow2	statement is the claim	helper lemma on bits of an index below 2^k, named by the involution-pair section	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:56	land_below_pow2	statement is the claim	helper lemma on bits of an index below 2^k, named by the involution-pair section	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:67	lxor_pow2_above	statement is the claim	helper lemma: i xor 2^k = i + 2^k below 2^k, the involution pair the module header states	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:108	div2_of_double	statement is the claim	helper lemma of the edge-count arithmetic	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:186	zd_giant_density_strictly_increasing	statement is the claim	module header defines the density as (dim-4)/(dim-3); the statement is its cross-multiplied increase at dim = 2h	
 rocq/open/verified/C1142_XORScatterGatherSums.v:26	lxor_below_pow2	statement is the claim	helper lemma: xor keeps the index range, under the header section XOR on the index range	
 rocq/open/verified/C1142_XORScatterGatherSums.v:41	lxor_solve	statement is the claim	helper lemma: the index equivalence the sums reindex by	
 rocq/open/verified/C1142_XORScatterGatherSums.v:49	xor_map_bijective_on_range	statement is the claim	helper lemma: j -> i xor j is a bijection of the index range, the reindexing of the sums	
