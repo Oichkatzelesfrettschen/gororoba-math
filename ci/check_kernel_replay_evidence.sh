@@ -585,4 +585,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 3 known-good and $((16 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 5 known-good and $((16 + mutants)) known-bad cases behaved"
