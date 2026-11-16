@@ -260,15 +260,16 @@ test-r2vb-correspondence:
 	{ $(GCC_VERSION) && sha256sum test_r2vb_dp4 test_r2vb_dp4_admit; } >r2vb_dp4_test_record.txt && \
 	./test_r2vb_dp4 && ./test_r2vb_dp4_admit
 
-# Compile-check the emitted FP24 C against the CertiRocq runtime headers under
-# the emitted-unit options; a missing emission fails. The check compiles; it
-# compares no digest (no golden file pins this emission).
+# Compare the emitted FP24 source and header with golden/fp24_admit_extraction.sha256
+# and compile the source against the CertiRocq runtime headers under the
+# emitted-unit options; a missing emission fails.
 extract-c-check: extract-c
 	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
-	echo "Compile-checking emitted C against $$RT ..."; \
+	(cd extraction && sha256sum $(FP24_C).c $(FP24_C).h >fp24_admit_extraction.sha256.new && \
+	  diff -u golden/fp24_admit_extraction.sha256 fp24_admit_extraction.sha256.new) && \
 	$(R2VB_CC) $(GEN_WARN) -I "$$RT" -c -o /dev/null extraction/$(FP24_C).c && \
-	echo "PASS: emitted FP24 C compiles with warnings as errors" || \
-	{ echo "FAIL: emitted C did not compile"; exit 1; }
+	echo "MATCH: FP24 emission matches golden and compiles with warnings as errors" || \
+	{ echo "FAIL: FP24 emission differs from golden or does not compile"; exit 1; }
 
 count:
 	@echo "Theory files:  $$(ls theories/*.v 2>/dev/null | wc -l)"
