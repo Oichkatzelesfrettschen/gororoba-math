@@ -165,7 +165,8 @@ gororoba repository shares; this file governs where the two differ.
     of level `k`, `vm_compute` ran 3.4 to 8.5 times faster than Lean's
     `decide +kernel` for `k` from 5 to 8, and `rocq check` of the level-8
     object took 51 s against 19 s for Lean's kernel decision (measured
-    2026-11-16, Rocq 9.3.0, Lean 4.35.0, one 4-vCPU host), so a large
+    2026-11-16, Rocq 9.3.0, Lean 4.35.0, one 4-vCPU host;
+    `docs/archive/measurements/h1-vm-compute-decide-kernel.md`), so a large
     certificate states both costs. Built-in `Extraction`
     and CertiRocq (on its Rocq 9.1 switch) tie running code to Gallina
     terms within the trusted base that the skill `extract-verified-rocq-code`
