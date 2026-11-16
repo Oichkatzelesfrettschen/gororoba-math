@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.Estimator",
+  "solution_module": "GororobaMath.KernelMap.Estimator",
+  "theorem_names": [
+    "KernelMap.nHat_sub_nullity",
+    "KernelMap.nHat_eq_card_div_two_of_negBins_eq_empty"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
