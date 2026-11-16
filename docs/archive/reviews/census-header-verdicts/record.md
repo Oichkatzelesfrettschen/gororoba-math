@@ -30,9 +30,14 @@ The owner chose none for this pull request.
 |---|---|---|
 | The README row names `Tower.mk_zero_mul_mk_zero`, which the challenge did not restate | P1 | Fixed in 6bd6a4d. `lake comparator` accepts the solution and rejects a calibration whose product reads `mk (c * a) 0`. |
 
-## Hosted Copilot
+## Hosted Copilot, on 6bd6a4d
 
-The comment `@Copilot review` on 6bd6a4d started a Copilot agent run that changed nothing and posted no review, and a request through the requested-reviewers endpoint did not register. The round is open.
+The comment `@Copilot review` started a Copilot agent run that changed nothing; the review itself posted later on 6bd6a4d.
+
+| Finding | Severity | Reconciliation |
+|---|---|---|
+| The C1141 header attributes the graph reading to `zd_graph_three_components`, which equates count definitions with constants and names no graph; the same holds for the C958 census rows | low | Fixed in 36668d8: the header states that the graph reading is not formalized and the three rows say the axiom names no graph. |
+| The missing-fraction numerator counts only the involution pairs inside the giant component; the singleton dim/2 adds dim - 2 missing pairs (21 of 105 at dim = 16) | low | Fixed in 36668d8: the bullet names its numerator and gives the full count. Checked: (dim/2 - 1)/((dim - 1)(dim - 2)/2) = 1/(dim - 1), and 7 + 14 = 21 at dim = 16. |
 
 ## Validation summary
 
