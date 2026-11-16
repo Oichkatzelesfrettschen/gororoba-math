@@ -7,10 +7,13 @@
     (i, i xor dim/2) for i in 1 .. dim/2 - 1, and the edge count is that of
     the complete graph on dim - 2 vertices minus the missing edges.  The
     module defines these counts as functions of dim and proves their
-    identities for every even dim >= 4; it defines no graph on the basis
+    identities for every even dim >= 4.  It defines no graph on the basis
     indices and proves no statement about a zero-divisor product, so the
-    edge-count formula as a property of the zero-divisor graph rests on the
-    axiom zd_graph_three_components of C958_ZDGraphTopology.v.
+    reading of these counts as properties of the zero-divisor graph is not
+    formalized.  The axiom zd_graph_three_components of
+    C958_ZDGraphTopology.v does not formalize it either: it equates the
+    count definitions of that file with constants and names no graph,
+    adjacency or edge.
 
     The module proves:
     - the involution pairs of half = 2^k are the pairs (i, i + half) for
@@ -23,8 +26,13 @@
     - the density of the giant component, 2 * edges / ((dim - 2)(dim - 3)),
       is (dim - 4)/(dim - 3): strictly increasing in dim, with complement
       1/(dim - 3);
-    - the fraction of missing edges among the pairs of the dim - 1 nonzero
-      indices is 1/(dim - 1): strictly decreasing in dim.
+    - the dim/2 - 1 missing involution pairs inside the giant component,
+      divided by the (dim - 1)(dim - 2)/2 pairs of the dim - 1 nonzero
+      indices, give 1/(dim - 1): strictly decreasing in dim.  The numerator
+      counts only those involution pairs; under the graph convention above
+      the singleton dim/2 lacks its dim - 2 pairs with the giant component
+      as well, so the missing pairs among the nonzero indices number
+      dim/2 - 1 + (dim - 2) (21 of 105 at dim = 16).
 
     The density ratio 3720/3906 at dim = 64 in C1141_ZDGraphGeneralStructure
     divides by (dim - 2)(dim - 1) = 62 * 63, while dim = 16 and dim = 32 divide
