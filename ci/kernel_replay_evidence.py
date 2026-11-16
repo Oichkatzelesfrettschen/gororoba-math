@@ -5,7 +5,8 @@ Usage, under the opam switch that carries Rocq 9.3.0 (the producer runs the
 
     opam exec --switch=rocq-9.3 -- "$PYTHON" -I ci/kernel_replay_evidence.py \\
         --proof theories/X.v --declaration NAME [--declaration NAME ...] \\
-        --warning-policy fatal_default --out OUTDIR [--tree rocq/open]
+        --warning-policy fatal_default --out OUTDIR [--tree rocq/open] \\
+        [--flocq-manifest FILE]
 
 The producer builds the dependency closure of `--proof` from the sources of
 the tree (`--tree`, default `$GOROROBA_MATH/rocq/open`), copies the closure
@@ -17,8 +18,8 @@ into OUTDIR:
 - `STEM.evidence.json`, the replay evidence in the shape gororoba-open's
   `gororoba-db theorem identity record-kernel-evidence` ingests
   (`KernelReplayEvidence`, schema_version 1: toolchain, project_sha256,
-  sources, proof_object_sha256, flocq_objects when Flocq is used,
-  compilation, checker, assumptions);
+  sources, proof_object_sha256, flocq_objects and flocq_producer when Flocq
+  is used, compilation, checker, assumptions);
 - `STEM.compile.txt`, `STEM.kernel.txt` and `STEM.assumptions.txt`, the output
   (stdout followed by stderr) of the proof source's compilation, the checker
   and the assumption query, which a witness binds as its compile, kernel and
@@ -47,7 +48,12 @@ same two `-R` pairs and the logical module, and the assumption query compiles
 `KernelReceiptAssumptions.v` the way a source compiles. A source of the
 closure that imports Flocq adds `-R external/Flocq Flocq` before the target of
 each command and copies the `.vo` files of a Flocq library into
-`external/Flocq` of the scratch directory, recording each one's digest.
+`external/Flocq` of the scratch directory, recording each one's digest. The
+producer names itself in `flocq_producer`: the entry of
+`ci/flocq-manifest.json` (`--flocq-manifest` names another file) whose
+`flocq_objects` equal the copied list. The object bytes depend on the install
+prefix and the native toolchain of the producer, so the run is refused when no
+entry matches, before any compilation.
 Warning lines, error lines, a nonzero exit status and a local absolute path
 in any output refuse the run.
 
@@ -408,6 +414,30 @@ def copy_flocq_objects(source: Path, destination: Path, relative: Path, objects:
             objects.append({"path": f"external/Flocq/{child.as_posix()}", "sha256": sha256_hex(data)})
 
 
+def flocq_producer(manifest: Path, objects: list[dict[str, str]]) -> str:
+    """The name of the one manifest entry whose Flocq objects equal `objects`."""
+    try:
+        document = json.loads(manifest.read_bytes())
+    except (OSError, ValueError) as error:
+        raise Refusal(f"cannot read the Flocq manifest {manifest.name}: {error}") from error
+    producers = (
+        document.get("producers") if isinstance(document, dict) and document.get("schema_version") == 2 else None
+    )
+    if not isinstance(producers, list):
+        raise Refusal(f"the Flocq manifest {manifest.name} is not a schema_version 2 document with producers")
+    names = [
+        entry["name"]
+        for entry in producers
+        if isinstance(entry, dict) and isinstance(entry.get("name"), str) and entry.get("flocq_objects") == objects
+    ]
+    if len(names) != 1:
+        raise Refusal(
+            f"{len(names)} producers of the Flocq manifest {manifest.name} list the Flocq objects of this switch;"
+            " record this producer with ci/flocq_manifest.py --record"
+        )
+    return names[0]
+
+
 def trusted_program() -> Path:
     """The first executable `rocq` of PATH, accepted only at Rocq 9.3.0 on OCaml 5.5.1."""
     search = os.environ.get("PATH")
@@ -535,6 +565,7 @@ def produce(
     out: Path,
     checkout: Path | None,
     identity: tuple[int, int],
+    manifest: Path,
 ) -> tuple[dict, Path]:
     """The summary of the written files and the path of the evidence file."""
     if policy not in WARNING_ARGUMENTS:
@@ -566,9 +597,11 @@ def produce(
             if sha256_hex(destination.read_bytes()) != sha256_hex(contents[source]):
                 raise Refusal(f"source changed while preparing replay: {source}")
         flocq_objects: list[dict[str, str]] = []
+        producer = ""
         if uses_flocq([contents[source].decode("utf-8") for source in ordered]):
             copy_flocq_objects(configured_flocq_root(tree), scratch / "external/Flocq", Path(), flocq_objects)
             flocq_objects.sort(key=lambda entry: entry["path"])
+            producer = flocq_producer(manifest, flocq_objects)
         flocq = bool(flocq_objects)
         compilation = [
             run(program, scratch, external_arguments(compiler_arguments(relative_source(source), warning), flocq))
@@ -609,6 +642,7 @@ def produce(
     }
     if flocq_objects:
         evidence["flocq_objects"] = flocq_objects
+        evidence["flocq_producer"] = producer
     evidence["compilation"] = compilation
     evidence["checker"] = checker
     evidence["assumptions"] = assumptions
@@ -737,6 +771,11 @@ def main(arguments: list[str]) -> int:
     parser.add_argument("--declaration", action="append", required=True, help="declaration name; repeatable")
     parser.add_argument("--warning-policy", required=True, choices=sorted(WARNING_ARGUMENTS))
     parser.add_argument("--out", required=True, help="output directory, absent or empty, outside the checkout")
+    parser.add_argument(
+        "--flocq-manifest",
+        default=str(Path(__file__).resolve().parent / "flocq-manifest.json"),
+        help="per-producer Flocq manifest, default ci/flocq-manifest.json beside this script",
+    )
     try:
         options = parser.parse_args(arguments)
     except SystemExit as error:
@@ -754,7 +793,14 @@ def main(arguments: list[str]) -> int:
         checkout = checkout_of(tree)
         out, identity = prepare_output(options.out, checkout, tree)
         summary, evidence_path = produce(
-            tree, options.proof, options.declaration, options.warning_policy, out, checkout, identity
+            tree,
+            options.proof,
+            options.declaration,
+            options.warning_policy,
+            out,
+            checkout,
+            identity,
+            Path(options.flocq_manifest),
         )
     except (Refusal, OSError, UnicodeDecodeError) as error:
         print(f"kernel_replay_evidence: {error}", file=sys.stderr)

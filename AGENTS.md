@@ -51,12 +51,18 @@ gororoba repository shares; this file governs where the two differ.
   that `make rocq` compiled; `ci/audit/SignTable.v` is its Rocq source,
   kept outside `rocq/` because the gate admits there only project-listed
   sources.
-  `ci/flocq_manifest.py` checks `ci/flocq-manifest.json`, the sha256 of each
-  Flocq `.vo` of the rocq-9.3 switch of the host that produces kernel replay
-  evidence, and `ci/check_flocq_manifest.sh` calibrates it. Both run on
-  demand on that host: a second build of the same opam export yields other
-  object bytes (measured on the hosted runner, first at
-  `Calc/Bracket.vo`), so no admission check compares a switch with it.
+  `ci/flocq_manifest.py` checks `ci/flocq-manifest.json`, which holds one entry
+  per producer of kernel replay evidence (schema_version 2): its name, its
+  toolchain identity (gcc, binutils, glibc, and the md5 of the switch's
+  `ltac_plugin.cmxs` that selects the entry) and the sha256 of each Flocq
+  `.vo` of its rocq-9.3 switch. `ci/check_flocq_manifest.sh` calibrates it.
+  Both run on demand on a producer: a `.vo` records the md5 of each OCaml plugin
+  it loads, and the plugin bytes depend on the install prefix and the native
+  toolchain (measured: the same opam export gives other object bytes on the
+  hosted runner, first at `Calc/Bracket.vo`, and under another prefix), so
+  each producer holds its own 35 digests and no admission check compares a
+  switch with the manifest. `ci/flocq_manifest.py --record` adds or replaces
+  the entry of the producer it runs on.
   `ci/kernel_replay_evidence.py` produces the kernel replay evidence that
   gororoba-open ingests for a theorem receipt, and
   `ci/check_kernel_replay_evidence.sh` calibrates it; `ci/check_rocq.sh` runs
@@ -193,7 +199,10 @@ gororoba repository shares; this file governs where the two differ.
 - Kernel replay evidence for a gororoba-open receipt comes from
   `ci/kernel_replay_evidence.py`, which compiles, kernel-checks and writes the
   evidence file and the retained logs and object into a directory outside
-  the checkout that tracks the tree; gororoba-open ingests the file and never runs Rocq. A
+  the checkout that tracks the tree; gororoba-open ingests the file and never runs Rocq.
+  Evidence that lists Flocq objects names its producer in `flocq_producer`, the
+  manifest entry whose objects equal the copied ones, and the run is refused
+  when no entry matches. A
   change to the compile or checker argument vectors, the closure order or
   the Flocq handling of the script changes the evidence contract that
   `theorem_replay.rs` of gororoba-open validates, so both land together, and

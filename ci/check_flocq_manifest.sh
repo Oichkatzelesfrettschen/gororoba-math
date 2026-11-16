@@ -1,8 +1,11 @@
 #!/bin/sh
 # Usage: sh ci/check_flocq_manifest.sh
 # Calibrates ci/flocq_manifest.py, which records the Flocq objects of the
-# rocq-9.3 switch in ci/flocq-manifest.json. Every case runs the producer and
-# requires its exit status and a named output text.
+# rocq-9.3 switch, one entry per producer, in ci/flocq-manifest.json. Every
+# case runs the producer and requires its exit status and a named output
+# text. The known-good case runs on a producer that the manifest records
+# (the entry is selected by the md5 of the switch's ltac_plugin.cmxs), so the
+# script runs on demand on such a host.
 # On a scratch copy of the switch's Flocq directory, through FLOCQ_ROOT:
 #   known-good: --check on the real switch exits 0 and reports equal;
 #   one byte of one .vo changed, one .vo removed, one extra .vo: --check exits
@@ -10,10 +13,16 @@
 #   one .vo replaced by a symbolic link: exits 2 with a refusal;
 #   FLOCQ_ROOT empty, and FLOCQ_ROOT a symbolic link: exit 2 with a refusal.
 # On a scratch copy of the producer with its own repository and manifest:
-#   --write creates the manifest and --check then exits 0;
-#   a manifest that is a symbolic link: --write exits 2 and its target keeps
+#   --record creates the manifest and --check then exits 0;
+#   a second --record leaves the manifest bytes unchanged;
+#   --record beside a foreign producer's entry keeps that entry byte for byte,
+#     and --check then exits 0;
+#   a manifest that records only a foreign producer: --check exits 1 and
+#     names the missing plugin digest;
+#   a manifest that is a symbolic link: --record exits 2 and its target keeps
 #     its bytes;
-#   a manifest of the wrong shape: --check exits 1 and names the shape.
+#   manifests of the wrong shape (a list, an item that is no object, schema
+#     version 1): --check exits 1 and names the shape.
 # The scratch directories live under FLOCQ_BUILD_DIR (default TMPDIR or /tmp)
 # and are removed on exit, also on INT (status 130) and TERM (status 143).
 # Needs git, opam, cmp, dd, find and PYTHON (default python3) on PATH. Exit
@@ -158,23 +167,92 @@ mkdir -p "$repo/ci"
 cp "$manifest_py" "$repo/ci/flocq_manifest.py"
 producer="$repo/ci/flocq_manifest.py"
 
-# Case: --write creates the manifest, and --check then reports it equal.
-status=$(run_case write-fresh "$work/pristine" "$producer" --write)
-expect write-fresh 0 "$status"
-status=$(run_case write-check "$work/pristine" "$producer" --check)
-expect write-check 0 "$status"
-expect_text write-check "flocq_manifest: equal, 35 objects"
+# Case: --record creates the manifest, and --check then reports it equal.
+status=$(run_case record-fresh "$work/pristine" "$producer" --record)
+expect record-fresh 0 "$status"
+expect_text record-fresh "added producer"
+status=$(run_case record-check "$work/pristine" "$producer" --check)
+expect record-check 0 "$status"
+expect_text record-check "flocq_manifest: equal, 35 objects, producer "
+cases=$((cases + 1))
+
+# Case: a second --record replaces the entry and leaves the bytes unchanged.
+cp "$repo/ci/flocq-manifest.json" "$work/recorded.json"
+status=$(run_case record-again "$work/pristine" "$producer" --record)
+expect record-again 0 "$status"
+expect_text record-again "replaced producer"
+cmp -s "$work/recorded.json" "$repo/ci/flocq-manifest.json" || {
+  echo "check_flocq_manifest: a second --record changed the manifest" >&2
+  exit 1
+}
+cases=$((cases + 1))
+
+# edit_manifest.py SOURCE TARGET MODE writes a scratch manifest: mode foreign
+# adds a second producer, zz-foreign, with another plugin digest and other
+# object digests; mode foreign-only keeps that producer and drops the rest.
+cat >"$work/edit_manifest.py" <<'EOF'
+import copy
+import json
+import sys
+
+source, target, mode = sys.argv[1:]
+with open(source) as handle:
+    document = json.load(handle)
+foreign = copy.deepcopy(document["producers"][0])
+foreign["name"] = "zz-foreign"
+foreign["toolchain"]["ltac_plugin_md5"] = "1" * 32
+foreign["flocq_objects"][0]["sha256"] = "2" * 64
+if mode == "foreign":
+    document["producers"].append(foreign)
+elif mode == "foreign-only":
+    document["producers"] = [foreign]
+else:
+    sys.exit(f"edit_manifest: unknown mode {mode}")
+with open(target, "w") as handle:
+    json.dump(document, handle, indent=2)
+    handle.write("\n")
+EOF
+
+# Case: --record beside a foreign entry keeps that entry byte for byte.
+"$PYTHON" -I -B "$work/edit_manifest.py" "$repo/ci/flocq-manifest.json" "$work/foreign.json" foreign
+cp "$work/foreign.json" "$repo/ci/flocq-manifest.json"
+status=$(run_case record-foreign "$work/pristine" "$producer" --record)
+expect record-foreign 0 "$status"
+"$PYTHON" -I -B - "$work/foreign.json" "$repo/ci/flocq-manifest.json" <<'EOF' || {
+import json
+import sys
+
+with open(sys.argv[1]) as handle:
+    before = json.load(handle)["producers"]
+with open(sys.argv[2]) as handle:
+    after = json.load(handle)["producers"]
+if after != before:
+    sys.exit("the producers differ after recording a recorded producer")
+EOF
+  echo "check_flocq_manifest: --record changed a foreign entry" >&2
+  exit 1
+}
+status=$(run_case record-foreign-check "$work/pristine" "$producer" --check)
+expect record-foreign-check 0 "$status"
+cases=$((cases + 1))
+
+# Case: a manifest that records only a foreign producer has no entry for this one.
+"$PYTHON" -I -B "$work/edit_manifest.py" "$repo/ci/flocq-manifest.json" "$work/foreign-only.json" foreign-only
+cp "$work/foreign-only.json" "$repo/ci/flocq-manifest.json"
+status=$(run_case foreign-only "$work/pristine" "$producer" --check)
+expect foreign-only 1 "$status"
+expect_text foreign-only "no producer has ltac_plugin_md5"
 cases=$((cases + 1))
 
 # Case: a manifest that is a symbolic link is not written through.
 printf 'sentinel\n' >"$work/outside.json"
 rm "$repo/ci/flocq-manifest.json"
 ln -s "$work/outside.json" "$repo/ci/flocq-manifest.json"
-status=$(run_case write-linked "$work/pristine" "$producer" --write)
-expect write-linked 2 "$status"
-expect_text write-linked "is a symbolic link"
+status=$(run_case record-linked "$work/pristine" "$producer" --record)
+expect record-linked 2 "$status"
+expect_text record-linked "is a symbolic link"
 [ "$(cat "$work/outside.json")" = "sentinel" ] || {
-  echo "check_flocq_manifest: --write changed the target of a symbolic link" >&2
+  echo "check_flocq_manifest: --record changed the target of a symbolic link" >&2
   exit 1
 }
 cases=$((cases + 1))
@@ -185,10 +263,14 @@ printf '[]\n' >"$repo/ci/flocq-manifest.json"
 status=$(run_case shape-list "$work/pristine" "$producer" --check)
 expect shape-list 1 "$status"
 expect_text shape-list "invalid shape"
-printf '{"schema_version": 1, "switch": "rocq-9.3", "packages": {}, "flocq_objects": [1]}\n' >"$repo/ci/flocq-manifest.json"
+printf '{"schema_version": 2, "switch": "rocq-9.3", "producers": [1]}\n' >"$repo/ci/flocq-manifest.json"
 status=$(run_case shape-item "$work/pristine" "$producer" --check)
 expect shape-item 1 "$status"
 expect_text shape-item "invalid shape"
-cases=$((cases + 2))
+printf '{"schema_version": 1, "switch": "rocq-9.3", "packages": {}, "flocq_objects": []}\n' >"$repo/ci/flocq-manifest.json"
+status=$(run_case shape-schema "$work/pristine" "$producer" --check)
+expect shape-schema 1 "$status"
+expect_text shape-schema "schema_version is 1"
+cases=$((cases + 3))
 
 echo "check_flocq_manifest: $cases case(s) behaved"
