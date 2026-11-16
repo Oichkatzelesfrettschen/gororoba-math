@@ -10,7 +10,7 @@
     second half exactly when the most significant bit of p is set, so
     basis k i is e R k p at the bit vector p of value i.
 
-    The functor NonAssociative restates each theorem of the Lean module at
+    The functor NonAssociative restates each headline theorem of the Lean module, the five named below, at
     the coefficient ring D:
 
     - embed_mul_bridge is Tower.mk_zero_mul_mk_zero.
