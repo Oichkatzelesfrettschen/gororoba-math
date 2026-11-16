@@ -18,6 +18,18 @@
 # and which this script does not compare afterwards. The export pins each
 # package version, and opam.ocaml.org and rocq-prover.org supply the
 # metadata and checksums of those versions at the time of the run.
+# System packages (Ubuntu names, as .github/workflows/rocq.yml installs them):
+# opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap. opam
+# offers to install a missing system package through a prompt that OPAMYES
+# does not answer, since launching the host package manager needs the unsafe
+# confirmation level (observed: a run on a host without clang waited at that
+# prompt). The script sets OPAMASSUMEDEPEXTS, which opam 2.5 documents as
+# skipping that step, so a missing package fails its conf-* package, and
+# gives the install commands an empty standard input, so no prompt can wait
+# for an answer (measured on a host with clang hidden, in gororoba-
+# infrastructure's extraction provisioner); and before opam installs
+# the packages of the export it requires clang whenever the export selects
+# conf-clang, so a switch that already holds every root needs no clang.
 # Exit status: 0 the switch holds every root package, 1 an opam step failed,
 # 2 a tool is missing. Reaches opam.ocaml.org and rocq-prover.org.
 set -eu
@@ -34,7 +46,8 @@ ports="$root/rocq/open/opam"
 export="$ports/qualified-rocq-9.3.export"
 switch=rocq-9.3
 OPAMJOBS=${OPAMJOBS:-$(getconf _NPROCESSORS_ONLN)}
-export OPAMJOBS OPAMYES=1
+OPAMASSUMEDEPEXTS=1
+export OPAMJOBS OPAMYES=1 OPAMASSUMEDEPEXTS
 
 # The root packages of the export, one "name.version" per line. The parser
 # reads the lines between "roots: [" and "]", so an export that opens the
@@ -64,6 +77,10 @@ if ! opam switch list --short | grep -q -x -F "$switch"; then
   opam switch create "$switch" ocaml-base-compiler.5.5.1
 fi
 if [ -n "$(missing_roots)" ]; then
+  if grep -q '"conf-clang\.' "$export" && ! command -v clang >/dev/null; then
+    echo "install_rocq: the export selects conf-clang and clang is not on PATH (system packages: see the header of this script)" >&2
+    exit 2
+  fi
   if ! opam repository list --switch="$switch" --short | grep -q -x rocq-released; then
     opam repository add rocq-released https://rocq-prover.org/opam/released --switch="$switch"
   fi
@@ -73,8 +90,8 @@ if [ -n "$(missing_roots)" ]; then
   else
     opam repository add gororoba-proof-ports "$ports" --switch="$switch"
   fi
-  opam install --switch="$switch" rocq-core.9.3.0 rocq-stdlib.9.2.0 coq-flocq.4.2.2 dune.3.23.1
-  opam switch import --switch="$switch" "$export"
+  opam install --switch="$switch" rocq-core.9.3.0 rocq-stdlib.9.2.0 coq-flocq.4.2.2 dune.3.23.1 </dev/null
+  opam switch import --switch="$switch" "$export" </dev/null
 fi
 
 left=$(missing_roots)
