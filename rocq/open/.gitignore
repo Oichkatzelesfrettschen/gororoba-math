@@ -23,6 +23,7 @@ extraction/r2vb_dp4_record.txt
 extraction/r2vb_dp4_test_record.txt
 extraction/test_r2vb_dp4
 extraction/test_r2vb_dp4_admit
+extraction/*.o
 # Stale generated SQLite planning exports (canonical source is registry/ at repo root)
 registry/
 # Output of the Coq 9.1 makefile generator; CoqMakefile.conf and the

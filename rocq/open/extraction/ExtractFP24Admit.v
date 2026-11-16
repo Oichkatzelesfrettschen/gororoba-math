@@ -1,4 +1,4 @@
-(* Verified Gallina -> C extraction of the r300 typed-carry admission gate.
+(* Gallina -> C emission of the r300 typed-carry admission gate through CertiRocq.
 
    CertiRocq (rocq-certirocq 0.9.1+9.1) compiles sint_range_admit -- the signed
    production predicate faithful to r300_nir_ssa_cut.c lines 433-439: a carry
@@ -9,11 +9,15 @@
    IDCT-operand policy is a separate function and is not this gate.
 
    The emitted C is correct relative to a trusted base, not to a proved
-   pipeline. CertiRocq 0.9.1+9.1 verifies large parts of its compiler and not
-   others (its README), holds no correctness theorem for its C back ends, and
-   both back ends admit the validity obligation of to_float. The base also
-   holds the CertiRocq runtime, the C compiler with its flags, and the
-   runtime objects of the switch.
+   pipeline. CertiRocq 0.9.1+9.1 holds no end-to-end correctness theorem:
+   lemmas of its LambdaBoxMut, LambdaBoxLocal and LambdaANF stages and of its
+   HashMap library are Admitted, Compiler/pipeline.v declares its C printers
+   as axioms realized in OCaml, the plugin itself is built by Rocq's
+   unverified Extraction, and the correctness file of its C back end holds
+   Admitted lemmas
+   (read in the installed package source, 2026-11-16). The base also holds
+   the CertiRocq runtime, the C compiler with its flags, and the
+   loader of the plugin.
    R300_MP_FP24_EXACT_INT = 131072 = 2^17 in r300_numeric_domain.c.  ASCII only. *)
 From CertiRocq.Plugin Require Import CertiRocq.
 From OpenGororoba Require Import FP24Representable.

@@ -179,40 +179,44 @@ extract-check: extract
 	else echo "SKIP: no golden file yet"; fi
 
 # Gallina -> C emission via CertiRocq (rocq-certirocq 0.9.1+9.1), run under
-# the rocq-certirocq switch. The C is correct relative to a trusted base that
-# holds the unproved C back end, the CertiRocq runtime, the generated glue, the
-# C compiler with its flags and the runtime objects of the switch (the headers
-# of extraction/ExtractFP24Admit.v and extraction/ExtractR2VBDP4.v).
-# extraction/ExtractFP24Admit.v compiles sint_range_admit, the signed carry
-# gate of FP24Representable.v; outputs land in extraction/ (ignored by git).
+# the rocq-certirocq switch. The C is correct relative to a trusted base, which
+# the headers of extraction/ExtractFP24Admit.v and extraction/ExtractR2VBDP4.v
+# list. Each emission target removes its expected outputs before it compiles,
+# so a file left by an earlier run cannot stand in for a missing one; outputs
+# land in extraction/ (ignored by git). The compiler version is captured before
+# it is trimmed, so a failing gcc fails the record step.
+ROCQ_EXTRACT_ARGS = $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified
+GCC_VERSION = v=$$(gcc --version) && printf '%s\n' "$$v" | head -n 1
 FP24_C := OpenGororoba.FP24Representable.sint_range_admit
 extract-c: all
 	@echo "Emitting C of $(FP24_C) from Rocq via CertiRocq..."
-	@rocq compile $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified \
-	  extraction/ExtractFP24Admit.v
-	@mv -f $(FP24_C).c $(FP24_C).h extraction/
+	@rm -f $(FP24_C).c $(FP24_C).h extraction/$(FP24_C).c extraction/$(FP24_C).h
+	@rocq compile $(ROCQ_EXTRACT_ARGS) extraction/ExtractFP24Admit.v
+	@mv $(FP24_C).c $(FP24_C).h extraction/
 	@echo "Emitted extraction/$(FP24_C).{c,h}"
 
-# Emission of the R2VB DP4 transform kernel: rocq compile of
-# extraction/ExtractR2VBDP4.v under the rocq-certirocq switch emits dp4 and
-# dp4_operand_admit plus the Z/positive/bool constructor glue; outputs land in
-# extraction/.
+# Emission of the R2VB DP4 transform kernel: the two theories it reads are
+# compiled first under the running switch, so no object of another build is
+# read, then extraction/ExtractR2VBDP4.v emits dp4 and dp4_operand_admit plus
+# the Z/positive/bool constructor glue.
 R2VB_C := OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4.h \
   OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.h \
   r2vb_dp4_glue.c r2vb_dp4_glue.h
 extract-r2vb-c:
 	@echo "Emitting R2VB DP4 C from Rocq via CertiRocq..."
-	@rocq compile $(ROCQ_EXTERNAL_ARGS) -R theories OpenGororoba -R verified OpenGororobaVerified \
-	  extraction/ExtractR2VBDP4.v
-	@mv -f $(R2VB_C) extraction/
+	@rm -f $(R2VB_C) $(addprefix extraction/,$(R2VB_C))
+	@rocq compile $(ROCQ_EXTRACT_ARGS) theories/FP24Representable.v
+	@rocq compile $(ROCQ_EXTRACT_ARGS) theories/R2VBTransformDP4.v
+	@rocq compile $(ROCQ_EXTRACT_ARGS) extraction/ExtractR2VBDP4.v
+	@mv $(R2VB_C) extraction/
 	@echo "Emitted extraction/OpenGororoba.R2VBTransformDP4.*.{c,h} and glue"
 
 # Compare the emitted sources and headers and the glue
 # (golden/r2vb_dp4_extraction.sha256), and every .c and .h of the CertiRocq
 # runtime (golden/certirocq_runtime.sha256: package bytes, equal on two hosts
-# measured 2026-11-16), with the retained hashes. The runtime objects and the
-# C compiler depend on the host, so extraction/r2vb_dp4_record.txt records
-# them with the switch packages instead of comparing them.
+# measured 2026-11-16), with the retained hashes. The prebuilt runtime objects
+# and the C compiler depend on the host, so extraction/r2vb_dp4_record.txt
+# records them with the switch packages instead of comparing them.
 extract-r2vb-check: extract-r2vb-c
 	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
 	cd extraction && \
@@ -222,40 +226,48 @@ extract-r2vb-check: extract-r2vb-c
 	diff -u golden/r2vb_dp4_extraction.sha256 r2vb_dp4_extraction.sha256.new && \
 	diff -u golden/certirocq_runtime.sha256 certirocq_runtime.sha256.new && \
 	{ opam list --installed --columns=name,version rocq-core rocq-certirocq coq-flocq ocaml-base-compiler && \
-	  (cd "$$RT" && sha256sum -- *.o) && gcc --version | head -n 1; } >r2vb_dp4_record.txt && \
+	  (cd "$$RT" && sha256sum -- *.o) && $(GCC_VERSION); } >r2vb_dp4_record.txt && \
 	echo "MATCH: R2VB extraction and CertiRocq runtime hashes match golden; record in extraction/r2vb_dp4_record.txt" || \
 	{ echo "DIFF: R2VB extraction or CertiRocq runtime hashes differ from golden"; exit 1; }
 
 # Build and run the correspondence harnesses: the extracted dp4 against a
 # native integer reference over nine fixtures spanning the B = 181 admission
 # boundary, and the extracted gate against its native predicate over five
-# known-good and four known-bad rows. Every compiler warning is an error but
-# four that the generated code raises: CertiRocq puns function pointers into
-# value (long) (int-conversion, implicit-function-declaration), and the
-# generated glue prints constructor names through non-literal format strings
-# (format, format-security; measured with gcc 15.2). extraction/r2vb_dp4_test_record.txt records the
-# compiler command and the digests of both binaries.
-R2VB_CFLAGS := -O1 -std=gnu11 -Werror -Wno-int-conversion -Wno-implicit-function-declaration \
-  -Wno-format -Wno-format-security
+# known-good and four known-bad rows. Each unit compiles with warnings as
+# errors under the narrowest options measured with gcc 15.2: the hand-written
+# harnesses under -Wall -Wextra; the emitted units with int-conversion off,
+# since CertiRocq puns function pointers into value (long); the glue also
+# with format and format-security off, since it prints constructor names
+# through non-literal format strings; and gc_stack.c, compiled here from the
+# runtime source that golden/certirocq_runtime.sha256 pins, under the default
+# warnings. extraction/r2vb_dp4_test_record.txt records the compiler and the
+# digests of both binaries.
+R2VB_CC = gcc -O1 -std=gnu11
+HAND_WARN = -Wall -Wextra -Werror
+GEN_WARN = -Werror -Wno-int-conversion
+GLUE_WARN = $(GEN_WARN) -Wno-format -Wno-format-security
 test-r2vb-correspondence:
 	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
-	gcc $(R2VB_CFLAGS) -I "$$RT" -o extraction/test_r2vb_dp4 \
-	  extraction/test_r2vb_dp4_correspondence.c extraction/OpenGororoba.R2VBTransformDP4.dp4.c \
-	  extraction/r2vb_dp4_glue.c "$$RT"/gc_stack.o && \
-	gcc $(R2VB_CFLAGS) -I "$$RT" -o extraction/test_r2vb_dp4_admit \
-	  extraction/test_r2vb_dp4_admit_correspondence.c extraction/OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c \
-	  extraction/r2vb_dp4_glue.c "$$RT"/gc_stack.o && \
-	{ gcc --version | head -n 1 && echo "gcc $(R2VB_CFLAGS) -I RUNTIME ... RUNTIME/gc_stack.o" && \
-	  sha256sum extraction/test_r2vb_dp4 extraction/test_r2vb_dp4_admit; } >extraction/r2vb_dp4_test_record.txt && \
-	./extraction/test_r2vb_dp4 && ./extraction/test_r2vb_dp4_admit
+	cd extraction && \
+	$(R2VB_CC) -Werror -I "$$RT" -c "$$RT/gc_stack.c" -o gc_stack.o && \
+	$(R2VB_CC) $(GEN_WARN) -I "$$RT" -c OpenGororoba.R2VBTransformDP4.dp4.c -o dp4.o && \
+	$(R2VB_CC) $(GEN_WARN) -I "$$RT" -c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c -o dp4_operand_admit.o && \
+	$(R2VB_CC) $(GLUE_WARN) -I "$$RT" -c r2vb_dp4_glue.c -o r2vb_dp4_glue.o && \
+	$(R2VB_CC) $(HAND_WARN) -I "$$RT" -c test_r2vb_dp4_correspondence.c -o test_r2vb_dp4_correspondence.o && \
+	$(R2VB_CC) $(HAND_WARN) -I "$$RT" -c test_r2vb_dp4_admit_correspondence.c -o test_r2vb_dp4_admit_correspondence.o && \
+	$(R2VB_CC) -o test_r2vb_dp4 test_r2vb_dp4_correspondence.o dp4.o r2vb_dp4_glue.o gc_stack.o && \
+	$(R2VB_CC) -o test_r2vb_dp4_admit test_r2vb_dp4_admit_correspondence.o dp4_operand_admit.o r2vb_dp4_glue.o gc_stack.o && \
+	{ $(GCC_VERSION) && sha256sum test_r2vb_dp4 test_r2vb_dp4_admit; } >r2vb_dp4_test_record.txt && \
+	./test_r2vb_dp4 && ./test_r2vb_dp4_admit
 
-# Compile-check the emitted FP24 C against the CertiRocq runtime headers; a
-# missing emission fails.
+# Compile-check the emitted FP24 C against the CertiRocq runtime headers under
+# the emitted-unit options; a missing emission fails. The check compiles; it
+# compares no digest (no golden file pins this emission).
 extract-c-check: extract-c
 	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
 	echo "Compile-checking emitted C against $$RT ..."; \
-	gcc -c $(R2VB_CFLAGS) -I "$$RT" -o /dev/null extraction/$(FP24_C).c && \
-	echo "MATCH: emitted C compiles clean" || \
+	$(R2VB_CC) $(GEN_WARN) -I "$$RT" -c -o /dev/null extraction/$(FP24_C).c && \
+	echo "PASS: emitted FP24 C compiles with warnings as errors" || \
 	{ echo "FAIL: emitted C did not compile"; exit 1; }
 
 count:
