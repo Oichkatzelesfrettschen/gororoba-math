@@ -3,6 +3,12 @@ defaultTargets = ["GororobaMath"]
 
 [leanOptions]
 autoImplicit = false
+# Mathlib's standard linter set, so that `lake build --wfail` fails on its
+# warnings too. Its header linter checks Mathlib's copyright and authors
+# header, which this repository replaces by one SPDX line per file, so it
+# is off.
+weak.linter.mathlibStandardSet = true
+weak.linter.style.header = false
 
 [[require]]
 name = "mathlib"
