@@ -360,3 +360,13 @@ theories/WorldlineInteraction.v
 theories/VacuumSpectralModels.v
 theories/FiniteCompositePassivity.v
 theories/VacuumAnalyticLimits.v
+verified/C872_WorldlineQuadratureBound.v
+verified/C882_OctahedronGraphSpectrum.v
+verified/C036_CliqueClusteringCounts.v
+verified/C1138_WickDampingMaximum.v
+verified/C1141_ZDGraphCountingIdentities.v
+verified/C1142_XORScatterGatherSums.v
+verified/C016_FanoOrientedTriples.v
+verified/C010_ComponentBridgeBound.v
+verified/C1463_MatrixColumnIdeal.v
+verified/C1636_ScheduleProductCount.v
