@@ -75,9 +75,9 @@ rocq/open/verified/C016_ParityFlips.v:21	fano_permutations_per_line	statement is
 rocq/open/verified/C016_ParityFlips.v:25	fano_oriented_count	statement is the claim	arithmetic of orientations per line, named as such	
 rocq/open/verified/C016_ParityFlips.v:38	even_odd_split	header overclaims	header claims 3 even and 3 odd orderings per line with antisymmetric signs; the statement is 6/2=3 with no permutation or sign	C016_FanoOrientedTriples.v
 rocq/open/verified/C016_ParityFlips.v:44	parity_decomposition	header overclaims	header claims 21 positive and 21 negative scalar outputs of m3; the statement is 7*3+7*3=42 and no m3 is defined	C016_FanoOrientedTriples.v
-rocq/open/verified/C010_ConnectivityObstruction.v:19	min_bridges_needed	header overclaims	header claims at least 6 bridges are required; the statement is 7-1=6 with no graph or lower bound	owed: C010_ComponentBridgeBound.v drafted, not compiled
+rocq/open/verified/C010_ConnectivityObstruction.v:19	min_bridges_needed	header overclaims	header claims at least 6 bridges are required; the statement is 7-1=6 with no graph or lower bound	C010_ComponentBridgeBound.v
 rocq/open/verified/C010_ConnectivityObstruction.v:33	total_vertices	statement is the claim	arithmetic of the vertex count 7*6=42, named as such	
-rocq/open/verified/C010_ConnectivityObstruction.v:39	connectivity_obstruction	header overclaims	header claims k components need k-1 bridges (spanning tree theorem); the statement is k>=2 -> k-1>=1	owed: C010_ComponentBridgeBound.v drafted, not compiled
+rocq/open/verified/C010_ConnectivityObstruction.v:39	connectivity_obstruction	header overclaims	header claims k components need k-1 bridges (spanning tree theorem); the statement is k>=2 -> k-1>=1	C010_ComponentBridgeBound.v
 rocq/open/verified/C1463_ArithmeticInventory.v:20	wilmot_table2_u1_total	statement is the claim	module header scopes the file to arithmetic identities	
 rocq/open/verified/C1463_ArithmeticInventory.v:24	c15_3	statement is the claim	module header scopes the file to arithmetic identities	
 rocq/open/verified/C1463_ArithmeticInventory.v:29	h_15_equals_35	statement is the claim	module header scopes the file to arithmetic identities	
@@ -99,9 +99,18 @@ rocq/open/verified/C1463_ArithmeticInventory.v:98	orbit_partner_numerator	statem
 rocq/open/verified/C1463_ArithmeticInventory.v:103	sedenion_dim	statement is the claim	module header scopes the file to arithmetic identities	
 rocq/open/verified/C1463_ArithmeticInventory.v:106	cl8_dim	statement is the claim	module header scopes the file to arithmetic identities	
 rocq/open/verified/C1463_ArithmeticInventory.v:109	cl8_is_mat16	statement is the claim	module header scopes the file to arithmetic identities	
-rocq/open/verified/C1463_ArithmeticInventory.v:113	minimal_ideal_dim	header overclaims	docstring identifies 256/16=16 with the minimal left ideal dimension (Bott periodicity); the statement is the division	owed: scoped header
+rocq/open/verified/C1463_ArithmeticInventory.v:113	minimal_ideal_dim	header overclaims	docstring identifies 256/16=16 with the minimal left ideal dimension (Bott periodicity); the statement is the division	C1463_MatrixColumnIdeal.v
 rocq/open/verified/C1467_XORSignCocycle.v:156	degenerate_triple_count	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
 rocq/open/verified/C1467_XORSignCocycle.v:160	assoc_split	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
 rocq/open/verified/C1467_XORSignCocycle.v:164	unordered_assoc_triads	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
 rocq/open/verified/C1467_XORSignCocycle.v:168	triad_total	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
-rocq/open/verified/C1636_Cariow2013SedenionSchedule.v:164	C1636_cariow2013_multiplier_count	header overclaims	header attributes 16 diagonal plus 106 sparse products to the schedule; the statement is 16+106=122<256 and no count of the schedule products is derived	owed: scoped header
+rocq/open/verified/C1636_Cariow2013SedenionSchedule.v:164	C1636_cariow2013_multiplier_count	header overclaims	header attributes 16 diagonal plus 106 sparse products to the schedule; the statement is 16+106=122<256 and no count of the schedule products is derived	C1636_ScheduleProductCount.v
+rocq/open/verified/C1138_WickDampingMaximum.v:23	exp_monotone	statement is the claim	helper lemma: monotonicity of exp, from which the module derives the decrease of the damping factor	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:39	testbit_below_pow2	statement is the claim	helper lemma on bits of an index below 2^k, named by the involution-pair section	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:48	land_below_pow2	statement is the claim	helper lemma on bits of an index below 2^k, named by the involution-pair section	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:59	lxor_pow2_above	statement is the claim	helper lemma: i xor 2^k = i + 2^k below 2^k, the involution pair the module header states	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:100	div2_of_double	statement is the claim	helper lemma of the edge-count arithmetic	
+rocq/open/verified/C1141_ZDGraphCountingIdentities.v:178	zd_giant_density_strictly_increasing	statement is the claim	module header defines the density as (dim-4)/(dim-3); the statement is its cross-multiplied increase at dim = 2h	
+rocq/open/verified/C1142_XORScatterGatherSums.v:26	lxor_below_pow2	statement is the claim	helper lemma: xor keeps the index range, under the header section XOR on the index range	
+rocq/open/verified/C1142_XORScatterGatherSums.v:41	lxor_solve	statement is the claim	helper lemma: the index equivalence the sums reindex by	
+rocq/open/verified/C1142_XORScatterGatherSums.v:49	xor_map_bijective_on_range	statement is the claim	helper lemma: j -> i xor j is a bijection of the index range, the reindexing of the sums	

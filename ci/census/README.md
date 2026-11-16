@@ -2,8 +2,11 @@
 
 `header-verdicts.tsv` holds one row per theorem that `ci/theorem_census.py` lists
 (a statement that names no constant of `OpenGororoba` or `OpenGororobaVerified`),
-read against the header and docstring of its file. The census was run on the
-tree at commit abff5ec with Rocq 9.3.0 and lists 106 theorems in 33 files.
+read against the header and docstring of its file. With Rocq 9.3.0 the census
+lists 106 theorems in 33 files on the tree at commit abff5ec, and 115 in 36
+files on the tree that holds the successor modules: the nine added rows are
+helper lemmas of C1138_WickDampingMaximum, C1141_ZDGraphCountingIdentities and
+C1142_XORScatterGatherSums, and the other successors list none.
 
 Criterion. The verdict is `statement is the claim` when the docstring of the
 declaration or the module header describes the declaration as the arithmetic or
