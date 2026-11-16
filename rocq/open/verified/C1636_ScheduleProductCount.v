@@ -28,7 +28,10 @@
     Scope.  That the Hadamard stages, [r16_scale] and the final combination
     form no product of two variable quantities is read from their
     definitions (sums, differences, and scaling by the constants 1/16, 2 and
-    -1); no theorem here counts the operations of a definition.  The count
+    -1); that [r16_sparse_correction] forms exactly the products of its
+    table is read from its definition, which writes each as b_i * a_j, while
+    [sparse_correction_table] proves only that the values agree.  No theorem
+    here counts the operations of a definition.  The count
     is that of this schedule; it bounds no other schedule and claims no
     minimality. *)
 
