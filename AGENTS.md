@@ -186,7 +186,10 @@ gororoba repository shares; this file governs where the two differ.
   `ci/check_headline_results.py`, which `ci/check.sh` runs, checks that
   each row names a theorem of the library, that the rows are the theorems
   the README table names, and that each partner names a theorem of a
-  project-listed Rocq source. A new row lands with its partner. A definition that both provers
+  project-listed Rocq source. Every identifier-shaped token of a Result
+  cell of that table resolves to a declaration of its module or is listed,
+  with its reason, in the script's `NON_DECLARATION_TOKENS`, so a prose
+  edit that adds such a token adds its entry. A new row lands with its partner. A definition that both provers
   hold lands with a comparison under `ci/` as in the item above. Any other
   claim is proved once. A result already in either tree stays where it is,
   and its translation to the other prover is a bridge in a new file, never
