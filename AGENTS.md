@@ -207,7 +207,10 @@ gororoba repository shares; this file governs where the two differ.
 - State a theorem at the generality its proof has: every level `k`, every
   ring, every characteristic-zero field. A statement about `A_5` alone is the
   instance `k = 5` of a tower theorem where one exists.
-- The library builds with warnings as errors (`lake build --wfail`).
+- The library builds with warnings as errors (`lake build --wfail`), with
+  Mathlib's standard linter set on (`lean/lakefile.toml`); its header
+  linter, which checks Mathlib's copyright and authors header, is off,
+  since each file here carries one SPDX line.
 
 ## Rocq sources
 
@@ -219,15 +222,36 @@ gororoba repository shares; this file governs where the two differ.
   of `ci/check_rocq.sh` (compiled by a make target of `rocq/open` or by
   the script, or held uncompiled), and the script fails on a tracked source
   neither names.
-- `rocq/open` compiles its project-listed sources, checkpoints and plugin
-  fixtures with `-w +default`, which makes each warning of Rocq's default
-  set an error; its `extract` recipe passes no warning option.
-  `rocq/quantum` compiles with `-w @all`, the
-  flag of its retained replays, under which `rocq` prints a warning and
-  exits 0; the gate fails on a warning line in the build log. `@all`
+- The three trees compile their project-listed sources, and `rocq/open`
+  its checkpoints, plugin fixtures and `extraction/ExtractQuaternion.v`,
+  with `-w all,+default`, and so does the script's compile of
+  `checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v`:
+  each warning of Rocq's default set is an error and every other warning
+  prints (measured, Rocq 9.3.0). Three compiles of the gate stay outside
+  the comparison below: the ratchet's own calibration fixtures; the
+  mutation harnesses of `rocq/open/tests`, which compile the unaltered
+  law and each mutant under `-w +default` into logs of their own (a
+  retained record of gororoba-open cites
+  `schur_acceleration_mutations.rs` by digest, so its options keep their
+  bytes, and the unaltered law is a checkpoint the gate also compiles
+  under the policy); and `ci/check_kernel_replay_evidence.sh`, whose
+  producer keeps the warning options of its evidence contract with
+  gororoba-open. The on-demand scripts (`ci/compare_dot.sh`,
+  `ci/compare_signs.sh`, `ci/replay_quantum_bundles.sh`) and the
+  CertiRocq targets run outside the gate.
+  `ci/rocq_warning_pairs.py` reads the build logs of each tree and compares
+  the (source, warning) pairs they print with `ci/rocq-warnings/allowed.tsv`,
+  and `ci/rocq-warnings/causes.tsv` gives each listed warning its cause and
+  the condition that removes it. The gate fails on a pair the list lacks
+  and on a listed pair that no log prints: a fix removes its rows in the
+  same commit. A new source adds rows only for warning names that
+  `causes.tsv` already lists, so the set of tolerated names only shrinks,
+  and a new name in `causes.tsv` is the owner's decision (owner,
+  2026-11-16). A source that a retained record cites keeps its bytes, so
+  its warnings leave the list through a successor file.
+  The retained replays of gororoba-quantum keep their own `-w @all`, which
   names no warning set (measured, Rocq 9.3.0: a warning that is off by
-  default stays silent under it and prints under `-w all`), so that
-  build sees the default set. No source of
+  default stays silent under it and prints under `-w all`). No source of
   `rocq/open/theories`, `rocq/open/verified`, `rocq/quantum` or
   `rocq/delegation` holds `Admitted` or `admit` (`rocq/open/admission_check.rs`).
 - `ci/check_rocq.sh` re-checks every project-listed module with the kernel
@@ -235,7 +259,7 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/open/kernel-assumptions.txt`,
   `rocq/quantum/kernel-assumptions.txt` and
   `rocq/delegation/kernel-assumptions.txt` (empty).
-  `rocq/delegation` compiles with `-w +default`. A change that adds or removes an
+  A change that adds or removes an
   axiom a tree rests on changes that tree's ledger in the same commit.
 - Kernel replay evidence for a gororoba-open receipt comes from
   `ci/kernel_replay_evidence.py`, which compiles, kernel-checks and writes the

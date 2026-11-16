@@ -2,7 +2,7 @@
 -R verified OpenGororobaVerified
 -docroot OpenGororoba
 -arg -w
--arg +default
+-arg all,+default
 theories/Prelude.v
 theories/Tanh.v
 theories/Quaternion.v

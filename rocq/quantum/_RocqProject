@@ -3,7 +3,7 @@
 -Q ../open/theories OpenGororoba
 -docroot GororobaQuantum
 -arg -w
--arg @all
+-arg all,+default
 A5W8ArcMatrixRanks.v
 CdAnnihilatorSymmetry.v
 CdAnnihilatorSymmetryReal.v
