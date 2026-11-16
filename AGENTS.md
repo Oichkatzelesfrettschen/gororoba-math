@@ -133,20 +133,42 @@ gororoba repository shares; this file governs where the two differ.
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
   level 5, 6 or 7, and on the coset-block circuits of the wide runs.
-- A new result, a statement that the README or a record cites, goes to
-  one prover by its kind; a helper lemma goes where its result is. A
-  result quantified
-  over a class of rings or fields, or over every level `k`, goes to Lean
-  on Mathlib, also where its proof evaluates a finite table (as the
-  fixed-level counts of `TwoTerm.lean` do). A statement about concrete
-  data (a rendered certificate, a rank, a kernel basis, a sign table) and
-  any definition that is extracted to code go to Rocq. Results already in
-  either tree stay where they are. The same mathematical claim, read
-  through each side's convention docstring, is proved once from now on: a
-  later proof of it in the other prover is a bridge theorem whose comment
-  names the original by repository path and theorem name, and a new
-  definition that both provers hold lands with a comparison as in the
-  item above.
+- A new result, a statement that the README or a record cites, has a home
+  prover chosen by the first of these mechanisms that binds; a helper lemma
+  goes where its result is.
+  1. A source that a retained record cites by sha256 keeps its bytes and its
+     tree ("Rocq sources").
+  2. A statement that a theorem receipt of gororoba-open rests on has a Rocq
+     proof: gororoba-open runs no prover and admits the kernel replay
+     evidence that `ci/kernel_replay_evidence.py` writes from a Rocq build.
+  3. A definition that is extracted or compiled to running code, and a
+     statement about floating-point behavior, go to Rocq: built-in
+     `Extraction`, CertiRocq (on its Rocq 9.1 switch) and Flocq relate the
+     code or the float operations to Gallina terms, and Lean's compiled code
+     has no such proof.
+  4. A result quantified over a class of rings, fields or modules, or over
+     every level `k`, and a result of real or complex analysis go to Lean
+     on Mathlib, also where the proof evaluates a finite table (as the
+     fixed-level counts of `TwoTerm.lean` do). The Lean tower over
+     `NonAssocRing` with `StarRing` is the general carrier: neither
+     Mathlib nor MathComp holds a non-associative Cayley-Dickson
+     development, and MathComp's rings are associative.
+  5. A statement about concrete data (a rendered certificate, a rank, a
+     kernel basis, a sign table) goes to Rocq, where `vm_compute` evaluates
+     it, unless it is an instance of a Lean theorem.
+  6. A finite group or combinatorial structure goes to the prover whose
+     library holds it: MathComp's finite groups in Rocq, Mathlib's group
+     theory in Lean.
+- A headline result is proved in both provers. A headline result is one
+  that the "Lean library" table or the "Rocq trees" section of `README.md`
+  names. Its second proof is a bridge theorem in a new file whose docstring
+  names the first proof by repository path and theorem name; the Lean side
+  has its challenge module (below), and a definition that both provers hold
+  lands with a comparison under `ci/` as in the item above. Two kernels and
+  two statement checks then stand behind the claim. Any other claim is
+  proved once. A result already in either tree stays where it is, and its
+  translation to the other prover is such a bridge, never an edit of a
+  cited source.
 - A headline theorem is one the "Lean library" table of `README.md`
   names. Each has a challenge module: a short file that restates its
   statement and the definitions it needs, with `sorry` as the proof, and
