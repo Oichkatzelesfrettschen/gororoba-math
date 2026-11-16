@@ -1,0 +1,12 @@
+{
+  "challenge_module": "Challenge.Basic",
+  "solution_module": "GororobaMath.CayleyDickson.Basic",
+  "theorem_names": [
+    "CayleyDickson.mul_star_self"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
