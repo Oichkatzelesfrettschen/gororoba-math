@@ -41,4 +41,4 @@ The comment `@Copilot review` started a Copilot agent run that changed nothing; 
 
 ## Validation summary
 
-`make rocq-open`, the census and `ci/check_rocq.sh` passed on an Azure build VM at 731d2b7. The hosted `rocq` and `lean` workflows passed on 8cbb407 and later heads. `lake build --wfail` and `lake comparator` (two calibrations) passed on the Windows workstation for the Lean module.
+`make rocq-open`, the census and `ci/check_rocq.sh` passed on an Azure build VM at 731d2b7. The hosted `rocq` and `lean` workflows passed on 8cbb407 and later heads. `lake build --wfail` and `lake comparator` (two calibrations) passed on the Windows workstation for the Lean module. After the Copilot fix, `C1141_ZDGraphCountingIdentities.v` compiles under `-w +default` with Rocq 9.3.0 and `rocq check -silent -o` reports no axiom, and each of the 115 rows of `ci/census/header-verdicts.tsv` names the line of its declaration (b390532).
