@@ -1,0 +1,17 @@
+{
+  "challenge_module": "Challenge.Tower",
+  "solution_module": "GororobaMath.CayleyDickson.Tower",
+  "theorem_names": [
+    "CayleyDickson.Tower.e_mul_e",
+    "CayleyDickson.Tower.e_mul_e_sign",
+    "CayleyDickson.Tower.star_e",
+    "CayleyDickson.Tower.e_mul_self",
+    "CayleyDickson.Tower.e_mul_e_anticomm",
+    "CayleyDickson.Tower.negSign_xor_right"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
