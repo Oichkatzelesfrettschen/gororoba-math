@@ -118,7 +118,10 @@ gororoba repository shares; this file governs where the two differ.
   and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
   gate replays every tracked module through `leanchecker`, one call per
   module, and keeps `lean/GororobaMath.lean` to `module` and its imports
-  of the library, since the root module's replay needs 27.5 GB; a
+  of the library, since `leanchecker` reads its argument as a module-name
+  prefix and replays every matching module at once, so a call on the root
+  name replays the whole library concurrently (30.5 to 32.1 GB measured
+  with Lean 4.35.0, against 6.4 GB for one module); a
   metaprogram can add a declaration that the build and the axiom audit
   accept and the kernel rejects. The replay assumes what a module
   imports, so a library module imports only the library and the package's
