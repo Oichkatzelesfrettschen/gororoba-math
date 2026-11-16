@@ -1,0 +1,107 @@
+location	theorem	verdict	reason	addressed_by
+rocq/open/verified/C872_PillarCasimirFinite.v:21	C872_pillar_casimir_finite	header overclaims	header claims a finite pillar-in-cavity energy profile; the statement is non-negativity of a real expression with no geometry, integral or quadrature	C872_WorldlineQuadratureBound.v
+rocq/open/verified/C873_SphereInCylinderFinite.v:17	C873_sphere_casimir_finite	header overclaims	header claims a finite sphere-in-cylinder energy; the statement is the same geometry-free expression as C872	C872_WorldlineQuadratureBound.v
+rocq/open/verified/C882_ParityCliqueExact.v:39	C882_octahedron_edges	header overclaims	header states the edge count of K_{2,2,2}; the statement 3*(2*2)=12 names no graph	C882_OctahedronGraphSpectrum.v
+rocq/open/verified/C882_ParityCliqueExact.v:47	C882_spectral_gap_k222	header overclaims	header states the spectrum [4,-2,-2,0,0,0] of K_{2,2,2}; the statement 4+2=6 names no matrix or eigenvalue	C882_OctahedronGraphSpectrum.v
+rocq/open/verified/C885_DemocraticMixing.v:102	democratic_mixing_normalized	statement is the claim	final normalization step 3a=1 -> a=1/3 named by its docstring; the S3 invariance parts are the neighboring theorems	
+rocq/open/verified/C887_BDGammaRange.v:9	frac_lt	statement is the claim	helper lemma, cross-multiplication of positive fractions, named as such	
+rocq/open/verified/C888_BDGammaMonotone.v:10	div_lt_div	statement is the claim	helper lemma, cross-multiplication of positive fractions, named as such	
+rocq/open/verified/C889_CassiniBound.v:12	frac_lt	statement is the claim	helper lemma, cross-multiplication of positive fractions, named as such	
+rocq/open/verified/C890_NordtvedtBound.v:9	frac_lt	statement is the claim	helper lemma, cross-multiplication of positive fractions, named as such	
+rocq/open/verified/C891_GPBGeodetic.v:10	frac_lt	statement is the claim	helper lemma, cross-multiplication of positive fractions, named as such	
+rocq/open/verified/C892_DichroismRatio.v:10	C892_eh_dichroism_ratio	statement is the claim	header states the coefficients 8/45 and 14/45 and their ratio 4/7; the statement is that ratio	
+rocq/open/verified/C892_DichroismRatio.v:14	C892_eh_ratio_simplified	statement is the claim	header states the coefficients 8/45 and 14/45 and their ratio 4/7; the statement is that ratio	
+rocq/open/verified/C914_TCMTUnitarity.v:8	C914_tcmt_unitarity	statement is the claim	statement is T+R=1 with T and R given by the header formulas	
+rocq/open/verified/C031_HurwitzComplete.v:13	C031_dim1	statement is the claim	dim-1 case: (xy)^2 = x^2 y^2 is norm multiplicativity of the reals	
+rocq/open/verified/C004_PSL27Order168.v:18	C004_gl3_gf2_order	statement is the claim	header says the order is proved by direct arithmetic on the order formula	
+rocq/open/verified/C016_M3TrilinearSplit.v:24	C016_vector_sector	header overclaims	header assigns 168 to the vector sector of a 3-form; the statement is the GL(3,2) order formula and the sector is not defined	C016_FanoOrientedTriples.v
+rocq/open/verified/C016_M3TrilinearSplit.v:28	C016_total_split	header overclaims	header states 210 = C(7,3) + |GL(3,2)|, which is 35 + 168 = 203; 210 is the count of ordered triples 7*6*5	C016_FanoOrientedTriples.v
+rocq/open/verified/C021_LatticeInconsistency.v:14	C021_xor_total	statement is the claim	header scopes the positive content to XOR totality, determinism and involution; the basis sign and product are not modeled	
+rocq/open/verified/C021_LatticeInconsistency.v:19	C021_xor_deterministic	statement is the claim	header scopes the positive content to XOR totality, determinism and involution; the basis sign and product are not modeled	
+rocq/open/verified/C021_LatticeInconsistency.v:25	C021_xor_involutive	statement is the claim	header scopes the positive content to XOR totality, determinism and involution; the basis sign and product are not modeled	
+rocq/open/verified/C022_OrdinalAnalogy.v:14	C022_dim_doubling	statement is the claim	body states the proved content as the doubling arithmetic; the title thesis about ordinals has no theorem	
+rocq/open/verified/C022_OrdinalAnalogy.v:20	C022_doubling_is_sum	statement is the claim	body states the proved content as the doubling arithmetic; the title thesis about ordinals has no theorem	
+rocq/open/verified/C029_FermionGenerations.v:15	C029_s3_order	statement is the claim	docstring states 3! = 6	
+rocq/open/verified/C029_FermionGenerations.v:20	C029_three_embeddings	header overclaims	statement 3 = 3 names no embedding, product or count (issue 6)	C029_FermionGenerationArithmetic.v (PR 27)
+rocq/open/verified/C029_FermionGenerations.v:24	C029_orbit_stabilizer	header overclaims	header claims S3 acts transitively on three objects; the statement is 6 = 3*2 with no group or action	C029_FermionGenerationArithmetic.v (PR 27)
+rocq/open/verified/C029_FermionGenerationArithmetic.v:29	C029_s3_order	statement is the claim	header scopes the statement to arithmetic and defines no group or action	
+rocq/open/verified/C029_FermionGenerationArithmetic.v:33	C029_orbit_stabilizer	statement is the claim	header scopes the statement to arithmetic and defines no group or action	
+rocq/open/verified/C036_TrialityClusteringBound.v:15	C036_k4_clustering	header overclaims	header states the K_4 clustering coefficient; the statement 4*3*2=24 names no graph or coefficient	C036_CliqueClusteringCounts.v
+rocq/open/verified/C036_TrialityClusteringBound.v:20	C036_k222_edges	header overclaims	header states C = 0 and no triangles for K_{2,2,2}, contradicted by its own next lemma; the statement 3*(2*2)=12 names no graph	C036_CliqueClusteringCounts.v
+rocq/open/verified/C036_TrialityClusteringBound.v:26	C036_k222_triangles	header overclaims	header counts triangles of K_{2,2,2}; the statement 2*2*2=8 names no graph and contradicts the header zero-triangle claim	C036_CliqueClusteringCounts.v
+rocq/open/verified/C040_PrimordialTiltRefuted.v:20	C040_28_in_range	statement is the claim	docstring states the interval 2 < 2.8 < 4; existence of the scale parameter is not part of the statement	
+rocq/open/verified/C999_PathionEntropyBound.v:23	div_gt_from_mul	statement is the claim	helper lemma named as such	
+rocq/open/verified/C956_RoutonAVT.v:71	avt_nonempty_witness	header overclaims	header claims a nonempty violation set at every dimension >= 8 (128, 256, ...); the statement is an abstract existential over any magma and the file lifts a witness to dimension 16 only	C956_TowerAssociatorPersistence.v
+rocq/open/verified/C957_VoudonZD.v:23	pos_times_pos	statement is the claim	helper lemma named as such; the dimension >= 16 persistence in the header is carried by sedenion-only declarations that the census does not list	
+rocq/open/verified/C958_ZDGraphTopology.v:209	zd_numerator_positive	statement is the claim	docstring names the numerator form of the edge-count inequality; the graph rests on the declared axiom zd_graph_three_components	
+rocq/open/verified/C958_ZDGraphTopology.v:221	zd_edge_superquadratic_growth	statement is the claim	docstring names the numerator form of the edge-count inequality; the graph rests on the declared axiom zd_graph_three_components	
+rocq/open/verified/C958_ZDGraphTopology.v:232	zd_giant_density_gt_half	statement is the claim	docstring names the numerator form of the edge-count inequality; the graph rests on the declared axiom zd_graph_three_components	
+rocq/open/verified/C1138_WickDampingFriction.v:29	friction_damping_bounded	statement is the claim	statement is the inequality of the damping factor exp(-H sin theta) its docstring names; F and the associator are not defined	
+rocq/open/verified/C1138_WickDampingFriction.v:40	friction_damping_contractive	statement is the claim	statement is the inequality of the damping factor exp(-H sin theta) its docstring names; F and the associator are not defined	
+rocq/open/verified/C1138_WickDampingFriction.v:57	friction_damping_monotone	statement is the claim	statement is the inequality of the damping factor exp(-H sin theta) its docstring names; F and the associator are not defined	
+rocq/open/verified/C1138_WickDampingFriction.v:68	friction_ratio_in_unit_interval	statement is the claim	statement is the inequality of the damping factor exp(-H sin theta) its docstring names; F and the associator are not defined	
+rocq/open/verified/C1138_WickDampingFriction.v:82	maximal_damping_at_pi_half	header overclaims	docstring claims the strongest possible damping at pi/2; the statement rewrites exp(-H*sin(PI/2)) under the hypothesis sin(PI/2)=1	C1138_WickDampingMaximum.v
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:30	zd_missing_edge_count	header overclaims	header claims the count dim/2-1 of involution pairs; the statement is x = x	C1141_ZDGraphCountingIdentities.v
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:40	missing_edges_16	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:43	missing_edges_32	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:46	missing_edges_64	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:49	missing_edges_128	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:52	missing_edges_256	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:64	zd_vertex_count	header overclaims	header claims dim-2 vertices (body: dim-1); the statement is dim>=16 -> dim-1>=15	C1141_ZDGraphCountingIdentities.v
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:84	edge_count_16	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:87	edge_count_16_val	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:90	edge_count_32	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:93	edge_count_32_val	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:96	edge_count_64	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:99	edge_count_64_val	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:115	edge_density_increases	header overclaims	header claims density rises toward 1; the three inequalities are edges <= pairs, and the dim-64 denominator 3906 is (d-2)(d-1) where dims 16 and 32 use (d-2)(d-3)	C1141_ZDGraphCountingIdentities.v
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:136	missing_fraction_decreases	header overclaims	header claims the missing fraction decreases to 0; the statement refutes one numeric inequality at dims 16 and 32	C1141_ZDGraphCountingIdentities.v
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:144	missing_fraction_16_gt_32	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1141_ZDGraphGeneralStructure.v:148	missing_fraction_32_gt_64	statement is the claim	arithmetic evaluation of the edge or missing-edge formula at one dimension, named as such	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:32	xor_involution	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:44	xor_involution_left	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:57	xor_map_injective	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:72	xor_map_surjective	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:93	scatter_gather_substitution	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:106	la_source_index_correct	header overclaims	docstring claims L_a gathers the correct coefficient a[i]; the statement is (i xor j) xor j = i with no L_a	C1142_XORScatterGatherSums.v
+rocq/open/verified/C1142_XORScatterGatherDuality.v:121	scatter_gather_roundtrip	header overclaims	docstring claims scatter and gather visit the same pairs; the statement is two index round trips	C1142_XORScatterGatherSums.v
+rocq/open/verified/C1142_XORScatterGatherDuality.v:135	xor_identity	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:138	xor_self_inverse	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:141	xor_commutative	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:144	xor_associative	statement is the claim	statement is the identity of lxor its docstring names	
+rocq/open/verified/C1142_XORScatterGatherDuality.v:160	scatter_gather_duality	header overclaims	header claims the scatter and gather algorithms compute the same function; the statement is the index equivalence i xor j = k <-> j = i xor k	C1142_XORScatterGatherSums.v
+rocq/open/verified/C1262_FlatBandFractionHalf.v:65	cd16_degeneracy_sum	statement is the claim	header strategy line says pure arithmetic on concrete naturals; no graph or spectrum is defined	
+rocq/open/verified/C016_ParityFlips.v:21	fano_permutations_per_line	statement is the claim	arithmetic of orientations per line, named as such	
+rocq/open/verified/C016_ParityFlips.v:25	fano_oriented_count	statement is the claim	arithmetic of orientations per line, named as such	
+rocq/open/verified/C016_ParityFlips.v:38	even_odd_split	header overclaims	header claims 3 even and 3 odd orderings per line with antisymmetric signs; the statement is 6/2=3 with no permutation or sign	C016_FanoOrientedTriples.v
+rocq/open/verified/C016_ParityFlips.v:44	parity_decomposition	header overclaims	header claims 21 positive and 21 negative scalar outputs of m3; the statement is 7*3+7*3=42 and no m3 is defined	C016_FanoOrientedTriples.v
+rocq/open/verified/C010_ConnectivityObstruction.v:19	min_bridges_needed	header overclaims	header claims at least 6 bridges are required; the statement is 7-1=6 with no graph or lower bound	owed: C010_ComponentBridgeBound.v drafted, not compiled
+rocq/open/verified/C010_ConnectivityObstruction.v:33	total_vertices	statement is the claim	arithmetic of the vertex count 7*6=42, named as such	
+rocq/open/verified/C010_ConnectivityObstruction.v:39	connectivity_obstruction	header overclaims	header claims k components need k-1 bridges (spanning tree theorem); the statement is k>=2 -> k-1>=1	owed: C010_ComponentBridgeBound.v drafted, not compiled
+rocq/open/verified/C1463_ArithmeticInventory.v:20	wilmot_table2_u1_total	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:24	c15_3	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:29	h_15_equals_35	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:33	h_31_equals_155	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:37	wilmot_table2_u2_total	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:41	c31_3	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:47	assessor_count_42	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:51	standard_zd_count	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:55	directed_zd_pairs	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:59	gl32_order	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:65	braid_pair_count	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:69	s3_orbit_decomposition	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:74	triad_type_decomposition	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:78	type_x_is_3_times_bc	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:83	incidence_rank_containment	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:87	rank_bc_is_c72	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:94	orbit_sum_numerator	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:98	orbit_partner_numerator	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:103	sedenion_dim	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:106	cl8_dim	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:109	cl8_is_mat16	statement is the claim	module header scopes the file to arithmetic identities	
+rocq/open/verified/C1463_ArithmeticInventory.v:113	minimal_ideal_dim	header overclaims	docstring identifies 256/16=16 with the minimal left ideal dimension (Bott periodicity); the statement is the division	owed: scoped header
+rocq/open/verified/C1467_XORSignCocycle.v:156	degenerate_triple_count	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
+rocq/open/verified/C1467_XORSignCocycle.v:160	assoc_split	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
+rocq/open/verified/C1467_XORSignCocycle.v:164	unordered_assoc_triads	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
+rocq/open/verified/C1467_XORSignCocycle.v:168	triad_total	statement is the claim	arithmetic consistency of counts proved by the preceding vm_compute theorems	
+rocq/open/verified/C1636_Cariow2013SedenionSchedule.v:164	C1636_cariow2013_multiplier_count	header overclaims	header attributes 16 diagonal plus 106 sparse products to the schedule; the statement is 16+106=122<256 and no count of the schedule products is derived	owed: scoped header
