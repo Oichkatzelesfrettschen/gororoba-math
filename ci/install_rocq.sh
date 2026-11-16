@@ -23,8 +23,11 @@
 # offers to install a missing system package through a prompt that OPAMYES
 # does not answer, since launching the host package manager needs the unsafe
 # confirmation level (observed: a run on a host without clang waited at that
-# prompt). The script sets OPAMASSUMEDEPEXTS, so opam skips that step and a
-# missing package fails its conf-* package instead, and before opam installs
+# prompt). The script sets OPAMASSUMEDEPEXTS, which opam 2.5 documents as
+# skipping that step, so a missing package fails its conf-* package, and
+# gives the install commands an empty standard input, so no prompt can wait
+# for an answer (measured on a host with clang hidden, in gororoba-
+# infrastructure's extraction provisioner); and before opam installs
 # the packages of the export it requires clang whenever the export selects
 # conf-clang, so a switch that already holds every root needs no clang.
 # Exit status: 0 the switch holds every root package, 1 an opam step failed,
@@ -87,8 +90,8 @@ if [ -n "$(missing_roots)" ]; then
   else
     opam repository add gororoba-proof-ports "$ports" --switch="$switch"
   fi
-  opam install --switch="$switch" rocq-core.9.3.0 rocq-stdlib.9.2.0 coq-flocq.4.2.2 dune.3.23.1
-  opam switch import --switch="$switch" "$export"
+  opam install --switch="$switch" rocq-core.9.3.0 rocq-stdlib.9.2.0 coq-flocq.4.2.2 dune.3.23.1 </dev/null
+  opam switch import --switch="$switch" "$export" </dev/null
 fi
 
 left=$(missing_roots)
