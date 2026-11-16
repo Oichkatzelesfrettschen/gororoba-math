@@ -39,3 +39,10 @@ The Advisor confirmed each reconciliation. It required, before the hosted reques
 - a reading of the hosted run on the head with the extraction recipe under the policy.
 
 It also set the merge order with pull request 50. That pull request adds Rocq sources whose warning pairs this list does not hold, so it lands after this one, with `main` merged into it and its rows taken from a gate run.
+
+## Hosted review
+
+| Reviewer | Head | Finding | Resolution |
+|---|---|---|---|
+| Codex | 42fd111 | A failed working-tree build skipped the ratchet, so a source that had compiled with an unlisted warning kept its object, and the next build passed (P2) | Fixed in 8ebd4dd: the cleanup runs after every build. Reproduced: after the failing source is fixed, the second run reports the pair and fails. |
+| Copilot | 8ebd4dd | When the ratchet itself exits 2, no source is named, so nothing is invalidated | Fixed in 65ea801: exit 2 removes every object of the tree. Measured with a parser stub: the object count goes from 6 to 0, and the run exits 2. |
