@@ -166,7 +166,7 @@ extract: all
 	@echo "Extracting OCaml code from Rocq..."
 	@mkdir -p extraction/golden
 	@if [ -f extraction/ExtractQuaternion.v ]; then \
-	  rocq compile -Q theories OpenGororoba -Q verified OpenGororobaVerified \
+	  rocq compile -q -w all,+default -Q theories OpenGororoba -Q verified OpenGororobaVerified \
 	    extraction/ExtractQuaternion.v; \
 	fi
 

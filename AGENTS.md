@@ -220,16 +220,23 @@ gororoba repository shares; this file governs where the two differ.
   the script, or held uncompiled), and the script fails on a tracked source
   neither names.
 - The three trees compile their project-listed sources, and `rocq/open`
-  its checkpoints and plugin fixtures, with `-w all,+default`: each
-  warning of Rocq's default set is an error and every other warning prints
-  (measured, Rocq 9.3.0); the `extract` recipe passes no warning option.
+  its checkpoints, plugin fixtures and `extraction/ExtractQuaternion.v`,
+  with `-w all,+default`: each warning of Rocq's default set is an error
+  and every other warning prints (measured, Rocq 9.3.0). Two compile paths
+  stay outside the comparison below: the mutation harnesses of
+  `rocq/open/tests` compile mutants that must fail, under `-w +default`,
+  and `ci/kernel_replay_evidence.py` keeps the warning options of its
+  evidence contract with gororoba-open.
   `ci/rocq_warning_pairs.py` reads the build logs of each tree and compares
   the (source, warning) pairs they print with `ci/rocq-warnings/allowed.tsv`,
   and `ci/rocq-warnings/causes.tsv` gives each listed warning its cause and
   the condition that removes it. The gate fails on a pair the list lacks
-  and on a listed pair that no log prints, so the list only shrinks: a fix
-  removes its rows in the same commit. A source that a retained record cites
-  keeps its bytes, so its warnings leave the list through a successor file.
+  and on a listed pair that no log prints: a fix removes its rows in the
+  same commit. A new source adds rows only for warning names that
+  `causes.tsv` already lists, so the set of tolerated names only shrinks,
+  and a new name in `causes.tsv` is the owner's decision (owner,
+  2026-11-16). A source that a retained record cites keeps its bytes, so
+  its warnings leave the list through a successor file.
   The retained replays of gororoba-quantum keep their own `-w @all`, which
   names no warning set (measured, Rocq 9.3.0: a warning that is off by
   default stays silent under it and prints under `-w all`). No source of

@@ -10,6 +10,7 @@ open	checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v	disj-patte
 open	checkpoints/schur-geometry/SchurAccelerationObstruction.v	bad-template-constraint
 open	checkpoints/schur-geometry/SchurAccelerationObstruction.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	checkpoints/schur-geometry/SchurAccelerationObstruction.v	disj-pattern-notation
+open	extraction/ExtractQuaternion.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	tests/PluginCompatibility.v	deprecated-transitive-library-file-since-8.20
 open	tests/PluginCompatibility.v	using-fallback-loc
 open	tests/PluginCompatibility.v	warn-transitive-library-file-stdlib-vector

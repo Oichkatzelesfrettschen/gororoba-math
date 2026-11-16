@@ -43,6 +43,7 @@ from pathlib import Path
 
 HEADER = re.compile(r'^File "([^"]+)", line \d+, characters \d+-\d+:$')
 TAG = re.compile(r"\[([A-Za-z0-9._-]+)(?:,[A-Za-z0-9._-]+)*\]$")
+TREES = ("open", "quantum", "delegation")
 ALLOWED_HEADER = ["tree", "path", "warning"]
 CAUSES_HEADER = ["warning", "cause", "removal"]
 
@@ -100,6 +101,13 @@ def read_table(path: Path, header: list[str]) -> list[list[str]]:
     return body
 
 
+def check_trees(rows: list[list[str]], path: str) -> None:
+    """Rejects an allow-list row whose tree is not one of TREES, since no run compares it."""
+    for number, row in enumerate(rows, start=2):
+        if row[0] not in TREES:
+            raise ParseError(f"{path}:{number}: tree {row[0]!r} is not one of {', '.join(TREES)}")
+
+
 def compare(observed: set[tuple[str, str]], allowed: set[tuple[str, str]]) -> list[str]:
     """Lists each pair that is new (+) or no longer observed (-)."""
     new = [f"+ {path}\t{name}" for path, name in sorted(observed - allowed)]
@@ -126,6 +134,12 @@ def calibrate() -> None:
     if not compare(set(), allowed):
         raise ParseError("calibration: an allowed pair that no log prints was accepted")
     try:
+        check_trees([["quantm", "Ghost.v", "disj-pattern-notation"]], "calibration")
+    except ParseError:
+        pass
+    else:
+        raise ParseError("calibration: an allow-list row of an unknown tree was accepted")
+    try:
         parse_log(block[1:4], "calibration")
     except ParseError:
         return
@@ -134,7 +148,7 @@ def calibrate() -> None:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--tree", required=True, choices=["open", "quantum", "delegation"])
+    parser.add_argument("--tree", required=True, choices=TREES)
     parser.add_argument("--allowed", required=True, type=Path)
     parser.add_argument("--causes", required=True, type=Path)
     parser.add_argument("--observed", type=Path, help="write the observed pairs of the tree here")
@@ -144,6 +158,7 @@ def main() -> int:
     try:
         calibrate()
         allowed_rows = read_table(arguments.allowed, ALLOWED_HEADER)
+        check_trees(allowed_rows, str(arguments.allowed))
         causes_rows = read_table(arguments.causes, CAUSES_HEADER)
         named = {row[0] for row in causes_rows}
         listed = {row[2] for row in allowed_rows}
