@@ -104,6 +104,23 @@ WHITESPACE = frozenset(
         0x3000,
     )
 )
+# The control flags of Rocq 9.3.0 (control_flag of vernac/g_vernac.mlg), each
+# with the number of argument tokens it takes: Redirect a string, Timeout a
+# natural, AllocLimit a natural and Mw or kw. Profile takes an optional string.
+CONTROL_FLAGS = {
+    "Time": 0,
+    "Instructions": 0,
+    "Profile": 0,
+    "Redirect": 1,
+    "Timeout": 1,
+    "AllocLimit": 2,
+    "Fail": 0,
+    "Succeed": 0,
+}
+# The legacy attributes of Rocq 9.3.0 (legacy_attr of vernac/g_vernac.mlg).
+LEGACY_ATTRIBUTES = frozenset(
+    ("Local", "Global", "Polymorphic", "Monomorphic", "Cumulative", "NonCumulative", "Private", "Program")
+)
 
 
 class Refusal(Exception):
@@ -354,41 +371,164 @@ def project_dependencies(
     ordered.append(proof_path)
 
 
-def command_imports_flocq(words: list[str]) -> bool:
-    """Whether the words of one vernacular command import Flocq.
+def string_end(command: str, cursor: int) -> int | None:
+    """The index after the quote that closes a string whose text starts at cursor.
+
+    A doubled quote inside a Rocq string literal stands for one quote
+    character. None when the command ends first.
+    """
+    length = len(command)
+    while cursor < length:
+        if command[cursor] == '"':
+            if command.startswith('""', cursor):
+                cursor += 2
+                continue
+            return cursor + 1
+        cursor += 1
+    return None
+
+
+def attribute_end(command: str, cursor: int) -> int | None:
+    """The index after the bracket that closes an attribute whose text starts at cursor.
+
+    Brackets nest, and a bracket inside a string literal of the attribute is
+    text. None when the command ends first.
+    """
+    depth = 1
+    length = len(command)
+    while cursor < length:
+        character = command[cursor]
+        if character == '"':
+            end = string_end(command, cursor + 1)
+            if end is None:
+                return None
+            cursor = end
+            continue
+        if character == "[":
+            depth += 1
+        elif character == "]":
+            depth -= 1
+            if depth == 0:
+                return cursor + 1
+        cursor += 1
+    return None
+
+
+def command_tokens(command: str) -> list[tuple[str, str]] | None:
+    """The tokens of one command, or None when an attribute or a string is unterminated.
+
+    A token is an attribute (#[ to its matching ]), a string literal, an
+    opening or closing parenthesis, or a word: a run of characters that holds
+    no whitespace, quote or parenthesis and ends before #[.
+    """
+    tokens: list[tuple[str, str]] = []
+    cursor = 0
+    length = len(command)
+    while cursor < length:
+        character = command[cursor]
+        if character in WHITESPACE:
+            cursor += 1
+        elif command.startswith("#[", cursor):
+            end = attribute_end(command, cursor + 2)
+            if end is None:
+                return None
+            tokens.append(("attribute", command[cursor:end]))
+            cursor = end
+        elif character == '"':
+            end = string_end(command, cursor + 1)
+            if end is None:
+                return None
+            tokens.append(("string", command[cursor:end]))
+            cursor = end
+        elif character in "()":
+            tokens.append(("open" if character == "(" else "close", character))
+            cursor += 1
+        else:
+            start = cursor
+            while (
+                cursor < length
+                and command[cursor] not in WHITESPACE
+                and command[cursor] not in '"()'
+                and not command.startswith("#[", cursor)
+            ):
+                cursor += 1
+            tokens.append(("word", command[start:cursor]))
+    return tokens
+
+
+def is_flocq(name: str) -> bool:
+    return name == "Flocq" or name.startswith("Flocq.")
+
+
+def module_words(tokens: list[tuple[str, str]]) -> list[str]:
+    """The module names among the arguments of Require.
+
+    Rocq 9.3 reads Require [Import | Export [-](CATEGORIES)] MODULE[(NAMES)]...
+    (export_token and filtered_import of vernac/g_vernac.mlg), so the names are
+    the words outside parentheses after a leading Import or Export, other
+    than the category negation -.
+    """
+    if tokens and tokens[0] in (("word", "Import"), ("word", "Export")):
+        tokens = tokens[1:]
+    depth = 0
+    words: list[str] = []
+    for kind, text in tokens:
+        if kind == "open":
+            depth += 1
+        elif kind == "close":
+            depth = max(depth - 1, 0)
+        elif kind == "word" and depth == 0 and text != "-":
+            words.append(text)
+    return words
+
+
+def command_imports_flocq(
+    command: str,
+    control_flags: dict[str, int] = CONTROL_FLAGS,
+    legacy_attributes: frozenset[str] = LEGACY_ATTRIBUTES,
+) -> bool:
+    """Whether one vernacular command imports Flocq.
 
     The rule is that of command_imports_flocq in gororoba-open
     crates/provenance_store/src/theorem_replay.rs, which validates the
-    evidence: attributes (#[...], possibly spread over several words) and the
-    control prefixes Time, Instructions, Profile and Timeout N are skipped,
-    then the command imports Flocq when it reads From Flocq[.X] Require ...,
-    From X Require ... Flocq.Y ..., or Require ... Flocq.Y .... An attribute
-    without its closing bracket makes no import.
+    evidence, and ci/flocq-import-corpus.tsv holds the cases both answer.
+    A run of control flags (CONTROL_FLAGS, each with its argument tokens and
+    Profile with an optional string), attributes and legacy attributes
+    (LEGACY_ATTRIBUTES) is skipped in any order; Rocq 9.3 reads them in the
+    order flags, attributes, legacy attributes and rejects the other orders.
+    Fail is skipped like the others: a command under Fail may load Flocq
+    before it fails, so a Fail command counts as the command it wraps. Then
+    From NAMESPACE Require imports Flocq when NAMESPACE is Flocq or starts
+    with Flocq., since Rocq resolves the modules under NAMESPACE, and a bare
+    Require imports Flocq when a module word is Flocq or starts with Flocq.
+    A command that names no module, or whose attribute or string is
+    unterminated, imports nothing. control_flags and legacy_attributes are
+    parameters so that the calibration can drop one entry.
     """
-    rest = words
-    while True:
-        if rest and rest[0].startswith("#["):
-            end = next((index for index, word in enumerate(rest) if word.endswith("]")), None)
-            if end is None:
-                return False
-            rest = rest[end + 1 :]
-        elif rest and rest[0] in ("Time", "Instructions", "Profile"):
-            rest = rest[1:]
-        elif len(rest) >= 2 and rest[0] == "Timeout":
-            rest = rest[2:]
+    tokens = command_tokens(command)
+    if tokens is None:
+        return False
+    position = 0
+    while position < len(tokens):
+        kind, text = tokens[position]
+        if kind == "attribute" or (kind == "word" and text in legacy_attributes):
+            position += 1
+        elif kind == "word" and text in control_flags:
+            position += 1 + control_flags[text]
+            if text == "Profile" and position < len(tokens) and tokens[position][0] == "string":
+                position += 1
         else:
             break
-    if len(rest) >= 3 and rest[0] == "From" and rest[2] == "Require":
-        return rest[1] == "Flocq" or rest[1].startswith("Flocq.") or any(m.startswith("Flocq.") for m in rest[3:])
-    if rest and rest[0] == "Require":
-        return any(module.startswith("Flocq.") for module in rest[1:])
+    rest = tokens[position:]
+    if len(rest) >= 3 and rest[0] == ("word", "From") and rest[1][0] == "word" and rest[2] == ("word", "Require"):
+        return is_flocq(rest[1][1]) and bool(module_words(rest[3:]))
+    if rest and rest[0] == ("word", "Require"):
+        return any(is_flocq(module) for module in module_words(rest[1:]))
     return False
 
 
 def uses_flocq(contents: list[str]) -> bool:
-    return any(
-        command_imports_flocq(split_whitespace(command)) for source in contents for command in source_commands(source)
-    )
+    return any(command_imports_flocq(command) for source in contents for command in source_commands(source))
 
 
 def configured_flocq_root(tree: Path) -> Path:
