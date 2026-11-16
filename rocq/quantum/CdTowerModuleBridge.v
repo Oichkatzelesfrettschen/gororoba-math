@@ -28,8 +28,9 @@
       coordinate of e_i y at w is the coordinate of y at i XOR w, negated
       when neg_sign k i (i XOR w) holds.
 
-    The proof of repr_e_mul decomposes y in the basis, applies e_mul_e of
-    CdTowerBasisBridge.v to each term, and keeps the one term of index
+    The proof of repr_e_mul decomposes y in the basis, applies
+    basis_mul_ring_sign of CdTowerBasisBridge.v (the lemma behind its
+    e_mul_e) to each term, and keeps the one term of index
     i XOR w. basis_mul_coord of CdTowerBasisSign.v states the same
     coordinates over the integer tower of CdImaginarySumConference.v,
     a type of its own, with sigma in place of neg_sign.
@@ -44,7 +45,7 @@
     over the zero ring, where Lean's Nontrivial hypothesis excludes it. Its
     conjugation is the identity, where Lean takes every StarRing.
     IntegerTowerModuleBridge instantiates the functor at the integers, and
-    integer_repr_e3_mul evaluates one coordinate of level 3 there. *)
+    integer_repr_e3_mul evaluates two coordinates of level 3 there. *)
 
 From Stdlib Require Import Ring Lia PeanoNat ZArith List.
 Require Import CdTowerRing CdTowerRingBasis CdTowerRingBaseChange.
