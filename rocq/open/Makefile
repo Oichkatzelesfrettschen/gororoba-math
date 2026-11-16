@@ -229,11 +229,14 @@ extract-r2vb-check: extract-r2vb-c
 # Build and run the correspondence harnesses: the extracted dp4 against a
 # native integer reference over nine fixtures spanning the B = 181 admission
 # boundary, and the extracted gate against its native predicate over five
-# known-good and four known-bad rows. CertiRocq puns function pointers into
-# value (long), so int-conversion and implicit-declaration are permitted for
-# these translation units. extraction/r2vb_dp4_test_record.txt records the
+# known-good and four known-bad rows. Every compiler warning is an error but
+# four that the generated code raises: CertiRocq puns function pointers into
+# value (long) (int-conversion, implicit-function-declaration), and the
+# generated glue prints constructor names through non-literal format strings
+# (format, format-security; measured with gcc 15.2). extraction/r2vb_dp4_test_record.txt records the
 # compiler command and the digests of both binaries.
-R2VB_CFLAGS := -O1 -std=gnu11 -Wno-int-conversion -Wno-implicit-function-declaration
+R2VB_CFLAGS := -O1 -std=gnu11 -Werror -Wno-int-conversion -Wno-implicit-function-declaration \
+  -Wno-format -Wno-format-security
 test-r2vb-correspondence:
 	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
 	gcc $(R2VB_CFLAGS) -I "$$RT" -o extraction/test_r2vb_dp4 \
