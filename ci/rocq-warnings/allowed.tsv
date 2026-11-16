@@ -736,6 +736,9 @@ quantum	CdTwistedProduct.v	using-fallback-loc
 quantum	GaussianIntegerHom.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	GaussianIntegerHom.v	disj-pattern-notation
 quantum	GaussianIntegerHom.v	using-fallback-loc
+quantum	KernelMapEstimator.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	KernelMapEstimator.v	disj-pattern-notation
+quantum	KernelMapEstimator.v	using-fallback-loc
 quantum	MatrixLeftInverseCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	MatrixLeftInverseCertificate.v	using-fallback-loc
 quantum	MatrixSplittingCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0

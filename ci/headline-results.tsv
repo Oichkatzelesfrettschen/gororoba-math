@@ -25,8 +25,8 @@ lean	lean/GororobaMath/CayleyDickson/AssociatorSpace.lean	CayleyDickson.Tower.fi
 lean	lean/GororobaMath/KernelMap/TwoTermBins.lean	KernelMap.nullity_eq_alignedPairCount	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
 lean	lean/GororobaMath/KernelMap/TwoTermBins.lean	KernelMap.nullity_eq_alignedPairCount_of_binContract	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
 lean	lean/GororobaMath/CayleyDickson/Basic.lean	CayleyDickson.mul_star_self	rocq/quantum/CdTowerMulStarSelf.v:MulStarSelf.mul_star_self narrower: a commutative coefficient ring whose conjugation is the identity, where Lean takes every NonAssocRing with a StarRing, and the ring of the doubling is a level of the tower, where Lean takes any star ring	-
-lean	lean/GororobaMath/KernelMap/Estimator.lean	KernelMap.nHat_sub_nullity	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
-lean	lean/GororobaMath/KernelMap/Estimator.lean	KernelMap.nHat_eq_card_div_two_of_negBins_eq_empty	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
+lean	lean/GororobaMath/KernelMap/Estimator.lean	KernelMap.nHat_sub_nullity	rocq/quantum/KernelMapEstimator.v:Estimator.nHat_sub_nullity	-
+lean	lean/GororobaMath/KernelMap/Estimator.lean	KernelMap.nHat_eq_card_div_two_of_negBins_eq_empty	rocq/quantum/KernelMapEstimator.v:Estimator.nHat_eq_card_div_two_of_negBins_eq_nil	-
 lean	lean/GororobaMath/CayleyDickson/AnnihilatorSymmetry.lean	CayleyDickson.Tower.mul_eq_zero_iff_rev	rocq/quantum/CdTowerDomain.v:CdTower.kernel_equality	-
 lean	lean/GororobaMath/CayleyDickson/AnnihilatorSymmetry.lean	CayleyDickson.Tower.re_eq_zero_of_mul_eq_zero	rocq/quantum/CdTowerDomain.v:CdTower.purity_left	-
 lean	lean/GororobaMath/CayleyDickson/AnnihilatorSymmetry.lean	CayleyDickson.Tower.mul_eq_one_rev	rocq/quantum/CdTowerDomain.v:CdTower.direct_finiteness	-

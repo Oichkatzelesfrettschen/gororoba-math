@@ -39,6 +39,7 @@ CdTowerRingDomain.v
 CdTwistedProduct.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
+KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
 QuantumChannelFromOpen.v
