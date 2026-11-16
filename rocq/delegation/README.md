@@ -2,7 +2,7 @@
 
 A model of delegation of rights between named subjects, and the three
 statement inventories of gororoba-open rendered with their proofs. Logical
-root `GororobaDelegation`; compiled with `-w +default`; no axiom
+root `GororobaDelegation`; compiled with `-w all,+default`; no axiom
 (`kernel-assumptions.txt` is empty).
 
 ## What is trivially true and what carries content
