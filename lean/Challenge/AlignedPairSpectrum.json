@@ -1,0 +1,16 @@
+{
+  "challenge_module": "Challenge.AlignedPairSpectrum",
+  "solution_module": "GororobaMath.CayleyDickson.AlignedPairSpectrum",
+  "theorem_names": [
+    "CayleyDickson.Tower.alignedPairCount_add_four_le_of_three_le",
+    "CayleyDickson.Tower.exists_alignedPairCount_eq",
+    "CayleyDickson.Tower.range_alignedPairCount",
+    "CayleyDickson.Tower.alignedPairCount_add_flip",
+    "CayleyDickson.Tower.multiplicity_mirror"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

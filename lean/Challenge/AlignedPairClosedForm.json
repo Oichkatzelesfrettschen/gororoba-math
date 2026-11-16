@@ -1,0 +1,12 @@
+{
+  "challenge_module": "Challenge.AlignedPairClosedForm",
+  "solution_module": "GororobaMath.CayleyDickson.AlignedPairClosedForm",
+  "theorem_names": [
+    "CayleyDickson.Tower.alignedPairCount_eq_closedForm"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

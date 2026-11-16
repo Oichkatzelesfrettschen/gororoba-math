@@ -49,11 +49,10 @@ and Lemmas 9.4 and 9.5 the vanishing at `e 0` and at the adjoined unit. For
 the mixed case, Proposition 11.1 gives the annihilator of `(e a, e b)` the
 dimension of the anti-associator space of `e a` and `e b`, a quaternionic
 pair of alternative vectors, and Lemmas 8.7 and 8.8 double the associator
-dimensions of such a pair. hypothesis: `dim Ass[e a, e b] = 2 * N k a b + 4`
-for distinct imaginary basis vectors, the identity under which those lemmas
-read as the mixed case (computed for `k ≤ 7`; no associator space is
-defined here). The theorems of this file are statements about the count on
-bit vectors and name no ring; through `Tower.finrank_ker_mulLeft_e_add_e`
+dimensions of such a pair. `Tower.finrank_assocSpace_e` proves
+`dim Ass[e a, e b] = 2 * N k a b + 4` for distinct imaginary basis vectors,
+the identity under which those lemmas read as the mixed case. The theorems
+of this file are statements about the count on bit vectors and name no ring; through `Tower.finrank_ker_mulLeft_e_add_e`
 they describe the kernel rank over every ring of the first paragraph.
 
 ## Main results

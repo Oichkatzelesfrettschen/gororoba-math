@@ -16,9 +16,28 @@ uses.
 | `GororobaMath.CayleyDickson.Tower` | at every level `k` and over every such ring, `e_p * e_q = sign(p, q) e_(p xor q)` (`Tower.e_mul_e`, `Tower.e_mul_e_sign`), conjugation negates every basis element but `1` (`Tower.star_e`), each of those squares to `-1` (`Tower.e_mul_self`) and two distinct ones anticommute (`Tower.e_mul_e_anticomm`); the sign of `e_p * e_(p xor q)` is that of `e_p * e_q`, reversed for `p != 0` (`Tower.negSign_xor_right`); `Pathion R` is level 5, the 32-dimensional algebra `A_5` | `cd_core.cd_sign`, by the comparison below |
 | `GororobaMath.CayleyDickson.TwoTerm` | an aligned pair `{x, x xor i xor j}` gives the zero product `(e_i + e_j)(e_x +- e_x') = 0` at every level over every ring (`Tower.two_term_mul_add_eq_zero`, `Tower.two_term_mul_sub_eq_zero`); `partner` is an involution without a fixed point for `i != j` and alignment is a property of the pair; the aligned-pair counts of the measured operands, evaluated in the kernel: 12 for `e_1 + e_18` and `e_1 + e_24`, 4 for `e_1 + e_26` and `e_2 + e_27`, 0 for `e_1 + e_17` in `A_5`, 4 for `e_1 + e_10` in the sedenions | the nullity reading of gororoba-quantum's `docs/evidence/pathion-kernel-map/README.md`; `TwoTermNullity` proves that the count is the nullity |
 | `GororobaMath.CayleyDickson.TowerModule` | every level of the tower over a commutative star ring `R` is an `R`-module with the basis `e_p`, of rank `2^k` (`Tower.basis`, `Tower.finrank_eq`); over a ring with the identity as star, left multiplication is `R`-linear (`Tower.mulLeft`) and acts on coordinates as a signed permutation (`Tower.repr_e_mul`) | the coordinates in which gororoba-quantum's `pathion_kernel_map.py` writes the operator |
-| `GororobaMath.CayleyDickson.TwoTermNullity` | over a nontrivial commutative ring with the identity as star in which `2` is a non-zero-divisor, the kernel of left multiplication by `e_i + e_j` is a free module of rank `alignedPairCount k i j` (`Tower.free_ker_mulLeft_e_add_e`, `Tower.finrank_ker_mulLeft_e_add_e`), and the same for `e_i - e_j` with `i != j`; 12 for `e_1 + e_18` in `A_5` over the rationals and over the integers | the nullity that the hardware estimator of `KernelMap.Estimator` targets; no theorem yet links `KernelMap.nullity` to this rank |
-| `GororobaMath.CayleyDickson.TwoTermRecursion` | the recursion of `alignedPairCount` on the top index bit, with low parts `a`, `b` of `i`, `j`: twice the level-`k` count of `a`, `b` for `i` and `j` in the same half (`Tower.alignedPairCount_succ_of_msb_eq`), `0` for different halves with `a = 0`, `b = 0` or `a = b` (`Tower.alignedPairCount_succ_eq_zero`), and `N(k+1, i, j) + 2 N(k, a, b) + 4 = 2^k` for different halves otherwise (`Tower.alignedPairCount_succ_add`); hence no aligned pair at levels `k <= 3` or for an operand with the term `e_0` or the unit the last doubling adjoins (index `2^(k-1)` at level `k`), every count a multiple of 4, and a nonzero count at level `k` at most `2^(k-1) - 4` | the counts of the measured operands in `TwoTerm`; over the reals, the same-half case is Theorem 10.1 of Biss, Dugger and Isaksen (arXiv:math/0511691) on sums of two basis vectors; the mixed case matches their Proposition 11.1 and Lemmas 8.7 and 8.8 under an associator-dimension identity that is computed and unproved |
+| `GororobaMath.CayleyDickson.TwoTermNullity` | over a nontrivial commutative ring with the identity as star in which `2` is a non-zero-divisor, the kernel of left multiplication by `e_i + e_j` is a free module of rank `alignedPairCount k i j` (`Tower.free_ker_mulLeft_e_add_e`, `Tower.finrank_ker_mulLeft_e_add_e`), and the same for `e_i - e_j` with `i != j`; 12 for `e_1 + e_18` in `A_5` over the rationals and over the integers | the nullity that the hardware estimator of `KernelMap.Estimator` targets; `KernelMap.TwoTermBins` links `KernelMap.nullity` to this count |
+| `GororobaMath.CayleyDickson.TwoTermRecursion` | the recursion of `alignedPairCount` on the top index bit, with low parts `a`, `b` of `i`, `j`: twice the level-`k` count of `a`, `b` for `i` and `j` in the same half (`Tower.alignedPairCount_succ_of_msb_eq`), `0` for different halves with `a = 0`, `b = 0` or `a = b` (`Tower.alignedPairCount_succ_eq_zero`), and `N(k+1, i, j) + 2 N(k, a, b) + 4 = 2^k` for different halves otherwise (`Tower.alignedPairCount_succ_add`); hence no aligned pair at levels `k <= 3` or for an operand with the term `e_0` or the unit the last doubling adjoins (index `2^(k-1)` at level `k`), every count a multiple of 4, and a nonzero count at level `k` at most `2^(k-1) - 4` | the counts of the measured operands in `TwoTerm`; over the reals, the same-half case is Theorem 10.1 of Biss, Dugger and Isaksen (arXiv:math/0511691) on sums of two basis vectors; the mixed case matches their Proposition 11.1 and Lemmas 8.7 and 8.8 under the associator-dimension identity that `AssociatorSpace` proves |
+| `GororobaMath.CayleyDickson.AlignedPairSpectrum` | for `k >= 3` every count satisfies `N + 4 <= 2^(k-1)` (`Tower.alignedPairCount_add_four_le_of_three_le`), every multiple `4v` with `4v + 4 <= 2^(k-1)` is the count of a pair of nonzero distinct indices (`Tower.exists_alignedPairCount_eq`), and the counts are exactly those multiples (`Tower.range_alignedPairCount`); flipping the top bit of `j` sends a nonzero count `n` to `2^(k-1) - 4 - n` (`Tower.alignedPairCount_add_flip`), so as many ordered pairs have count `n` as have count `2^(k-1) - 4 - n` (`Tower.multiplicity_mirror`) | the spectrum and multiplicities of the two-term nullities |
+| `GororobaMath.CayleyDickson.AlignedPairClosedForm` | `N(k, i, j) = 4 * sum over t in [3, k) of 2^(k-1-t) * parity(m' >> t)`, with `m'` the exclusive or of the indices with every bit at or below the highest degenerate split cleared (`Tower.alignedPairCount_eq_closedForm`) | the closed form computed for issue 15 |
+| `GororobaMath.CayleyDickson.AssociatorSpace` | the associator space `{x : (a x) b = a (x b)}` as a kernel (`Tower.assocSpace`); for nonzero distinct basis indices it is free (`Tower.free_assocSpace_e`) of rank `2 N(k, a, b) + 4` over every nontrivial commutative ring with the identity as star in which `2` is a non-zero-divisor (`Tower.finrank_assocSpace_e`) | Lemmas 8.7 and 8.8 of Biss, Dugger and Isaksen read on basis vectors |
 | `GororobaMath.KernelMap.Estimator` | the bias identity of the hardware nullity estimator, `N_hat - N = \|B+\|\|B-\|/\|B\| (Vbar+ - Vbar-)/V_hat` for every observed contrast with `V_hat` nonzero (`nHat_sub_nullity`), and the forced reading `N_hat = \|B\|/2` of a block with no bin of ideal contrast `-1` (`nHat_eq_card_div_two_of_negBins_eq_empty`) | `docs/evidence/pathion-kernel-map/nhat-bias/README.md` in gororoba-quantum, claims 1 and 3 |
+| `GororobaMath.KernelMap.TwoTermBins` | a labelling of the `2^k` bins in which every index of an aligned pair is a `+1` bin and every misaligned pair holds one bin of each sign has `KernelMap.nullity = alignedPairCount k i j` (`KernelMap.nullity_eq_alignedPairCount`), and the same from the Boolean contract `KernelMap.binContract` (`KernelMap.nullity_eq_alignedPairCount_of_binContract`) | the ideal output contrast of `pathion_kernel_map.kernel_map_circuit`, by the comparison below |
+
+`lean/Challenge/` holds the challenge modules of the headline theorems of
+`AlignedPairSpectrum`, `AlignedPairClosedForm`, `AssociatorSpace` and
+`KernelMap.TwoTermBins`, one per solution module. `Challenge.NAME` restates
+the theorems the table names with `sorry` as each proof, together with the
+definitions the solution module introduces and those statements use, and
+imports the library modules the solution imports. `NAME.json` beside it names
+the challenge module, the solution module, the theorems and the permitted
+axioms (`propext`, `Quot.sound`, `Classical.choice`). From `lean/`, with
+`bubblewrap` installed, `lake comparator --config Challenge/NAME.json`
+checks that each named theorem of the solution has that statement and those
+axioms. No library module imports `Challenge` and the admission gate does
+not build it. The theorems of the other rows are owed their challenge modules
+in the same layout
+([issue 31](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/31)).
 
 The tower theorems hold for every level and every coefficient ring, so they
 cover the 64- and 128-dimensional runs as well as `A_5`. The estimator
@@ -228,9 +247,33 @@ GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_estimator.sh
 
 compares `KernelMap.vHat`, `KernelMap.nHat` and `KernelMap.nullity`, evaluated
 over the rationals, with `pathion_kernel_map._pair_summary` on twelve fixed
-blocks whose bins are all decided. Each prints the gororoba-quantum commit it
-read and runs on demand, since it reads another repository; the second also
-needs that repository's Python packages.
+blocks whose bins are all decided, and
+
+```sh
+GOROROBA_QUANTUM=../gororoba-quantum sh ci/compare_kernel_map_bins.sh [LEVEL [SCOPE]]
+```
+
+evaluates `KernelMap.binContract` on the ideal kernel map of
+`pathion_kernel_map` at level `LEVEL` (5, 6 or 7; default 5). It runs
+`kernel_map_circuit` at dimension `2^LEVEL` for every two-term operand
+`e_i + t e_j` (`i != j`, `t = +1` or `-1`): 1,984 operands at level 5, with
+the module's six operands and two twins among them, 8,064 at level 6 and
+32,512 at level 7. At levels 6 and 7 it also runs each operand of
+`pathion_wide_coset.WIDE_OPERANDS` through the coset-block circuits that the
+64- and 128-dimensional runs execute; `SCOPE wide` takes only those. The
+`+1` bins of the ideal output contrast are `pos`, with bin `y` read as index
+`y`, and the script requires `Tower.alignedPairCount`, `KernelMap.nullity`
+and half the contrast sum to agree. At every level the contract must reject
+`e_1 + e_18` with one SELECT sign negated and a contrast with one bin
+negated; at levels 6 and 7 it must also reject the cocycle-free wide
+operand. The script refuses a gororoba-quantum checkout whose
+`gororoba_quantum` directory is modified or changes during the run, and it
+prints that directory's git tree. Level 5 takes about a minute and level 6
+about four minutes on the build host; level 7 with `SCOPE all` needs about
+35 minutes and more than 4 GiB (issue 36). Each prints the gororoba-quantum commit it
+read and runs on demand, since it reads another repository; the second and
+third also need that repository's Python packages and the built Lean
+library.
 
 ```sh
 GOROROBA_OPEN=../gororoba-open sh ci/check_delegation_sources.sh
@@ -352,10 +395,14 @@ literal expectations: the complete compiler, checker and assumption argument
 vectors, the compilation order, the digests of the written files and the
 sources, the assumption lists (empty, `postulate` and empty) and, for Flocq,
 an object list equal to the sorted `.vo` files of the switch's library with
-`-R external/Flocq Flocq` before every target. The verifier is itself
-calibrated: 18 mutated copies of that evidence (swapped `-R` pairs, a lexical
-or reversed compilation order, a truncated Flocq list, altered digests, among
-others) must each be rejected. A warning printed on a zero exit status, a
+`-R external/Flocq Flocq` before every target, and a `flocq_producer` that
+names the entry of a scratch manifest (`ci/flocq_manifest.py --record` of the
+running switch) which lists those objects. The verifier is itself
+calibrated: 20 mutated copies of that evidence (swapped `-R` pairs, a lexical
+or reversed compilation order, a truncated Flocq list, altered digests, a
+missing or renamed Flocq producer, among others) must each be rejected, and a
+manifest with no entry, two entries, the wrong schema or no file for the
+switch's objects must be refused. A warning printed on a zero exit status, a
 source that fails to compile, a missing declaration, another Rocq version, a
 Flocq directory without `Core/Core.vo`, an output directory inside the
 tracking repository, a failing git, an output directory that is a symbolic
