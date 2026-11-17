@@ -14,10 +14,13 @@
 #      passes when the script exits with 130 after INT and 143 after TERM,
 #      reaches no later stage, and leaves its temporary directory empty. A
 #      mutant of each subject whose EXIT trap also names INT and TERM, the
-#      form issue 66 reports, must fail the same test.
-# Needs git, GNU env (--default-signal, coreutils 8.31 or later, since an
-# asynchronous command of a non-interactive shell starts with SIGINT
-# ignored and a shell cannot trap a signal ignored at its start) and a sleep
+#      form issue 66 reports, must fail the same test: the four comparison
+#      scripts run on into a later stage, and check.sh, whose EXIT action
+#      ends in exit "$status", exits 0.
+# Needs git, an env that takes --default-signal (GNU coreutils 8.31 or later;
+# uutils coreutils 0.10.0 measured), since an asynchronous command of a
+# non-interactive shell starts with SIGINT ignored and a shell cannot trap a
+# signal ignored at its start, and a sleep
 # that takes fractions of a second. Exit status: 0 every subject stops and
 # every mutant is caught, 1 a check failed, 2 a tool is missing. Writes only
 # under a temporary directory it removes.
@@ -41,14 +44,15 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 scratch=$(mktemp -d)
 
-# Prints the lines of standard input that run trap in a command position in
-# any form but three, each on one physical line: trap 'exit 130' INT,
+# Prints the lines of standard input that run trap in a command position (at
+# the start of a line, after ; & | ( { or after then, do, else or !) in any
+# form but three, each on one physical line: trap 'exit 130' INT,
 # trap 'exit 143' TERM, and trap ACTION EXIT with ACTION a function name or a
 # single-quoted string. Every other spelling is reported, a correct one too
 # (trap -- ..., double quotes, signal numbers, SIG names, several conditions,
 # a trap spread over lines), so the rule fails closed on what it cannot read.
 nonconforming_traps() {
-  { grep -n -E '(^|[;&|({])[[:space:]]*trap([[:space:]]|$)' || [ $? -eq 1 ]; } |
+  { grep -n -E '(^|[;&|({]|(^|[;&|({[:space:]])(then|do|else|!))[[:space:]]*trap([[:space:]]|$)' || [ $? -eq 1 ]; } |
     { grep -v -E '^[0-9]+:[[:space:]]*#' || [ $? -eq 1 ]; } |
     { grep -v -E "^[0-9]+:[[:space:]]*trap ('exit 130' INT|'exit 143' TERM)\$" || [ $? -eq 1 ]; } |
     { grep -v -E "^[0-9]+:[[:space:]]*trap ('[^']*'|[[:alpha:]_][[:alnum:]_]*) EXIT\$" || [ $? -eq 1 ]; }
@@ -69,7 +73,11 @@ TRAP '
 TRAP 'rm w' 0
 f() { TRAP 'rm w' INT; }
 cd w && TRAP 'rm w' INT
-(TRAP 'rm w' TERM)"
+(TRAP 'rm w' TERM)
+if w; then TRAP 'rm w' INT; fi
+for w in w; do TRAP 'rm w' INT; done
+if w; then :; else TRAP 'rm w' INT; fi
+! TRAP 'rm w' INT"
 printf '%s\n' "$rejected" | sed 's/TRAP/trap/' | while IFS= read -r sample; do
   [ -n "$(printf '%s\n' "$sample" | nonconforming_traps)" ] || {
     echo "check_signal_traps: the lexical rule accepted: $sample" >&2
@@ -82,7 +90,8 @@ TRAP 'exit 143' TERM
 TRAP cleanup EXIT
 TRAP 'rm -r \"\$work\" </dev/null' EXIT
 # TRAP 'rm w' INT
-echo TRAP INT"
+echo TRAP INT
+echo do not TRAP INT"
 [ -z "$(printf '%s\n' "$accepted" | sed 's/TRAP/trap/' | nonconforming_traps)" ] || {
   echo "check_signal_traps: the lexical rule reported a conforming trap" >&2
   exit 1
@@ -213,4 +222,4 @@ done <<EOF
 $subjects
 EOF
 [ "$failed" -eq 0 ] || exit 1
-echo "check_signal_traps: $runs subject runs stop with the signal status; each mutant runs on"
+echo "check_signal_traps: $runs subject runs stop with the signal status; each mutant fails the test"
