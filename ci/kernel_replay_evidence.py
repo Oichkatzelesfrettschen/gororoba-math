@@ -759,7 +759,8 @@ def reported_assumptions(report: str) -> list[str]:
 def library_name(name: str) -> bool:
     """Whether `name` is a dot-separated qualified name of ASCII identifiers."""
     return all(
-        part and (part[0].isascii() and (part[0].isalpha() or part[0] == "_"))
+        part
+        and (part[0].isascii() and (part[0].isalpha() or part[0] == "_"))
         and all(character.isascii() and (character.isalnum() or character in "_'") for character in part)
         for part in name.split(".")
     )
