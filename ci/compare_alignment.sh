@@ -15,13 +15,15 @@
 # rocq/open/verified that differs from its copy in the tree, or an object
 # older than its source, is status 2. Runs on demand, outside ci/check.sh,
 # because it needs the Rocq switch of ci/install_rocq.sh, a build tree and the
-# Lean toolchain with a built lean/.lake.
+# Lean toolchain with a built lean/.lake (the script runs lake build --no-build
+# and writes nothing there).
 # Exit status: 0 agreement, 1 a difference or an accepted mutant, 2 a tool,
 # the switch or the build tree is missing or stale, or a table producer
 # fails. Writes only under a temporary directory it removes.
 set -eu
 
 PYTHON=${PYTHON:-python3}
+export PYTHON
 switch=rocq-9.3
 for tool in git lake opam "$PYTHON"; do
   command -v "$tool" >/dev/null || {
@@ -79,8 +81,8 @@ for name in Alignment MutantPartner MutantAdd MutantSub; do
 done
 
 cd "$root/lean"
-lake build -q GororobaMath.CayleyDickson.TwoTerm >&2 || {
-  echo "compare_alignment: GororobaMath.CayleyDickson.TwoTerm does not build" >&2
+lake build --no-build -q GororobaMath.CayleyDickson.TwoTerm >&2 || {
+  echo "compare_alignment: build the Lean library first (lake build in lean/)" >&2
   exit 2
 }
 lake env lean --run "$work/Alignment.lean" >"$work/lean.txt" || {
