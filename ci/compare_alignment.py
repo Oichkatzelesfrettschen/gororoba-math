@@ -36,7 +36,7 @@ LEVELS = range(7)
 ENTRIES = sum(8**k for k in LEVELS)
 ADD_WEIGHT = 64
 SUB_WEIGHT = 128
-BLOCK = re.compile(r'^\s*=\s*"(.*?)"\s*\n\s*:\s*string\s*$', re.DOTALL | re.MULTILINE)
+BLOCK = re.compile(r'^\s*=\s*"(.*?)"(?:%string)?\s*\n\s*:\s*string\s*$', re.DOTALL | re.MULTILINE)
 
 LEAN = """import GororobaMath.CayleyDickson.TwoTerm
 
