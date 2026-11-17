@@ -178,6 +178,13 @@ def read_rocq(path: Path) -> list[str]:
     return ["".join("1" if v == "true" else "0" for v in BOOL.findall(m.group(1))) for m in EVAL.finditer(text)]
 
 
+def read_files(quantum: Path) -> list[Path]:
+    """The Python files of the checkout that the interpreter has loaded."""
+    root = quantum / "gororoba_quantum"
+    names = (getattr(m, "__file__", None) for m in sys.modules.values())
+    return sorted({Path(n) for n in names if n and Path(n).is_relative_to(root)})
+
+
 def compare(quantum: Path, lean_path: Path, rocq_path: Path, mutate: bool) -> int:
     try:
         anf, cd_core = load(quantum)
@@ -216,10 +223,8 @@ def compare(quantum: Path, lean_path: Path, rocq_path: Path, mutate: bool) -> in
     if status:
         return status
     print(f"compare_anf: {len(table_list)} tables, {len(python)} rows agree in Lean, Rocq and Python")
-    root = str(quantum / "gororoba_quantum") + os.sep
-    files = sorted({m.__file__ for m in sys.modules.values() if getattr(m, "__file__", None) and m.__file__.startswith(root)})
-    for name in files:
-        print(f"compare_anf: sha256 {hashlib.sha256(Path(name).read_bytes()).hexdigest()} {Path(name).name}")
+    for name in read_files(quantum):
+        print(f"compare_anf: sha256 {hashlib.sha256(name.read_bytes()).hexdigest()} {name.name}")
     return 0
 
 

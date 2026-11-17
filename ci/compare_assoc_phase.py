@@ -60,7 +60,7 @@ def write_cases(lean_file: Path, rocq_file: Path, mutant_file: Path) -> None:
         "    for p in List.range (2 ^ k) do",
         "      for q in List.range (2 ^ k) do",
         "        let row := (List.range (2 ^ k)).map fun x =>",
-        "          if Tower.assocPhase (BitVec.ofNat k p) (BitVec.ofNat k q) (BitVec.ofNat k x) then \"1\" else \"0\"",
+        '          if Tower.assocPhase (BitVec.ofNat k p) (BitVec.ofNat k q) (BitVec.ofNat k x) then "1" else "0"',
         '        IO.println s!"{k} {p} {q} {String.join row}"',
     ]
     lean_file.write_text("\n".join(lean) + "\n", encoding="utf-8")
@@ -133,6 +133,13 @@ def read_rocq(path: Path) -> list[str]:
     return ["".join("1" if v == "true" else "0" for v in BOOL.findall(m.group(1))) for m in EVAL.finditer(text)]
 
 
+def read_files(quantum: Path) -> list[Path]:
+    """The Python files of the checkout that the interpreter has loaded."""
+    root = quantum / "gororoba_quantum"
+    names = (getattr(m, "__file__", None) for m in sys.modules.values())
+    return sorted({Path(n) for n in names if n and Path(n).is_relative_to(root)})
+
+
 def compare(quantum: Path, lean_path: Path, rocq_path: Path, mutate: bool) -> int:
     try:
         predict = load(quantum)
@@ -160,10 +167,8 @@ def compare(quantum: Path, lean_path: Path, rocq_path: Path, mutate: bool) -> in
                 )
                 return 1
     print(f"compare_assoc_phase: {VALUES} phases agree in Lean, Rocq and Python at levels 1 to {LEVELS[-1]}")
-    root = str(quantum / "gororoba_quantum") + os.sep
-    files = sorted({m.__file__ for m in sys.modules.values() if getattr(m, "__file__", None) and m.__file__.startswith(root)})
-    for name in files:
-        print(f"compare_assoc_phase: sha256 {hashlib.sha256(Path(name).read_bytes()).hexdigest()} {Path(name).name}")
+    for name in read_files(quantum):
+        print(f"compare_assoc_phase: sha256 {hashlib.sha256(name.read_bytes()).hexdigest()} {name.name}")
     return 0
 
 
@@ -174,7 +179,8 @@ def main() -> int:
             load(Path(args[1]))
         except ImportError as error:
             print(
-                f"compare_assoc_phase: predict.py does not import ({error}); it needs numpy, so set PYTHON to an interpreter that has it",
+                f"compare_assoc_phase: predict.py does not import ({error}); "
+                "it needs numpy, so set PYTHON to an interpreter that has it",
                 file=sys.stderr,
             )
             return 2
