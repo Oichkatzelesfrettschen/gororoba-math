@@ -4,9 +4,9 @@
 # bound to INT or TERM that returns lets a POSIX shell run on with the next
 # command, so each tracked shell script binds INT to exit 130 and TERM to
 # exit 143 alone, and leaves its cleanup to the EXIT trap.
-#   1. A lexical rule reads every tracked shell script and reports a trap
-#      line whose conditions name INT or TERM with any other action; samples
-#      calibrate it.
+#   1. A lexical rule reads every tracked shell script and reports each
+#      trap command in any form but trap ACTION EXIT, trap 'exit 130' INT
+#      and trap 'exit 143' TERM on one line; samples calibrate it both ways.
 #   2. Each subject script below runs from a scratch repository with stub
 #      tools first on PATH. The first call of its trigger tool, the first
 #      command after its traps, waits until this script has sent the signal;
@@ -41,36 +41,65 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 scratch=$(mktemp -d)
 
-# Prints the lines of standard input that bind INT or TERM to an action other
-# than the bare exit with that signal's status.
-returning_traps() {
-  { grep -n -E '^[[:space:]]*trap[[:space:]].*[[:space:]](INT|TERM)([[:space:]]|$)' || [ $? -eq 1 ]; } |
-    { grep -v -E "^[0-9]+:[[:space:]]*trap 'exit 130' INT$" || [ $? -eq 1 ]; } |
-    { grep -v -E "^[0-9]+:[[:space:]]*trap 'exit 143' TERM$" || [ $? -eq 1 ]; }
+# Prints the lines of standard input that run trap in a command position in
+# any form but three, each on one physical line: trap 'exit 130' INT,
+# trap 'exit 143' TERM, and trap ACTION EXIT with ACTION a function name or a
+# single-quoted string. Every other spelling is reported, a correct one too
+# (trap -- ..., double quotes, signal numbers, SIG names, several conditions,
+# a trap spread over lines), so the rule fails closed on what it cannot read.
+nonconforming_traps() {
+  { grep -n -E '(^|[;&|({])[[:space:]]*trap([[:space:]]|$)' || [ $? -eq 1 ]; } |
+    { grep -v -E '^[0-9]+:[[:space:]]*#' || [ $? -eq 1 ]; } |
+    { grep -v -E "^[0-9]+:[[:space:]]*trap ('exit 130' INT|'exit 143' TERM)\$" || [ $? -eq 1 ]; } |
+    { grep -v -E "^[0-9]+:[[:space:]]*trap ('[^']*'|[[:alpha:]_][[:alnum:]_]*) EXIT\$" || [ $? -eq 1 ]; }
 }
-for sample in "trap 'rm -r \"\$work\"' EXIT INT TERM" "trap 'rm -r w' INT" "trap 'exit 130' INT TERM" "trap cleanup TERM" "  trap 'exit 0' INT"; do
-  [ -n "$(printf '%s\n' "$sample" | returning_traps)" ] || {
-    echo "check_signal_traps: the lexical rule accepted a returning trap: $sample" >&2
+# The samples spell the command TRAP, and sed restores it, so the scan of this
+# script below meets no sample as a trap command.
+rejected="TRAP 'rm -r \"\$work\"' EXIT INT TERM
+TRAP 'rm -r w' INT
+TRAP 'exit 130' INT TERM
+TRAP cleanup TERM
+  TRAP 'exit 0' INT
+TRAP 'exit 130' 2
+TRAP 'exit 143' 15
+TRAP 'exit 130' SIGINT
+TRAP -- 'exit 130' INT
+TRAP \"exit 130\" INT
+TRAP '
+TRAP 'rm w' 0
+f() { TRAP 'rm w' INT; }
+cd w && TRAP 'rm w' INT
+(TRAP 'rm w' TERM)"
+printf '%s\n' "$rejected" | sed 's/TRAP/trap/' | while IFS= read -r sample; do
+  [ -n "$(printf '%s\n' "$sample" | nonconforming_traps)" ] || {
+    echo "check_signal_traps: the lexical rule accepted: $sample" >&2
     exit 1
   }
 done
-[ -z "$(printf "trap 'exit 130' INT\ntrap 'exit 143' TERM\ntrap cleanup EXIT\n# trap 'rm w' INT\n" | returning_traps)" ] || {
-  echo "check_signal_traps: the lexical rule reported a trap that exits" >&2
+accepted="TRAP 'exit 130' INT
+TRAP 'exit 143' TERM
+  TRAP 'exit 130' INT
+TRAP cleanup EXIT
+TRAP 'rm -r \"\$work\" </dev/null' EXIT
+# TRAP 'rm w' INT
+echo TRAP INT"
+[ -z "$(printf '%s\n' "$accepted" | sed 's/TRAP/trap/' | nonconforming_traps)" ] || {
+  echo "check_signal_traps: the lexical rule reported a conforming trap" >&2
   exit 1
 }
 cd "$root"
 git ls-files -- '*.sh' >"$scratch/scripts.txt"
-: >"$scratch/returning.txt"
+: >"$scratch/nonconforming.txt"
 while IFS= read -r script; do
-  found=$(returning_traps <"$script")
-  [ -z "$found" ] || printf '%s\n' "$found" | sed "s|^|$script:|" >>"$scratch/returning.txt"
+  found=$(nonconforming_traps <"$script")
+  [ -z "$found" ] || printf '%s\n' "$found" | sed "s|^|$script:|" >>"$scratch/nonconforming.txt"
 done <"$scratch/scripts.txt"
-[ ! -s "$scratch/returning.txt" ] || {
-  cat "$scratch/returning.txt" >&2
-  echo "check_signal_traps: a trap bound to INT or TERM returns; bind INT to exit 130 and TERM to exit 143" >&2
+[ ! -s "$scratch/nonconforming.txt" ] || {
+  cat "$scratch/nonconforming.txt" >&2
+  echo "check_signal_traps: write each trap on one line as trap ACTION EXIT, trap 'exit 130' INT or trap 'exit 143' TERM" >&2
   exit 1
 }
-echo "check_signal_traps: no trap of $(wc -l <"$scratch/scripts.txt") script(s) returns from INT or TERM"
+echo "check_signal_traps: every trap of $(wc -l <"$scratch/scripts.txt") script(s) has a conforming form"
 
 # Each subject with the tool its first command after the traps runs.
 subjects='check.sh:shellcheck
