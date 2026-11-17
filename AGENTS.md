@@ -133,7 +133,8 @@ gororoba repository shares; this file governs where the two differ.
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
-  estimator, `ci/compare_dot.sh` for `Tower.dot` and `Tower.re`,
+  estimator and `ci/compare_estimator_rocq.sh` for its Rocq partner in
+  `rocq/quantum/KernelMapEstimator.v`, `ci/compare_dot.sh` for `Tower.dot` and `Tower.re`,
   `ci/compare_alignment.sh` for `Tower.partner`, `Tower.alignedAdd` and
   `Tower.alignedSub`, which it compares with the integer instance of
   `rocq/quantum/CdTowerTwoTermBridge.v`.
