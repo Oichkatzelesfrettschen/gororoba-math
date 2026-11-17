@@ -42,8 +42,11 @@ claim, sorted by `source` in byte order, sources unique.
 - `proved` means that the listed declarations together state the whole claim
   at its generality. Each row that reads `proved`, and each row an earlier
   pass had linked to a file without reading its theorems, was re-read against
-  the statements of its declarations on 2026-11-17 (131 rows: of 92 `proved`
-  rows 14 fewer read `proved` afterwards). `partial` means that the proofs
+  the statements of its declarations on 2026-11-17 (131 rows: 28 of the 92
+  `proved` rows lost the status, 14 of the 39 file-linked rows gained it, and
+  78 rows read `proved` afterwards). A sentence of a claim that reports the
+  agreement of code with the stated identity is a measurement and stays
+  outside the reading. `partial` means that the proofs
   state an instance, a fixed level or a part of the claim, and the note says
   what is open. `owed` means that the placement
   clauses ask for a proof and gororoba-math holds none that the readings found.
@@ -89,6 +92,11 @@ claim, sorted by `source` in byte order, sources unique.
 | Outside the clauses: physics, software, data or measurement | none | no clause applies; a physics, software, data or measurement claim |
 | Outside the clauses: analogy or interpretation, no mathematical statement | none | no clause applies; the claim is an analogy or an interpretation |
 | Outside the clauses: the source does not assert the claim | none | no clause applies; the source marks the claim refuted, superseded, rejected, stalled or open |
+
+A claim that its source marks refuted, superseded, closed, rejected, stalled
+or open takes the clause `Outside the clauses: the source does not assert
+the claim` whenever it reads `no-proof-owed`, before the other two
+`Outside the clauses` rows are considered (190 rows).
 
 `Result already in a proof tree stays where it is` also covers the rows whose
 statement class puts them in the other prover: an every-level law that
