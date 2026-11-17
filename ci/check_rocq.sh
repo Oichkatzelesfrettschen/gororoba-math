@@ -13,7 +13,8 @@
 #      (ci/kernel_replay_evidence.py) then runs its calibration from the
 #      export (ci/check_kernel_replay_evidence.sh): known-good and known-bad
 #      synthetic trees under the same switch; its Flocq case records the
-#      switch with ci/flocq_manifest.py, which the export carries.
+#      switch with ci/flocq_manifest.py, and its import rule answers
+#      ci/flocq-import-corpus.tsv, both of which the export carries.
 #   1. rocq/open: every tracked source of theories/ and verified/ is a line
 #      of _RocqProject, which compiles them with -w all,+default (each
 #      warning of the default set is an error and every other warning
@@ -82,7 +83,7 @@ trap '[ -z "$open_kernel" ] || kill "$open_kernel" 2>/dev/null || true; rm -r "$
 trap 'exit 130' INT
 trap 'exit 143' TERM
 git -C "$root" archive HEAD rocq ci/kernel_replay_evidence.py ci/check_kernel_replay_evidence.sh ci/flocq_manifest.py \
-  ci/rocq_warning_pairs.py ci/rocq-warnings | tar -x -C "$work"
+  ci/flocq-import-corpus.tsv ci/rocq_warning_pairs.py ci/rocq-warnings | tar -x -C "$work"
 # git archive leaves out a path that a .gitattributes file marks
 # export-ignore, and a recipe of rocq/open skips a source or a golden file
 # that is absent, so the export is compared with the tree of HEAD before
