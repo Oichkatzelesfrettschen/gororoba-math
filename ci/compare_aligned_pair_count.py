@@ -61,7 +61,7 @@ def write_cases(lean_file: Path, rocq_file: Path, mutant_file: Path) -> None:
     mutant = [
         "Definition count (k i j : nat) : nat :=",
         "  if Nat.eqb i j then O",
-        "  else length (filter (fun x => IntegerTwoTermBridge.aligned_add k i j x) (seq 0 (Nat.pow 2 k))) / 2.",
+        "  else Nat.div (length (filter (fun x => IntegerTwoTermBridge.aligned_add k i j x) (seq 0 (Nat.pow 2 k)))) 2.",
         "",
     ]
     for path, body in ((rocq_file, count), (mutant_file, mutant)):
