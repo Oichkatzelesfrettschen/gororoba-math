@@ -22,9 +22,10 @@ swapped), each of which prints the same tables. Every table holds
 sum over k of 8^k = 299593 codes.
 
 The compare command reads the integers each side printed (the Lean program
-prints one line per level; Rocq prints each Eval as "= [a; b; ...]" followed by
-": list nat") and exits 0 when the levels are equal entry by entry, 1 on the
-first difference, and 2 when an output is unreadable or has the wrong shape.
+prints one line per level; Rocq prints each Eval as a string of two hex digits
+per code followed by ": string") and exits 0 when the levels are equal entry by
+entry, 1 on the first difference, and 2 when an output is unreadable or has
+the wrong shape.
 """
 
 import re
@@ -35,7 +36,7 @@ LEVELS = range(7)
 ENTRIES = sum(8**k for k in LEVELS)
 ADD_WEIGHT = 64
 SUB_WEIGHT = 128
-BLOCK = re.compile(r"^\s*=\s*(.*?)\n\s*:\s*list nat\s*$", re.DOTALL | re.MULTILINE)
+BLOCK = re.compile(r'^\s*=\s*"(.*?)"\s*\n\s*:\s*string\s*$', re.DOTALL | re.MULTILINE)
 
 LEAN = """import GororobaMath.CayleyDickson.TwoTerm
 
@@ -62,7 +63,7 @@ def main : IO Unit := do
     IO.println (row k)
 """
 
-ROCQ_HEAD = """From Stdlib Require Import List PeanoNat.
+ROCQ_HEAD = """From Stdlib Require Import List PeanoNat Ascii String.
 Require Import CdTowerBasisBridge CdTowerTwoTermBridge.
 Import TowerSign.
 
@@ -73,6 +74,13 @@ Definition table (code : nat -> nat -> nat -> nat -> nat) (k : nat) : list nat :
   flat_map (fun i => flat_map (fun j => map (fun x => code k i j x) (seq 0 n)) (seq 0 n)) (seq 0 n).
 
 Definition weight (b : bool) (w : nat) : nat := if b then w else 0.
+
+Definition hex_digit (n : nat) : Ascii.ascii :=
+  Ascii.ascii_of_nat (if Nat.ltb n 10 then 48 + n else 87 + n).
+
+Definition hex_text (l : list nat) : String.string :=
+  fold_right (fun c acc => String.String (hex_digit (Nat.div c 16)) (String.String (hex_digit (Nat.modulo c 16)) acc))
+    String.EmptyString l.
 
 """
 
@@ -111,7 +119,7 @@ MUTANT_CODE = """Definition code (k i j x : nat) : nat :=
 
 def rocq_file(definitions: str) -> str:
     lines = [ROCQ_HEAD + definitions]
-    lines.extend(f"Eval vm_compute in table code {k}." for k in LEVELS)
+    lines.extend(f"Eval vm_compute in hex_text (table code {k})." for k in LEVELS)
     return "\n".join(lines) + "\n"
 
 
@@ -128,7 +136,13 @@ def read_lean(path: Path) -> list[list[int]]:
 
 def read_rocq(path: Path) -> list[list[int]]:
     text = path.read_text(encoding="utf-8")
-    return [[int(v) for v in re.findall(r"[0-9]+", m.group(1))] for m in BLOCK.finditer(text)]
+    tables = []
+    for m in BLOCK.finditer(text):
+        digits = "".join(m.group(1).split())
+        if len(digits) % 2:
+            raise ValueError("a Rocq table has an odd number of hex digits")
+        tables.append([int(digits[n : n + 2], 16) for n in range(0, len(digits), 2)])
+    return tables
 
 
 def first_difference(level: int, lean: list[int], rocq: list[int]) -> str | None:
