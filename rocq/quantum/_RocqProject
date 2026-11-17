@@ -29,6 +29,7 @@ CdTowerG2Derivations.v
 CdTowerKernelCertificate.v
 CdTowerLeibnizSystem.v
 CdTowerModuleBridge.v
+CdTowerMulStarSelf.v
 CdTowerNonAssociative.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
@@ -42,6 +43,7 @@ CdTowerTwoTermRecursion.v
 CdTwistedProduct.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
+KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
 QuantumChannelFromOpen.v

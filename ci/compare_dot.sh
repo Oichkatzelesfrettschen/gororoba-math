@@ -17,6 +17,7 @@
 set -eu
 
 PYTHON=${PYTHON:-python3}
+export PYTHON
 for tool in git lake opam "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "compare_dot: $tool is not on PATH" >&2
@@ -43,7 +44,10 @@ cp "$root/rocq/quantum/CdImaginarySumConference.v" "$work/"
   opam exec --switch="$switch" -- rocq compile -q -Q . "" DotMutant.v >"$work/mutant.txt"
 )
 cd "$root/lean"
-lake build -q GororobaMath.CayleyDickson.AnnihilatorSymmetry
+lake build --no-build -q GororobaMath.CayleyDickson.AnnihilatorSymmetry || {
+  echo "compare_dot: build the Lean library first (lake build in lean/); this script writes no build tree" >&2
+  exit 2
+}
 lake env lean --run "$work/Dot.lean" >"$work/lean.txt"
 "$PYTHON" -I "$here/compare_dot.py" compare "$work/lean.txt" "$work/rocq.txt"
 status=0
