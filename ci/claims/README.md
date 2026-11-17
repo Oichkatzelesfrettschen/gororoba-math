@@ -19,14 +19,14 @@ claim, sorted by `source` in byte order, sources unique.
 
 | Column | Value |
 |---|---|
-| source | `gororoba-open:CLAIM_ID`, `gororoba-open:doc:PATH:LINE` (a proof file that the theorem index of gororoba-open lists), or `gororoba-quantum:PATH:LINE#LABEL` |
-| statement | the claim, at most 30 words (a longer statement is cut and ends in `...`) |
+| source | `gororoba-open:C-NNN` (a claim of `registry/claims.toml`), `gororoba-open:doc:PATH.md:LINE` (line `LINE` of `docs/PATH.md`: a row of the theorem index or a sentence of a commentary), or `gororoba-quantum:docs/PATH:LINE#LABEL` (line `LINE` of that file, with the ledger's label of the claim; for the findings ledger the label is the row's identifier) |
+| statement | the claim, at most 30 words; a registry statement is the registry's own text, and one longer than 30 words is cut to 30 with `...` appended |
 | quantifier | `every-level`, `fixed-dimension N`, `ring-class`, `concrete-table`, `numeric` or `other` |
 | placement | `lean`, `rocq`, `both` or `none` |
 | clause | the placement clause that decides it (below), at most 12 words |
 | status | `proved`, `partial`, `owed` or `no-proof-owed` |
 | proof | semicolon-separated `PATH:NAME` of gororoba-math declarations, or `-` |
-| note | what the proof leaves open, or `-` |
+| note | what the proof leaves open, or `-`; a `partial` row always says what is open |
 
 ## Rules
 
@@ -39,10 +39,13 @@ claim, sorted by `source` in byte order, sources unique.
   `_RocqProject` lists and whose proof ends in `Qed` or `Defined`. The check
   reads both through the lexers of `ci/check_headline_results.py`, so a name in
   a comment, a string or a `Module Type` resolves to nothing.
-- `proved` means that a listed proof covers the whole statement as the
-  earlier readings of the two source tables judged it. `partial` means that a
-  proof covers an instance, a fixed level, a part of the statement or only a
-  file-level link, and the note says which. `owed` means that the placement
+- `proved` means that the listed declarations together state the whole claim
+  at its generality. Each row that reads `proved`, and each row an earlier
+  pass had linked to a file without reading its theorems, was re-read against
+  the statements of its declarations on 2026-11-17 (131 rows: of 92 `proved`
+  rows 14 fewer read `proved` afterwards). `partial` means that the proofs
+  state an instance, a fixed level or a part of the claim, and the note says
+  what is open. `owed` means that the placement
   clauses ask for a proof and gororoba-math holds none that the readings found.
 - A reference of those readings that did not resolve against `origin/main` is
   repaired to the declaration it meant (nine rows; the first reading named
@@ -57,12 +60,19 @@ claim, sorted by `source` in byte order, sources unique.
   readings gave a `neither` row a Rocq proof of its own (five rows of
   gororoba-open and two of gororoba-quantum), the row reads `partial` with that
   proof and a note, since a proof is on record.
-- The 540 rows of `docs/evidence/a5-exceptional-fibers/ledger.tsv` that the
-  earlier reading had not covered read `no-proof-owed` by the precedent of its
-  row A5-448 (Singular and exact-arithmetic computations have no Rocq or Lean
-  counterpart); each note carries the findings ledger's own status, whose
-  `proved` and `certified` name a computation. Whether any of those claims is
-  owed instead is the owner's decision, row by row.
+- The 549 rows of the findings ledger
+  `docs/evidence/a5-exceptional-fibers/ledger.tsv` are placed row by row
+  (owner, 2026-11-17). A row whose findings status is refuted, superseded,
+  stalled, rejected or open is not asserted by its source and reads
+  `no-proof-owed`; a method or run record reads `no-proof-owed` as software
+  or data; an asserted exact statement about `A_5` or its fiber cones (a
+  Hilbert-function value, an ideal equality, a rank, a Cohen-Macaulay or
+  reducedness property) is a Rocq certificate and reads `owed`, and a
+  statement over every level or a class of fields is owed in Lean. The rows
+  read: 17 lean, owed; 2 lean, partial; 177 none, no-proof-owed; 349 rocq, owed; 3 rocq, partial; 1 rocq, proved. The note of an
+  owed row says what a proof certifies and carries the findings status, whose
+  `proved` and `certified` name a computation; `survives` marks a statement
+  the source has not proved.
 
 ## Placement clauses
 
@@ -70,6 +80,7 @@ claim, sorted by `source` in byte order, sources unique.
 |---|---|---|
 | Statement over every level or ring class: Lean on Mathlib | lean | Statement: a class of rings or every level `k` |
 | Fixed algebra instancing a Lean theorem: stays beside it | lean | Statement: one fixed algebra that instances a Lean theorem |
+| Statement of real or complex analysis: Lean on Mathlib | lean | Statement: a statement of real or complex analysis; the ledger also files here a manifold or bundle statement, whose nearest definitions Mathlib holds |
 | Fixed finite structure decided by evaluation: Rocq | rocq | Statement: one fixed algebra or coefficient type, a decision by evaluation |
 | Certificate evaluated by vm_compute or extracted code: Rocq | rocq | Evidence: a certificate, a compiled definition, floating-point behavior |
 | Finite group or combinatorial structure: its library prover | lean or rocq | Statement: a finite group or combinatorial structure goes to the prover whose library holds it (MathComp in Rocq, Mathlib in Lean) |
@@ -77,6 +88,7 @@ claim, sorted by `source` in byte order, sources unique.
 | Result already in a proof tree stays where it is | the proof's prover | "A result already in either tree stays where it is" and pinned bytes |
 | Outside the clauses: physics, software, data or measurement | none | no clause applies; a physics, software, data or measurement claim |
 | Outside the clauses: analogy or interpretation, no mathematical statement | none | no clause applies; the claim is an analogy or an interpretation |
+| Outside the clauses: the source does not assert the claim | none | no clause applies; the source marks the claim refuted, superseded, rejected, stalled or open |
 
 `Result already in a proof tree stays where it is` also covers the rows whose
 statement class puts them in the other prover: an every-level law that
@@ -103,17 +115,44 @@ file its ledgers cite. The check requires each listed source to be a ledger
 row and each file to be a project-listed Rocq source, so the list cannot drift
 from the ledger.
 
+## Expected claims
+
+`expected-sources.tsv` (columns `source`, `commit`, `sha256`) lists the claims
+the ledger must hold: each source, the commit of its repository at which it
+was read, and the sha256 of the source text there (the registry statement,
+or the named line). `ci/check_claims_ledger.py` requires the sources of the
+ledger to equal the listed ones, so a deleted row, a deleted cohort and a row
+that the list lacks each fail the admission gate.
+
+`ci/claims/expected_sources.py` compares the list with the two repositories.
+It runs on demand, with `GOROROBA_OPEN` and `GOROROBA_QUANTUM` naming their
+checkouts, and reads each file with `git show COMMIT:PATH`: every source
+resolves at its commit with the listed digest; a line locator names a
+nonempty line that is no first-level heading; a findings-ledger label is the
+identifier of its line, and every row of the findings ledger at its commit is
+listed; a registry statement equals the ledger statement; and a claim the
+registry marks Refuted, Superseded or Closed does not read `proved`. It
+calibrates on a known-bad copy for each of these first. `--write` writes the
+list again from the ledger sources, which is how a new row or a moved commit
+enters it.
+
+The registry of gororoba-open holds 1597 claims at the listed commit and the
+ledger holds the 500 that concern the Cayley-Dickson algebras, chosen by the
+reading of the registry; the list fixes that choice and does not derive it.
+For the findings ledger of gororoba-quantum the list is the whole file.
+
 ## Provenance and limits
 
 - The rows come from a reading of the gororoba-open registry (gororoba-open
   `f81aba2b`) and of the evidence documents of gororoba-quantum
-  (`78c780bc6`), classified against `AGENTS.md`; the topic notes
+  (`78c780bc6`), classified against `AGENTS.md`; the findings ledger, whose
+  rows A5-565 to A5-571 the earlier commit lacks, and the topic notes
   `cd-star-lattice-tower.md` and `c5-zero-divisor-code-falsification.md` of
   the second pass were read at gororoba-quantum `b7c2b373c`.
+  `expected-sources.tsv` holds the full commit of each source.
 - The check proves that each proof entry names a declaration. It does not prove
-  that the declaration states the claim: a row whose note reads `theorems named
-  by file prefix` links a file, and a reader confirms the statement before the
-  row moves to `proved`.
+  that the declaration states the claim; that is the reading recorded under
+  "Rules", and a row moves to `proved` only after such a reading.
 - The gororoba-quantum pass is partial. Read for rows: the findings ledger
   `docs/evidence/a5-exceptional-fibers/ledger.tsv` (every row), the theorem
   table of `docs/evidence/cd-tower-domain/README.md`, and the topic notes
