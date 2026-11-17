@@ -733,6 +733,9 @@ quantum	CdTowerRingDomain.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerTwoTermBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerTwoTermBridge.v	disj-pattern-notation
 quantum	CdTowerTwoTermBridge.v	using-fallback-loc
+quantum	CdTowerTwoTermNullity.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerTwoTermNullity.v	disj-pattern-notation
+quantum	CdTowerTwoTermNullity.v	using-fallback-loc
 quantum	CdTowerTwoTermRecursion.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTwistedProduct.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTwistedProduct.v	disj-pattern-notation
