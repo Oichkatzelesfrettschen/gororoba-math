@@ -285,8 +285,9 @@ echo "check: $(wc -l <"$work/sources.txt") library source(s) import only the lib
 # argument as a module-name prefix (checkOlean in LeanChecker.lean, Lean
 # 4.35.0) and replays every matching module at once, so a call on
 # GororobaMath replays the whole library concurrently, 30.5 to 32.1 GB
-# (measured), while a copy of the root under another name replays in
-# 6.4 GB. The check below keeps the root free of declarations, and no
+# (measured on the eight-module library of an earlier commit; the peak
+# grows with the module count), while a copy of the root under another
+# name replays in 6.4 GB. The check below keeps the root free of declarations, and no
 # module name is a component prefix of another, so each call replays one
 # module.
 # Prints each line of the Lean file $1 that is neither blank, `module`, nor
