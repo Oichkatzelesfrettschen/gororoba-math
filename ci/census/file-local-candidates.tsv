@@ -1,0 +1,177 @@
+file	theorem	statement	local_names	verdict
+C_OverImbalancedSign.v	over_imbalanced_positive	forall F theta_gr alpha_s, F > 3 / 8 -> theta_gr > 0 -> alpha_s > 0 -> york_correction F theta_gr alpha_s > 0	york_correction	
+C_OverImbalancedSign.v	under_imbalanced_negative	forall F theta_gr alpha_s, F < 3 / 8 -> theta_gr > 0 -> alpha_s > 0 -> york_correction F theta_gr alpha_s < 0	york_correction	
+C_OverImbalancedSign.v	at_attractor_vanishes	forall theta_gr alpha_s, york_correction (3 / 8) theta_gr alpha_s = 0	york_correction	
+C881_GF2CubicMinDegree.v	pg32_length_labels	length pg32_labels = 15	pg32_labels	
+C881_GF2CubicMinDegree.v	pg32_length_classes	length pg32_classes = 15	pg32_classes	
+C881_GF2CubicMinDegree.v	degree2_candidate_count	length degree2_candidates = 2048	degree2_candidates	
+C881_GF2CubicMinDegree.v	coefficient_support_enumerated	forall monomials coefficients, length coefficients = length monomials -> In (coefficient_support monomials coefficients) (monomial_subsets monomials)	coefficient_support,monomial_subsets	
+C884_NegDimDegeneracy.v	neg_dim_product_degeneracy	forall a1 e1 a2 e2 : R, neg_dim_product a1 e1 = neg_dim_product a2 e2 -> neg_dim_w_eff a1 e1 = neg_dim_w_eff a2 e2	neg_dim_product,neg_dim_w_eff	
+C884_NegDimDegeneracy.v	neg_dim_vacuum	forall alpha : R, neg_dim_w_eff alpha 0 = -1	neg_dim_w_eff	
+C884_NegDimDegeneracy.v	neg_dim_phantom	forall alpha eta : R, neg_dim_w_eff alpha eta < -1 <-> neg_dim_product alpha eta > 0	neg_dim_product,neg_dim_w_eff	
+C884_NegDimDegeneracy.v	neg_dim_quintessence	forall alpha eta : R, neg_dim_w_eff alpha eta > -1 <-> neg_dim_product alpha eta < 0	neg_dim_product,neg_dim_w_eff	
+C884_NegDimDegeneracy.v	neg_dim_degeneracy_witness	neg_dim_w_eff 0 1 = neg_dim_w_eff 1 (3/5)	neg_dim_w_eff	
+C885_DemocraticMixing.v	democratic_s3_invariant	forall a : R, s3_invariant (democratic a)	democratic,s3_invariant	
+C018_WheelsAxioms.v	C018_add_comm	forall x y, wadd x y = wadd y x	wadd,wheel_elt	
+C018_WheelsAxioms.v	C018_mul_comm	forall x y, wmul x y = wmul y x	wheel_elt,wmul	
+C018_WheelsAxioms.v	C018_add_assoc	forall x y z, wadd (wadd x y) z = wadd x (wadd y z)	wadd,wheel_elt	
+C018_WheelsAxioms.v	C018_mul_assoc	forall x y z, wmul (wmul x y) z = wmul x (wmul y z)	wheel_elt,wmul	
+C018_WheelsAxioms.v	C018_add_zero	forall x, wadd W0 x = x	W0,wadd,wheel_elt	
+C018_WheelsAxioms.v	C018_mul_one	forall x, wmul W1 x = x	W1,wheel_elt,wmul	
+C018_WheelsAxioms.v	C018_inv_involution	forall x, winv (winv x) = x	wheel_elt,winv	
+C033_SU5GeneratorsWellDefined.v	C033_antisymmetry	forall a b : R, lie_bracket a b = - lie_bracket b a	lie_bracket	
+C033_SU5GeneratorsWellDefined.v	C033_self_zero	forall a : R, lie_bracket a a = 0	lie_bracket	
+C027_DeffHorizonToy.v	C027_vacuum_value	forall k rho_vac : R, rho_vac > 0 -> D_eff k rho_vac rho_vac = 3	D_eff	
+C027_DeffHorizonToy.v	C027_decreasing	forall k rho1 rho2 rho_vac : R, k > 0 -> rho_vac > 0 -> rho1 > 0 -> rho2 > 0 -> rho1 < rho2 -> D_eff k rho2 rho_vac < D_eff k rho1 rho_vac	D_eff	
+C958_ZDGraphTopology.v	zd_edge_formula	forall d : R, d > 0 -> zd_edge_count_R d = complete_edges_R (d - 2) - missing_edges_R d	complete_edges_R,missing_edges_R,zd_edge_count_R	
+C958_ZDGraphTopology.v	zd_edges_at_16	zd_edge_count_N 16 = 84%N	zd_edge_count_N	
+C958_ZDGraphTopology.v	zd_edges_at_32	zd_edge_count_N 32 = 420%N	zd_edge_count_N	
+C958_ZDGraphTopology.v	zd_edges_at_64	zd_edge_count_N 64 = 1860%N	zd_edge_count_N	
+C958_ZDGraphTopology.v	zd_edges_at_256	zd_edge_count_N 256 = 32004%N	zd_edge_count_N	
+C958_ZDGraphTopology.v	zd_edges_at_512	zd_edge_count_N 512 = 129540%N	zd_edge_count_N	
+C958_ZDGraphTopology.v	zd_edges_at_1024	zd_edge_count_N 1024 = 521220%N	zd_edge_count_N	
+C958_ZDGraphTopology.v	singletons_at_16	zd_singleton_indices 16 = [0%N; 8%N]	zd_singleton_indices	
+C958_ZDGraphTopology.v	singletons_at_32	zd_singleton_indices 32 = [0%N; 16%N]	zd_singleton_indices	
+C958_ZDGraphTopology.v	singletons_at_64	zd_singleton_indices 64 = [0%N; 32%N]	zd_singleton_indices	
+C958_ZDGraphTopology.v	missing_edges_16_xor	List.forallb (fun p => N.eqb (N.lxor (fst p) (snd p)) 8) missing_edges_16 = true	missing_edges_16	
+C958_ZDGraphTopology.v	missing_edges_16_count	length missing_edges_16 = 7%nat	missing_edges_16	
+C958b_ZDAdjacencyAnalytical.v	analytical_edges_16	analytical_edge_count 16 = 84	analytical_edge_count	
+C958b_ZDAdjacencyAnalytical.v	analytical_edges_32	analytical_edge_count 32 = 420	analytical_edge_count	
+C959_CHSHClassicalBound.v	observed_S_negative	observed_S_512d < 0	observed_S_512d	
+C959_CHSHClassicalBound.v	observed_within_classical_bound	Rabs observed_S_512d < 2	observed_S_512d	
+C959_CHSHClassicalBound.v	classical_gap_significant	2 - Rabs observed_S_512d > 4 / 10	observed_S_512d	
+C959_CHSHClassicalBound.v	cd_lhv_interpretation	Rabs observed_S_512d <= 2	observed_S_512d	
+C1262_FlatBandFractionHalf.v	cd16_flat_band_fraction_half	flat_band_fraction cd16_n_flat cd16_n_vertices = 1 / 2	cd16_n_flat,cd16_n_vertices,flat_band_fraction	
+C1262_FlatBandFractionHalf.v	cd16_flat_band_fraction_bounds	0 < flat_band_fraction cd16_n_flat cd16_n_vertices /\ flat_band_fraction cd16_n_flat cd16_n_vertices <= 1	cd16_n_flat,cd16_n_vertices,flat_band_fraction	
+C1262_FlatBandFractionHalf.v	cd16_non_flat_fraction_half	1 - flat_band_fraction cd16_n_flat cd16_n_vertices = 1 / 2	cd16_n_flat,cd16_n_vertices,flat_band_fraction	
+C1262_FlatBandFractionHalf.v	cd32_flat_band_fraction_half	flat_band_fraction cd32_n_flat cd32_n_vertices = 1 / 2	cd32_n_flat,cd32_n_vertices,flat_band_fraction	
+C1313_Thesis42Arithmetic.v	catalan_5_value	catalan_formula 5 = 42%nat	catalan_formula	
+C1313_Thesis42Arithmetic.v	thesis_square_bound_value	thesis_square_bound = 1764%nat	thesis_square_bound	
+C1313_Thesis42Arithmetic.v	normalized_square_bound_exact	normalized_square_bound = 441 / 2500	normalized_square_bound	
+C1313_Thesis42Arithmetic.v	normalized_square_bound_in_unit_interval	0 < normalized_square_bound < 1	normalized_square_bound	
+C1363_HarmonicHaloExactRecovery.v	C1363_alpha_zero_modulation_unity	forall modulation_core : R, harmonic_halo_modulation_law 0 modulation_core = 1	harmonic_halo_modulation_law	
+C1363_HarmonicHaloExactRecovery.v	C1363_alpha_zero_exact_recovery_sq	forall baseline_velocity_sq modulation_core : R, harmonic_halo_velocity_sq baseline_velocity_sq 0 modulation_core = baseline_velocity_sq	harmonic_halo_velocity_sq	
+C1363_HarmonicHaloExactRecovery.v	C1363_zero_baseline_stays_zero	forall alpha_zd modulation_core : R, harmonic_halo_velocity_sq 0 alpha_zd modulation_core = 0	harmonic_halo_velocity_sq	
+C1364_HomotopyBridgeLaw.v	C1364_zero_coupling_lambda_zero	forall obstruction_norm : R, homotopy_lambda_law obstruction_norm 0 = 0	homotopy_lambda_law	
+C1364_HomotopyBridgeLaw.v	C1364_zero_coupling_isotropic	forall rho p_r obstruction_norm : R, tangential_pressure rho p_r obstruction_norm 0 = p_r	tangential_pressure	
+C1364_HomotopyBridgeLaw.v	C1364_positive_anisotropy_correction	forall rho p_r obstruction_norm coupling : R, rho > 0 -> p_r > 0 -> obstruction_norm > 0 -> coupling > 0 -> anisotropy_correction rho p_r obstruction_norm coupling > 0	anisotropy_correction	
+C1364_HomotopyBridgeLaw.v	C1364_positive_coupling_increases_tangential_pressure	forall rho p_r obstruction_norm coupling : R, rho > 0 -> p_r > 0 -> obstruction_norm > 0 -> coupling > 0 -> tangential_pressure rho p_r obstruction_norm coupling > p_r	tangential_pressure	
+C1466_SubalgebraClosure.v	tang_o1_closed	check_closure tang_o1 = true	check_closure,tang_o1	
+C1466_SubalgebraClosure.v	tang_o2_closed	check_closure tang_o2 = true	check_closure,tang_o2	
+C1466_SubalgebraClosure.v	tang_o3_closed	check_closure tang_o3 = true	check_closure,tang_o3	
+C1466_SubalgebraClosure.v	interleaved_o1_closed	check_closure interleaved_o1 = true	check_closure,interleaved_o1	
+C1466_SubalgebraClosure.v	interleaved_o2_closed	check_closure interleaved_o2 = true	check_closure,interleaved_o2	
+C1466_SubalgebraClosure.v	interleaved_o3_closed	check_closure interleaved_o3 = true	check_closure,interleaved_o3	
+C1466_SubalgebraClosure.v	random_set_not_closed	check_closure not_a_subalgebra = false	check_closure,not_a_subalgebra	
+C1467_XORSignCocycle.v	sed_sign_table_correct	check_table_matches = true	check_table_matches	
+C1467_XORSignCocycle.v	cocycle_identity	check_identity = true	check_identity	
+C1467_XORSignCocycle.v	cocycle_squares	check_squares = true	check_squares	
+C1467_XORSignCocycle.v	cocycle_anticomm	check_anticomm = true	check_anticomm	
+C1467_XORSignCocycle.v	assoc_triple_count_ordered	count_assoc_triples = 1527	count_assoc_triples	
+C1467_XORSignCocycle.v	assoc_distinct_count	count_assoc_distinct = 882	count_assoc_distinct	
+C1468_SlotShiftEquivariance.v	zd_preserved_dim16	check_zd_dim16 = true	check_zd_dim16	
+C1468_SlotShiftEquivariance.v	zd_preserved_dim32_slot0	check_zd_dim32_slot0 = true	check_zd_dim32_slot0	
+C1468_SlotShiftEquivariance.v	zd_preserved_dim32_slot1	check_zd_dim32_slot1 = true	check_zd_dim32_slot1	
+C1468_SlotShiftEquivariance.v	zd_pair_count_16	count_zd_pairs_16 = 84	count_zd_pairs_16	
+C1468_SlotShiftEquivariance.v	zd_pair_count_32_slot1	count_zd_pairs_32_slot1 = 84	count_zd_pairs_32_slot1	
+C1469_TowerTrilinearity.v	identity_16	forallb (fun i => (Z.eqb (sign16 i 0) 1 && Z.eqb (sign16 0 i) 1)%bool) (seq 0 16) = true	sign16	
+C1469_TowerTrilinearity.v	identity_32	forallb (fun i => (Z.eqb (sign32 i 0) 1 && Z.eqb (sign32 0 i) 1)%bool) (seq 0 32) = true	sign32	
+C1469_TowerTrilinearity.v	identity_64	forallb (fun i => (Z.eqb (sign64 i 0) 1 && Z.eqb (sign64 0 i) 1)%bool) (seq 0 64) = true	sign64	
+C1469_TowerTrilinearity.v	squares_16	forallb (fun i => Z.eqb (sign16 i i) (-1)%Z) (seq 1 15) = true	sign16	
+C1469_TowerTrilinearity.v	squares_32	forallb (fun i => Z.eqb (sign32 i i) (-1)%Z) (seq 1 31) = true	sign32	
+C1469_TowerTrilinearity.v	squares_64	forallb (fun i => Z.eqb (sign64 i i) (-1)%Z) (seq 1 63) = true	sign64	
+C1469_TowerTrilinearity.v	anticomm_16	forallb (fun i => forallb (fun j => if Nat.eqb i j then true else Z.eqb (sign16 i j + sign16 j i)%Z 0%Z ) (seq 1 15)) (seq 1 15) = true	sign16	
+C1469_TowerTrilinearity.v	anticomm_32	forallb (fun i => forallb (fun j => if Nat.eqb i j then true else Z.eqb (sign32 i j + sign32 j i)%Z 0%Z ) (seq 1 31)) (seq 1 31) = true	sign32	
+C1469_TowerTrilinearity.v	anticomm_64	forallb (fun i => forallb (fun j => if Nat.eqb i j then true else Z.eqb (sign64 i j + sign64 j i)%Z 0%Z ) (seq 1 63)) (seq 1 63) = true	sign64	
+C1469_TowerTrilinearity.v	identity_128	forallb (fun i => (Z.eqb (sign128 i 0) 1 && Z.eqb (sign128 0 i) 1)%bool) (seq 0 128) = true	sign128	
+C1469_TowerTrilinearity.v	squares_128	forallb (fun i => Z.eqb (sign128 i i) (-1)%Z) (seq 1 127) = true	sign128	
+C1469_TowerTrilinearity.v	identity_256	forallb (fun i => (Z.eqb (sign256 i 0) 1 && Z.eqb (sign256 0 i) 1)%bool) (seq 0 256) = true	sign256	
+C1469_TowerTrilinearity.v	squares_256	forallb (fun i => Z.eqb (sign256 i i) (-1)%Z) (seq 1 255) = true	sign256	
+C1474_FuelAdequacy.v	fuel_adequate_4	check_all_pairs 3 100 4 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_adequate_8	check_all_pairs 4 100 8 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_adequate_16	check_all_pairs 5 100 16 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_adequate_32	check_all_pairs 6 100 32 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_adequate_64	check_all_pairs 7 100 64 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_mono_16	check_all_pairs 5 6 16 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_mono_32	check_all_pairs 6 7 32 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_mono_64	check_all_pairs 7 8 64 = true	check_all_pairs	
+C1474_FuelAdequacy.v	fuel_insufficient_16	has_wrong_pair 4 5 16 = true	has_wrong_pair	
+C1474_FuelAdequacy.v	fuel_insufficient_32	has_wrong_pair 5 6 32 = true	has_wrong_pair	
+C1474_FuelAdequacy.v	fuel_insufficient_64	has_wrong_pair 6 7 64 = true	has_wrong_pair	
+C029_SedenionOctonionSubalgebras.v	emb_ok_all	forall u, (1 <= u <= 15)%nat -> emb_ok u	emb_ok	
+C029_SedenionOctonionSubalgebras.v	mul_closed_all	forall u, (1 <= u <= 15)%nat -> mul_closed u	mul_closed	
+C029_SedenionOctonionSubalgebras.v	iso_small	forall u, (1 <= u <= 8)%nat -> oct_sub_iso u	oct_sub_iso	
+C029_SedenionOctonionSubalgebras.v	not_iso_large	forall u, (9 <= u <= 15)%nat -> ~ oct_sub_iso u	oct_sub_iso	
+C029_SedenionOctonionSubalgebras.v	C029_octonion_subalgebra_iff	forall u, (1 <= u <= 15)%nat -> (oct_sub_iso u <-> (u <= 8)%nat)	oct_sub_iso	
+C029_SedenionOctonionSubalgebras.v	C029_octonion_subalgebra_count	exists L : list nat, NoDup L /\ length L = 8%nat /\ forall u, In u L <-> ((1 <= u <= 15)%nat /\ oct_sub_iso u)	oct_sub_iso	
+C029_SedenionOctonionSubalgebras.v	off_differ_check	forallb (fun u => forallb (fun v => orb (Nat.eqb u v) (existsb (fun k => negb (Bool.eqb (off_sub u k) (off_sub v k))) (seq 0 16))) (seq 1 15)) (seq 1 15) = true	off_sub	
+C029_SedenionOctonionSubalgebras.v	off_differ	forall u v, (1 <= u <= 15)%nat -> (1 <= v <= 15)%nat -> u <> v -> exists k, (k < 16)%nat /\ off_sub u k <> off_sub v k	off_sub	
+C872_WorldlineQuadratureBound.v	wl_summand_bound	forall (T_min B : R) (q : wl_node), T_min > 0 -> wl_admissible T_min B q -> Rabs (wl_summand q) <= wl_weight q * B / (T_min * T_min * sqrt T_min)	wl_admissible,wl_node,wl_summand,wl_weight	
+C872_WorldlineQuadratureBound.v	wl_sum_bound	forall (T_min B : R) (qs : list wl_node), T_min > 0 -> Forall (wl_admissible T_min B) qs -> Rabs (wl_sum qs) <= wl_total_weight qs * B / (T_min * T_min * sqrt T_min)	wl_admissible,wl_node,wl_sum,wl_total_weight	
+C872_WorldlineQuadratureBound.v	worldline_quadrature_energy_bound	forall (T_min T_max B pf : R) (qs : list wl_node), T_min > 0 -> T_max > T_min -> B >= 0 -> Forall (wl_admissible T_min B) qs -> wl_total_weight qs = T_max - T_min -> Rabs (wl_energy pf qs) <= Rabs pf * B * (T_max - T_min) / (T_min * T_min * sqrt T_min)	wl_admissible,wl_energy,wl_node,wl_total_weight	
+C882_OctahedronGraphSpectrum.v	k222_has_12_edges	k222_edge_count = 12%nat	k222_edge_count	
+C882_OctahedronGraphSpectrum.v	k222_eigenpairs_are_eigenvectors	forallb (fun p => forallb (fun e => Z.eqb (fst e) (snd e)) (combine (matvec k222_matrix (snd p)) (map (Z.mul (fst p)) (snd p)))) k222_eigenpairs = true	k222_eigenpairs,k222_matrix,matvec	
+C882_OctahedronGraphSpectrum.v	k222_eigenvectors_nonzero	forallb (fun p => Z.ltb 0 (dot (snd p) (snd p))) k222_eigenpairs = true	dot,k222_eigenpairs	
+C882_OctahedronGraphSpectrum.v	k222_eigenvectors_pairwise_orthogonal	forallb (fun ij => (Nat.leb (snd ij) (fst ij) || Z.eqb (dot (snd (nth (fst ij) k222_eigenpairs (0, []))) (snd (nth (snd ij) k222_eigenpairs (0, [])))) 0)%bool) (list_prod (seq 0 6) (seq 0 6)) = true	dot,k222_eigenpairs	
+C882_OctahedronGraphSpectrum.v	k222_spectral_gap	fold_right Z.max (-100) k222_eigenvalues - fold_right Z.min 100 k222_eigenvalues = 6	k222_eigenvalues	
+C882_OctahedronGraphSpectrum.v	k222_trace_zero	fold_right Z.add 0 k222_eigenvalues = 0 /\ fold_right Z.add 0 (map (fun i => nth i (nth i k222_matrix []) 0) (seq 0 6)) = 0	k222_eigenvalues,k222_matrix	
+C036_CliqueClusteringCounts.v	k4_counts	edge_count 4 k4_adjacent = 6 /\ triangle_count 4 k4_adjacent = 4 /\ connected_triple_count 4 k4_adjacent = 12	connected_triple_count,edge_count,k4_adjacent,triangle_count	
+C036_CliqueClusteringCounts.v	k4_clustering_is_one	3 * triangle_count 4 k4_adjacent = connected_triple_count 4 k4_adjacent	connected_triple_count,k4_adjacent,triangle_count	
+C036_CliqueClusteringCounts.v	k222_counts	edge_count 6 k222_adjacent = 12 /\ triangle_count 6 k222_adjacent = 8 /\ connected_triple_count 6 k222_adjacent = 36	connected_triple_count,edge_count,k222_adjacent,triangle_count	
+C036_CliqueClusteringCounts.v	k222_clustering_is_two_thirds	3 * (3 * triangle_count 6 k222_adjacent) = 2 * connected_triple_count 6 k222_adjacent	connected_triple_count,k222_adjacent,triangle_count	
+C036_CliqueClusteringCounts.v	k222_has_triangles	triangle_count 6 k222_adjacent <> 0	k222_adjacent,triangle_count	
+C1138_WickDampingMaximum.v	wick_damping_decreasing_on_quarter_turn	forall H theta1 theta2 : R, H >= 0 -> 0 <= theta1 -> theta1 <= theta2 -> theta2 <= PI / 2 -> wick_damping H theta2 <= wick_damping H theta1	wick_damping	
+C1138_WickDampingMaximum.v	wick_damping_at_quarter_turn	forall H : R, wick_damping H (PI / 2) = exp (- H)	wick_damping	
+C1138_WickDampingMaximum.v	wick_damping_minimal_at_quarter_turn	forall H theta : R, H >= 0 -> wick_damping H (PI / 2) <= wick_damping H theta	wick_damping	
+C1141_ZDGraphCountingIdentities.v	involution_pair_count	forall half : nat, length (involution_pairs half) = half - 1	involution_pairs	
+C1141_ZDGraphCountingIdentities.v	involution_pair_partner	forall k : nat, forall p : nat * nat, In p (involution_pairs (2 ^ k)) -> 1 <= fst p /\ fst p < 2 ^ k /\ snd p = fst p + 2 ^ k	involution_pairs	
+C1141_ZDGraphCountingIdentities.v	zd_vertices_partition	forall dim : nat, 2 <= dim -> zd_giant_vertices dim + zd_singleton_vertices = dim	zd_giant_vertices,zd_singleton_vertices	
+C1141_ZDGraphCountingIdentities.v	zd_edges_complete_minus_missing	forall h : nat, 2 <= h -> zd_edges (2 * h) = zd_complete_edges (zd_giant_vertices (2 * h)) - zd_missing_edges (2 * h)	zd_complete_edges,zd_edges,zd_giant_vertices,zd_missing_edges	
+C1141_ZDGraphCountingIdentities.v	zd_edges_expanded	forall dim : nat, 6 <= dim -> zd_edges dim = (dim * dim - 6 * dim + 8) / 2	zd_edges	
+C1141_ZDGraphCountingIdentities.v	zd_edges_even	forall h : nat, 2 <= h -> zd_edges (2 * h) = 2 * ((h - 1) * (h - 2))	zd_edges	
+C1141_ZDGraphCountingIdentities.v	zd_giant_density_closed_form	forall h : nat, 2 <= h -> 2 * zd_edges (2 * h) * (2 * h - 3) = (2 * h - 4) * zd_giant_pairs (2 * h) /\ (2 * h - 3) - (2 * h - 4) = 1	zd_edges,zd_giant_pairs	
+C1141_ZDGraphCountingIdentities.v	zd_missing_fraction_closed_form	forall h : nat, 2 <= h -> zd_missing_edges (2 * h) * (2 * h - 1) = zd_complete_edges (2 * h - 1)	zd_complete_edges,zd_missing_edges	
+C1141_ZDGraphCountingIdentities.v	zd_missing_fraction_strictly_decreasing	forall h1 h2 : nat, 2 <= h1 -> h1 < h2 -> zd_missing_edges (2 * h2) * zd_complete_edges (2 * h1 - 1) < zd_missing_edges (2 * h1) * zd_complete_edges (2 * h2 - 1)	zd_complete_edges,zd_missing_edges	
+C1142_XORScatterGatherSums.v	scatter_gather_same_pairs	forall m k i j : nat, (k < 2 ^ m)%nat -> scatter_pair (2 ^ m) k i j <-> gather_pair (2 ^ m) k i j	gather_pair,scatter_pair	
+C1142_XORScatterGatherSums.v	big_sum_nil	forall g : nat -> Z, big_sum [] g = 0	big_sum	
+C1142_XORScatterGatherSums.v	big_sum_cons	forall (a : nat) (l : list nat) (g : nat -> Z), big_sum (a :: l) g = g a + big_sum l g	big_sum	
+C1142_XORScatterGatherSums.v	big_sum_zero	forall l : list nat, big_sum l (fun _ => 0) = 0	big_sum	
+C1142_XORScatterGatherSums.v	big_sum_add	forall (l : list nat) (g h : nat -> Z), big_sum l (fun x => g x + h x) = big_sum l g + big_sum l h	big_sum	
+C1142_XORScatterGatherSums.v	big_sum_ext	forall (l : list nat) (g1 g2 : nat -> Z), (forall x, In x l -> g1 x = g2 x) -> big_sum l g1 = big_sum l g2	big_sum	
+C1142_XORScatterGatherSums.v	big_sum_swap	forall (l1 l2 : list nat) (g : nat -> nat -> Z), big_sum l1 (fun i => big_sum l2 (fun j => g i j)) = big_sum l2 (fun j => big_sum l1 (fun i => g i j))	big_sum	
+C1142_XORScatterGatherSums.v	big_sum_off_point	forall (l : list nat) (i0 : nat) (v : nat -> Z), ~ In i0 l -> big_sum l (fun i => if Nat.eqb i i0 then v i else 0) = 0	big_sum	
+C1142_XORScatterGatherSums.v	big_sum_single	forall (l : list nat) (i0 : nat) (v : nat -> Z), NoDup l -> In i0 l -> big_sum l (fun i => if Nat.eqb i i0 then v i else 0) = v i0	big_sum	
+C1142_XORScatterGatherSums.v	scatter_equals_gather	forall (m : nat) (f : nat -> nat -> Z) (k : nat), (k < 2 ^ m)%nat -> xor_scatter (2 ^ m) f k = xor_gather (2 ^ m) f k	xor_gather,xor_scatter	
+C016_FanoOrientedTriples.v	ordered_triple_counts	length ordered_triples = 210 /\ length oriented_triples = 42 /\ length other_triples = 168	ordered_triples,oriented_triples,other_triples	
+C016_FanoOrientedTriples.v	ordered_triples_count_is_falling_factorial	length ordered_triples = 7 * 6 * 5	ordered_triples	
+C016_FanoOrientedTriples.v	oriented_triples_lie_on_lines	forallb on_a_line oriented_triples = true	on_a_line,oriented_triples	
+C016_FanoOrientedTriples.v	oriented_swap_flips_parity	forallb (fun t => existsb (fun u => Nat.eqb (fst (fst u)) (fst (fst (swap_first_two t))) && Nat.eqb (snd (fst u)) (snd (fst (swap_first_two t))) && Nat.eqb (snd u) (snd (swap_first_two t))) oriented_triples && negb (Bool.eqb (even_triple t) (even_triple (swap_first_two t)))) oriented_triples = true	even_triple,oriented_triples,swap_first_two	
+C016_FanoOrientedTriples.v	oriented_parity_split	length (filter even_triple oriented_triples) = 21 /\ length (filter (fun t => negb (even_triple t)) oriented_triples) = 21	even_triple,oriented_triples	
+C016_FanoOrientedTriples.v	gl32_order_by_enumeration	length (filter (fun n => Z.eqb (det3_mod2 n) 1) (seq 0 512)) = 168	det3_mod2	
+C016_FanoOrientedTriples.v	ordered_triples_not_binomial_plus_gl32	7 * 6 * 5 / 6 + length other_triples <> length ordered_triples	ordered_triples,other_triples	
+C010_ComponentBridgeBound.v	closure_length	forall es S, length (closure es S) <= length S + length es	closure,edge	
+C010_ComponentBridgeBound.v	reach_more_edges	forall es es' S x, (forall e, In e es -> In e es') -> Reach es S x -> Reach es' S x	Reach,edge	
+C010_ComponentBridgeBound.v	reach_through	forall es S S' x, (forall y, In y S' -> Reach es S y) -> Reach es S' x -> Reach es S x	Reach,edge	
+C010_ComponentBridgeBound.v	reach_more_start	forall es S S' x, (forall y, In y S -> In y S') -> Reach es S x -> Reach es S' x	Reach,edge	
+C010_ComponentBridgeBound.v	closure_sound	forall es S x, In x (closure es S) -> Reach es S x	Reach,closure,edge	
+C010_ComponentBridgeBound.v	closure_complete	forall es S x, Reach es S x -> In x (closure es S)	Reach,closure,edge	
+C010_ComponentBridgeBound.v	reach_all_lower_bound	forall es s k, (forall x, x < k -> Reach es [s] x) -> k - 1 <= length es	Reach,edge	
+C010_ComponentBridgeBound.v	reach_quotient	forall comp internal bridges S x, (forall e, In e internal -> comp (fst e) = comp (snd e)) -> Reach (internal ++ bridges) S x -> Reach (quotient comp bridges) (map comp S) (comp x)	Reach,quotient	
+C010_ComponentBridgeBound.v	bridge_lower_bound	forall (k : nat) (comp : nat -> nat) (vs : list nat) (v0 : nat) (internal bridges : list edge), (forall e, In e internal -> comp (fst e) = comp (snd e)) -> (forall x, In x vs -> Reach (internal ++ bridges) [v0] x) -> (forall c, c < k -> exists x, In x vs /\ comp x = c) -> k - 1 <= length bridges	Reach,edge	
+C010_ComponentBridgeBound.v	path_bridges_length	forall k, length (path_bridges k) = k - 1	edge,path_bridges	
+C010_ComponentBridgeBound.v	path_bridges_connect	forall k x, x < k -> Reach (path_bridges k) [0] x	Reach,path_bridges	
+C010_ComponentBridgeBound.v	seven_components_need_six_bridges	forall (comp : nat -> nat) (vs : list nat) (v0 : nat) (internal bridges : list edge), (forall e, In e internal -> comp (fst e) = comp (snd e)) -> (forall x, In x vs -> Reach (internal ++ bridges) [v0] x) -> (forall c, c < 7 -> exists x, In x vs /\ comp x = c) -> 6 <= length bridges	Reach,edge	
+C010_ComponentBridgeBound.v	six_bridges_connect_seven_components	length (path_bridges 7) = 6 /\ forall c, c < 7 -> Reach (path_bridges 7) [0] c	Reach,edge,path_bridges	
+C1463_MatrixColumnIdeal.v	sum_to_zero	forall n f, (forall l, (l < n)%nat -> f l = 0) -> sum_to n f = 0	sum_to	
+C1463_MatrixColumnIdeal.v	sum_to_single	forall n p f, (p < n)%nat -> (forall l, (l < n)%nat -> l <> p -> f l = 0) -> sum_to n f = f p	sum_to	
+C1463_MatrixColumnIdeal.v	col_space_add	forall n j M N, col_space n j M -> col_space n j N -> col_space n j (fun r c => M r c + N r c)	col_space,mat	
+C1463_MatrixColumnIdeal.v	col_space_left_ideal	forall n j A M, col_space n j M -> col_space n j (mmul n A M)	col_space,mat,mmul	
+C1463_MatrixColumnIdeal.v	unit_col_in_col_space	forall n j i, col_space n j (unit_col j i)	col_space,unit_col	
+C1463_MatrixColumnIdeal.v	col_space_span	forall n j M, col_space n j M -> mat_eq n M (fun r c => sum_to n (fun i => M i j * unit_col j i r c))	col_space,mat,mat_eq,sum_to,unit_col	
+C1463_MatrixColumnIdeal.v	col_space_independent	forall n j (a : nat -> R), (j < n)%nat -> mat_eq n (fun r c => sum_to n (fun i => a i * unit_col j i r c)) (fun _ _ => 0) -> forall i, (i < n)%nat -> a i = 0	mat_eq,sum_to,unit_col	
+C1463_MatrixColumnIdeal.v	col_space_generated	forall n j M N p, (p < n)%nat -> col_space n j M -> col_space n j N -> M p j <> 0 -> mat_eq n (mmul n (row_mover N M j p) M) N	col_space,mat,mat_eq,mmul,row_mover	
+C1463_MatrixColumnIdeal.v	col_space_minimal	forall n j (I : mat -> Prop), (forall M N, mat_eq n M N -> I M -> I N) -> (forall A M, I M -> I (mmul n A M)) -> (forall M, I M -> col_space n j M) -> (exists M p k, I M /\ (p < n)%nat /\ (k < n)%nat /\ M p k <> 0) -> forall N, col_space n j N -> I N	col_space,mat,mat_eq,mmul	
+C1463_MatrixColumnIdeal.v	C1463_minimal_left_ideal_dim_16	(forall A M, col_space 16 0 M -> col_space 16 0 (mmul 16 A M)) /\ (forall i, col_space 16 0 (unit_col 0 i)) /\ (forall M, col_space 16 0 M -> mat_eq 16 M (fun r c => sum_to 16 (fun i => M i 0%nat * unit_col 0 i r c))) /\ (forall a : nat -> R, mat_eq 16 (fun r c => sum_to 16 (fun i => a i * unit_col 0 i r c)) (fun _ _ => 0) -> forall i, (i < 16)%nat -> a i = 0) /\ (forall I : mat -> Prop, (forall M N, mat_eq 16 M N -> I M -> I N) -> (forall A M, I M -> I (mmul 16 A M)) -> (forall M, I M -> col_space 16 0 M) -> (exists M p k, I M /\ (p < 16)%nat /\ (k < 16)%nat /\ M p k <> 0) -> forall N, col_space 16 0 N -> I N)	col_space,mat,mat_eq,mmul,sum_to,unit_col	
+C1636_ScheduleProductCount.v	nodupb_NoDup	forall l, nodupb l = true -> NoDup l	nodupb	
+C1636_ScheduleProductCount.v	sparse_terms_count	map (@length (nat * nat)) sparse_terms = 1 :: repeat 7 15 /\ length (concat sparse_terms) = 106	sparse_terms	
+C1636_ScheduleProductCount.v	sparse_terms_distinct	NoDup (concat sparse_terms)	sparse_terms	

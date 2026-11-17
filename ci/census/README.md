@@ -53,3 +53,26 @@ Lean module. `C029_FermionGenerationArithmetic.v` landed in pull request 27.
 the claimed structure and scopes the rest; its header states which part. The 26
 overclaim rows are the rows of these 14 files, and every other row of the table
 reads `statement is the claim`.
+
+## File-local candidates
+
+`python3 -I ci/theorem_census.py --objects DIR --file-local` also lists a theorem
+whose statement names only definitions of its own file (the default listing
+leaves these out, since a local definition is a project constant). Measured with
+Rocq 9.3.0 on the tree at commit 6d00d47 (175 verified sources, 810 declarations):
+the default mode lists 115 theorems, and the file-local mode lists those 115
+plus 176 more, in 30 files. 69 of the 176 sit in the 11 successor modules and 107
+in 19 other files. With more than 80 new rows, the rows carry no verdict yet:
+`file-local-candidates.tsv` holds them with an empty `verdict` column, and
+`local_names` gives the file-local definitions each statement names. A verdict
+reads the file header and the statement under the criterion above, and its row
+then moves to `header-verdicts.tsv`.
+
+The mode calibrates itself before it reports. Known good: `at_attractor_vanishes`
+of `C_OverImbalancedSign` and `pg32_length_labels` of `C881_GF2CubicMinDegree`
+list as file-local with exactly the named definition. Known bad:
+`C028_lo_subalgebra_closed`, whose statement names a local definition and a
+`theories/` constant, stays out. Six printed types check the name rule alone
+(another file, a stem that extends this one, a local name beside a `theories/`
+name, a nested module, no project name). A calibration that reads a changed
+expectation exits 1 (three mutated copies each exited 1).
