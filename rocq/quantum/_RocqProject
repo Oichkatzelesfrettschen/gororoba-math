@@ -28,6 +28,7 @@ CdTowerG2DerivationSpan.v
 CdTowerG2Derivations.v
 CdTowerKernelCertificate.v
 CdTowerLeibnizSystem.v
+CdTowerModuleBridge.v
 CdTowerNonAssociative.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
@@ -35,6 +36,7 @@ CdTowerRing.v
 CdTowerRingBaseChange.v
 CdTowerRingBasis.v
 CdTowerRingDomain.v
+CdTowerTwoTermBridge.v
 CdTwistedProduct.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
