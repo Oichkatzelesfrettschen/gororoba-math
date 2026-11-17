@@ -101,10 +101,10 @@ translates.
 Layer `n` holds the rows whose longest dependency chain has `n` rows
 (rows with no Lean reading omitted).
 
-1. Layer 1 (39 rows): 1, 5, 6, 7, 8, 10, 11, 12, 13, 17, 18, 19, 20, 23, 26, 29, 30, 34, 35, 36, 40, 44, 47, 48, 49, 50, 56, 62, 63, 65, 66, 69, 73, 74, 75, 81, 86, 94, 97.
-2. Layer 2 (33 rows): 2, 3, 9, 14, 15, 16, 21, 22, 27, 31, 32, 37, 41, 42, 51, 55, 58, 64, 67, 68, 70, 71, 76, 82, 84, 85, 95, 96, 98, 107, 108, 109, 110.
-3. Layer 3 (22 rows): 4, 24, 28, 33, 38, 43, 45, 52, 57, 61, 72, 77, 80, 83, 89, 93, 99, 100, 102, 103, 104, 105.
-4. Layer 4 (11 rows): 25, 39, 46, 53, 54, 59, 60, 78, 87, 101, 106.
+1. Layer 1 (40 rows): 1, 5, 6, 7, 8, 10, 11, 12, 13, 17, 18, 19, 20, 23, 26, 29, 30, 34, 35, 36, 40, 44, 47, 48, 49, 50, 56, 62, 63, 65, 66, 69, 73, 74, 75, 81, 86, 94, 97, 101.
+2. Layer 2 (34 rows): 2, 3, 9, 14, 15, 16, 21, 22, 27, 31, 32, 37, 41, 42, 51, 55, 58, 64, 67, 68, 70, 71, 76, 82, 84, 85, 95, 96, 98, 100, 107, 108, 109, 110.
+3. Layer 3 (21 rows): 4, 24, 28, 33, 38, 43, 45, 52, 57, 61, 72, 77, 80, 83, 89, 93, 99, 102, 103, 104, 105.
+4. Layer 4 (10 rows): 25, 39, 46, 53, 54, 59, 60, 78, 87, 106.
 5. Layer 5 (5 rows): 79, 88, 90, 91, 92.
 
 By family: ring and star laws, maps, the derivation extension and the
@@ -144,6 +144,23 @@ later rows share (`Tower.anfCoeff`, `Tower.anfEval`, `Tower.weight`,
 - Row 120, `rocq/quantum/A5W8ArcMatrixRanks.v:W8ArcMatrixRanks.w8_nm_linear_point1_columns_independent`: a fixed-matrix certificate (Evidence axis); its general lemma is row columns_independent.
 - Row 121, `rocq/quantum/CdTwistedProduct.v:Twisted.W8_ideal_exchange`: a fixed 32-coordinate polynomial identity read by the Singular ideal of the A_5 W8 record; its general lemma is row ideal_exchange.
 - Row 122, `rocq/open/theories/CDSparseBlockTransport.v:sparse_photonic_configuration_coverage`: membership in a retained configuration list is a record check (Evidence axis).
+
+Rows 118 to 121 are certificates at a fixed level or matrix whose general
+lemma is a Lean row (44, 43, 48 and 47), so each claim lands on both axes
+and owes an instance bridge (`AGENTS.md`, "Statements and proofs"): a Rocq
+theorem in a new file whose comment names the Lean theorem by path and name
+and the values substituted for its parameters, and whose statement is the
+substituted proposition. No such theorem exists at origin/main; the
+`narrowing` cell of each row names the Lean partner and the substitution,
+and the bridge lands with the partner row. The bridge of row 119 also
+states the dimension 14 of the sedenion derivations as the instance
+`k := 4`, `n := 14` of row 101.
+
+Rows 100 and 101 state what their Rocq originals prove. Row 100 keeps the
+premise `Hbackward` of the Rocq theorem as a hypothesis; Schafer's
+unconditional Theorem 4 has no row. Row 101 is the linear-algebra step
+from independent derivations and a spanning relation to the dimension, and
+the value 14 stays with the Rocq tables.
 
 These rows hold `-` in `lean_module`, `lean_statement` and `effort`, a
 departure from the S, M or L of the brief that keeps a no-reading row from
