@@ -554,7 +554,7 @@ blind blind-open open "$work/flocq" "loads Flocq.Core.Zaux from Rocq's default l
 # path the Require finds no Flocq, so Fail succeeds, nothing is loaded, and
 # the evidence lists no Flocq objects.
 tree "$work/flocq-fail"
-printf '%s\n' 'Fail Require Import Flocq.Core.Core(Rnd).' 'From OpenGororoba Require Import Prelude.' \
+printf '%s\n' 'Fail Require Import Flocq.Core.Core.' 'From OpenGororoba Require Import Prelude.' \
   'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-fail/verified/C900_Test.v"
 opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/blind.py" "$here" hidden --tree "$work/flocq-fail" \
   --out "$work/out-blind-fail" --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_default \
@@ -567,7 +567,9 @@ opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/blind.py" "$here" hidden 
 echo "check_kernel_replay_evidence: blind-fail accepted with no Flocq loaded"
 # The same source on the open load path: the Require succeeds there, so Fail
 # itself fails and the run is refused, which shows that the accepted run's
-# Require found no Flocq.
+# Require found no Flocq. (A Fail whose import names a missing filter, such as
+# Core(Rnd), succeeds on both paths, after reading Flocq on the open one, so it
+# cannot tell them apart.)
 blind blind-fail-open open "$work/flocq-fail" 'command has not failed'
 
 # Known-bad: a manifest that cannot name this producer. The scratch copies
