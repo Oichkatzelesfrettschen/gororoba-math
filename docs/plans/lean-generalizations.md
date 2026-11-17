@@ -103,8 +103,8 @@ Layer `n` holds the rows whose longest dependency chain has `n` rows
 
 1. Layer 1 (40 rows): 1, 5, 6, 7, 8, 10, 11, 12, 13, 17, 18, 19, 20, 23, 26, 29, 30, 34, 35, 36, 40, 44, 47, 48, 49, 50, 56, 62, 63, 65, 66, 69, 73, 74, 75, 81, 86, 94, 97, 101.
 2. Layer 2 (34 rows): 2, 3, 9, 14, 15, 16, 21, 22, 27, 31, 32, 37, 41, 42, 51, 55, 58, 64, 67, 68, 70, 71, 76, 82, 84, 85, 95, 96, 98, 100, 107, 108, 109, 110.
-3. Layer 3 (21 rows): 4, 24, 28, 33, 38, 43, 45, 52, 57, 61, 72, 77, 80, 83, 89, 93, 99, 102, 103, 104, 105.
-4. Layer 4 (10 rows): 25, 39, 46, 53, 54, 59, 60, 78, 87, 106.
+3. Layer 3 (20 rows): 4, 24, 28, 33, 38, 43, 45, 52, 57, 61, 72, 77, 83, 89, 93, 99, 102, 103, 104, 105.
+4. Layer 4 (11 rows): 25, 39, 46, 53, 54, 59, 60, 78, 80, 87, 106.
 5. Layer 5 (5 rows): 79, 88, 90, 91, 92.
 
 By family: ring and star laws, maps, the derivation extension and the
@@ -127,8 +127,37 @@ Rows 7, 19, 20, 22, 29, 40, 75, 76, 81, 85:
 `assoc_basis`, `associator_doubling`.
 They have the most later rows depending on them (counted transitively:
 row 7 has 5, row 19 has 14, row 20 has 13, row 22 has 7, row 29 has 6, row 40 has 7, row 75 has 10, row 76 has 9, row 81 has 11, row 85 has 7), they introduce the new definitions the
-later rows share (`Tower.anfCoeff`, `Tower.anfEval`, `Tower.weight`,
-`Tower.anfDegree`, `Tower.assocPhase`, `Tower.commPhase`, `CayleyDickson.map`), and 7 of the ten are effort S.
+later rows share (`Tower.anfCoeff`, `Tower.anfEval`, `Tower.assocPhase`,
+`Tower.commPhase`, `CayleyDickson.map`), and 7 of the ten are effort S.
+`Tower.weight` and `Tower.anfDegree` enter with row 77, the first row whose
+statement uses them.
+
+## Proved rows
+
+The library proves the ten rows of the first tranche, each in the module its
+row names:
+
+| Row | Module | Theorem |
+|---|---|---|
+| 7 | `Map` | `CayleyDickson.map_mul` |
+| 19 | `TraceForm` | `Tower.mul_star_mul_left` |
+| 20 | `TraceForm` | `Tower.mul_mul_star_right` |
+| 22 | `TraceForm` | `Tower.mul_eq_zero_iff_star_mul_eq_zero` |
+| 29 | `TraceForm` | `Tower.dot_mul_left_of_star_eq_neg` |
+| 40 | `BasisExt` | `Tower.map_mul_of_map_e_mul_e` |
+| 75 | `BooleanAnf` | `Tower.anfEval_anfCoeff` |
+| 76 | `BooleanAnf` | `Tower.anfCoeff_unique` |
+| 81 | `AssociatorPhase` | `Tower.e_mul_e_mul_e` |
+| 85 | `AssociatorPhase` | `Tower.assocPhase_cons` |
+
+`ci/compare_anf.sh` and `ci/compare_assoc_phase.sh` compare the definitions
+of rows 75 and 81 with their Rocq partners of `rocq/quantum` and with the
+Python of gororoba-quantum. The open-tree spellings (`canonical_anf` of
+`BooleanANFDegree.v`, `associator_phase` of `CDAssociatorDoubling.v`) are
+outside both scripts: their cube carrier needs the compiled open tree, and
+the `comparison` cells of rows 75 and 81 mark that part owed. A row leaves
+the plan's open work when its theorem is in the library; the table grows
+with each tranche.
 
 ## Rows with no Lean reading
 
