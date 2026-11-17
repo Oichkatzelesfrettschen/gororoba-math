@@ -48,7 +48,9 @@ Calibration. Before the verdict on the repository counts, the script runs the
 same checks on known-bad copies of the inputs, one per defect class above
 (the mutants function lists them), and requires each to fail; it runs them on
 known-good copies that stress the lexers (the controls function) and requires
-each to pass; and it runs them on the repository inputs.
+each to pass; and it runs them on the repository inputs. The owed cases start
+from a copy whose first row is owed and tracked by CALIBRATION_ISSUE, so the
+calibration holds when every row of the registry has its partner.
 
 Exit status: 0 every check passed; 1 a check failed (each failure printed);
 2 the calibration failed or an input is unreadable.
@@ -68,6 +70,8 @@ ROOT = Path(__file__).resolve().parent.parent
 HEADER = ["prover", "path", "theorem", "partner", "tracking"]
 PERMITTED_AXIOMS = ("propext", "Quot.sound", "Classical.choice")
 ISSUE_URL = re.compile(r"^https://github\.com/Oichkatzelesfrettschen/gororoba-math/issues/[0-9]+$")
+# The tracking value of the owed row that the calibration builds; the registry itself may hold no owed row.
+CALIBRATION_ISSUE = "https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46"
 PARTNER = re.compile(r"^(rocq/(?:open|quantum|delegation)/[A-Za-z0-9_/]+\.v):([A-Za-z0-9_.']+)(?: narrower: (.+))?$")
 LEAN_DECL = re.compile(
     r"^\s*(?P<attrs>(?:@\[[^\]]*\]\s*)*)"
@@ -531,9 +535,8 @@ def find_sites(good: Inputs) -> Sites:
     lines = good.lean[first[1]].splitlines()
     code = lean_code(good.lean[first[1]]).splitlines()
     scan = [entry for entry in lean_scan(good.lean[first[1]]) if entry[0] == first[2] and not entry[2]]
-    owed = any(r[3] == "owed" for r in good.rows[1:])
-    if not scan or not owed:
-        raise SystemExit("check_headline_results: calibration needs a Lean row with a declaration and one owed row")
+    if not scan:
+        raise SystemExit("check_headline_results: calibration needs a Lean row with a declaration")
     index = scan[0][3]
     name = LEAN_DECL.match(code[index])
     for position, row in enumerate(good.rows[1:], start=1):
@@ -547,6 +550,14 @@ def find_sites(good: Inputs) -> Sites:
         if start and end and partner.group(2) in rocq_theorems(text):
             return Sites(first, lines, index, name, row, position, partner.group(1), last, start.start(), end)
     raise SystemExit("check_headline_results: calibration needs a partner row whose theorem ends in Qed or Defined")
+
+
+def owed_copy(rows: list[list[str]]) -> list[list[str]]:
+    """The rows with the first registry row owed and tracked by CALIBRATION_ISSUE: a registry the checks accept."""
+    copy = [list(r) for r in rows]
+    copy[1][3] = "owed"
+    copy[1][4] = CALIBRATION_ISSUE
+    return copy
 
 
 def mutants(good: Inputs) -> dict[str, Inputs]:
@@ -597,8 +608,9 @@ def mutants(good: Inputs) -> dict[str, Inputs]:
     projects = {k: set(v) for k, v in good.projects.items()}
     projects[tree].discard(site.partner_source[len(tree) + 1 :])
     cases["a partner source the project file omits"] = replace(good, projects=projects)
-    owed = next(i for i, r in enumerate(good.rows) if i and r[3] == "owed")
-    cases["an owed row without an issue URL"] = with_rows(edit_row(owed, 4, "-"))
+    untracked = owed_copy(good.rows)
+    untracked[1][4] = "-"
+    cases["an owed row without an issue URL"] = with_rows(untracked)
     extra = "calibration_unlisted"
     unlisted = with_lean([f"theorem {extra} : True := trivial"])
     unlisted.rows.append(
@@ -607,7 +619,7 @@ def mutants(good: Inputs) -> dict[str, Inputs]:
             site.first[1],
             site.first[2].rsplit(".", 1)[0] + "." + extra if "." in site.first[2] else extra,
             "owed",
-            good.rows[owed][4],
+            CALIBRATION_ISSUE,
         ]
     )
     cases["a registry row that README does not name"] = unlisted
@@ -628,7 +640,7 @@ def mutants(good: Inputs) -> dict[str, Inputs]:
     duplicate = next(i for i, line in enumerate(row_lines) if line.startswith("| \x60GororobaMath."))
     row_lines.insert(duplicate + 1, row_lines[duplicate])
     cases["a repeated README module row"] = replace(good, readme="\n".join(row_lines) + "\n")
-    cases["a repeated registry row"] = with_rows([*good.rows, [*good.rows[1][:3], "owed", good.rows[owed][4]]])
+    cases["a repeated registry row"] = with_rows([*good.rows, [*good.rows[1][:3], "owed", CALIBRATION_ISSUE]])
     cases["a stale NON_DECLARATION_TOKENS entry"] = replace(
         good, exempt={**good.exempt, (site.first[1], "calibration_absent"): "calibration"}
     )
@@ -729,6 +741,7 @@ def controls(good: Inputs) -> dict[str, Inputs]:
         "Module Type CalibrationT.\n  Parameter calibration_p : nat.\nEnd CalibrationT.\n"
         "Section CalibrationS.\nEnd CalibrationS.\n"
     )
+    cases["an owed row with its issue URL"] = replace(good, rows=owed_copy(good.rows))
     cases["Rocq comments, strings and blocks around the partner theorem"] = replace(
         good, rocq={**good.rocq, site.partner_source: text[: site.partner_start] + insert + text[site.partner_start :]}
     )
