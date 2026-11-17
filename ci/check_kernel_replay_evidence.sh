@@ -24,10 +24,16 @@
 #     answer on each row of ci/flocq-import-corpus.tsv, which gororoba-open's
 #     consumer (theorem_replay.rs, command_imports_flocq) pins by digest, and
 #     no rule that drops one control flag or legacy attribute does.
+#   - every Rocq process runs with COQPATH and ROCQPATH set empty and every
+#     compile with ROCQLIB at the hidden library directory (a recording
+#     wrapper rocq; each check rejects a synthetic known-bad line first);
+#   - an import under Fail that the rule misses loads nothing on the hidden
+#     load path and yields evidence without Flocq objects.
 # Known-bad cases must be refused: a source whose compilation prints a
 # warning but exits 0, a source that fails to compile, a declaration name the
 # source lacks, a Rocq that reports another version, a Flocq library
-# directory without Core/Core.vo, a source that reaches the switch's own Flocq
+# directory without Core/Core.vo, thirteen malformed library reports, a
+# source that reaches the switch's own Flocq
 # through an import the rule misses (a producer whose rule reads no import:
 # a plain import and one under Succeed find no Flocq on the hidden load path,
 # and with that path switched off the library query refuses the plain one), a
@@ -544,6 +550,24 @@ blind blind-import hidden "$work/flocq" '^Core with prefix Flocq\.$'
 blind blind-succeed hidden "$work/flocq-succeed" 'bound to logical path Flocq\.Core\.Core\.$'
 blind blind-open open "$work/flocq" "loads Flocq.Core.Zaux from Rocq's default load path"
 
+# Known-good: an import under Fail that the rule misses. On the hidden load
+# path the Require finds no Flocq, so Fail succeeds, nothing is loaded, and
+# the evidence lists no Flocq objects; the compile log keeps Rocq's message.
+tree "$work/flocq-fail"
+printf '%s\n' 'Fail Require Import Flocq.Core.Core(Rnd).' 'From OpenGororoba Require Import Prelude.' \
+  'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-fail/verified/C900_Test.v"
+opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/blind.py" "$here" hidden --tree "$work/flocq-fail" \
+  --out "$work/out-blind-fail" --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_default \
+  >"$work/blind-fail.log" 2>&1 || {
+  cat "$work/blind-fail.log" >&2
+  fail "blind-fail: the producer refused an import under Fail that loads nothing"
+}
+! grep -q flocq_objects "$work/out-blind-fail/C900_Test.evidence.json" ||
+  fail "blind-fail: the evidence lists Flocq objects"
+grep -q 'logical path Flocq.Core.Core' "$work/out-blind-fail/C900_Test.compile.txt" ||
+  fail "blind-fail: the compile log lacks Rocq's not-found message: $(head -n 3 "$work/out-blind-fail/C900_Test.compile.txt")"
+echo "check_kernel_replay_evidence: blind-fail accepted with no Flocq loaded"
+
 # Known-bad: a manifest that cannot name this producer. The scratch copies
 # below differ from the recorded manifest in one way each.
 cat >"$work/edit_manifest.py" <<'EOF'
@@ -691,6 +715,11 @@ if ! REAL_BIN=$(opam var --switch="$switch" bin) ENV_LOG="$work/env.calls" PATH=
   fail "the producer refused the known-good fixture under the recording wrapper"
 fi
 [ -s "$work/env.calls" ] || fail "envlog: the wrapper recorded no call"
+# The two checks below reject a synthetic known-bad line each first.
+printf '%s\n' 'compile rocqpath=absent coqpath= rocqlib=set' | grep -v -q -E '^[^ ]+ rocqpath= coqpath= ' ||
+  fail "envlog: the path-variable check accepted an absent ROCQPATH"
+printf '%s\n' 'compile rocqpath= coqpath= rocqlib=' | grep -E '^compile ' | grep -v -q ' rocqlib=set$' ||
+  fail "envlog: the library-directory check accepted a compile without ROCQLIB"
 ! grep -v -q -E '^[^ ]+ rocqpath= coqpath= ' "$work/env.calls" ||
   fail "envlog: a Rocq call ran with COQPATH or ROCQPATH absent or set: $(grep -v -E '^[^ ]+ rocqpath= coqpath= ' "$work/env.calls" | head -n 1)"
 ! grep -E '^compile ' "$work/env.calls" | grep -v -q ' rocqlib=set$' ||
@@ -705,4 +734,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 6 known-good and $((32 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 7 known-good and $((34 + mutants)) known-bad cases behaved"
