@@ -137,9 +137,15 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/KernelMapEstimator.v`, `ci/compare_dot.sh` for `Tower.dot` and `Tower.re`,
   `ci/compare_alignment.sh` for `Tower.partner`, `Tower.alignedAdd` and
   `Tower.alignedSub`, which it compares with the integer instance of
-  `rocq/quantum/CdTowerTwoTermBridge.v`, and
+  `rocq/quantum/CdTowerTwoTermBridge.v`,
   `ci/compare_aligned_pair_count.sh` for `Tower.alignedPairCount` against
-  `aligned_pair_count` of `rocq/quantum/CdTowerTwoTermRecursion.v`.
+  `aligned_pair_count` of `rocq/quantum/CdTowerTwoTermRecursion.v`, and
+  `ci/compare_aligned_pair_forms.sh` for `Tower.alignedPairCountMultiplicity`,
+  `Tower.closedForm`, `Tower.clearedXorBit`, `Tower.DegenerateSplit`,
+  `Tower.associates` and `KernelMap.binContract` against their partners in
+  `rocq/quantum/CdTowerAlignedPairSpectrum.v`,
+  `CdTowerAlignedPairClosedForm.v`, `CdTowerAssociatorSpace.v` and
+  `CdTowerTwoTermBins.v`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
