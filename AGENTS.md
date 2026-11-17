@@ -280,6 +280,11 @@ gororoba repository shares; this file governs where the two differ.
   the Flocq handling of the script changes the evidence contract that
   `theorem_replay.rs` of gororoba-open validates, so both land together, and
   `ci/check_kernel_replay_evidence.sh` runs before the script lands.
+  Whether a source imports Flocq is decided by one rule in both
+  repositories, `command_imports_flocq` here and in `theorem_replay.rs`,
+  and both read `ci/flocq-import-corpus.tsv`: the calibration here, and a
+  vendored copy in gororoba-open pinned by sha256 and the gororoba-math
+  commit. A change to the rule changes the corpus and the pin together.
 - Retained records in gororoba-open and gororoba-quantum cite sources of
   these trees by sha256. Before editing a source, `git grep` its digest in
   both repositories; a cited source keeps its bytes, and a change lands in a
