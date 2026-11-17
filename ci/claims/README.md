@@ -53,7 +53,16 @@ claim, sorted by `source` in byte order, sources unique.
   (one row).
 - A `no-proof-owed` row that a record of either repository cites as proved
   falsifies its row; no check reads those records, so the falsifier stays open
-  for each such row until a record search closes it.
+  for each such row until a record search closes it. Where the earlier
+  readings gave a `neither` row a Rocq proof of its own (five rows of
+  gororoba-open and two of gororoba-quantum), the row reads `partial` with that
+  proof and a note, since a proof is on record.
+- The 540 rows of `docs/evidence/a5-exceptional-fibers/ledger.tsv` that the
+  earlier reading had not covered read `no-proof-owed` by the precedent of its
+  row A5-448 (Singular and exact-arithmetic computations have no Rocq or Lean
+  counterpart); each note carries the findings ledger's own status, whose
+  `proved` and `certified` name a computation. Whether any of those claims is
+  owed instead is the owner's decision, row by row.
 
 ## Placement clauses
 
@@ -105,10 +114,14 @@ from the ledger.
   that the declaration states the claim: a row whose note reads `theorems named
   by file prefix` links a file, and a reader confirms the statement before the
   row moves to `proved`.
-- The gororoba-quantum pass is partial. Not read for rows: the findings ledger
-  `docs/evidence/a5-exceptional-fibers/ledger.tsv` beyond the rows that cite
-  `rocq/quantum` (about 540 computer-algebra rows over finite fields), the
-  `a5-*` topic notes and evidence directories that the earlier pass named as
-  skipped, `docs/notes/topics/box-kites/`, `finite-field-qlsa-alternatives.md`
+- The gororoba-quantum pass is partial. Read for rows: the findings ledger
+  `docs/evidence/a5-exceptional-fibers/ledger.tsv` (every row), the theorem
+  table of `docs/evidence/cd-tower-domain/README.md`, and the topic notes
+  `cd-star-lattice-tower.md` and `c5-zero-divisor-code-falsification.md`. Not
+  read for rows: the `a5-*` evidence directories and topic notes (their
+  claims are the findings-ledger rows), `rank_locus_*`,
+  `dimension32_skew_schur`, `stiefel-pfaffian-higher`,
+  `hypercomplex-operators`, `sedenion-automorphisms` beyond the rows already
+  present, `docs/notes/topics/box-kites/`, `finite-field-qlsa-alternatives.md`
   and `cd-annihilator-varieties-prior-art.md` (a literature survey). A row is
   added when one of these sources states a claim; none is added by sampling.

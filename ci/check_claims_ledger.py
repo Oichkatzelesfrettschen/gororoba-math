@@ -33,15 +33,17 @@ copies (the controls function) and requires each to add no failure to those of
 the repository inputs.
 
 Exit status: 0 every check passed; 1 a check failed (each failure printed);
-2 the calibration failed or an input is unreadable.
+2 the calibration failed, a tool failed or an input is unreadable.
 """
 
 from __future__ import annotations
 
 import importlib.util
 import re
+import subprocess
 import sys
 from dataclasses import dataclass, replace
+from functools import cache
 from pathlib import Path
 from types import ModuleType
 
@@ -78,6 +80,7 @@ ROCQ_EXTRA = (
 )
 
 
+@cache
 def load_headline() -> ModuleType:
     """The module ci/check_headline_results.py, imported from its path (the -I flag leaves ci/ off sys.path)."""
     path = ROOT / "ci" / "check_headline_results.py"
@@ -89,8 +92,6 @@ def load_headline() -> ModuleType:
     spec.loader.exec_module(module)
     return module
 
-
-H = load_headline()
 
 
 @dataclass
@@ -196,8 +197,8 @@ def check_unlinked(inputs: Inputs, sources: set[str]) -> list[str]:
 def check(inputs: Inputs) -> list[str]:
     if not inputs.rows or inputs.rows[0] != HEADER:
         return ["ci/claims/ledger.tsv: the header is not " + "\t".join(HEADER)]
-    declared = {path: H.lean_declarations(text) for path, text in inputs.lean.items()}
-    proved = {path: H.rocq_theorems(text) for path, text in inputs.rocq.items()}
+    declared = {path: load_headline().lean_declarations(text) for path, text in inputs.lean.items()}
+    proved = {path: load_headline().rocq_theorems(text) for path, text in inputs.rocq.items()}
     failures: list[str] = []
     for number, row in enumerate(inputs.rows[1:], start=2):
         failures.extend(check_row(f"ci/claims/ledger.tsv:{number}", row, inputs, declared, proved))
@@ -212,7 +213,7 @@ def check(inputs: Inputs) -> list[str]:
 
 
 def read_inputs() -> Inputs:
-    base = H.read_inputs()
+    base = load_headline().read_inputs()
     rows = split_table((ROOT / "ci/claims/ledger.tsv").read_text(encoding="utf-8"))
     unlinked = split_table((ROOT / "ci/claims/unlinked-proof-files.tsv").read_text(encoding="utf-8"))
     return Inputs(rows, unlinked, base.lean, base.rocq, base.projects)
@@ -225,14 +226,14 @@ def first_proof(good: Inputs, suffix: str) -> tuple[int, str, str]:
             path, name = split_proof(entry)
             if path.endswith(suffix):
                 return index, path, name
-    raise SystemExit(f"check_claims_ledger: calibration needs a ledger proof entry in a {suffix} file")
+    raise LookupError(f"calibration needs a ledger proof entry in a {suffix} file")
 
 
 def find_row(good: Inputs, status: str, placement: str | None = None) -> int:
     for index, row in enumerate(good.rows[1:], start=1):
         if row[5] == status and (placement is None or row[3] == placement):
             return index
-    raise SystemExit(f"check_claims_ledger: calibration needs a {status} row")
+    raise LookupError(f"calibration needs a {status} row")
 
 
 def mutants(good: Inputs) -> dict[str, Inputs]:
@@ -314,12 +315,8 @@ def controls(good: Inputs) -> dict[str, Inputs]:
     return cases
 
 
-def main() -> int:
-    try:
-        good = read_inputs()
-    except (OSError, ValueError) as error:
-        print(f"check_claims_ledger: {error}", file=sys.stderr)
-        return 2
+def run() -> int:
+    good = read_inputs()
     if len(good.rows) < 4 or len(good.unlinked) < 4:
         print("check_claims_ledger: the calibration needs at least three rows in each table", file=sys.stderr)
         return 2
@@ -339,6 +336,14 @@ def main() -> int:
         return 1
     print(f"check_claims_ledger: {len(good.rows) - 1} ledger rows match the library and the Rocq trees")
     return 0
+
+
+def main() -> int:
+    try:
+        return run()
+    except (OSError, ValueError, LookupError, ImportError, subprocess.SubprocessError) as error:
+        print(f"check_claims_ledger: {error}", file=sys.stderr)
+        return 2
 
 
 if __name__ == "__main__":
