@@ -90,7 +90,7 @@ translates.
 - Base rings with `i`. Rocq's Gaussian integers carry the identity as
   conjugation; Mathlib's `GaussianInt` carries complex conjugation as
   `star`, which builds a different tower, so a Gaussian instance in Lean uses
-  a local trivial star or stays in Rocq (row 38).
+  a local trivial star or stays in Rocq (row 39).
 - Comparisons. A row that defines a Lean function mirroring a Rocq one of
   another sign or index convention names a new `ci/` comparison in the
   manner of `ci/compare_signs.sh`: integer instance, levels 1 to 5 or 6, a
@@ -101,36 +101,34 @@ translates.
 Layer `n` holds the rows whose longest dependency chain has `n` rows
 (rows with no Lean reading omitted).
 
-1. Layer 1 (39 rows): 1, 5, 6, 7, 8, 10, 11, 12, 13, 17, 18, 19, 20, 23, 26, 29, 30, 34, 35, 36, 39, 43, 46, 47, 48, 49, 55, 61, 62, 64, 65, 68, 72, 73, 74, 80, 85, 93, 96.
-2. Layer 2 (34 rows): 2, 3, 9, 14, 15, 16, 21, 22, 27, 31, 32, 37, 40, 41, 50, 54, 57, 63, 66, 67, 69, 70, 75, 81, 83, 84, 94, 95, 97, 106, 107, 108, 109, 110.
-3. Layer 3 (22 rows): 4, 24, 28, 33, 38, 42, 44, 51, 56, 60, 71, 76, 79, 82, 88, 92, 98, 99, 101, 102, 103, 104.
-4. Layer 4 (10 rows): 25, 45, 52, 53, 58, 59, 77, 86, 100, 105.
-5. Layer 5 (5 rows): 78, 87, 89, 90, 91.
+1. Layer 1 (39 rows): 1, 5, 6, 7, 8, 10, 11, 12, 13, 17, 18, 19, 20, 23, 26, 29, 30, 34, 35, 36, 40, 44, 47, 48, 49, 50, 56, 62, 63, 65, 66, 69, 73, 74, 75, 81, 86, 94, 97.
+2. Layer 2 (33 rows): 2, 3, 9, 14, 15, 16, 21, 22, 27, 31, 32, 37, 41, 42, 51, 55, 58, 64, 67, 68, 70, 71, 76, 82, 84, 85, 95, 96, 98, 107, 108, 109, 110.
+3. Layer 3 (22 rows): 4, 24, 28, 33, 38, 43, 45, 52, 57, 61, 72, 77, 80, 83, 89, 93, 99, 100, 102, 103, 104, 105.
+4. Layer 4 (11 rows): 25, 39, 46, 53, 54, 59, 60, 78, 87, 101, 106.
+5. Layer 5 (5 rows): 79, 88, 90, 91, 92.
 
 By family: ring and star laws, maps, the derivation extension and the
 scalar actions of a double (rows 1 to 16) and the trace form with the
-characteristic-2 and square-root-of-minus-one rows (17 to 38) open the work;
+characteristic-2 and square-root-of-minus-one rows (17 to 39) open the work;
 basis extension, base change, certificates, the order-three map and the ideal
-lemma (39 to 48), the imaginary sum (49 to 54), and the kernel dimensions,
-fold, zero divisors, Hurwitz bound, level-2 rows and quaternion modules (55
-to 71) build on them; the sign, ANF, associator-phase, census, sign-code and
-sparse-support rows (72 to 98) form a combinatorial strand over `BitVec`
-that needs no coefficient ring beyond row 80; the derivation rows (99, 100)
-close the list. Rows 101 to 110 are instance rows that point at a canonical
+lemma (40 to 49), the imaginary sum (50 to 55), and the kernel dimensions,
+fold, zero divisors, Hurwitz bound, level-2 rows and quaternion modules (56
+to 72) build on them; the sign, ANF, associator-phase, census, sign-code and
+sparse-support rows (73 to 99) form a combinatorial strand over `BitVec`
+that needs no coefficient ring beyond row 81; the derivation rows (100, 101)
+close the list. Rows 102 to 110 are instance rows that point at a canonical
 row, and rows 111 to 122 have no Lean reading.
 
 ## First tranche
 
-Rows 19, 20, 22, 29, 39, 7, 74, 75, 80, 84: `conj_mul_left`, `conj_mul_right`,
-`lemma_9_2`, `l_x_skew_symm`, `multiplicative_by_basis`, `diag_mul`,
-`anf_inversion`, `canonical_anf_unique`, `assoc_basis` and
-`associator_doubling`. They have the most later rows depending on them
-(the two conjugation identities 14 and 13 each, `assoc_basis` 11,
-`anf_inversion` 10, `canonical_anf_unique` 9, `lemma_9_2`,
-`multiplicative_by_basis` and `associator_doubling` 7 each,
-`l_x_skew_symm` 6, `diag_mul` 5), they introduce the new definitions the
-later rows share (`Tower.anfCoeff`, `Tower.anfEval`, `Tower.assocPhase`,
-`Tower.commPhase`, `CayleyDickson.map`), and all but two are effort S.
+Rows 7, 19, 20, 22, 29, 40, 75, 76, 81, 85:
+`diag_mul`, `conj_mul_left`, `conj_mul_right`, `lemma_9_2`, `l_x_skew_symm`,
+`multiplicative_by_basis`, `anf_inversion`, `canonical_anf_unique`,
+`assoc_basis`, `associator_doubling`.
+They have the most later rows depending on them (counted transitively:
+row 7 has 5, row 19 has 14, row 20 has 13, row 22 has 7, row 29 has 6, row 40 has 7, row 75 has 10, row 76 has 9, row 81 has 11, row 85 has 7), they introduce the new definitions the
+later rows share (`Tower.anfCoeff`, `Tower.anfEval`, `Tower.weight`,
+`Tower.anfDegree`, `Tower.assocPhase`, `Tower.commPhase`, `CayleyDickson.map`), and 7 of the ten are effort S.
 
 ## Rows with no Lean reading
 
@@ -138,7 +136,7 @@ later rows share (`Tower.anfCoeff`, `Tower.anfEval`, `Tower.assocPhase`,
 - Row 112, `rocq/quantum/CdSignPythonSemantics.v:cd_sign_returns_sigma`: a semantics of Python source is evidence about running code (AGENTS.md, Evidence axis); the Lean side meets the same function through ci/compare_signs.sh, which compares Tower.sign with cd_core.cd_sign.
 - Row 113, `rocq/quantum/CdSignAstTranslation.v:function_semantic_preservation`: translation validation of a Python syntax tree, evidence about code with no algebraic content.
 - Row 114, `rocq/quantum/SignBridge.v:open_cube_sign_sigma`: it identifies two Rocq spellings of one sign function; Lean holds one spelling, Tower.negSign, compared with them by ci/compare_signs.sh.
-- Row 115, `rocq/quantum/TowerBridge.v:to_quantum_mul`: it relates two Rocq carriers of the same tower; Lean has a single carrier, Tower R k.
+- Row 115, `rocq/quantum/TowerBridge.v:to_quantum_mul`: it relates two Rocq carriers of the same tower, and Lean has a single carrier, Tower R k; the reading the file can carry is its quantum_basis_product, which is Tower.e_mul_e through the sign dictionary (sign_exponent on cube_decode is negSign), so no row is owed.
 - Row 116, `rocq/open/theories/CDSignNumericCorrespondence.v:numeric_cube_sign`: it relates a fuel-indexed numeric function of the open tree to the cube sign; Lean indexes by BitVec k with BitVec.toNat_xor, so no fuel or encoding enters.
 - Row 117, `rocq/quantum/CdTowerLeibnizSystem.v:LeibnizSystem.system_solved`: the flat index j = 2^k m + q and the equation list are the input format of a Rocq certificate (MatrixSplittingCertificate.v); the Lean reading of the Leibniz rule is row derivation_by_basis.
 - Row 118, `rocq/quantum/CdTowerCanonicalKernels.v:CanonicalKernels.W8_kernel_free_basis`: a generated certificate at fixed level 5 (Evidence axis); its general lemma is row kernel_free_basis, and the twelve point tables stay Rocq artifacts.
@@ -147,25 +145,34 @@ later rows share (`Tower.anfCoeff`, `Tower.anfEval`, `Tower.assocPhase`,
 - Row 121, `rocq/quantum/CdTwistedProduct.v:Twisted.W8_ideal_exchange`: a fixed 32-coordinate polynomial identity read by the Singular ideal of the A_5 W8 record; its general lemma is row ideal_exchange.
 - Row 122, `rocq/open/theories/CDSparseBlockTransport.v:sparse_photonic_configuration_coverage`: membership in a retained configuration list is a record check (Evidence axis).
 
+These rows hold `-` in `lean_module`, `lean_statement` and `effort`, a
+departure from the S, M or L of the brief that keeps a no-reading row from
+looking like owed work.
+
 Further rows carry a narrower Lean reading and say so in `narrowing`: row
-35 (norm multiplicativity, levels 0 to 3 only), row 108
-(an abstract interface read on the tower), row 69 (an inductive
-predicate on nat read as a module statement), row 70 (the
-abstract lane of Moreno's Theorem 1.16), row 95 (a group-cochain
-identity read for the tower cochain), row 98 (a MathComp block
-rank read as the kernel decomposition), and rows 38 and
-44 (fixed levels over a class of rings).
+35 (norm multiplicativity, levels 0 to 3 only),
+row 70 (an inductive
+predicate on nat read as a module statement), row 71 (the
+abstract lane of Moreno's Theorem 1.16), row 96 (a group-cochain
+identity read for the tower cochain), row 99 (a MathComp block
+rank read as the kernel decomposition), and rows 39 and
+45 (fixed levels over a class of rings).
 
 ## Census
 
-The census read the headers and theorem statements of every source of
-`rocq/open/theories`, `rocq/open/verified` and `rocq/quantum` that the
-inventory of 2026-11-15 classed every-level or ring-class, every source added
-since, and every source that names a ring functor (`CommutativeRing`,
-`OrderedDomain`, `RingHom`) or binds a level next to a tower operation.
+The census read the headers and theorem statements of the sources that one
+of three sweeps selected: the inventory of 2026-11-15 classing a source
+every-level or ring-class; a keyword search (tower, Cayley, Dickson, sedenion,
+octonion, pathion, CommutativeRing, Module Type, sigma_k, cube) over the
+sources added since that inventory; and a search for a ring functor
+(`CommutativeRing`, `OrderedDomain`, `RingHom`) or a level binder (`k`,
+`order`, `n`, `dim`, `level` as a `nat` argument) next to a tower
+operation. A source no sweep selected was not opened.
+`rocq/open/verified/C956_TowerAssociatorPersistence.v`, added and then
+deleted after the inventory commit, is absent from the tree.
 
-Sources with rows (61):
-`rocq/open/theories/BooleanANFDegree.v`, `rocq/open/theories/BooleanCochainFiltration.v`, `rocq/open/theories/Brown1972ChapterIII.v`, `rocq/open/theories/C1539_MorSkewSymm.v`, `rocq/open/theories/C1542_MorVlambdaOrbit.v`, `rocq/open/theories/C1543_MorMod4Bound.v`, `rocq/open/theories/CDAssociatorCensus.v`, `rocq/open/theories/CDAssociatorDoubling.v`, `rocq/open/theories/CDDoubleFunctor.v`, `rocq/open/theories/CDPhaseDegree.v`, `rocq/open/theories/CDPureDoublingKernel.v`, `rocq/open/theories/CDScalarExtension.v`, `rocq/open/theories/CDSignNumericCorrespondence.v`, `rocq/open/theories/CDSparseBlockTransport.v`, `rocq/open/theories/CDSparseMatrixTransport.v`, `rocq/open/theories/CDTowerFoldTransport.v`, `rocq/open/theories/CDTowerZeroDivisors.v`, `rocq/open/theories/CDTraceZero.v`, `rocq/open/theories/Dickson1921.v`, `rocq/open/theories/DicksonCDProcess.v`, `rocq/open/theories/FinDimHModule.v`, `rocq/open/theories/FloatQuaternion.v`, `rocq/open/theories/FloatRealBridge.v`, `rocq/open/theories/HModuleDim.v`, `rocq/open/theories/HurwitzTheorem.v`, `rocq/open/theories/Moreno1997.v`, `rocq/open/theories/MorenoTowerInstance.v`, `rocq/open/theories/Schafer1954.v`, `rocq/open/theories/SchreierSignCode.v`, `rocq/open/theories/SignCodeCardinality.v`, `rocq/open/verified/C957_VoudonZD.v`, `rocq/quantum/A5W8ArcMatrixRanks.v`, `rocq/quantum/CdAnnihilatorSymmetry.v`, `rocq/quantum/CdAnnihilatorSymmetryReal.v`, `rocq/quantum/CdAssociatorAnf.v`, `rocq/quantum/CdAssociatorCensus.v`, `rocq/quantum/CdAssociatorPointIndicators.v`, `rocq/quantum/CdHalfFold.v`, `rocq/quantum/CdImaginarySumConference.v`, `rocq/quantum/CdSignAstTranslation.v`, `rocq/quantum/CdSignPythonSemantics.v`, `rocq/quantum/CdSignRowAnf.v`, `rocq/quantum/CdTowerBasisSign.v`, `rocq/quantum/CdTowerCanonicalKernels.v`, `rocq/quantum/CdTowerDomain.v`, `rocq/quantum/CdTowerDomainR.v`, `rocq/quantum/CdTowerDomainZ.v`, `rocq/quantum/CdTowerG2DerivationSpan.v`, `rocq/quantum/CdTowerG2Derivations.v`, `rocq/quantum/CdTowerKernelCertificate.v`, `rocq/quantum/CdTowerLeibnizSystem.v`, `rocq/quantum/CdTowerOrderThreeMap.v`, `rocq/quantum/CdTowerRing.v`, `rocq/quantum/CdTowerRingBaseChange.v`, `rocq/quantum/CdTowerRingBasis.v`, `rocq/quantum/CdTowerRingDomain.v`, `rocq/quantum/CdTwistedProduct.v`, `rocq/quantum/MatrixLeftInverseCertificate.v`, `rocq/quantum/MatrixSplittingCertificate.v`, `rocq/quantum/SignBridge.v`, `rocq/quantum/TowerBridge.v`.
+Sources with rows (60):
+`rocq/open/theories/BooleanANFDegree.v`, `rocq/open/theories/BooleanCochainFiltration.v`, `rocq/open/theories/Brown1972ChapterIII.v`, `rocq/open/theories/C1539_MorSkewSymm.v`, `rocq/open/theories/C1542_MorVlambdaOrbit.v`, `rocq/open/theories/C1543_MorMod4Bound.v`, `rocq/open/theories/CDAssociatorCensus.v`, `rocq/open/theories/CDAssociatorDoubling.v`, `rocq/open/theories/CDDoubleFunctor.v`, `rocq/open/theories/CDPhaseDegree.v`, `rocq/open/theories/CDPureDoublingKernel.v`, `rocq/open/theories/CDScalarExtension.v`, `rocq/open/theories/CDSignNumericCorrespondence.v`, `rocq/open/theories/CDSparseBlockTransport.v`, `rocq/open/theories/CDSparseMatrixTransport.v`, `rocq/open/theories/CDTowerFoldTransport.v`, `rocq/open/theories/CDTowerZeroDivisors.v`, `rocq/open/theories/Dickson1921.v`, `rocq/open/theories/DicksonCDProcess.v`, `rocq/open/theories/FinDimHModule.v`, `rocq/open/theories/FloatQuaternion.v`, `rocq/open/theories/FloatRealBridge.v`, `rocq/open/theories/HModuleDim.v`, `rocq/open/theories/HurwitzTheorem.v`, `rocq/open/theories/Moreno1997.v`, `rocq/open/theories/MorenoTowerInstance.v`, `rocq/open/theories/Schafer1954.v`, `rocq/open/theories/SchreierSignCode.v`, `rocq/open/theories/SignCodeCardinality.v`, `rocq/open/verified/C957_VoudonZD.v`, `rocq/quantum/A5W8ArcMatrixRanks.v`, `rocq/quantum/CdAnnihilatorSymmetry.v`, `rocq/quantum/CdAnnihilatorSymmetryReal.v`, `rocq/quantum/CdAssociatorAnf.v`, `rocq/quantum/CdAssociatorCensus.v`, `rocq/quantum/CdAssociatorPointIndicators.v`, `rocq/quantum/CdHalfFold.v`, `rocq/quantum/CdImaginarySumConference.v`, `rocq/quantum/CdSignAstTranslation.v`, `rocq/quantum/CdSignPythonSemantics.v`, `rocq/quantum/CdSignRowAnf.v`, `rocq/quantum/CdTowerBasisSign.v`, `rocq/quantum/CdTowerCanonicalKernels.v`, `rocq/quantum/CdTowerDomain.v`, `rocq/quantum/CdTowerDomainR.v`, `rocq/quantum/CdTowerDomainZ.v`, `rocq/quantum/CdTowerG2DerivationSpan.v`, `rocq/quantum/CdTowerG2Derivations.v`, `rocq/quantum/CdTowerKernelCertificate.v`, `rocq/quantum/CdTowerLeibnizSystem.v`, `rocq/quantum/CdTowerOrderThreeMap.v`, `rocq/quantum/CdTowerRing.v`, `rocq/quantum/CdTowerRingBaseChange.v`, `rocq/quantum/CdTowerRingBasis.v`, `rocq/quantum/CdTowerRingDomain.v`, `rocq/quantum/CdTwistedProduct.v`, `rocq/quantum/MatrixLeftInverseCertificate.v`, `rocq/quantum/MatrixSplittingCertificate.v`, `rocq/quantum/SignBridge.v`, `rocq/quantum/TowerBridge.v`.
 
 Sources whose headline results the Lean library already states, so issue 55
 owes no row:
@@ -189,6 +196,12 @@ owes no row:
 - `rocq/quantum/CdTowerE1E18Kernel.v`: `Tower.free_ker_mulLeft_e_add_e` and
   `Tower.finrank_ker_pathion_1_18` state the kernel over every ring with
   `2` left-regular.
+- `rocq/open/theories/CDTraceZero.v`: `trace_zero_of_zd` (x pure and nonzero,
+  x y = 0, so re(y) = 0) is `Tower.re_eq_zero_of_mul_eq_zero` with the case
+  y = 0 trivial; the interface `CDAlgInnerTrace` has no Mathlib class.
+- `rocq/open/theories/WedderburnPrimitive.v`: its `is_h_module_dim` lemmas are
+  the arithmetic predicate of `FinDimHModule.v`, whose Lean reading is row
+  69.
 - `rocq/quantum/GaussianIntegerHom.v`: Mathlib's `Zsqrtd.lift` and the
   domain instance of `GaussianInt`.
 - Within files that have rows: `norm_mul`, `adjoint`, `kernel_equality`,
@@ -225,15 +238,33 @@ Sources outside issue 55:
 - No Cayley-Dickson product: `rocq/open/theories/SignCodeProjection.v` (any
   binary code with the constant word), `BooleanPermutation.v`,
   `CubeAffineCosets.v`, `WalshProbability.v`, `BaezNormedDivAlgebra.v`,
-  and `rocq/open/verified/C1141_ZDGraphCountingIdentities.v`,
-  `C1142_XORScatterGatherSums.v`, `C1463_MatrixColumnIdeal.v`,
-  `C882_OctahedronGraphSpectrum.v`, `C010_ComponentBridgeBound.v`. Each has
-  a Mathlib reading (Finset sums, `Submodule (ZMod 2)`, matrices, graphs)
-  that no tower statement needs.
+  `CDFidelity.v` (real inequalities about an associator norm it never
+  computes), `RationalRealSpecialization.v`, `GF2Algebra.v`,
+  `FP24Representable.v`, `BekensteinEntropy.v`, `Foliation.v`,
+  `FanoPlane.v`, `ParityClique.v`, `SedenionXorGroup.v`, and
+  `rocq/open/verified/C1141_ZDGraphCountingIdentities.v`,
+  `C1141_ZDGraphGeneralStructure.v`, `C1142_XORScatterGatherSums.v`,
+  `C1463_MatrixColumnIdeal.v`, `C882_OctahedronGraphSpectrum.v`,
+  `C010_ComponentBridgeBound.v`, `C016_FanoOrientedTriples.v`,
+  `C022_OrdinalAnalogy.v`, `C036_CliqueClusteringCounts.v`,
+  `C1313_Thesis42Arithmetic.v`. Each has a Mathlib reading (Finset sums,
+  `Submodule (ZMod 2)`, matrices, graphs, real inequalities) that no tower
+  statement needs.
+- Fixed level or fixed algebra, selected by the binder sweep:
+  `rocq/open/theories/CDSignSection.v`, `ZDGraph.v`,
+  `G2StabilizerDimension.v`, `BrownGeneralizedCD.v`, `Brown1972ChapterV.v`,
+  `Brown1972ChapterVII.v`, `SStructuralGaps.v`, and
+  `rocq/open/verified/C1137_MissingEdgeQuantizedGap.v`,
+  `C1140_PathionQuantizedGap.v`, `C1466_SubalgebraClosure.v`,
+  `C031_HurwitzComplete.v`.
 
 ## Checks
 
-No Lean or Rocq command ran for this plan. The table was checked by script:
-11 cells per row, no tab or newline inside a cell, `order` contiguous,
-every `depends` entry smaller than its row, every `rocq` cell resolving to
-exactly one theorem of its file, every `statement` at most 30 words.
+No Lean or Rocq command ran for this plan. A script checked the table: 11
+cells per row, no tab or newline inside a cell, `order` contiguous, every
+`depends` entry smaller than its row, every `statement` at most 30 words,
+every `rocq` cell resolving to exactly one theorem of its file (the Moreno
+1997 corollary by a direct search, since it sits in a section the extractor
+skipped), and every `Tower.`, `CayleyDickson.` or `KernelMap.` name in
+`lean_statement` and `reuses` either declared in `lean/GororobaMath/` or
+introduced by a row in the transitive `depends` of its row.
