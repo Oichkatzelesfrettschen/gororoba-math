@@ -43,9 +43,7 @@ not build it. The challenge modules of `Basic`, `Tower`, `TowerModule`, `TwoTerm
 `lake build Challenge` builds the modules one at a time (the `Challenge.*` glob) and no single file
 imports them all.
 `ci/headline-results.tsv` lists the theorems this table names as the
-headline results, each with its Rocq partner, the bridge theorem that
-restates it in a new `rocq/quantum` file and names it in its docstring
-(every row has one since
+headline results, each with its Rocq partner (every row has one since
 [issue 46](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46));
 a new row lands with its partner.
 
