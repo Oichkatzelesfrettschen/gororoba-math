@@ -6,7 +6,10 @@
 #      tracked Python file passes ruff check and ruff format --check under
 #      ruff.toml, every tracked workflow passes actionlint, and each line of
 #      a tracked shell script that runs rm with a recursive option redirects
-#      standard input from /dev/null;
+#      standard input from /dev/null; ci/check_signal_traps.sh requires
+#      each trap of a tracked shell script that names INT or TERM to exit
+#      with that signal's status, and interrupts this script and four
+#      comparison scripts under stub tools to confirm that each stops;
 #   2. every tracked module under lean/GororobaMath/, taken from git's file
 #      list, and the audit command build with warnings as errors;
 #   3. the axiom audit accepts a generated file that imports the root
@@ -125,6 +128,7 @@ done <"$work/scripts.txt"
   exit 1
 }
 echo "check: each recursive removal of $(wc -l <"$work/scripts.txt") script(s) reads /dev/null"
+sh ci/check_signal_traps.sh
 
 git ls-files -- '*.py' >"$work/python.txt"
 if [ -s "$work/python.txt" ]; then
