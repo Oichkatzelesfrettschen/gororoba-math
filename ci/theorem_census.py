@@ -5,7 +5,7 @@ Usage, with the `rocq` of Rocq 9.3.0 on PATH (for example under
 `rocq/open` directory that `make rocq-open` builds under `BUILD_DIR`:
 
     opam exec --switch=rocq-9.3 -- "$PYTHON" -I ci/theorem_census.py \\
-        --objects "$BUILD_DIR/rocq/open" [--file-local] [--tsv FILE]
+        --objects "$BUILD_DIR/rocq/open" [--file-local] [--tsv FILE] [--candidates FILE]
 
 Criterion. A declaration counts as listed when the type that Rocq prints for it
 refers to no constant, inductive type or constructor of the logical roots
@@ -55,7 +55,11 @@ any stderr output exits 1.
 
 Output. Stdout gets one line per source file with its count of listed and of
 all declarations, then the total. `--tsv FILE` writes the listed declarations as
-file, theorem and statement columns.
+file, theorem and statement columns. `--candidates FILE`, with `--file-local`,
+writes the verdict queue: a header line, then each file-local row that has no row
+in the `--verdicts` table (default ci/census/header-verdicts.tsv), as file,
+theorem, statement, the local names without their file prefix, and an empty
+verdict column. ci/census/file-local-candidates.tsv is that output.
 """
 
 import argparse
@@ -87,6 +91,7 @@ CALIBRATION_FILE_LOCAL = (
 CALIBRATION_FILE_LOCAL_REJECTED = (("C028_SedenionAutGroup", "C028_lo_subalgebra_closed"),)
 # Printed types for the matching rule alone: a name of another file, a name of a file whose
 # stem extends this one, and a local name beside a theories/ name each keep a type out.
+CANDIDATE_HEADER = ("file", "theorem", "statement", "local_names", "verdict")
 CALIBRATION_NAME_RULE = (
     ("A", "x : OpenGororobaVerified.A.f 1 = 1", ["OpenGororobaVerified.A.f"]),
     ("A", "x : OpenGororobaVerified.B.f 1 = 1", None),
@@ -279,6 +284,26 @@ def file_local_names(stem: str, text: str) -> list[str] | None:
     return None
 
 
+def verdict_keys(table: Path) -> set[tuple[str, str]]:
+    """(file, theorem) of each row of the verdict table, whose location reads PATH/FILE.v:LINE."""
+    lines = table.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0].split("\t")[:2] != ["location", "theorem"]:
+        raise CensusError(f"{table} does not start with the location and theorem columns")
+    keys = set()
+    for line in lines[1:]:
+        cells = line.split("\t")
+        if len(cells) < 2 or ":" not in cells[0]:
+            raise CensusError(f"{table}: row without a PATH:LINE location and a theorem: {line[:80]!r}")
+        keys.add((cells[0].rsplit(":", 1)[0].rsplit("/", 1)[-1], cells[1]))
+    return keys
+
+
+def short_local_names(file: str, names: str) -> str:
+    """The comma-separated local names of a row with the prefix of the row's own file removed."""
+    prefix = f"OpenGororobaVerified.{file[: -len('.v')]}."
+    return ",".join(name.removeprefix(prefix) for name in names.split(","))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--objects", required=True, type=Path, help="compiled rocq/open tree (theories/ and verified/)")
@@ -289,8 +314,22 @@ def main() -> int:
         help="also list declarations whose project references all lie in their own file",
     )
     parser.add_argument("--tsv", type=Path, help="write the listed declarations (file, theorem, statement) here")
+    parser.add_argument(
+        "--candidates",
+        type=Path,
+        help="with --file-local: write the file-local rows that hold no verdict yet, as the verdict queue",
+    )
+    parser.add_argument(
+        "--verdicts",
+        type=Path,
+        default=Path(__file__).resolve().parent / "census" / "header-verdicts.tsv",
+        help="table of the rows that hold a verdict (location, theorem, ...); --candidates leaves these out",
+    )
     args = parser.parse_args()
+    if args.candidates and not args.file_local:
+        parser.error("--candidates needs --file-local")
     try:
+        judged = verdict_keys(args.verdicts) if args.candidates else set()
         if resolve_dir(Path("relative-directory")) != Path.cwd() / "relative-directory":
             raise CensusError("calibration: a relative directory must resolve against the caller's directory")
         tree, objects = resolve_dir(args.tree), resolve_dir(args.objects)
@@ -343,6 +382,13 @@ def main() -> int:
         print(f"total\t{len(rows)}\t{total}\t(listed, declarations; calibration passed)")
     if args.tsv:
         args.tsv.write_text("".join("\t".join(row) + "\n" for row in rows), encoding="utf-8")
+    if args.candidates:
+        queue = [CANDIDATE_HEADER]
+        for file, name, text, scope, names in rows:
+            if scope == "file-local" and (file, name) not in judged:
+                queue.append((file, name, text, short_local_names(file, names), ""))
+        args.candidates.write_text("".join("\t".join(row) + "\n" for row in queue), encoding="utf-8")
+        print(f"candidates\t{len(queue) - 1}\t(file-local rows without a verdict)")
     return 0
 
 
