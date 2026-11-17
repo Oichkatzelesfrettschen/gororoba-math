@@ -22,6 +22,14 @@ middle argument last; as a sum of four signs it is
 anticommute, which happens exactly for two distinct indices other than `0`
 (`Tower.commPhase_eq`).
 
+`Tower.assocPhase` mirrors `predict.associator_phase` of
+`gororoba_quantum/predict.py` in gororoba-quantum: `associator_phase(2 ^ k, i, j)[x]`,
+the product `cd_sign(i, j) * cd_sign(i ^ j, x) * cd_sign(j, x) * cd_sign(i, j ^ x)`
+at level `k`, is `-1` exactly when `assocPhase i j x` holds, for the indices read
+as `i.toNat`, `j.toNat` and `x.toNat`. `ci/compare_assoc_phase.sh` runs both sides,
+and the Rocq `assoc` of `rocq/quantum/CdAssociatorAnf.v` on every triple at levels
+1 to 5.
+
 ## Main results
 
 * `Tower.e_mul_e_mul_e`: `e p * (e q * e x)` is `(e p * e q) * e x`, negated

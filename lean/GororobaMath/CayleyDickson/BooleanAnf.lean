@@ -23,6 +23,15 @@ because between two masks `t` under `x` lie `2 ^ (weight of x - weight of t)`
 masks, an odd count exactly when `t = x` (`Tower.sum_between`). The counting runs in
 `ZMod 2` and splits `BitVec (k + 1)` by its top bit (`Tower.sumEquiv`).
 
+The definitions mirror two functions of `gororoba_quantum/boolean_anf.py` in
+gororoba-quantum. `anf_coefficients(truth_table)` is `Tower.anfCoeff`: it takes the
+list of `2 ^ k` entries in `{0, 1}` with `truth_table[x] = 1` exactly when `f x`
+(`x` read as `x.toNat`) and returns the tuple of the masks `s` with coefficient one,
+so `s` lies in the tuple exactly when `anfCoeff f s`. `evaluate_anf(masks, x)` is
+`Tower.anfEval`: it returns `1` exactly when `anfEval c x` for the table `c` that
+selects the masks of `masks`. `ci/compare_anf.sh` runs both sides, and the Rocq
+`anf_coef` and `anf_eval` of `rocq/quantum/CdSignRowAnf.v`, on the same truth tables.
+
 ## Main results
 
 * `Tower.anfEval_anfCoeff`: the Moebius transform over submasks recovers `f` from its
@@ -99,7 +108,7 @@ theorem sum_between : ∀ {k : ℕ} (t x : BitVec k),
     rw [Fintype.sum_subsingleton _ x]
     have h1 : t = x := Subsingleton.elim _ _
     subst h1
-    simp
+    simp only [BitVec.and_self, and_self, ↓reduceIte]
   | k + 1, t, x => by
     obtain ⟨T, t, rfl⟩ : ∃ T t', t = BitVec.cons T t' :=
       ⟨_, _, (BitVec.cons_msb_setWidth t).symm⟩
@@ -127,8 +136,10 @@ theorem anfEval_anfCoeff {k : ℕ} (f : BitVec k → Bool) (x : BitVec k) :
       by_cases hs : s &&& x = s
       · simp only [hs, ↓reduceIte, and_true]
         refine Finset.sum_congr rfl fun t _ => ?_
-        split_ifs <;> simp
-      · simp [hs]
+        split_ifs
+        · simp only [mul_one]
+        · simp only [mul_zero]
+      · simp only [hs, ↓reduceIte, and_false, mul_zero, Finset.sum_const_zero]
     _ = ∑ t, boolZMod (f t) * ∑ s, if t &&& s = t ∧ s &&& x = s then 1 else 0 := by
       rw [Finset.sum_comm]
       simp only [Finset.mul_sum]
