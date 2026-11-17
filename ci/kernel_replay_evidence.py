@@ -53,7 +53,16 @@ producer names itself in `flocq_producer`: the entry of
 `ci/flocq-manifest.json` (`--flocq-manifest` names another file) whose
 `flocq_objects` equal the copied list. The object bytes depend on the install
 prefix and the native toolchain of the producer, so the run is refused when no
-entry matches, before any compilation.
+entry matches, before any compilation. Rocq's default load path also holds
+the switch's own Flocq, which an import the rule misses would reach, and
+evidence without `flocq_objects` would then be accepted downstream. So every
+compile runs with ROCQLIB at a copy of the installation's library directory,
+made of links, that leaves Flocq out (hidden_flocq_environment), and only a
+mapped `external/Flocq` resolves a Flocq import; the argument vectors and the
+objects stay the same. After the assumption query the producer also compiles
+`Require MODULE. Print Libraries.` the same way, outside the evidence, and
+refuses a run whose closure loads a `Flocq` library while it maps none. The
+checker runs under the installation's load path.
 Warning lines, error lines, a nonzero exit status and a local absolute path
 in any output refuse the run.
 
@@ -61,8 +70,10 @@ Environment. `FLOCQ_ROOT` names the Flocq library directory; without it,
 `$OPAM_SWITCH_PREFIX/lib/coq/user-contrib/Flocq` is used, and without that
 `opam var lib` gives the library directory (a relative path resolves below the
 tree). The directory must hold `Core/Core.vo`. `COQPATH` and `ROCQPATH` are
-removed from the environment of every Rocq process, so no library outside the
-scratch directory and the installation is visible.
+set empty in the environment of every Rocq process, rather than removed,
+since Rocq fills an absent variable from the `coq_environment.txt` beside its
+executable; so no library outside the scratch directory and the installation
+is visible.
 
 Needs python3 (standard library only), git and the opam switch.
 
@@ -619,12 +630,47 @@ def trusted_program() -> Path:
     raise Refusal("trusted Rocq replay requires rocq in the host PATH/opam switch")
 
 
+def hidden_flocq_environment(program: Path, scratch: Path) -> dict[str, str]:
+    """Environment entries under which Rocq's default load path holds no Flocq.
+
+    ROCQLIB names `rocqlib` of the scratch directory, whose `theories` and
+    whose `user-contrib` entries other than Flocq link to the installation's,
+    ROCQRUNTIMELIB keeps the installation's plugins, and the XDG data
+    directories, which Rocq also searches, name an empty directory. Only the
+    mapped `external/Flocq` then resolves a Flocq import. The objects equal
+    those of a compile under the installation's own load path (measured,
+    Rocq 9.3.0, on a Stdlib source and on a source that imports mapped Flocq).
+    """
+    config = run(program, scratch, ["c", "-config"])
+    values = dict(line.split("=", 1) for line in config["stdout"].splitlines() if "=" in line)
+    if not values.get("COQLIB") or not values.get("COQCORELIB"):
+        raise Refusal("rocq c -config names no COQLIB or COQCORELIB")
+    library = Path(values["COQLIB"]).resolve(strict=True)
+    runtime = Path(values["COQCORELIB"]).resolve(strict=True)
+    shadow = scratch / "rocqlib"
+    (shadow / "user-contrib").mkdir(parents=True)
+    (shadow / "theories").symlink_to(library / "theories", target_is_directory=True)
+    for entry in sorted((library / "user-contrib").iterdir()):
+        if entry.name != "Flocq":
+            (shadow / "user-contrib" / entry.name).symlink_to(entry)
+    empty = scratch / "xdg"
+    empty.mkdir()
+    return {
+        "ROCQLIB": str(shadow),
+        "ROCQRUNTIMELIB": str(runtime),
+        "XDG_DATA_HOME": str(empty),
+        "XDG_DATA_DIRS": str(empty),
+    }
+
+
 def command_log(evidence: dict) -> str:
     return f"{evidence['stdout']}\n{evidence['stderr']}"
 
 
-def run(program: Path, directory: Path, arguments: list[str]) -> dict:
-    environment = {name: value for name, value in os.environ.items() if name not in ("COQPATH", "ROCQPATH")}
+def run(program: Path, directory: Path, arguments: list[str], extra: dict[str, str] | None = None) -> dict:
+    # Empty rather than absent: Rocq fills an absent variable from the
+    # coq_environment.txt beside its executable (Boot.Util.getenv_opt).
+    environment = {**os.environ, "COQPATH": "", "ROCQPATH": "", **(extra or {})}
     try:
         output = subprocess.run(  # noqa: S603
             [str(program), *arguments],
@@ -710,6 +756,40 @@ def reported_assumptions(report: str) -> list[str]:
     return observed
 
 
+def library_name(name: str) -> bool:
+    """Whether `name` is a dot-separated qualified name of ASCII identifiers."""
+    return all(
+        part
+        and (part[0].isascii() and (part[0].isalpha() or part[0] == "_"))
+        and all(character.isascii() and (character.isalnum() or character in "_'") for character in part)
+        for part in name.split(".")
+    )
+
+
+def loaded_libraries(stdout: str, stderr: str) -> list[str]:
+    """The library names of a `Print Libraries` report that is the query's whole output.
+
+    The output is the header line, then one indented name per line, then only
+    blank lines; anything else (text around the report, a blank line inside it,
+    a second report, an entry that is not one name, standard error) refuses.
+    """
+    if stderr:
+        raise Refusal("the library query writes to standard error")
+    lines = stdout.splitlines()
+    while lines and not trim(lines[-1]):
+        lines.pop()
+    if not lines or trim(lines[0]) != "Loaded library files:":
+        raise Refusal("the library query output is not one 'Loaded library files:' report")
+    names: list[str] = []
+    for line in lines[1:]:
+        if not line.startswith("  ") or len(split_whitespace(line)) != 1 or not library_name(trim(line)):
+            raise Refusal(f"the library query prints an unexpected line: {trim(line)}")
+        names.append(trim(line))
+    if not names:
+        raise Refusal("the library query lists no library")
+    return names
+
+
 def valid_declaration_name(name: str) -> bool:
     return (
         bool(name)
@@ -764,8 +844,14 @@ def produce(
             flocq_objects.sort(key=lambda entry: entry["path"])
             producer = flocq_producer(manifest, flocq_objects)
         flocq = bool(flocq_objects)
+        hidden = hidden_flocq_environment(program, scratch)
         compilation = [
-            run(program, scratch, external_arguments(compiler_arguments(relative_source(source), warning), flocq))
+            run(
+                program,
+                scratch,
+                external_arguments(compiler_arguments(relative_source(source), warning), flocq),
+                hidden,
+            )
             for source in ordered
         ]
         object_path = (scratch / relative_source(proof_path)).with_suffix(".vo")
@@ -782,12 +868,29 @@ def produce(
             program,
             scratch,
             external_arguments(compiler_arguments("KernelReceiptAssumptions.v", warning), flocq),
+            hidden,
+        )
+        (scratch / "KernelReceiptLibraries.v").write_text(f"Require {logical}.\nPrint Libraries.\n", encoding="utf-8")
+        libraries = run(
+            program,
+            scratch,
+            external_arguments(compiler_arguments("KernelReceiptLibraries.v", warning), flocq),
+            hidden,
         )
         for entry in flocq_objects:
             if sha256_hex((scratch / entry["path"]).read_bytes()) != entry["sha256"]:
                 raise Refusal("Flocq replay object changed during execution")
-    for command in [*compilation, checker, assumptions]:
+    for command in [*compilation, checker, assumptions, libraries]:
         validate_command(command)
+    loaded = loaded_libraries(libraries["stdout"], libraries["stderr"])
+    if logical not in loaded:
+        raise Refusal(f"the library query does not list {logical}")
+    unmapped = [] if flocq else [name for name in loaded if is_flocq(name)]
+    if unmapped:
+        raise Refusal(
+            f"the closure loads {unmapped[0]} from Rocq's default load path, which the Flocq import rule"
+            " did not read; evidence without flocq_objects is refused"
+        )
     if "CONTEXT SUMMARY" not in command_log(checker):
         raise Refusal("trusted checker replay lacks its context summary")
     reports = labeled_assumption_reports(command_log(assumptions))

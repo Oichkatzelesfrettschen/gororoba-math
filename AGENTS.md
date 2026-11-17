@@ -305,7 +305,13 @@ gororoba repository shares; this file governs where the two differ.
   the checkout that tracks the tree; gororoba-open ingests the file and never runs Rocq.
   Evidence that lists Flocq objects names its producer in `flocq_producer`, the
   manifest entry whose objects equal the copied ones, and the run is refused
-  when no entry matches. A
+  when no entry matches. Rocq's default load path also holds the switch's
+  own Flocq, so the producer compiles with `ROCQLIB` at a linked copy of
+  the installation's library directory without Flocq, under which only the
+  mapped `external/Flocq` resolves (same arguments, same objects), and
+  reads the libraries the closure loads (`Print Libraries`, outside the
+  evidence), refusing a run that loads a `Flocq` library while it maps
+  none. A
   change to the compile or checker argument vectors, the closure order or
   the Flocq handling of the script changes the evidence contract that
   `theorem_replay.rs` of gororoba-open validates, so both land together, and
