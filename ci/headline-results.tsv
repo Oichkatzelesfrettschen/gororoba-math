@@ -11,9 +11,9 @@ lean	lean/GororobaMath/CayleyDickson/TowerModule.lean	CayleyDickson.Tower.finran
 lean	lean/GororobaMath/CayleyDickson/TowerModule.lean	CayleyDickson.Tower.repr_e_mul	rocq/quantum/CdTowerModuleBridge.v:TowerModuleBridge.repr_e_mul narrower: an index below 2^k where Lean takes a BitVec k	-
 lean	lean/GororobaMath/CayleyDickson/TwoTermNullity.lean	CayleyDickson.Tower.free_ker_mulLeft_e_add_e	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
 lean	lean/GororobaMath/CayleyDickson/TwoTermNullity.lean	CayleyDickson.Tower.finrank_ker_mulLeft_e_add_e	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
-lean	lean/GororobaMath/CayleyDickson/TwoTermRecursion.lean	CayleyDickson.Tower.alignedPairCount_succ_of_msb_eq	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
-lean	lean/GororobaMath/CayleyDickson/TwoTermRecursion.lean	CayleyDickson.Tower.alignedPairCount_succ_eq_zero	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
-lean	lean/GororobaMath/CayleyDickson/TwoTermRecursion.lean	CayleyDickson.Tower.alignedPairCount_succ_add	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
+lean	lean/GororobaMath/CayleyDickson/TwoTermRecursion.lean	CayleyDickson.Tower.alignedPairCount_succ_of_msb_eq	rocq/quantum/CdTowerTwoTermRecursion.v:TwoTermRecursion.aligned_pair_count_succ_of_msb_eq narrower: an index below 2^(k + 1), where Lean takes a BitVec (k + 1)	-
+lean	lean/GororobaMath/CayleyDickson/TwoTermRecursion.lean	CayleyDickson.Tower.alignedPairCount_succ_eq_zero	rocq/quantum/CdTowerTwoTermRecursion.v:TwoTermRecursion.aligned_pair_count_succ_eq_zero narrower: an index below 2^(k + 1), where Lean takes a BitVec (k + 1)	-
+lean	lean/GororobaMath/CayleyDickson/TwoTermRecursion.lean	CayleyDickson.Tower.alignedPairCount_succ_add	rocq/quantum/CdTowerTwoTermRecursion.v:TwoTermRecursion.aligned_pair_count_succ_add narrower: an index below 2^(k + 1), where Lean takes a BitVec (k + 1)	-
 lean	lean/GororobaMath/CayleyDickson/AlignedPairSpectrum.lean	CayleyDickson.Tower.alignedPairCount_add_four_le_of_three_le	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
 lean	lean/GororobaMath/CayleyDickson/AlignedPairSpectrum.lean	CayleyDickson.Tower.exists_alignedPairCount_eq	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46
 lean	lean/GororobaMath/CayleyDickson/AlignedPairSpectrum.lean	CayleyDickson.Tower.range_alignedPairCount	owed	https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46

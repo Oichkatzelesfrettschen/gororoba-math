@@ -37,6 +37,7 @@ CdTowerRingBaseChange.v
 CdTowerRingBasis.v
 CdTowerRingDomain.v
 CdTowerTwoTermBridge.v
+CdTowerTwoTermRecursion.v
 CdTwistedProduct.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
