@@ -4,15 +4,17 @@
 # (ci/compare_aligned_pair_forms.py names the tables and their ranges):
 # Tower.alignedPairCountMultiplicity with AlignedPairSpectrum.multiplicity of
 # rocq/quantum/CdTowerAlignedPairSpectrum.v; Tower.closedForm,
-# Tower.clearedXorBit and Tower.DegenerateSplit with the closed_form,
-# cleared_xor_bit and degenerate_split of
+# Tower.clearedXorBit, Tower.DegenerateSplit and Tower.clearedXorParity with
+# the closed_form, cleared_xor_bit, degenerate_split and cleared_xor_parity
+# (at every t from 0 to k) of
 # rocq/quantum/CdTowerAlignedPairClosedForm.v; Tower.associates with
 # AssociatorSign.associates of rocq/quantum/CdTowerAssociatorSpace.v; and
 # KernelMap.binContract with TwoTermBins.bin_contract of
 # rocq/quantum/CdTowerTwoTermBins.v. Lean evaluates them in a program run by
 # lake env lean --run, Rocq with vm_compute after compiling the closure of the
 # Rocq sources from a copy of rocq/quantum of this checkout. The comparison
-# must also reject a mutated Rocq reference on every table. Runs on demand,
+# first rejects a mutated Rocq reference on every table and only then
+# compares and reports the agreement. Runs on demand,
 # outside ci/check.sh, because it needs the Rocq switch of
 # ci/install_rocq.sh beside the Lean toolchain with a built lean/.lake (the
 # script runs lake build --no-build, which builds nothing).
@@ -89,10 +91,10 @@ lake env lean --run "$work/Forms.lean" >"$work/lean.txt" || {
   echo "compare_aligned_pair_forms: the Lean program failed" >&2
   exit 2
 }
-"$PYTHON" -I "$here/compare_aligned_pair_forms.py" compare "$work/lean.txt" "$work/rocq.txt"
 status=0
 "$PYTHON" -I "$here/compare_aligned_pair_forms.py" reject "$work/lean.txt" "$work/mutant.txt" || status=$?
 [ "$status" -eq 0 ] || {
   echo "compare_aligned_pair_forms: the comparison did not reject the mutated reference (status $status)" >&2
   exit 1
 }
+"$PYTHON" -I "$here/compare_aligned_pair_forms.py" compare "$work/lean.txt" "$work/rocq.txt"

@@ -26,8 +26,10 @@
 
     ci/compare_aligned_pair_forms.sh evaluates closed_form, the cleared
     bits as one index and the degenerate splits as one index on every pair
-    up to level 6, against the Lean definitions, and rejects a mutated
-    Rocq closed form that keeps every bit of i XOR j.
+    up to level 6, and cleared_xor_parity at every t from 0 to k on every
+    pair up to level 5, against the Lean definitions, and rejects a mutated
+    Rocq closed form that keeps every bit of i XOR j and a mutated parity
+    at t < 3.
 
     The module AlignedPairClosedForm restates
     aligned_pair_count_eq_closed_form, Tower.alignedPairCount_eq_closedForm:

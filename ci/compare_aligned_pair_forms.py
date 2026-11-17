@@ -16,6 +16,9 @@ The definitions are, Lean first and the Rocq partner second:
   rocq/quantum/CdTowerAlignedPairClosedForm.v, on every pair i, j below 2^k at the levels
   0 to 6; C reads the cleared bits s < k as the index sum of 2^s over the kept bits, D the
   degenerate splits p < k as the index sum of 2^p.
+- P: Tower.clearedXorParity i j t and cleared_xor_parity k i j t of the same files, on
+  every pair i, j below 2^k at the levels 0 to 5 and every t from 0 to k, so the positions
+  t = 0, 1 and 2 that the closed form never reads are compared too.
 - A: Tower.associates a b c of AssociatorSpace.lean and AssociatorSign.associates k a b c
   of rocq/quantum/CdTowerAssociatorSpace.v, as 0 or 1, on every triple below 2^k at the
   levels 0 to 5.
@@ -32,21 +35,23 @@ Rocq file that evaluates the same rows with vm_compute, one Eval per row, and a 
 Rocq reference: a multiplicity over the pairs i < j only, a cleared bit that keeps every
 bit of i XOR j (and the closed form built on it), a degenerate split without the clause
 that the low part of j is zero, an associativity sign that reads e_b e_c for e_c e_b, and
-a bin contract without the clause that an aligned bin is +1.
+a bin contract without the clause that an aligned bin is +1, and a parity complemented at
+t = 0, 1 and 2, where the closed form does not read it.
 
 compare exits 0 when both outputs hold every row and agree, 1 on the first difference,
 and 2 when an output is unreadable or incomplete. reject exits 0 when every table of the
 mutated reference differs from the Lean output, 1 when a table agrees, and 2 as compare.
+The shell script runs reject first and compare only after the mutant is rejected.
 """
 
 import re
 import sys
 from pathlib import Path
 
-CODES = {"M": 0, "F": 1, "C": 2, "D": 3, "A": 4, "B": 5, "G": 6}
+CODES = {"M": 0, "F": 1, "C": 2, "D": 3, "A": 4, "B": 5, "G": 6, "P": 7}
 NAMES = {v: k for k, v in CODES.items()}
 # The number of leading fields of a printed row that name it: the code and the row parameters.
-HEAD_SIZE = {0: 2, 1: 3, 2: 3, 3: 3, 4: 4, 5: 5, 6: 4}
+HEAD_SIZE = {0: 2, 1: 3, 2: 3, 3: 3, 4: 4, 5: 5, 6: 4, 7: 4}
 EVAL = re.compile(r"^\s*=(.*?):\s*list nat", re.MULTILINE | re.DOTALL)
 NUMBER = re.compile(r"[0-9]+")
 BLOCK = 64
@@ -65,6 +70,8 @@ def rows() -> list[tuple[int, ...]]:
         out += [(CODES["B"], k, i, j, n) for i in range(2**k) for j in range(2**k) for n in range(blocks)]
     for k in (4, 5):
         out += [(CODES["G"], k, i, j) for i in range(2**k) for j in range(2**k)]
+    for k in range(6):
+        out += [(CODES["P"], k, i, j) for i in range(2**k) for j in range(2**k)]
     return out
 
 
@@ -79,6 +86,8 @@ def width(head: tuple[int, ...]) -> int:
         return min(BLOCK, 2 ** (2**k))
     if code == CODES["G"]:
         return 2**k + 1
+    if code == CODES["P"]:
+        return k + 1
     return 2**k
 
 
@@ -129,6 +138,10 @@ def main : IO Unit := do
       for j in List.range (2 ^ k) do
         out [6, k, i, j] ((List.range (2 ^ k + 1)).map fun m =>
           (KernelMap.binContract k (bv k i) (bv k j) (labelled k i j m)).toNat)
+  for k in List.range 6 do
+    for i in List.range (2 ^ k) do
+      for j in List.range (2 ^ k) do
+        out [7, k, i, j] ((List.range (k + 1)).map fun t => Tower.clearedXorParity (bv k i) (bv k j) t)
 """
 
 ROCQ_HEAD = """From Stdlib Require Import List Bool.
@@ -143,6 +156,7 @@ ROCQ_DEFS = """Definition mult (k n : nat) : nat := AlignedPairSpectrum.multipli
 Definition cbit (k i j s : nat) : bool := AlignedPairClosedForm.cleared_xor_bit k i j s.
 Definition cf (k i j : nat) : nat := AlignedPairClosedForm.closed_form k i j.
 Definition dsplit (i j p : nat) : bool := AlignedPairClosedForm.degenerate_split i j p.
+Definition par (k i j t : nat) : nat := AlignedPairClosedForm.cleared_xor_parity k i j t.
 Definition assoc (k a b c : nat) : bool := AssociatorSign.associates k a b c.
 Definition contract (k i j : nat) (pos : nat -> bool) : bool := TwoTermBins.bin_contract k i j pos.
 """
@@ -154,6 +168,9 @@ Definition cbit (k i j s : nat) : bool := xorb (Nat.testbit i s) (Nat.testbit j 
 Definition cf (k i j : nat) : nat :=
   4 * AlignedPairClosedForm.isum 3 k (fun t => Nat.pow 2 (k - 1 - t) *
     Nat.modulo (AlignedPairClosedForm.isum t k (fun s => TwoTermRecursion.ind (cbit k i j s))) 2).
+Definition par (k i j t : nat) : nat :=
+  if Nat.ltb t 3 then 1 - AlignedPairClosedForm.cleared_xor_parity k i j t
+  else AlignedPairClosedForm.cleared_xor_parity k i j t.
 Definition dsplit (i j p : nat) : bool :=
   negb (Bool.eqb (Nat.testbit i p) (Nat.testbit j p)) &&
   (forallb (fun s => negb (Nat.testbit i s)) (seq 0 p) ||
@@ -192,6 +209,8 @@ def rocq_eval(head: tuple[int, ...]) -> str:
     elif code == "B":
         base = BLOCK * head[4]
         body = f"map (fun r => b2 (contract {k} {head[2]} {head[3]} (fun x => Nat.testbit ({base} + r) x))) {seq}"
+    elif code == "P":
+        body = f"map (fun t => par {k} {head[2]} {head[3]} t) {seq}"
     else:
         body = f"map (fun m => b2 (contract {k} {head[2]} {head[3]} (labelled {k} {head[2]} {head[3]} m))) {seq}"
     return f"Eval vm_compute in {body}."

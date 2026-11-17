@@ -142,7 +142,7 @@ gororoba repository shares; this file governs where the two differ.
   `aligned_pair_count` of `rocq/quantum/CdTowerTwoTermRecursion.v`, and
   `ci/compare_aligned_pair_forms.sh` for `Tower.alignedPairCountMultiplicity`,
   `Tower.closedForm`, `Tower.clearedXorBit`, `Tower.DegenerateSplit`,
-  `Tower.associates` and `KernelMap.binContract` against their partners in
+  `Tower.clearedXorParity` (at every `t` from 0 to `k`), `Tower.associates` and `KernelMap.binContract` against their partners in
   `rocq/quantum/CdTowerAlignedPairSpectrum.v`,
   `CdTowerAlignedPairClosedForm.v`, `CdTowerAssociatorSpace.v` and
   `CdTowerTwoTermBins.v`.
