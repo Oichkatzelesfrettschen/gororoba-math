@@ -16,6 +16,7 @@
 set -eu
 
 PYTHON=${PYTHON:-python3}
+export PYTHON
 for tool in git lake opam "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "compare_estimator_rocq: $tool is not on PATH" >&2
@@ -42,6 +43,9 @@ cp "$root/rocq/quantum/KernelMapEstimator.v" "$work/"
   opam exec --switch="$switch" -- rocq compile -q -Q . "" BridgeMutant.v >"$work/mutant.txt"
 )
 cd "$root/lean"
-lake build -q GororobaMath.KernelMap.Estimator
+lake build --no-build -q GororobaMath.KernelMap.Estimator || {
+  echo "compare_estimator_rocq: build the Lean library first (lake build in lean/); this script writes no build tree" >&2
+  exit 2
+}
 lake env lean --run "$work/Estimator.lean" >"$work/lean.txt"
 "$PYTHON" -I "$here/compare_estimator_rocq.py" compare "$work/lean.txt" "$work/rocq.txt" "$work/mutant.txt"
