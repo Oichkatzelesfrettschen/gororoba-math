@@ -19,8 +19,9 @@ dependency order, the sources of the directory that TARGET.v requires, TARGET.v
 last.
 
 `compare` reads the rows each side printed (the Lean program prints one row
-per line; Rocq prints each Eval as "= N_0 :: ... :: N_m :: nil", wrapped over lines,
-followed by ": list nat")
+per line; Rocq prints each Eval as "= [N_0; ...; N_m]", wrapped over lines, followed by
+": list nat"; the list notation keeps a row of 128 entries within the printing depth, which
+elides the nested form of a long cons chain)
 and exits 0 when both hold the 255 rows of the 21845 pairs and agree, 1 on the
 first difference, and 2 when an output is unreadable or incomplete.
 """
@@ -54,6 +55,7 @@ def write_cases(lean_file: Path, rocq_file: Path, mutant_file: Path) -> None:
     head = [
         "From Stdlib Require Import List.",
         "Require Import CdTowerTwoTermBridge CdTowerTwoTermRecursion.",
+        "Import ListNotations.",
         "",
     ]
     count = [
