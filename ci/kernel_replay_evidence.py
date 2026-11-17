@@ -70,8 +70,10 @@ Environment. `FLOCQ_ROOT` names the Flocq library directory; without it,
 `$OPAM_SWITCH_PREFIX/lib/coq/user-contrib/Flocq` is used, and without that
 `opam var lib` gives the library directory (a relative path resolves below the
 tree). The directory must hold `Core/Core.vo`. `COQPATH` and `ROCQPATH` are
-removed from the environment of every Rocq process, so no library outside the
-scratch directory and the installation is visible.
+set empty in the environment of every Rocq process, rather than removed,
+since Rocq fills an absent variable from the `coq_environment.txt` beside its
+executable; so no library outside the scratch directory and the installation
+is visible.
 
 Needs python3 (standard library only), git and the opam switch.
 
@@ -666,8 +668,9 @@ def command_log(evidence: dict) -> str:
 
 
 def run(program: Path, directory: Path, arguments: list[str], extra: dict[str, str] | None = None) -> dict:
-    environment = {name: value for name, value in os.environ.items() if name not in ("COQPATH", "ROCQPATH")}
-    environment.update(extra or {})
+    # Empty rather than absent: Rocq fills an absent variable from the
+    # coq_environment.txt beside its executable (Boot.Util.getenv_opt).
+    environment = {**os.environ, "COQPATH": "", "ROCQPATH": "", **(extra or {})}
     try:
         output = subprocess.run(  # noqa: S603
             [str(program), *arguments],
@@ -753,6 +756,15 @@ def reported_assumptions(report: str) -> list[str]:
     return observed
 
 
+def library_name(name: str) -> bool:
+    """Whether `name` is a dot-separated qualified name of ASCII identifiers."""
+    return all(
+        part and (part[0].isascii() and (part[0].isalpha() or part[0] == "_"))
+        and all(character.isascii() and (character.isalnum() or character in "_'") for character in part)
+        for part in name.split(".")
+    )
+
+
 def loaded_libraries(stdout: str, stderr: str) -> list[str]:
     """The library names of a `Print Libraries` report that is the query's whole output.
 
@@ -769,7 +781,7 @@ def loaded_libraries(stdout: str, stderr: str) -> list[str]:
         raise Refusal("the library query output is not one 'Loaded library files:' report")
     names: list[str] = []
     for line in lines[1:]:
-        if not line.startswith("  ") or len(split_whitespace(line)) != 1:
+        if not line.startswith("  ") or len(split_whitespace(line)) != 1 or not library_name(trim(line)):
             raise Refusal(f"the library query prints an unexpected line: {trim(line)}")
         names.append(trim(line))
     if not names:

@@ -494,6 +494,10 @@ bad = {
     "an unindented entry": ("Loaded library files: \nM\n", ""),
     "an empty report": ("Loaded library files: \n", ""),
     "standard error": ("Loaded library files: \n  M\n", "note\n"),
+    "a punctuation entry": ("Loaded library files: \n  M\n  ???\n", ""),
+    "an empty name component": ("Loaded library files: \n  M\n  M..N\n", ""),
+    "a leading digit": ("Loaded library files: \n  M\n  1M\n", ""),
+    "a trailing dot": ("Loaded library files: \n  M\n  M.\n", ""),
 }
 for name, (stdout, stderr) in bad.items():
     try:
@@ -666,6 +670,33 @@ fi
 grep -q 'symbolic link' "$work/swap.log" || fail "swap: the refusal names another cause"
 echo "check_kernel_replay_evidence: output directory replaced during the replay refused"
 
+# Known-good: every Rocq process of the producer runs with COQPATH and
+# ROCQPATH set empty, since Rocq fills an absent variable from the
+# coq_environment.txt beside its executable, and every compile with ROCQLIB at
+# the hidden library directory. A wrapper rocq first on PATH records each call.
+mkdir "$work/envlog"
+cat >"$work/envlog/rocq" <<'EOF'
+#!/bin/sh
+if [ "$1" != --version ]; then
+  printf '%s rocqpath=%s coqpath=%s rocqlib=%s\n' "$1" "${ROCQPATH-absent}" "${COQPATH-absent}" \
+    "${ROCQLIB:+set}" >>"$ENV_LOG"
+fi
+exec "$REAL_BIN/rocq" "$@"
+EOF
+chmod +x "$work/envlog/rocq"
+if ! REAL_BIN=$(opam var --switch="$switch" bin) ENV_LOG="$work/env.calls" PATH="$work/envlog:$PATH" \
+  "$PYTHON" -I -B "$producer" --tree "$work/good" --out "$work/out-envlog" --proof verified/C900_Test.v \
+  --declaration fixture --warning-policy fatal_all >"$work/envlog.log" 2>&1; then
+  cat "$work/envlog.log" >&2
+  fail "the producer refused the known-good fixture under the recording wrapper"
+fi
+[ -s "$work/env.calls" ] || fail "envlog: the wrapper recorded no call"
+! grep -v -q -E '^[^ ]+ rocqpath= coqpath= ' "$work/env.calls" ||
+  fail "envlog: a Rocq call ran with COQPATH or ROCQPATH absent or set: $(grep -v -E '^[^ ]+ rocqpath= coqpath= ' "$work/env.calls" | head -n 1)"
+! grep -E '^compile ' "$work/env.calls" | grep -v -q ' rocqlib=set$' ||
+  fail "envlog: a compile ran without the hidden library directory"
+echo "check_kernel_replay_evidence: $(wc -l <"$work/env.calls") Rocq calls ran with empty path variables, each compile on the hidden library directory"
+
 # Known-bad: a summary that cannot be printed leaves no evidence file.
 if opam exec --switch="$switch" -- "$PYTHON" -I -B "$producer" --tree "$work/good" --out "$work/out-full" \
   --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_all >/dev/full 2>"$work/full.log"; then
@@ -674,4 +705,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 5 known-good and $((28 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 6 known-good and $((32 + mutants)) known-bad cases behaved"
