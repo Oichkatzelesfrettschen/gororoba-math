@@ -27,7 +27,10 @@
 # Known-bad cases must be refused: a source whose compilation prints a
 # warning but exits 0, a source that fails to compile, a declaration name the
 # source lacks, a Rocq that reports another version, a Flocq library
-# directory without Core/Core.vo, a manifest with no entry for the switch's
+# directory without Core/Core.vo, a source that loads the switch's own Flocq
+# through an import the rule misses (a producer whose rule reads no import,
+# so the compile finds Flocq on Rocq's default load path), a manifest with no
+# entry for the switch's
 # objects, with two such entries, of the wrong schema or unreadable, an output
 # directory inside the checkout, a
 # git that fails, an output directory that is a symbolic link or becomes one
@@ -471,6 +474,29 @@ grep -q 'Flocq Core.vo is missing' "$work/no-flocq.log" || fail "no-flocq: the r
 [ ! -e "$work/out-no-flocq/C900_Test.evidence.json" ] || fail "no-flocq: a refused run left an evidence file"
 echo "check_kernel_replay_evidence: missing Flocq library refused"
 
+# Known-bad: Flocq reached through an import the rule misses. The wrapper runs
+# the producer with a rule that reads no import, so no command maps
+# external/Flocq and the compile loads the switch's Flocq from Rocq's default
+# load path; the library query must refuse the run.
+cat >"$work/blind.py" <<'EOF'
+import sys
+
+sys.path.insert(0, sys.argv[1])
+import kernel_replay_evidence
+
+kernel_replay_evidence.uses_flocq = lambda contents: False
+sys.exit(kernel_replay_evidence.main(sys.argv[2:]))
+EOF
+if opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/blind.py" "$here" --tree "$work/flocq" \
+  --out "$work/out-blind" --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_default \
+  >"$work/blind.log" 2>&1; then
+  fail "the producer accepted a closure that loads Flocq its import rule missed"
+fi
+[ ! -e "$work/out-blind/C900_Test.evidence.json" ] || fail "blind: a refused run left an evidence file"
+grep -q "loads Flocq.Core.Zaux from Rocq's default load path" "$work/blind.log" ||
+  fail "blind: the refusal names another cause: $(head -n 1 "$work/blind.log")"
+echo "check_kernel_replay_evidence: Flocq loaded through a missed import refused"
+
 # Known-bad: a manifest that cannot name this producer. The scratch copies
 # below differ from the recorded manifest in one way each.
 cat >"$work/edit_manifest.py" <<'EOF'
@@ -605,4 +631,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 5 known-good and $((16 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 5 known-good and $((17 + mutants)) known-bad cases behaved"

@@ -53,7 +53,12 @@ producer names itself in `flocq_producer`: the entry of
 `ci/flocq-manifest.json` (`--flocq-manifest` names another file) whose
 `flocq_objects` equal the copied list. The object bytes depend on the install
 prefix and the native toolchain of the producer, so the run is refused when no
-entry matches, before any compilation.
+entry matches, before any compilation. Rocq's default load path also holds
+the switch's own Flocq, so after the assumption query the producer compiles
+`Require MODULE. Print Libraries.` the way a source compiles, outside the
+evidence, and refuses a run whose closure loads a `Flocq` library while it
+maps no `external/Flocq`: the import rule missed that import, and evidence
+without `flocq_objects` would be accepted downstream.
 Warning lines, error lines, a nonzero exit status and a local absolute path
 in any output refuse the run.
 
@@ -710,6 +715,22 @@ def reported_assumptions(report: str) -> list[str]:
     return observed
 
 
+def loaded_libraries(log: str) -> list[str]:
+    """The library names of the one `Print Libraries` report of a log, in its order."""
+    lines = log.splitlines()
+    headers = [index for index, line in enumerate(lines) if trim(line) == "Loaded library files:"]
+    if len(headers) != 1:
+        raise Refusal("the library query lacks its one 'Loaded library files:' report")
+    names: list[str] = []
+    for line in lines[headers[0] + 1 :]:
+        if not trim(line):
+            break
+        if not line.startswith("  ") or len(split_whitespace(line)) != 1:
+            raise Refusal(f"the library query prints an unexpected line: {trim(line)}")
+        names.append(trim(line))
+    return names
+
+
 def valid_declaration_name(name: str) -> bool:
     return (
         bool(name)
@@ -783,11 +804,26 @@ def produce(
             scratch,
             external_arguments(compiler_arguments("KernelReceiptAssumptions.v", warning), flocq),
         )
+        (scratch / "KernelReceiptLibraries.v").write_text(f"Require {logical}.\nPrint Libraries.\n", encoding="utf-8")
+        libraries = run(
+            program,
+            scratch,
+            external_arguments(compiler_arguments("KernelReceiptLibraries.v", warning), flocq),
+        )
         for entry in flocq_objects:
             if sha256_hex((scratch / entry["path"]).read_bytes()) != entry["sha256"]:
                 raise Refusal("Flocq replay object changed during execution")
-    for command in [*compilation, checker, assumptions]:
+    for command in [*compilation, checker, assumptions, libraries]:
         validate_command(command)
+    loaded = loaded_libraries(command_log(libraries))
+    if logical not in loaded:
+        raise Refusal(f"the library query does not list {logical}")
+    unmapped = [] if flocq else [name for name in loaded if is_flocq(name)]
+    if unmapped:
+        raise Refusal(
+            f"the closure loads {unmapped[0]} from Rocq's default load path, which the Flocq import rule"
+            " did not read; evidence without flocq_objects is refused"
+        )
     if "CONTEXT SUMMARY" not in command_log(checker):
         raise Refusal("trusted checker replay lacks its context summary")
     reports = labeled_assumption_reports(command_log(assumptions))
