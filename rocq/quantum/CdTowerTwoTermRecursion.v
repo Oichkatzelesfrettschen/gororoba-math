@@ -43,7 +43,7 @@
     second half and conjugation corrections when the left index does.
     misaligned k i j x is Tower.misaligned, true when the four signs of the
     pair {x, partner i j x} multiply to -1; aligned_misaligned ties it to
-    the tranche-2 test. For i and j in the same half the corrections
+    the alignment test of CdTowerTwoTermBridge.v. For i and j in the same half the corrections
     cancel (misaligned_cons_same); for i and j in different halves a low
     index outside {0, a, b, a XOR b} changes its alignment
     (misaligned_cons_mixed), the four exceptional indices are aligned at
@@ -57,8 +57,10 @@
 
     The Rocq statements are narrower than the Lean ones in one respect:
     an index is a nat below 2^(k + 1), where Lean takes a BitVec (k + 1).
-    The Lean theorems name no ring, and neither do these. Two instances
-    evaluate the Lean module's counts at level 5. *)
+    The Lean theorems name no ring, and neither do these.
+    aligned_pair_count_level5 evaluates the counts that TwoTerm.lean
+    decides at levels 4 and 5, and aligned_pair_count_recursion_instances
+    one instance of the same-half and of the mixed case. *)
 
 From Stdlib Require Import Bool Btauto Lia PeanoNat List.
 Require CdTowerBasisSign.
