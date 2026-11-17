@@ -753,19 +753,27 @@ def reported_assumptions(report: str) -> list[str]:
     return observed
 
 
-def loaded_libraries(log: str) -> list[str]:
-    """The library names of the one `Print Libraries` report of a log, in its order."""
-    lines = log.splitlines()
-    headers = [index for index, line in enumerate(lines) if trim(line) == "Loaded library files:"]
-    if len(headers) != 1:
-        raise Refusal("the library query lacks its one 'Loaded library files:' report")
+def loaded_libraries(stdout: str, stderr: str) -> list[str]:
+    """The library names of a `Print Libraries` report that is the query's whole output.
+
+    The output is the header line, then one indented name per line, then only
+    blank lines; anything else (text around the report, a blank line inside it,
+    a second report, an entry that is not one name, standard error) refuses.
+    """
+    if stderr:
+        raise Refusal("the library query writes to standard error")
+    lines = stdout.splitlines()
+    while lines and not trim(lines[-1]):
+        lines.pop()
+    if not lines or trim(lines[0]) != "Loaded library files:":
+        raise Refusal("the library query output is not one 'Loaded library files:' report")
     names: list[str] = []
-    for line in lines[headers[0] + 1 :]:
-        if not trim(line):
-            break
+    for line in lines[1:]:
         if not line.startswith("  ") or len(split_whitespace(line)) != 1:
             raise Refusal(f"the library query prints an unexpected line: {trim(line)}")
         names.append(trim(line))
+    if not names:
+        raise Refusal("the library query lists no library")
     return names
 
 
@@ -861,7 +869,7 @@ def produce(
                 raise Refusal("Flocq replay object changed during execution")
     for command in [*compilation, checker, assumptions, libraries]:
         validate_command(command)
-    loaded = loaded_libraries(command_log(libraries))
+    loaded = loaded_libraries(libraries["stdout"], libraries["stderr"])
     if logical not in loaded:
         raise Refusal(f"the library query does not list {logical}")
     unmapped = [] if flocq else [name for name in loaded if is_flocq(name)]

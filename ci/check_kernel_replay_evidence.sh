@@ -475,6 +475,35 @@ grep -q 'Flocq Core.vo is missing' "$work/no-flocq.log" || fail "no-flocq: the r
 [ ! -e "$work/out-no-flocq/C900_Test.evidence.json" ] || fail "no-flocq: a refused run left an evidence file"
 echo "check_kernel_replay_evidence: missing Flocq library refused"
 
+# Known-bad: library reports the producer must refuse, and one it must read.
+"$PYTHON" -I -B - "$here" <<'EOF' || fail "loaded_libraries misread a library report"
+import sys
+
+sys.path.insert(0, sys.argv[1])
+from kernel_replay_evidence import Refusal, loaded_libraries
+
+if loaded_libraries("Loaded library files: \n  Corelib.Init.Prelude\n  M\n\n", "") != ["Corelib.Init.Prelude", "M"]:
+    sys.exit("the well-formed report parsed differently")
+bad = {
+    "no output": ("", ""),
+    "text before the report": ("note\nLoaded library files: \n  M\n", ""),
+    "two reports": ("Loaded library files: \n  M\nLoaded library files: \n  M\n", ""),
+    "a blank line inside the report": ("Loaded library files: \n  M\n\n  Flocq.Core.Zaux\n", ""),
+    "text after the report": ("Loaded library files: \n  M\n\nnote\n", ""),
+    "an entry of two words": ("Loaded library files: \n  M N\n", ""),
+    "an unindented entry": ("Loaded library files: \nM\n", ""),
+    "an empty report": ("Loaded library files: \n", ""),
+    "standard error": ("Loaded library files: \n  M\n", "note\n"),
+}
+for name, (stdout, stderr) in bad.items():
+    try:
+        loaded_libraries(stdout, stderr)
+    except Refusal:
+        continue
+    sys.exit(f"loaded_libraries accepted {name}")
+print(f"check_kernel_replay_evidence: {len(bad)} malformed library reports refused")
+EOF
+
 # Known-bad: Flocq reached through an import the rule misses. The wrapper runs
 # the producer with a rule that reads no import, so no command maps
 # external/Flocq: under the hidden load path the compile finds no Flocq, for a
@@ -645,4 +674,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 5 known-good and $((19 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 5 known-good and $((28 + mutants)) known-bad cases behaved"
