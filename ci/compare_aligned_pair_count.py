@@ -19,7 +19,8 @@ dependency order, the sources of the directory that TARGET.v requires, TARGET.v
 last.
 
 `compare` reads the rows each side printed (the Lean program prints one row
-per line; Rocq prints each Eval as "= [N_0; ...; N_m]" followed by ": list nat")
+per line; Rocq prints each Eval as "= N_0 :: ... :: N_m :: nil", wrapped over lines,
+followed by ": list nat")
 and exits 0 when both hold the 255 rows of the 21845 pairs and agree, 1 on the
 first difference, and 2 when an output is unreadable or incomplete.
 """
@@ -32,7 +33,8 @@ from pathlib import Path
 LEVELS = range(8)
 ROWS = [(k, i) for k in LEVELS for i in range(2**k)]
 PAIRS = sum(4**k for k in LEVELS)
-EVAL = re.compile(r"=\s*\[([^\]]*)\]\s*:\s*list nat")
+EVAL = re.compile(r"^\s*=(.*?):\s*list nat", re.MULTILINE | re.DOTALL)
+NUMBER = re.compile(r"[0-9]+")
 
 
 def write_cases(lean_file: Path, rocq_file: Path, mutant_file: Path) -> None:
@@ -117,8 +119,7 @@ def read_lean(path: Path) -> dict[tuple[int, int], list[int]]:
 def read_rocq(path: Path) -> list[list[int]]:
     rows = []
     for match in EVAL.finditer(path.read_text(encoding="utf-8")):
-        body = match.group(1).replace(";", " ").split()
-        rows.append([int(v) for v in body])
+        rows.append([int(v) for v in NUMBER.findall(match.group(1))])
     return rows
 
 
