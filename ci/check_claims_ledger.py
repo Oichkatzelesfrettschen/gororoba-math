@@ -93,7 +93,6 @@ def load_headline() -> ModuleType:
     return module
 
 
-
 @dataclass
 class Inputs:
     rows: list[list[str]]
