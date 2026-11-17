@@ -12,7 +12,10 @@
 # Runs on demand, outside ci/check.sh, because it needs the Rocq switch of
 # ci/install_rocq.sh beside the Lean toolchain.
 # Exit status: 0 agreement, 1 a difference or an accepted mutant, 2 a tool or
-# the switch is missing. Writes only under a temporary directory it removes.
+# the switch is missing or the Lean module is stale. On a stale Lean module,
+# Lake writes a .nobuild trace beside the module's trace in lean/.lake before
+# the script exits 2; otherwise the script writes only under a temporary
+# directory it removes.
 set -eu
 
 PYTHON=${PYTHON:-python3}
@@ -44,7 +47,7 @@ cp "$root/rocq/quantum/KernelMapEstimator.v" "$work/"
 )
 cd "$root/lean"
 lake build --no-build -q GororobaMath.KernelMap.Estimator || {
-  echo "compare_estimator_rocq: build the Lean library first (lake build in lean/); this script writes no build tree" >&2
+  echo "compare_estimator_rocq: build the Lean library first (lake build in lean/)" >&2
   exit 2
 }
 lake env lean --run "$work/Estimator.lean" >"$work/lean.txt"

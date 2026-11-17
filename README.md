@@ -222,7 +222,7 @@ seven and the script compiles `NullityTwelveCoefficientCertificate.v`;
 uncompiled, and the script names all eleven and fails on a twelfth. Before any
 build it runs the calibration of the kernel replay evidence producer (below).
 
-The script then re-checks all 409 project-listed modules with Rocq's kernel
+The script then re-checks every project-listed module with Rocq's kernel
 checker and compares the axioms it reports with a ledger in each tree.
 `rocq/delegation/kernel-assumptions.txt` is empty.
 `rocq/quantum/kernel-assumptions.txt` holds four axioms of the standard
