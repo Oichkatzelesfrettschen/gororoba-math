@@ -58,8 +58,8 @@ all declarations, then the total. `--tsv FILE` writes the listed declarations as
 file, theorem and statement columns. `--candidates FILE`, with `--file-local`,
 writes the verdict queue: a header line, then each file-local row that has no row
 in the `--verdicts` table (default ci/census/header-verdicts.tsv), as file,
-theorem, statement, the local names without their file prefix, and an empty
-verdict column. ci/census/file-local-candidates.tsv is that output.
+theorem, the statement without its leading colon, the local names without their
+file prefix, and an empty verdict column. ci/census/file-local-candidates.tsv is that output.
 """
 
 import argparse
@@ -386,7 +386,7 @@ def main() -> int:
         queue = [CANDIDATE_HEADER]
         for file, name, text, scope, names in rows:
             if scope == "file-local" and (file, name) not in judged:
-                queue.append((file, name, text, short_local_names(file, names), ""))
+                queue.append((file, name, text.removeprefix(": "), short_local_names(file, names), ""))
         args.candidates.write_text("".join("\t".join(row) + "\n" for row in queue), encoding="utf-8")
         print(f"candidates\t{len(queue) - 1}\t(file-local rows without a verdict)")
     return 0
