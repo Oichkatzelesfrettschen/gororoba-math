@@ -4,12 +4,15 @@
 # bound to INT or TERM that returns lets a POSIX shell run on with the next
 # command, so each tracked shell script binds INT to exit 130 and TERM to
 # exit 143 alone, and leaves its cleanup to the EXIT trap.
-#   1. A lexical rule reads every tracked shell script and reports each
-#      trap command in any form but trap ACTION EXIT, trap 'exit 130' INT
-#      and trap 'exit 143' TERM on one line; samples calibrate it both ways.
+#   1. A lexical rule reads every tracked shell script (each *.sh file and
+#      each tracked file whose first line is a shell #! line) and reports
+#      each non-comment line that holds the word trap outside the one-line
+#      forms trap ACTION EXIT, trap 'exit 130' INT and trap 'exit 143' TERM;
+#      samples calibrate it both ways.
 #   2. Each subject script below runs from a scratch repository with stub
 #      tools first on PATH. The first call of its trigger tool, the first
-#      command after its traps, waits until this script has sent the signal;
+#      stubbed tool it reaches after its traps are set, waits until this
+#      script has sent the signal;
 #      every stub call after the signal records a later stage. The run
 #      passes when the script exits with 130 after INT and 143 after TERM,
 #      reaches no later stage, and leaves its temporary directory empty. A
@@ -44,23 +47,26 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 scratch=$(mktemp -d)
 
-# Prints the lines of standard input that run trap in a command position (at
-# the start of a line, after ; & | ( { or after then, do, else or !) in any
-# form but three, each on one physical line: trap 'exit 130' INT,
-# trap 'exit 143' TERM, and trap ACTION EXIT with ACTION a function name or a
-# single-quoted string. Every other spelling is reported, a correct one too
-# (trap -- ..., double quotes, signal numbers, SIG names, several conditions,
-# a trap spread over lines), so the rule fails closed on what it cannot read.
+# Prints the lines of standard input, other than comment lines, that hold the
+# word trap anywhere outside three forms, each the whole line: trap 'exit 130'
+# INT, trap 'exit 143' TERM, and trap ACTION EXIT with ACTION a function name
+# or a single-quoted string. The rule reads words, not command positions, so
+# it fails closed on every spelling it cannot read (a case arm, an assignment
+# or command prefix, trap --, double quotes, signal numbers, SIG names,
+# several conditions, a trap spread over lines) and on prose that names the
+# word outside a comment line; a command name built by quoting or expansion
+# (t\rap, eval) is outside it. Its own patterns spell the word t[r]ap.
 nonconforming_traps() {
-  { grep -n -E '(^|[;&|({]|(^|[;&|({[:space:]])(then|do|else|!))[[:space:]]*trap([[:space:]]|$)' || [ $? -eq 1 ]; } |
+  { grep -n -E '(^|[^[:alnum:]_])t[r]ap([^[:alnum:]_]|$)' || [ $? -eq 1 ]; } |
     { grep -v -E '^[0-9]+:[[:space:]]*#' || [ $? -eq 1 ]; } |
-    { grep -v -E "^[0-9]+:[[:space:]]*trap ('exit 130' INT|'exit 143' TERM)\$" || [ $? -eq 1 ]; } |
-    { grep -v -E "^[0-9]+:[[:space:]]*trap ('[^']*'|[[:alpha:]_][[:alnum:]_]*) EXIT\$" || [ $? -eq 1 ]; }
+    { grep -v -E "^[0-9]+:[[:space:]]*t[r]ap ('exit 130' INT|'exit 143' TERM)\$" || [ $? -eq 1 ]; } |
+    { grep -v -E "^[0-9]+:[[:space:]]*t[r]ap ('[^']*'|[[:alpha:]_][[:alnum:]_]*) EXIT\$" || [ $? -eq 1 ]; }
 }
-# The samples spell the command TRAP, and sed restores it, so the scan of this
-# script below meets no sample as a trap command.
-rejected="TRAP 'rm -r \"\$work\"' EXIT INT TERM
-TRAP 'rm -r w' INT
+# The samples spell the word TRAP, and sed restores it, so the scan of this
+# script below meets no sample.
+word=$(printf 't%sap' r)
+rejected="TRAP 'unlink w' EXIT INT TERM
+TRAP 'unlink w' INT
 TRAP 'exit 130' INT TERM
 TRAP cleanup TERM
   TRAP 'exit 0' INT
@@ -77,8 +83,12 @@ cd w && TRAP 'rm w' INT
 if w; then TRAP 'rm w' INT; fi
 for w in w; do TRAP 'rm w' INT; done
 if w; then :; else TRAP 'rm w' INT; fi
-! TRAP 'rm w' INT"
-printf '%s\n' "$rejected" | sed 's/TRAP/trap/' | while IFS= read -r sample; do
+! TRAP 'rm w' INT
+case w in w) TRAP cleanup INT ;; esac
+w=w TRAP cleanup INT
+command TRAP cleanup INT
+echo do not TRAP INT"
+printf '%s\n' "$rejected" | sed "s/TRAP/$word/" | while IFS= read -r sample; do
   [ -n "$(printf '%s\n' "$sample" | nonconforming_traps)" ] || {
     echo "check_signal_traps: the lexical rule accepted: $sample" >&2
     exit 1
@@ -88,16 +98,28 @@ accepted="TRAP 'exit 130' INT
 TRAP 'exit 143' TERM
   TRAP 'exit 130' INT
 TRAP cleanup EXIT
-TRAP 'rm -r \"\$work\" </dev/null' EXIT
+TRAP 'unlink \"\$work\"' EXIT
 # TRAP 'rm w' INT
-echo TRAP INT
-echo do not TRAP INT"
-[ -z "$(printf '%s\n' "$accepted" | sed 's/TRAP/trap/' | nonconforming_traps)" ] || {
-  echo "check_signal_traps: the lexical rule reported a conforming trap" >&2
+echo traps INT"
+[ -z "$(printf '%s\n' "$accepted" | sed "s/TRAP/$word/" | nonconforming_traps)" ] || {
+  echo "check_signal_traps: the lexical rule reported a conforming handler" >&2
   exit 1
 }
 cd "$root"
-git ls-files -- '*.sh' >"$scratch/scripts.txt"
+# The tracked shell scripts: each file named *.sh, and each other tracked file
+# whose first line is a shell #! line.
+git ls-files >"$scratch/tracked.txt"
+: >"$scratch/scripts.txt"
+while IFS= read -r path; do
+  case $path in
+    *.sh) printf '%s\n' "$path" >>"$scratch/scripts.txt" ;;
+    *)
+      if [ -f "$path" ] && head -n 1 "$path" | grep -q -E '^#!.*[/ ](sh|bash|dash|ksh|zsh)([[:space:]]|$)'; then
+        printf '%s\n' "$path" >>"$scratch/scripts.txt"
+      fi
+      ;;
+  esac
+done <"$scratch/tracked.txt"
 : >"$scratch/nonconforming.txt"
 while IFS= read -r script; do
   found=$(nonconforming_traps <"$script")
@@ -105,12 +127,13 @@ while IFS= read -r script; do
 done <"$scratch/scripts.txt"
 [ ! -s "$scratch/nonconforming.txt" ] || {
   cat "$scratch/nonconforming.txt" >&2
-  echo "check_signal_traps: write each trap on one line as trap ACTION EXIT, trap 'exit 130' INT or trap 'exit 143' TERM" >&2
+  echo "check_signal_traps: write each signal handler on one line in a form ci/check_signal_traps.sh names" >&2
   exit 1
 }
-echo "check_signal_traps: every trap of $(wc -l <"$scratch/scripts.txt") script(s) has a conforming form"
+echo "check_signal_traps: every signal handler of $(wc -l <"$scratch/scripts.txt") script(s) has a conforming form"
 
-# Each subject with the tool its first command after the traps runs.
+# Each subject with its trigger: the first stubbed tool it reaches after its
+# traps are set.
 subjects='check.sh:shellcheck
 compare_dot.sh:python3
 compare_estimator.sh:python3
