@@ -9,13 +9,15 @@
 # rocq/quantum of this checkout. The comparison must also reject a Rocq
 # reference that counts only the indices with aligned_add. Runs on demand,
 # outside ci/check.sh, because it needs the Rocq switch of
-# ci/install_rocq.sh beside the Lean toolchain.
+# ci/install_rocq.sh beside the Lean toolchain with a built lean/.lake (the
+# script runs lake build --no-build and writes nothing there).
 # Exit status: 0 agreement, 1 a difference or an accepted mutant, 2 a tool or
 # the switch is missing or a source does not compile. Writes only under a
 # temporary directory it removes.
 set -eu
 
 PYTHON=${PYTHON:-python3}
+export PYTHON
 for tool in git lake opam "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "compare_aligned_pair_count: $tool is not on PATH" >&2
@@ -71,8 +73,8 @@ git -C "$root" ls-files -z -- 'rocq/quantum/*.v' | (cd "$root" && xargs -0 cp -t
   }
 )
 cd "$root/lean"
-lake build -q GororobaMath.CayleyDickson.TwoTerm || {
-  echo "compare_aligned_pair_count: lake build of GororobaMath.CayleyDickson.TwoTerm failed" >&2
+lake build --no-build -q GororobaMath.CayleyDickson.TwoTerm >&2 || {
+  echo "compare_aligned_pair_count: build the Lean library first (lake build in lean/)" >&2
   exit 2
 }
 lake env lean --run "$work/Count.lean" >"$work/lean.txt" || {
