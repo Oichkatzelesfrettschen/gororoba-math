@@ -118,7 +118,11 @@ gororoba repository shares; this file governs where the two differ.
   and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
   gate replays every tracked module through `leanchecker`, one call per
   module, and keeps `lean/GororobaMath.lean` to `module` and its imports
-  of the library, since the root module's replay needs 27.5 GB; a
+  of the library, since `leanchecker` reads its argument as a module-name
+  prefix and replays every matching module at once, so a call on the root
+  name replays the whole library concurrently (30.5 to 32.1 GB measured
+  with Lean 4.35.0 on the eight-module library of an earlier commit,
+  against 6.4 GB for one module); a
   metaprogram can add a declaration that the build and the axiom audit
   accept and the kernel rejects. The replay assumes what a module
   imports, so a library module imports only the library and the package's
@@ -129,7 +133,10 @@ gororoba repository shares; this file governs where the two differ.
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
-  estimator, `ci/compare_dot.sh` for `Tower.dot` and `Tower.re`.
+  estimator, `ci/compare_dot.sh` for `Tower.dot` and `Tower.re`,
+  `ci/compare_alignment.sh` for `Tower.partner`, `Tower.alignedAdd` and
+  `Tower.alignedSub`, which it compares with the integer instance of
+  `rocq/quantum/CdTowerTwoTermBridge.v`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
@@ -160,7 +167,14 @@ gororoba repository shares; this file governs where the two differ.
     and a statement that a theorem receipt of gororoba-open rests on are
     Rocq artifacts: gororoba-open runs no prover and admits the kernel
     replay evidence that `ci/kernel_replay_evidence.py` writes from a Rocq
-    build, and `vm_compute` evaluates certificates. Built-in `Extraction`
+    build, and `vm_compute` evaluates certificates. Evaluation is faster in
+    Rocq and the kernel re-check slower: on the sign-anticommutativity table
+    of level `k`, `vm_compute` ran 3.4 to 8.5 times faster than Lean's
+    `decide +kernel` for `k` from 5 to 8, and `rocq check` of the level-8
+    object took 51 s against 19 s for Lean's kernel decision (measured
+    2026-11-16, Rocq 9.3.0, Lean 4.35.0, one 4-vCPU host;
+    `docs/archive/measurements/h1-vm-compute-decide-kernel.md`), so a large
+    certificate states both costs. Built-in `Extraction`
     and CertiRocq (on its Rocq 9.1 switch) tie running code to Gallina
     terms within the trusted base that the skill `extract-verified-rocq-code`
     records, and Lean's compiled code carries no such tie. Flocq is the
@@ -207,7 +221,10 @@ gororoba repository shares; this file governs where the two differ.
   the same environment that imports the solution module declaring it, so
   `lean/Challenge.lean` imports the challenge modules among which no such
   clash arises, and the `Challenge.*` glob of `lean/lakefile.toml`
-  builds every module.
+  builds every module. `ci/check_headline_results.py` requires each Lean
+  row to have a tracked configuration that names its theorem and solution
+  module, permits exactly `propext`, `Quot.sound` and `Classical.choice`,
+  and names a tracked challenge module.
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another
@@ -245,7 +262,7 @@ gororoba repository shares; this file governs where the two differ.
   under the policy); and `ci/check_kernel_replay_evidence.sh`, whose
   producer keeps the warning options of its evidence contract with
   gororoba-open. The on-demand scripts (`ci/compare_dot.sh`,
-  `ci/compare_signs.sh`, `ci/replay_quantum_bundles.sh`) and the
+  `ci/compare_alignment.sh`, `ci/compare_signs.sh`, `ci/replay_quantum_bundles.sh`) and the
   CertiRocq targets run outside the gate.
   `ci/rocq_warning_pairs.py` reads the build logs of each tree and compares
   the (source, warning) pairs they print with `ci/rocq-warnings/allowed.tsv`,
@@ -280,6 +297,11 @@ gororoba repository shares; this file governs where the two differ.
   the Flocq handling of the script changes the evidence contract that
   `theorem_replay.rs` of gororoba-open validates, so both land together, and
   `ci/check_kernel_replay_evidence.sh` runs before the script lands.
+  Whether a source imports Flocq is decided by one rule in both
+  repositories, `command_imports_flocq` here and in `theorem_replay.rs`,
+  and both read `ci/flocq-import-corpus.tsv`: the calibration here, and a
+  vendored copy in gororoba-open pinned by sha256 and the gororoba-math
+  commit. A change to the rule changes the corpus and the pin together.
 - Retained records in gororoba-open and gororoba-quantum cite sources of
   these trees by sha256. Before editing a source, `git grep` its digest in
   both repositories; a cited source keeps its bytes, and a change lands in a

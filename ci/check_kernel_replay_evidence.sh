@@ -20,9 +20,10 @@
 #     producer of a scratch manifest (ci/flocq_manifest.py --record) and
 #     passes it with --flocq-manifest; no hosted runner is a recorded producer.
 #     The same holds for the source whose Flocq import carries the control
-#     prefix Time, and the producer's Flocq import rule gives the consumer's
-#     answer on each command of its test table (gororoba-open
-#     theorem_replay.rs, command_imports_flocq).
+#     prefix Time, and the producer's Flocq import rule gives the expected
+#     answer on each row of ci/flocq-import-corpus.tsv, which gororoba-open's
+#     consumer (theorem_replay.rs, command_imports_flocq) pins by digest, and
+#     no rule that drops one control flag or legacy attribute does.
 # Known-bad cases must be refused: a source whose compilation prints a
 # warning but exits 0, a source that fails to compile, a declaration name the
 # source lacks, a Rocq that reports another version, a Flocq library
@@ -355,47 +356,66 @@ library=$(opam var --switch="$switch" lib)/coq/user-contrib/Flocq
   fail "the Flocq evidence differs from its expectation"
 echo "check_kernel_replay_evidence: Flocq objects recorded"
 
-# The Flocq import rule of the producer equals that of the consumer
-# (command_imports_flocq in gororoba-open theorem_replay.rs): the table is the
-# consumer's test table, prefixed and quoted forms included.
-"$PYTHON" -I -B - "$here" <<'EOF' || fail "the Flocq import rule differs from the consumer's table"
+# The Flocq import rule of the producer gives the expected answer on each
+# row of ci/flocq-import-corpus.tsv, whose bytes gororoba-open pins for the
+# same rule in its consumer (command_imports_flocq in theorem_replay.rs). Each
+# row runs through the rule alone and through the source reader, as the
+# producer reads a source; a row the reader refuses is a refused run, so its
+# expected answer is false. The corpus rejects each mutant rule that drops one
+# control flag or one legacy attribute.
+"$PYTHON" -I -B - "$here" <<'EOF' || fail "the Flocq import rule differs from ci/flocq-import-corpus.tsv"
 import sys
 
 sys.path.insert(0, sys.argv[1])
-from kernel_replay_evidence import command_imports_flocq, split_whitespace, uses_flocq
+from kernel_replay_evidence import CONTROL_FLAGS, LEGACY_ATTRIBUTES, Refusal, command_imports_flocq, source_commands
 
-table = [
-    ("From Flocq Require Import Core", True),
-    ("From Flocq.Core Require Import Raux", True),
-    ("Require Import Flocq.Core.Core", True),
-    ("Time From Flocq Require Import Core", True),
-    ('#[warnings("-w")] From Flocq Require Import Core', True),
-    ("Time Require Import Flocq.Core.Core", True),
-    ("From Stdlib Require Import List", False),
-    ("Require Import Stdlib.Reals.Reals", False),
-    ("Definition Flocq_unrelated := 0", False),
-    ("Require", False),
-    ('idtac "Example: Require Import Flocq.Core.Core"', False),
-    ('Definition note := "From Flocq Require Import Core"', False),
-    ('#[local, warnings("-w")] Require Import Flocq.Core.Core', True),
-    ("Timeout 10 Require Import Flocq.Core.Core", True),
-    ("#[local Require Import Flocq.Core.Core", False),
-    ("Instructions From Flocq Require Import Core", True),
-    ("Profile Require Import Flocq.Core.Core", True),
-    ("Time Timeout 5 Profile From Flocq Require Import Core", True),
-    ("#[local] Time Require Import Flocq.Core.Core", True),
-    ("From OpenGororoba Require Import Prelude", False),
-]
-# Each row runs through the word splitter alone and through the source reader
-# (source_commands, then split_whitespace), as the producer reads a source.
-wrong = [
-    command
-    for command, expected in table
-    if command_imports_flocq(split_whitespace(command)) != expected or uses_flocq([command + "."]) != expected
-]
+with open(f"{sys.argv[1]}/flocq-import-corpus.tsv", encoding="utf-8", newline="") as stream:
+    lines = stream.read().split("\n")
+if lines[0] != "command\timports_flocq" or lines[-1] != "":
+    sys.exit("flocq-import-corpus.tsv: the header or the final newline differs")
+corpus = []
+for number, line in enumerate(lines[1:-1], start=2):
+    fields = line.split("\t")
+    if len(fields) != 2 or not fields[0] or fields[1] not in ("true", "false"):
+        sys.exit(f"flocq-import-corpus.tsv:{number}: malformed row")
+    corpus.append((fields[0], fields[1] == "true"))
+if not corpus or len({command for command, _ in corpus}) != len(corpus):
+    sys.exit("flocq-import-corpus.tsv: no rows or a repeated command")
+
+
+def read_as_source(command):
+    try:
+        return source_commands(command + ".")
+    except Refusal:
+        return None
+
+
+wrong = []
+for command, expected in corpus:
+    commands = read_as_source(command)
+    if command_imports_flocq(command) != expected or (
+        [command] != commands if commands is not None else expected
+    ):
+        wrong.append(command)
 if wrong:
     print("\n".join(wrong), file=sys.stderr)
     sys.exit(1)
+mutants = [
+    (f"control flag {name}", {key: value for key, value in CONTROL_FLAGS.items() if key != name}, LEGACY_ATTRIBUTES)
+    for name in CONTROL_FLAGS
+]
+mutants += [
+    (f"legacy attribute {name}", CONTROL_FLAGS, LEGACY_ATTRIBUTES - {name}) for name in sorted(LEGACY_ATTRIBUTES)
+]
+survivors = [
+    label
+    for label, flags, legacy in mutants
+    if all(command_imports_flocq(command, flags, legacy) == expected for command, expected in corpus)
+]
+if survivors:
+    print("the corpus accepts the rule without " + ", ".join(survivors), file=sys.stderr)
+    sys.exit(1)
+print(f"check_kernel_replay_evidence: {len(corpus)} corpus rows answered, {len(mutants)} mutant rules rejected")
 EOF
 
 # Known-good: the same fixture with its Flocq import behind a control prefix.

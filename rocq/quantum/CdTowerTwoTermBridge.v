@@ -21,9 +21,11 @@
     - aligned_sub k i j x is Tower.alignedSub k i j x, with a == b written
       Bool.eqb a b.
 
-    These definitions compose neg_sign with Nat.lxor alone, and
-    ci/compare_signs.sh compares Lean's Tower.sign with neg_sign through
-    TowerSign.sign_sigma, so no further comparison script reads them.
+    These definitions compose neg_sign with Nat.lxor alone.
+    ci/compare_alignment.sh evaluates Lean's Tower.partner,
+    Tower.alignedAdd and Tower.alignedSub and the three Rocq definitions on
+    every triple of indices below 2^k for k up to 6, and ci/compare_signs.sh
+    compares Lean's Tower.sign with neg_sign through TowerSign.sign_sigma.
 
     It restates the two headline theorems at the coefficient ring D:
 
