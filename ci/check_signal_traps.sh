@@ -152,7 +152,7 @@ for kind in good mutant; do
       cp "ci/$script" "$scratch/$kind/ci/$script"
     else
       sed -e "/^trap 'exit 130' INT\$/d" -e "/^trap 'exit 143' TERM\$/d" \
-        -e "s/^\(trap '.*'\) EXIT\$/\1 EXIT INT TERM/" "ci/$script" >"$scratch/$kind/ci/$script"
+        -e "s/^\(t[r]ap '.*'\) EXIT\$/\1 EXIT INT TERM/" "ci/$script" >"$scratch/$kind/ci/$script"
       ! cmp -s "ci/$script" "$scratch/$kind/ci/$script" || {
         echo "check_signal_traps: the mutation left ci/$script unchanged" >&2
         exit 1
