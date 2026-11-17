@@ -5,7 +5,7 @@ Usage, with the `rocq` of Rocq 9.3.0 on PATH (for example under
 `rocq/open` directory that `make rocq-open` builds under `BUILD_DIR`:
 
     opam exec --switch=rocq-9.3 -- "$PYTHON" -I ci/theorem_census.py \\
-        --objects "$BUILD_DIR/rocq/open" [--tsv FILE]
+        --objects "$BUILD_DIR/rocq/open" [--file-local] [--tsv FILE]
 
 Criterion. A declaration counts as listed when the type that Rocq prints for it
 refers to no constant, inductive type or constructor of the logical roots
@@ -24,16 +24,32 @@ declaration names and statement text come from the copy, so they describe the
 object that Rocq prints.
 
 Scope. A declaration is listed when it names no project constant, whatever it claims:
-a theorem over a definition local to its own file is not listed (the local
+a theorem over a definition local to its own file is not listed by default (the local
 definition is a project constant), and a theorem over standard-library names alone is
 listed even when it states the file's claim. The list bounds where a statement
 carries no project content; it does not decide whether a header overclaims.
 Declarations of other kinds (Definition, Remark) are not read.
 
+File-local mode. `--file-local` also lists a declaration whose project references
+all lie in its own file: each referenced constant, inductive type or constructor
+is `OpenGororobaVerified.<stem>.<name>` for the stem of the declaration's file,
+including names of modules nested in that file. A reference to a theories/
+constant or to another verified/ file keeps a declaration out. The mode adds
+rows and removes none, so its listing contains the default listing. Stdout
+reports the default count and the file-local count, and `--tsv` gains a scope
+column (`closed` or `file-local`) and a column with the local names a
+file-local row references.
+
 Calibration. Every run checks four declarations against the criterion before it
 reports: C029_three_embeddings and C029_s3_order of C029_FermionGenerations are
 listed, chern_sum_zero_under_trs of C1233_ChernSumZero and
-C028_lo_subalgebra_closed of C028_SedenionAutGroup are not. A different verdict,
+C028_lo_subalgebra_closed of C028_SedenionAutGroup are not. A `--file-local` run
+also checks the file-local rule: the declarations of CALIBRATION_FILE_LOCAL are
+listed as file-local with exactly the named local constants (known good), and
+those of CALIBRATION_FILE_LOCAL_REJECTED, whose statements reference a project
+constant of another file or of theories/, stay unlisted (known bad); CALIBRATION_NAME_RULE
+checks the matching rule on printed types: a name of another file, a name of a file whose
+stem extends this one and a local name beside a theories/ name each keep a type out. A different verdict,
 a missing declaration, an object missing for a listed source, a Rocq error or
 any stderr output exits 1.
 
@@ -51,6 +67,7 @@ import tempfile
 from pathlib import Path
 
 ROOT_REFERENCE = re.compile(r"\bOpenGororoba(?:Verified)?\.[A-Za-z_]")
+PROJECT_NAME = re.compile(r"\bOpenGororoba(?:Verified)?\.[A-Za-z_][A-Za-z0-9_'.]*")
 DECLARATION = re.compile(
     r"(?m)^[ \t]*(?:(?:#\[[^\]]*\]|Local|Global)[ \t]+)*"
     r"(Theorem|Lemma|Corollary|Fact|Proposition|Example)[ \t]+([A-Za-z_][A-Za-z0-9_']*)"
@@ -62,6 +79,25 @@ CALIBRATION_LISTED = (
 CALIBRATION_UNLISTED = (
     ("C1233_ChernSumZero", "chern_sum_zero_under_trs"),
     ("C028_SedenionAutGroup", "C028_lo_subalgebra_closed"),
+)
+CALIBRATION_FILE_LOCAL = (
+    ("C_OverImbalancedSign", "at_attractor_vanishes", ["OpenGororobaVerified.C_OverImbalancedSign.york_correction"]),
+    ("C881_GF2CubicMinDegree", "pg32_length_labels", ["OpenGororobaVerified.C881_GF2CubicMinDegree.pg32_labels"]),
+)
+CALIBRATION_FILE_LOCAL_REJECTED = (("C028_SedenionAutGroup", "C028_lo_subalgebra_closed"),)
+# Printed types for the matching rule alone: a name of another file, a name of a file whose
+# stem extends this one, and a local name beside a theories/ name each keep a type out.
+CALIBRATION_NAME_RULE = (
+    ("A", "x : OpenGororobaVerified.A.f 1 = 1", ["OpenGororobaVerified.A.f"]),
+    ("A", "x : OpenGororobaVerified.B.f 1 = 1", None),
+    ("A", "x : OpenGororobaVerified.AB.f 1 = 1", None),
+    ("A", "x : OpenGororobaVerified.A.f 1 = OpenGororoba.Prelude.g 1", None),
+    (
+        "A",
+        "x : OpenGororobaVerified.A.f 1 = OpenGororobaVerified.A.m.g 1",
+        ["OpenGororobaVerified.A.f", "OpenGororobaVerified.A.m.g"],
+    ),
+    ("A", "x : 1 = 1", None),
 )
 
 
@@ -230,10 +266,28 @@ def run_checks(objects: Path, decls: dict[str, list[tuple[str, str]]]) -> dict[t
     return types
 
 
+def file_local_names(stem: str, text: str) -> list[str] | None:
+    """Project names of a printed type when all of them lie in the file of `stem`, else None.
+
+    A type that names no project constant returns None as well: it is listed by the
+    default rule, and the file-local rule adds only the declarations that name a local one.
+    """
+    names = {match.rstrip(".") for match in PROJECT_NAME.findall(text)}
+    prefix = f"OpenGororobaVerified.{stem}."
+    if names and all(name.startswith(prefix) for name in names):
+        return sorted(names)
+    return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--objects", required=True, type=Path, help="compiled rocq/open tree (theories/ and verified/)")
     parser.add_argument("--tree", type=Path, default=Path(__file__).resolve().parent.parent / "rocq" / "open")
+    parser.add_argument(
+        "--file-local",
+        action="store_true",
+        help="also list declarations whose project references all lie in their own file",
+    )
     parser.add_argument("--tsv", type=Path, help="write the listed declarations (file, theorem, statement) here")
     args = parser.parse_args()
     try:
@@ -251,19 +305,44 @@ def main() -> int:
         for stem, name in CALIBRATION_UNLISTED:
             if listed.get((stem, name)) is not False:
                 raise CensusError(f"calibration: {stem}.{name} must be unlisted, verdict {listed.get((stem, name))}")
+        local = {key: file_local_names(key[0], text) for key, text in types.items()}
+        if args.file_local:
+            for stem, text, expected in CALIBRATION_NAME_RULE:
+                if file_local_names(stem, text) != expected:
+                    raise CensusError(f"calibration: name rule on {text!r} must give {expected}")
+            for stem, name, expected in CALIBRATION_FILE_LOCAL:
+                if local.get((stem, name)) != expected:
+                    raise CensusError(
+                        f"calibration: {stem}.{name} must be file-local with {expected}, got {local.get((stem, name))}"
+                    )
+            for stem, name in CALIBRATION_FILE_LOCAL_REJECTED:
+                if (stem, name) not in local or listed[(stem, name)] or local[(stem, name)] is not None:
+                    raise CensusError(f"calibration: {stem}.{name} must stay unlisted in file-local mode")
     except (CensusError, OSError) as error:
         print(f"theorem_census: {error}", file=sys.stderr)
         return 1
     rows = []
     total = 0
+    file_local_count = 0
     for stem, items in decls.items():
         hits = [(name, text) for name, text in items if listed[(stem, name)]]
-        rows += [(f"{stem}.v", name, text) for name, text in hits]
+        local_hits = [(name, text, local[(stem, name)]) for name, text in items if local[(stem, name)] is not None]
+        if args.file_local:
+            rows += [(f"{stem}.v", name, text, "closed", "") for name, text in hits]
+            rows += [(f"{stem}.v", name, text, "file-local", ",".join(names)) for name, text, names in local_hits]
+            file_local_count += len(local_hits)
+            print(f"{stem}.v\t{len(hits)}\t{len(local_hits)}\t{len(items)}")
+        else:
+            rows += [(f"{stem}.v", name, text) for name, text in hits]
+            print(f"{stem}.v\t{len(hits)}\t{len(items)}")
         total += len(items)
-        print(f"{stem}.v\t{len(hits)}\t{len(items)}")
-    print(f"total\t{len(rows)}\t{total}\t(listed, declarations; calibration passed)")
+    if args.file_local:
+        closed = len(rows) - file_local_count
+        print(f"total\t{closed}\t{file_local_count}\t{total}\t(closed, file-local, declarations; calibration passed)")
+    else:
+        print(f"total\t{len(rows)}\t{total}\t(listed, declarations; calibration passed)")
     if args.tsv:
-        args.tsv.write_text("".join(f"{a}\t{b}\t{c}\n" for a, b, c in rows), encoding="utf-8")
+        args.tsv.write_text("".join("\t".join(row) + "\n" for row in rows), encoding="utf-8")
     return 0
 
 
