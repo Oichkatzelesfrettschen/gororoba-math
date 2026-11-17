@@ -281,9 +281,15 @@ echo "check: $(wc -l <"$work/sources.txt") library source(s) import only the lib
 # every library module is named; Mathlib's objects are assumed, as its
 # prebuilt cache already is. One module per call keeps the peak at 6.9 GB
 # (measured, Lean 4.35.0 with Mathlib v4.35.0, each of the seven modules
-# under a 14 GB limit). The root module is left out: its replay needs
-# 27.5 GB and ends with SIGTERM under a 20 GB limit (measured; cause not
-# isolated), and the check below keeps it free of declarations.
+# under a 14 GB limit). The root module is left out: leanchecker reads its
+# argument as a module-name prefix (checkOlean in LeanChecker.lean, Lean
+# 4.35.0) and replays every matching module at once, so a call on
+# GororobaMath replays the whole library concurrently, 30.5 to 32.1 GB
+# (measured on the eight-module library of an earlier commit; the peak
+# grows with the module count), while a copy of the root under another
+# name replays in 6.4 GB. The check below keeps the root free of declarations, and no
+# module name is a component prefix of another, so each call replays one
+# module.
 # Prints each line of the Lean file $1 that is neither blank, `module`, nor
 # an import of a library module; succeeds when it printed one.
 root_extra() {

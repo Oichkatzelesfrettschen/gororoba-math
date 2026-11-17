@@ -36,6 +36,13 @@ script checks, from the repository root it sits under:
    contribute no name; the theorem counts when its proof ends with Qed or
    Defined, or when it is given by a term with :=, and an Abort or Admitted
    ending does not count.
+4. Each Lean row has a challenge configuration: a tracked lean/Challenge/*.json
+   whose solution_module is the row's module, whose theorem_names hold the
+   row's theorem, whose permitted_axioms are exactly propext, Quot.sound and
+   Classical.choice, and whose challenge_module Challenge.NAME is the tracked
+   file lean/Challenge/NAME.lean. lake comparator, which checks that the
+   statements agree, runs on demand; this check keeps a row from landing
+   without the configuration that comparator reads.
 
 Calibration. Before the verdict on the repository counts, the script runs the
 same checks on known-bad copies of the inputs, one per defect class above
@@ -49,6 +56,7 @@ Exit status: 0 every check passed; 1 a check failed (each failure printed);
 
 from __future__ import annotations
 
+import json
 import re
 import subprocess
 import sys
@@ -58,6 +66,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 HEADER = ["prover", "path", "theorem", "partner", "tracking"]
+PERMITTED_AXIOMS = ("propext", "Quot.sound", "Classical.choice")
 ISSUE_URL = re.compile(r"^https://github\.com/Oichkatzelesfrettschen/gororoba-math/issues/[0-9]+$")
 PARTNER = re.compile(r"^(rocq/(?:open|quantum|delegation)/[A-Za-z0-9_/]+\.v):([A-Za-z0-9_.']+)(?: narrower: (.+))?$")
 LEAN_DECL = re.compile(
@@ -115,6 +124,8 @@ class Inputs:
     rocq: dict[str, str]
     projects: dict[str, set[str]] = field(default_factory=dict)
     exempt: dict[tuple[str, str], str] = field(default_factory=lambda: dict(NON_DECLARATION_TOKENS))
+    challenges: dict[str, str] = field(default_factory=dict)
+    challenge_sources: dict[str, str] = field(default_factory=dict)
 
 
 def blank(chunk: str) -> str:
@@ -398,6 +409,70 @@ def check(inputs: Inputs) -> list[str]:
         tokens = table.get(path, [])
         if not any(theorem == token or theorem.endswith("." + token) for token in tokens):
             failures.append(f"ci/headline-results.tsv: {theorem} is not named in the README row of {path}")
+    failures.extend(check_challenges(inputs, lean_rows))
+    return failures
+
+
+def challenge_config(config: str, text: str) -> tuple[dict, list[str]]:
+    """Decodes one configuration and checks its shape; returns the object and the failures."""
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as error:
+        return {}, [f"{config}: not JSON ({error.msg} at line {error.lineno})"]
+    if not isinstance(data, dict):
+        return {}, [f"{config}: the top level is {type(data).__name__}, not an object"]
+    failures = []
+    for key in ("challenge_module", "solution_module"):
+        if not isinstance(data.get(key), str):
+            failures.append(f"{config}: {key} is {data.get(key)!r}, not a string")
+    for key in ("theorem_names", "permitted_axioms"):
+        value = data.get(key)
+        if not isinstance(value, list) or not value or not all(isinstance(item, str) for item in value):
+            failures.append(f"{config}: {key} is {value!r}, not a nonempty list of strings")
+    return (data, failures) if not failures else ({}, failures)
+
+
+def check_challenges(inputs: Inputs, lean_rows: set[tuple[str, str]]) -> list[str]:
+    """Each Lean row has a well-formed challenge configuration that names its theorem.
+
+    A configuration lean/Challenge/NAME.json names challenge_module
+    Challenge.NAME, a tracked lean/Challenge/NAME.lean that declares every
+    theorem it lists, permits exactly the three axioms, and lists the row's
+    theorem under the row's solution module.
+    """
+    failures: list[str] = []
+    configs: dict[str, dict] = {}
+    for config, text in sorted(inputs.challenges.items()):
+        data, problems = challenge_config(config, text)
+        failures.extend(problems)
+        if problems:
+            continue
+        configs[config] = data
+        if sorted(data["permitted_axioms"]) != sorted(PERMITTED_AXIOMS):
+            failures.append(
+                f"{config}: permitted_axioms is {data['permitted_axioms']!r}, not exactly {', '.join(PERMITTED_AXIOMS)}"
+            )
+        stem = config.removeprefix("lean/Challenge/").removesuffix(".json")
+        if data["challenge_module"] != "Challenge." + stem:
+            failures.append(f"{config}: challenge_module is {data['challenge_module']}, not Challenge.{stem}")
+            continue
+        source = f"lean/Challenge/{stem}.lean"
+        if source not in inputs.challenge_sources:
+            failures.append(f"{config}: {source} is not tracked")
+            continue
+        declared = lean_declarations(inputs.challenge_sources[source])
+        for theorem in data["theorem_names"]:
+            if declared.get(theorem) != "theorem":
+                failures.append(f"{config}: {source} declares no theorem {theorem}")
+    for path, theorem in sorted(lean_rows):
+        module = path.removeprefix("lean/").removesuffix(".lean").replace("/", ".")
+        covering = [
+            config
+            for config, data in configs.items()
+            if data["solution_module"] == module and theorem in data["theorem_names"]
+        ]
+        if not covering:
+            failures.append(f"ci/headline-results.tsv: {theorem} has no challenge configuration naming it for {module}")
     return failures
 
 
@@ -416,7 +491,23 @@ def read_inputs() -> Inputs:
         projects[tree] = {line.strip() for line in lines if line.strip().endswith(".v")}
     rows_text = (ROOT / "ci/headline-results.tsv").read_text(encoding="utf-8")
     rows = [line.split("\t") for line in rows_text.splitlines() if line]
-    return Inputs(rows, (ROOT / "README.md").read_text(encoding="utf-8"), lean, rocq, projects)
+    challenge_files = subprocess.run(  # noqa: S603
+        ["git", "-C", str(ROOT), "ls-files", "--", "lean/Challenge"],  # noqa: S607
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.split()
+    challenges = {p: (ROOT / p).read_text(encoding="utf-8") for p in challenge_files if p.endswith(".json")}
+    modules = {p: (ROOT / p).read_text(encoding="utf-8") for p in challenge_files if p.endswith(".lean")}
+    return Inputs(
+        rows,
+        (ROOT / "README.md").read_text(encoding="utf-8"),
+        lean,
+        rocq,
+        projects,
+        challenges=challenges,
+        challenge_sources=modules,
+    )
 
 
 @dataclass
@@ -569,6 +660,49 @@ def mutants(good: Inputs) -> dict[str, Inputs]:
         ["/-- doc /- nested -/ text", f"theorem {site.lean_name.group('name')} : True := trivial", "-/"], rename=True
     )
     cases["a Lean private theorem with the row's name"] = with_lean([], private=True)
+    covering = next(
+        config for config, text in good.challenges.items() if site.first[2] in json.loads(text)["theorem_names"]
+    )
+    base = json.loads(good.challenges[covering])
+
+    def with_config(text: str) -> Inputs:
+        return replace(good, challenges={**good.challenges, covering: text})
+
+    def edited(key: str, value: object) -> Inputs:
+        return with_config(json.dumps({**base, key: value}))
+
+    cases["a row whose challenge configuration is gone"] = replace(
+        good, challenges={k: v for k, v in good.challenges.items() if k != covering}
+    )
+    cases["a challenge configuration that lacks the row's theorem"] = edited(
+        "theorem_names", [t for t in base["theorem_names"] if t != site.first[2]] or ["Other.theorem"]
+    )
+    cases["a challenge configuration with another solution module"] = edited("solution_module", "GororobaMath.Other")
+    cases["a challenge configuration that permits an extra axiom"] = edited(
+        "permitted_axioms", [*base["permitted_axioms"], "sorryAx"]
+    )
+    cases["a challenge configuration that permits one axiom too few"] = edited(
+        "permitted_axioms", base["permitted_axioms"][1:]
+    )
+    other = next(json.loads(text)["challenge_module"] for config, text in good.challenges.items() if config != covering)
+    cases["a challenge configuration that names another tracked challenge module"] = edited("challenge_module", other)
+    source = "lean/" + base["challenge_module"].replace(".", "/") + ".lean"
+    cases["a challenge configuration whose challenge module is untracked"] = replace(
+        good, challenge_sources={k: v for k, v in good.challenge_sources.items() if k != source}
+    )
+    cases["a challenge module that does not declare the configured theorem"] = replace(
+        good,
+        challenge_sources={
+            **good.challenge_sources,
+            source: good.challenge_sources[source].replace(
+                site.first[2].rsplit(".", 1)[-1], site.first[2].rsplit(".", 1)[-1] + "_gone"
+            ),
+        },
+    )
+    cases["a challenge configuration whose theorem_names is a string"] = edited("theorem_names", site.first[2])
+    cases["a challenge configuration whose theorem_names holds a number"] = edited("theorem_names", [7])
+    cases["a challenge configuration that is a JSON array"] = with_config(json.dumps([base]))
+    cases["a challenge configuration that is not JSON"] = with_config("{")
     return cases
 
 
@@ -621,7 +755,10 @@ def main() -> int:
         print(failure, file=sys.stderr)
     if failures:
         return 1
-    print(f"check_headline_results: {len(good.rows) - 1} rows match the library, README.md and the Rocq trees")
+    print(
+        f"check_headline_results: {len(good.rows) - 1} rows match the library, README.md, the Rocq trees "
+        f"and {len(good.challenges)} challenge configurations"
+    )
     return 0
 
 
