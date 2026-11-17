@@ -679,6 +679,7 @@ quantum	CdSignPythonSemantics.v	disj-pattern-notation
 quantum	CdSignRowAnf.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdSignSourceCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdSignSourceCertificate.v	disj-pattern-notation
+quantum	CdTowerAlignedPairClosedForm.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerAlignedPairSpectrum.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerAssociatorSpace.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerAssociatorSpace.v	disj-pattern-notation
