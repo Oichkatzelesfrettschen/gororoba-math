@@ -552,7 +552,7 @@ blind blind-open open "$work/flocq" "loads Flocq.Core.Zaux from Rocq's default l
 
 # Known-good: an import under Fail that the rule misses. On the hidden load
 # path the Require finds no Flocq, so Fail succeeds, nothing is loaded, and
-# the evidence lists no Flocq objects; the compile log keeps Rocq's message.
+# the evidence lists no Flocq objects.
 tree "$work/flocq-fail"
 printf '%s\n' 'Fail Require Import Flocq.Core.Core(Rnd).' 'From OpenGororoba Require Import Prelude.' \
   'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-fail/verified/C900_Test.v"
@@ -564,9 +564,11 @@ opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/blind.py" "$here" hidden 
 }
 ! grep -q flocq_objects "$work/out-blind-fail/C900_Test.evidence.json" ||
   fail "blind-fail: the evidence lists Flocq objects"
-grep -q 'logical path Flocq.Core.Core' "$work/out-blind-fail/C900_Test.compile.txt" ||
-  fail "blind-fail: the compile log lacks Rocq's not-found message: $(head -n 3 "$work/out-blind-fail/C900_Test.compile.txt")"
 echo "check_kernel_replay_evidence: blind-fail accepted with no Flocq loaded"
+# The same source on the open load path: the Require succeeds there, so Fail
+# itself fails and the run is refused, which shows that the accepted run's
+# Require found no Flocq.
+blind blind-fail-open open "$work/flocq-fail" 'command has not failed'
 
 # Known-bad: a manifest that cannot name this producer. The scratch copies
 # below differ from the recorded manifest in one way each.
@@ -734,4 +736,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 7 known-good and $((34 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 7 known-good and $((35 + mutants)) known-bad cases behaved"
