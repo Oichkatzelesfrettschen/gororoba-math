@@ -47,18 +47,38 @@ git -C "$root" ls-files -z -- 'rocq/quantum/*.v' | (cd "$root" && xargs -0 cp -t
   }
   "$PYTHON" -I "$here/compare_aligned_pair_count.py" closure CdTowerTwoTermRecursion.v <"$work/dep.txt" \
     >"$work/closure.txt" || exit 2
+  echo "compare_aligned_pair_count: compiling $(grep -c . "$work/closure.txt") sources"
   while IFS= read -r source; do
     opam exec --switch="$switch" -- rocq compile -q -Q . "" "$source" >>"$work/compile.log" 2>&1 || {
       echo "compare_aligned_pair_count: $source does not compile" >&2
       exit 2
     }
   done <"$work/closure.txt"
-  opam exec --switch="$switch" -- rocq compile -q -Q . "" Count.v >"$work/rocq.txt" 2>&1 || exit 2
-  opam exec --switch="$switch" -- rocq compile -q -Q . "" CountMutant.v >"$work/mutant.txt" 2>&1 || exit 2
+  # The two evaluations run side by side; each takes most of the script's time at level 7.
+  opam exec --switch="$switch" -- rocq compile -q -Q . "" Count.v >"$work/rocq.txt" 2>&1 &
+  count=$!
+  opam exec --switch="$switch" -- rocq compile -q -Q . "" CountMutant.v >"$work/mutant.txt" 2>&1 &
+  mutant=$!
+  wait "$count" || {
+    echo "compare_aligned_pair_count: the Rocq count does not evaluate:" >&2
+    tail -n 20 "$work/rocq.txt" >&2
+    exit 2
+  }
+  wait "$mutant" || {
+    echo "compare_aligned_pair_count: the mutated Rocq count does not evaluate:" >&2
+    tail -n 20 "$work/mutant.txt" >&2
+    exit 2
+  }
 )
 cd "$root/lean"
-lake build -q GororobaMath.CayleyDickson.TwoTerm
-lake env lean --run "$work/Count.lean" >"$work/lean.txt"
+lake build -q GororobaMath.CayleyDickson.TwoTerm || {
+  echo "compare_aligned_pair_count: lake build of GororobaMath.CayleyDickson.TwoTerm failed" >&2
+  exit 2
+}
+lake env lean --run "$work/Count.lean" >"$work/lean.txt" || {
+  echo "compare_aligned_pair_count: the Lean program failed" >&2
+  exit 2
+}
 "$PYTHON" -I "$here/compare_aligned_pair_count.py" compare "$work/lean.txt" "$work/rocq.txt"
 status=0
 "$PYTHON" -I "$here/compare_aligned_pair_count.py" compare "$work/lean.txt" "$work/mutant.txt" >/dev/null 2>&1 ||
