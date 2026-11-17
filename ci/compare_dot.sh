@@ -11,7 +11,9 @@
 # reads the second half. Runs on demand, outside ci/check.sh, because it
 # needs the Rocq switch of ci/install_rocq.sh beside the Lean toolchain.
 # Exit status: 0 agreement, 1 a difference or an accepted mutant, 2 a tool or
-# the switch is missing. Writes only under a temporary directory it removes.
+# the switch is missing. The script runs lake build, which builds a stale
+# AnnihilatorSymmetry module and its imports in lean/.lake; otherwise it
+# writes only under a temporary directory it removes.
 set -eu
 
 PYTHON=${PYTHON:-python3}

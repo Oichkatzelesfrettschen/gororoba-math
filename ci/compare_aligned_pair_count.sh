@@ -10,10 +10,12 @@
 # reference that counts only the indices with aligned_add. Runs on demand,
 # outside ci/check.sh, because it needs the Rocq switch of
 # ci/install_rocq.sh beside the Lean toolchain with a built lean/.lake (the
-# script runs lake build --no-build and writes nothing there).
+# script runs lake build --no-build, which builds nothing).
 # Exit status: 0 agreement, 1 a difference or an accepted mutant, 2 a tool or
-# the switch is missing or a source does not compile. Writes only under a
-# temporary directory it removes.
+# the switch is missing, a source does not compile or the Lean module is
+# stale. On a stale Lean module, Lake writes a .nobuild trace beside the
+# module's trace in lean/.lake before the script exits 2; otherwise the
+# script writes only under a temporary directory it removes.
 set -eu
 
 PYTHON=${PYTHON:-python3}

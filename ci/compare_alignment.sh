@@ -15,11 +15,13 @@
 # rocq/open/verified that differs from its copy in the tree, or an object
 # older than its source, is status 2. Runs on demand, outside ci/check.sh,
 # because it needs the Rocq switch of ci/install_rocq.sh, a build tree and the
-# Lean toolchain with a built lean/.lake (the script runs lake build --no-build
-# and writes nothing there).
+# Lean toolchain with a built lean/.lake (the script runs lake build --no-build,
+# which builds nothing).
 # Exit status: 0 agreement, 1 a difference or an accepted mutant, 2 a tool,
-# the switch or the build tree is missing or stale, or a table producer
-# fails. Writes only under a temporary directory it removes.
+# the switch or the build tree is missing or stale, the Lean module is stale,
+# or a table producer fails. On a stale Lean module, Lake writes a .nobuild
+# trace beside the module's trace in lean/.lake before the script exits 2;
+# otherwise the script writes only under a temporary directory it removes.
 set -eu
 
 PYTHON=${PYTHON:-python3}
