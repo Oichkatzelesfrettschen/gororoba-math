@@ -12,5 +12,6 @@ public import GororobaMath.CayleyDickson.AssociatorSpace
 public import GororobaMath.CayleyDickson.AnnihilatorSymmetry
 public import GororobaMath.CayleyDickson.NonAssociative
 public import GororobaMath.CayleyDickson.Map
+public import GororobaMath.CayleyDickson.TraceForm
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins
