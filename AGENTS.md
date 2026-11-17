@@ -129,7 +129,10 @@ gororoba repository shares; this file governs where the two differ.
   on the same inputs and rejects a mutated reference: `ci/compare_signs.sh`
   for `Tower.sign`, which it also compares with both Rocq sign functions of
   `rocq/quantum/SignBridge.v`, `ci/compare_estimator.sh` for the nullity
-  estimator, `ci/compare_dot.sh` for `Tower.dot` and `Tower.re`.
+  estimator, `ci/compare_dot.sh` for `Tower.dot` and `Tower.re`,
+  `ci/compare_alignment.sh` for `Tower.partner`, `Tower.alignedAdd` and
+  `Tower.alignedSub`, which it compares with the integer instance of
+  `rocq/quantum/CdTowerTwoTermBridge.v`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
@@ -245,7 +248,7 @@ gororoba repository shares; this file governs where the two differ.
   under the policy); and `ci/check_kernel_replay_evidence.sh`, whose
   producer keeps the warning options of its evidence contract with
   gororoba-open. The on-demand scripts (`ci/compare_dot.sh`,
-  `ci/compare_signs.sh`, `ci/replay_quantum_bundles.sh`) and the
+  `ci/compare_alignment.sh`, `ci/compare_signs.sh`, `ci/replay_quantum_bundles.sh`) and the
   CertiRocq targets run outside the gate.
   `ci/rocq_warning_pairs.py` reads the build logs of each tree and compares
   the (source, warning) pairs they print with `ci/rocq-warnings/allowed.tsv`,
