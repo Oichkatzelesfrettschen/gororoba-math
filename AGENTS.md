@@ -45,7 +45,11 @@ gororoba repository shares; this file governs where the two differ.
   and `ci/check_delegation_sources.sh` renders them again from the checkout
   `GOROROBA_OPEN` names, on demand.
 - `ci/check.sh` is the Lean half of the admission gate and
-  `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
+  `ci/check_rocq.sh` the Rocq half; `ci/check_signal_traps.sh`, which
+  `ci/check.sh` runs, requires each `trap` of a tracked shell script to
+  read `trap ACTION EXIT`, `trap 'exit 130' INT` or `trap 'exit 143' TERM`
+  on one line, since a trap action on INT or TERM that returns lets the
+  script run on, and interrupts five scripts under stub tools; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
   `GOROROBA_QUANTUM` and `ROCQ_BUILD_TREE`, the `rocq` directory of a tree
   that `make rocq` compiled; `ci/audit/SignTable.v` is its Rocq source,
