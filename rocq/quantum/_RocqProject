@@ -16,6 +16,9 @@ CdSignAstTranslation.v
 CdSignPythonSemantics.v
 CdSignRowAnf.v
 CdSignSourceCertificate.v
+CdTowerAlignedPairClosedForm.v
+CdTowerAlignedPairSpectrum.v
+CdTowerAssociatorSpace.v
 CdTowerBasisBridge.v
 CdTowerBasisSign.v
 CdTowerCanonicalKernels.v
@@ -37,6 +40,7 @@ CdTowerRing.v
 CdTowerRingBaseChange.v
 CdTowerRingBasis.v
 CdTowerRingDomain.v
+CdTowerTwoTermBins.v
 CdTowerTwoTermBridge.v
 CdTowerTwoTermNullity.v
 CdTowerTwoTermRecursion.v

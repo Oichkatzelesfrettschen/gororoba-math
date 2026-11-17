@@ -43,8 +43,9 @@ not build it. The challenge modules of `Basic`, `Tower`, `TowerModule`, `TwoTerm
 `lake build Challenge` builds the modules one at a time (the `Challenge.*` glob) and no single file
 imports them all.
 `ci/headline-results.tsv` lists the theorems this table names as the
-headline results, each with its Rocq partner or `owed`
-([issue 46](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46)).
+headline results, each with its Rocq partner (every row has one since
+[issue 46](https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/46));
+a new row lands with its partner.
 
 The tower theorems hold for every level and every coefficient ring, so they
 cover the 64- and 128-dimensional runs as well as `A_5`. The estimator

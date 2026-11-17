@@ -679,6 +679,11 @@ quantum	CdSignPythonSemantics.v	disj-pattern-notation
 quantum	CdSignRowAnf.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdSignSourceCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdSignSourceCertificate.v	disj-pattern-notation
+quantum	CdTowerAlignedPairClosedForm.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerAlignedPairSpectrum.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerAssociatorSpace.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerAssociatorSpace.v	disj-pattern-notation
+quantum	CdTowerAssociatorSpace.v	using-fallback-loc
 quantum	CdTowerBasisBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerBasisBridge.v	disj-pattern-notation
 quantum	CdTowerBasisBridge.v	using-fallback-loc
@@ -733,6 +738,9 @@ quantum	CdTowerRingBasis.v	bad-template-constraint
 quantum	CdTowerRingBasis.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerRingBasis.v	using-fallback-loc
 quantum	CdTowerRingDomain.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerTwoTermBins.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerTwoTermBins.v	disj-pattern-notation
+quantum	CdTowerTwoTermBins.v	using-fallback-loc
 quantum	CdTowerTwoTermBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerTwoTermBridge.v	disj-pattern-notation
 quantum	CdTowerTwoTermBridge.v	using-fallback-loc
