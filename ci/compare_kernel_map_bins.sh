@@ -55,7 +55,9 @@ tree=$(git -C "$quantum" rev-parse HEAD:gororoba_quantum)
 here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 root=$(git -C "$here" rev-parse --show-toplevel)
 work=$(mktemp -d)
-trap 'rm -r "$work" </dev/null' EXIT INT TERM
+trap 'rm -r "$work" </dev/null' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 "$PYTHON" -B "$here/compare_kernel_map_bins.py" cases "$level" "$scope" "$quantum" "$work/KernelMapBins.lean" "$work/cases.txt" "$work/python.json"
 cd "$root/lean"
