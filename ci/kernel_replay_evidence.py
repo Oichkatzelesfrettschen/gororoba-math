@@ -54,11 +54,15 @@ producer names itself in `flocq_producer`: the entry of
 `flocq_objects` equal the copied list. The object bytes depend on the install
 prefix and the native toolchain of the producer, so the run is refused when no
 entry matches, before any compilation. Rocq's default load path also holds
-the switch's own Flocq, so after the assumption query the producer compiles
-`Require MODULE. Print Libraries.` the way a source compiles, outside the
-evidence, and refuses a run whose closure loads a `Flocq` library while it
-maps no `external/Flocq`: the import rule missed that import, and evidence
-without `flocq_objects` would be accepted downstream.
+the switch's own Flocq, which an import the rule misses would reach, and
+evidence without `flocq_objects` would then be accepted downstream. So every
+compile runs with ROCQLIB at a copy of the installation's library directory,
+made of links, that leaves Flocq out (hidden_flocq_environment), and only a
+mapped `external/Flocq` resolves a Flocq import; the argument vectors and the
+objects stay the same. After the assumption query the producer also compiles
+`Require MODULE. Print Libraries.` the same way, outside the evidence, and
+refuses a run whose closure loads a `Flocq` library while it maps none. The
+checker runs under the installation's load path.
 Warning lines, error lines, a nonzero exit status and a local absolute path
 in any output refuse the run.
 
@@ -624,12 +628,46 @@ def trusted_program() -> Path:
     raise Refusal("trusted Rocq replay requires rocq in the host PATH/opam switch")
 
 
+def hidden_flocq_environment(program: Path, scratch: Path) -> dict[str, str]:
+    """Environment entries under which Rocq's default load path holds no Flocq.
+
+    ROCQLIB names `rocqlib` of the scratch directory, whose `theories` and
+    whose `user-contrib` entries other than Flocq link to the installation's,
+    ROCQRUNTIMELIB keeps the installation's plugins, and the XDG data
+    directories, which Rocq also searches, name an empty directory. Only the
+    mapped `external/Flocq` then resolves a Flocq import. The objects equal
+    those of a compile under the installation's own load path (measured,
+    Rocq 9.3.0, on a Stdlib source and on a source that imports mapped Flocq).
+    """
+    config = run(program, scratch, ["c", "-config"])
+    values = dict(line.split("=", 1) for line in config["stdout"].splitlines() if "=" in line)
+    if not values.get("COQLIB") or not values.get("COQCORELIB"):
+        raise Refusal("rocq c -config names no COQLIB or COQCORELIB")
+    library = Path(values["COQLIB"]).resolve(strict=True)
+    runtime = Path(values["COQCORELIB"]).resolve(strict=True)
+    shadow = scratch / "rocqlib"
+    (shadow / "user-contrib").mkdir(parents=True)
+    (shadow / "theories").symlink_to(library / "theories", target_is_directory=True)
+    for entry in sorted((library / "user-contrib").iterdir()):
+        if entry.name != "Flocq":
+            (shadow / "user-contrib" / entry.name).symlink_to(entry)
+    empty = scratch / "xdg"
+    empty.mkdir()
+    return {
+        "ROCQLIB": str(shadow),
+        "ROCQRUNTIMELIB": str(runtime),
+        "XDG_DATA_HOME": str(empty),
+        "XDG_DATA_DIRS": str(empty),
+    }
+
+
 def command_log(evidence: dict) -> str:
     return f"{evidence['stdout']}\n{evidence['stderr']}"
 
 
-def run(program: Path, directory: Path, arguments: list[str]) -> dict:
+def run(program: Path, directory: Path, arguments: list[str], extra: dict[str, str] | None = None) -> dict:
     environment = {name: value for name, value in os.environ.items() if name not in ("COQPATH", "ROCQPATH")}
+    environment.update(extra or {})
     try:
         output = subprocess.run(  # noqa: S603
             [str(program), *arguments],
@@ -785,8 +823,14 @@ def produce(
             flocq_objects.sort(key=lambda entry: entry["path"])
             producer = flocq_producer(manifest, flocq_objects)
         flocq = bool(flocq_objects)
+        hidden = hidden_flocq_environment(program, scratch)
         compilation = [
-            run(program, scratch, external_arguments(compiler_arguments(relative_source(source), warning), flocq))
+            run(
+                program,
+                scratch,
+                external_arguments(compiler_arguments(relative_source(source), warning), flocq),
+                hidden,
+            )
             for source in ordered
         ]
         object_path = (scratch / relative_source(proof_path)).with_suffix(".vo")
@@ -803,12 +847,14 @@ def produce(
             program,
             scratch,
             external_arguments(compiler_arguments("KernelReceiptAssumptions.v", warning), flocq),
+            hidden,
         )
         (scratch / "KernelReceiptLibraries.v").write_text(f"Require {logical}.\nPrint Libraries.\n", encoding="utf-8")
         libraries = run(
             program,
             scratch,
             external_arguments(compiler_arguments("KernelReceiptLibraries.v", warning), flocq),
+            hidden,
         )
         for entry in flocq_objects:
             if sha256_hex((scratch / entry["path"]).read_bytes()) != entry["sha256"]:
