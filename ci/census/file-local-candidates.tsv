@@ -162,6 +162,24 @@ C010_ComponentBridgeBound.v	path_bridges_length	forall k, length (path_bridges k
 C010_ComponentBridgeBound.v	path_bridges_connect	forall k x, x < k -> Reach (path_bridges k) [0] x	Reach,path_bridges	
 C010_ComponentBridgeBound.v	seven_components_need_six_bridges	forall (comp : nat -> nat) (vs : list nat) (v0 : nat) (internal bridges : list edge), (forall e, In e internal -> comp (fst e) = comp (snd e)) -> (forall x, In x vs -> Reach (internal ++ bridges) [v0] x) -> (forall c, c < 7 -> exists x, In x vs /\ comp x = c) -> 6 <= length bridges	Reach,edge	
 C010_ComponentBridgeBound.v	six_bridges_connect_seven_components	length (path_bridges 7) = 6 /\ forall c, c < 7 -> Reach (path_bridges 7) [0] c	Reach,edge,path_bridges	
+C010_ZDGraphComponents.v	IZR_ind	forall n x c, IZR (ind n x c) = IZR c * (if Nat.eqb x n then 1 else 0)	ind	
+C010_ZDGraphComponents.v	sign_real	forall s : R, (s = 1%R \/ s = (-1)%R) -> exists zs, In zs signs /\ s = IZR zs	signs	
+C010_ZDGraphComponents.v	real_sign	forall zs, In zs signs -> IZR zs = 1%R \/ IZR zs = (-1)%R	signs	
+C010_ZDGraphComponents.v	zd_adj_iff_adjb	forall a b : nat * nat, (fst a < 16)%nat -> (snd a < 16)%nat -> (fst b < 16)%nat -> (snd b < 16)%nat -> zd_adj a b <-> adjb a b = true	adjb,zd_adj	
+C010_ZDGraphComponents.v	zd_edges_iff	forall u v, In (u, v) zd_edges <-> (u < v)%nat /\ (v < 42)%nat /\ adj_idx u v = true	adj_idx,zd_edges	
+C010_ZDGraphComponents.v	vtx_lt_16	forall u, (u < 42)%nat -> (fst (vtx u) < 16)%nat /\ (snd (vtx u) < 16)%nat	vtx	
+C010_ZDGraphComponents.v	zd_adj_vtx_iff	forall u v, (u < 42)%nat -> (v < 42)%nat -> zd_adj (vtx u) (vtx v) <-> adj_idx u v = true	adj_idx,vtx,zd_adj	
+C010_ZDGraphComponents.v	adj_idx_symmetric	forall u v, (u < 42)%nat -> (v < 42)%nat -> adj_idx u v = adj_idx v u	adj_idx	
+C010_ZDGraphComponents.v	box_comp_class_size	forall c, (c < 7)%nat -> length (filter (fun u => Nat.eqb (box_comp u) c) (seq 0 42)) = 6%nat	box_comp	
+C010_ZDGraphComponents.v	zd_graph_regular	forall u, (u < 42)%nat -> length (nbrs zd_edges u) = 4%nat	nbrs,zd_edges	
+C010_ZDGraphComponents.v	zd_edges_adj_spec	forall u v, (u < 42)%nat -> (v < 42)%nat -> u <> v -> (In (u, v) zd_edges \/ In (v, u) zd_edges) <-> zd_adj (vtx u) (vtx v)	vtx,zd_adj,zd_edges	
+C010_ZDGraphComponents.v	zd_adj_symmetric	forall u v, (u < 42)%nat -> (v < 42)%nat -> zd_adj (vtx u) (vtx v) <-> zd_adj (vtx v) (vtx u)	vtx,zd_adj	
+C010_ZDGraphComponents.v	zd_adj_irreflexive	forall u, (u < 42)%nat -> ~ zd_adj (vtx u) (vtx u)	vtx,zd_adj	
+C010_ZDGraphComponents.v	zd_edges_adj_total	forall u v, (u < 42)%nat -> (v < 42)%nat -> (In (u, v) zd_edges \/ In (v, u) zd_edges) <-> zd_adj (vtx u) (vtx v)	vtx,zd_adj,zd_edges	
+C010_ZDGraphComponents.v	zd_edge_same_boxkite	forall u v, In (u, v) zd_edges -> (u < 42)%nat /\ (v < 42)%nat /\ box_comp u = box_comp v	box_comp,zd_edges	
+C010_ZDGraphComponents.v	boxkite_conn_check_true	forallb (fun u => forallb (fun v => implb (Nat.eqb (box_comp u) (box_comp v)) (existsb (Nat.eqb v) (saturate 3 zd_edges [u]))) (seq 0 42)) (seq 0 42) = true	box_comp,saturate,zd_edges	
+C010_ZDGraphComponents.v	box_comp_cover	forall c, (c < 7)%nat -> exists x, In x (seq 0 42) /\ box_comp x = c	box_comp	
+C010_ZDGraphComponents.v	box_comp_class_connected	forall c, (c < 7)%nat -> label_class_connected box_comp (seq 0 42) zd_edges c	box_comp,label_class_connected,zd_edges	
 C1463_MatrixColumnIdeal.v	sum_to_zero	forall n f, (forall l, (l < n)%nat -> f l = 0) -> sum_to n f = 0	sum_to	
 C1463_MatrixColumnIdeal.v	sum_to_single	forall n p f, (p < n)%nat -> (forall l, (l < n)%nat -> l <> p -> f l = 0) -> sum_to n f = f p	sum_to	
 C1463_MatrixColumnIdeal.v	col_space_add	forall n j M N, col_space n j M -> col_space n j N -> col_space n j (fun r c => M r c + N r c)	col_space,mat	
@@ -172,6 +190,45 @@ C1463_MatrixColumnIdeal.v	col_space_independent	forall n j (a : nat -> R), (j < 
 C1463_MatrixColumnIdeal.v	col_space_generated	forall n j M N p, (p < n)%nat -> col_space n j M -> col_space n j N -> M p j <> 0 -> mat_eq n (mmul n (row_mover N M j p) M) N	col_space,mat,mat_eq,mmul,row_mover	
 C1463_MatrixColumnIdeal.v	col_space_minimal	forall n j (I : mat -> Prop), (forall M N, mat_eq n M N -> I M -> I N) -> (forall A M, I M -> I (mmul n A M)) -> (forall M, I M -> col_space n j M) -> (exists M p k, I M /\ (p < n)%nat /\ (k < n)%nat /\ M p k <> 0) -> forall N, col_space n j N -> I N	col_space,mat,mat_eq,mmul	
 C1463_MatrixColumnIdeal.v	C1463_minimal_left_ideal_dim_16	(forall A M, col_space 16 0 M -> col_space 16 0 (mmul 16 A M)) /\ (forall i, col_space 16 0 (unit_col 0 i)) /\ (forall M, col_space 16 0 M -> mat_eq 16 M (fun r c => sum_to 16 (fun i => M i 0%nat * unit_col 0 i r c))) /\ (forall a : nat -> R, mat_eq 16 (fun r c => sum_to 16 (fun i => a i * unit_col 0 i r c)) (fun _ _ => 0) -> forall i, (i < 16)%nat -> a i = 0) /\ (forall I : mat -> Prop, (forall M N, mat_eq 16 M N -> I M -> I N) -> (forall A M, I M -> I (mmul 16 A M)) -> (forall M, I M -> col_space 16 0 M) -> (exists M p k, I M /\ (p < 16)%nat /\ (k < 16)%nat /\ M p k <> 0) -> forall N, col_space 16 0 N -> I N)	col_space,mat,mat_eq,mmul,sum_to,unit_col	
+C1463_CliffordMatrixBasis.v	all_lt_spec	forall n p, all_lt n p = true -> forall i, i < n -> p i = true	all_lt	
+C1463_CliffordMatrixBasis.v	all_lt2	forall n (p : nat -> nat -> bool), all_lt n (fun a => all_lt n (fun b => p a b)) = true -> forall a b, a < n -> b < n -> p a b = true	all_lt	
+C1463_CliffordMatrixBasis.v	all_lt3	forall n (p : nat -> nat -> nat -> bool), all_lt n (fun a => all_lt n (fun b => all_lt n (fun c => p a b c))) = true -> forall a b c, a < n -> b < n -> c < n -> p a b c = true	all_lt	
+C1463_CliffordMatrixBasis.v	zsum_to_zero	forall n f, (forall l, l < n -> f l = 0%Z) -> zsum_to n f = 0%Z	zsum_to	
+C1463_CliffordMatrixBasis.v	coord_of_vec	forall v j, j < 16 -> coord (sed_of_vec v) j = v j	coord,sed_of_vec	
+C1463_CliffordMatrixBasis.v	sv_ent_mul	forall A B r, r < 16 -> sv_ent (sv_mul A B) r = (sv_ent A r * sv_ent B (Nat.lxor (fst A) r))%Z	sv,sv_ent,sv_mul	
+C1463_CliffordMatrixBasis.v	sv_ent_id	forall r, r < 16 -> sv_ent sv_id r = 1%Z	sv_ent,sv_id	
+C1463_CliffordMatrixBasis.v	sv_ent_neg	forall A r, sv_ent (sv_neg A) r = (- sv_ent A r)%Z	sv,sv_ent,sv_neg	
+C1463_CliffordMatrixBasis.v	sv_wf_mul	forall A B, sv_wf A -> sv_wf B -> sv_wf (sv_mul A B)	sv,sv_mul,sv_wf	
+C1463_CliffordMatrixBasis.v	sv_wf_id	sv_wf sv_id	sv_id,sv_wf	
+C1463_CliffordMatrixBasis.v	sv_wf_G	forall a, a < 16 -> sv_wf (Gsv a)	Gsv,sv_wf	
+C1463_CliffordMatrixBasis.v	sv_mat_id	forall r c, r < 16 -> sv_mat sv_id r c = Idmat r c	Idmat,sv_id,sv_mat	
+C1463_CliffordMatrixBasis.v	sv_mat_neg	forall A r c, sv_mat (sv_neg A) r c = (- sv_mat A r c)%R	sv,sv_mat,sv_neg	
+C1463_CliffordMatrixBasis.v	sv_square_all	Forall (fun a => sv_mul (Gsv a) (Gsv a) = sv_neg sv_id) idx8	Gsv,idx8,sv,sv_id,sv_mul,sv_neg	
+C1463_CliffordMatrixBasis.v	sv_anticomm_all	Forall (fun a => Forall (fun b => a <> b -> sv_mul (Gsv a) (Gsv b) = sv_neg (sv_mul (Gsv b) (Gsv a))) idx8) idx8	Gsv,idx8,sv,sv_mul,sv_neg	
+C1463_CliffordMatrixBasis.v	in_idx8	forall a, 1 <= a -> a <= 8 -> In a idx8	idx8	
+C1463_CliffordMatrixBasis.v	subset_in_idx8	forall m a, In a (subset m) -> 1 <= a /\ a <= 8	subset	
+C1463_CliffordMatrixBasis.v	mono_sv_wf	forall l, (forall a, In a l -> a < 16) -> sv_wf (mono_sv l)	mono_sv,sv_wf	
+C1463_CliffordMatrixBasis.v	msv_wf	forall m, sv_wf (msv m)	msv,sv_wf	
+C1463_CliffordMatrixBasis.v	frob_sv	forall A B, sv_wf A -> sv_wf B -> frob (sv_mat A) (sv_mat B) = IZR (fz A B)	frob,fz,sv,sv_mat,sv_wf	
+C1463_CliffordMatrixBasis.v	in_tabm	forall m, m < 256 -> In (m, msv m) tabm	msv,sv,tabm	
+C1463_CliffordMatrixBasis.v	gram_check	gram_ok = true	gram_ok	
+C1463_CliffordMatrixBasis.v	gram_spec	forall S T, S < 256 -> T < 256 -> fz (msv S) (msv T) = if Nat.eqb S T then 16%Z else 0%Z	fz,msv	
+C1463_CliffordMatrixBasis.v	frob_Gm	forall S T, S < 256 -> T < 256 -> frob (Gm S) (Gm T) = IZR (if Nat.eqb S T then 16%Z else 0%Z)	Gm,frob	
+C1463_CliffordMatrixBasis.v	zsum_to_ext	forall n f g, (forall l, l < n -> f l = g l) -> zsum_to n f = zsum_to n g	zsum_to	
+C1463_CliffordMatrixBasis.v	seq_fold	forall n (f : nat -> Z) z, fold_right (fun m acc => (f m + acc)%Z) z (seq 0 n) = (z + zsum_to n f)%Z	zsum_to	
+C1463_CliffordMatrixBasis.v	tab_sum_eq	forall F, tab_sum F = zsum_to 256 (fun m => F (msv m))	msv,sv,tab_sum,zsum_to	
+C1463_CliffordMatrixBasis.v	sv_mat_ent	forall A r c, sv_mat A r c = IZR (ent A r c)	ent,sv,sv_mat	
+C1463_CliffordMatrixBasis.v	comp_check	comp_ok = true	comp_ok	
+C1463_CliffordMatrixBasis.v	comp_class	forall x i r, x < 16 -> i < 16 -> r < 16 -> tab_sum (cls_term x i r) = if Nat.eqb i r then 16%Z else 0%Z	cls_term,tab_sum	
+C1463_CliffordMatrixBasis.v	comp_spec	forall i j r k, i < 16 -> j < 16 -> r < 16 -> k < 16 -> zsum_to 256 (fun m => (ent (msv m) i j * ent (msv m) r k)%Z) = if (Nat.eqb i r && Nat.eqb j k)%bool then 16%Z else 0%Z	ent,msv,zsum_to	
 C1636_ScheduleProductCount.v	nodupb_NoDup	forall l, nodupb l = true -> NoDup l	nodupb	
 C1636_ScheduleProductCount.v	sparse_terms_count	map (@length (nat * nat)) sparse_terms = 1 :: repeat 7 15 /\ length (concat sparse_terms) = 106	sparse_terms	
 C1636_ScheduleProductCount.v	sparse_terms_distinct	NoDup (concat sparse_terms)	sparse_terms	
+C1636_ScheduleProgramCount.v	instrs_mul_count_app	forall l m, instrs_mul_count (l ++ m) = instrs_mul_count l + instrs_mul_count m	instr,instrs_mul_count	
+C1636_ScheduleProgramCount.v	cariow_program_mul_count	mul_count cariow_program = 122	cariow_program,mul_count	
+C1636_ScheduleProgramCount.v	cariow_program_outputs	length (prog_outs cariow_program) = 16	cariow_program,prog_outs	
+C1636_ScheduleProgramCount.v	add_multiply_count	forall p : program, mul_count (add_multiply p) = S (mul_count p)	add_multiply,mul_count,program	
+C1636_ScheduleProgramCount.v	control_one_multiply_count	mul_count one_multiply_program = 1	mul_count,one_multiply_program	
+C1636_ScheduleProgramCount.v	control_two_multiply_count	mul_count two_multiply_program = 2	mul_count,two_multiply_program	
+C1636_ScheduleProgramCount.v	control_scaling_count	mul_count scaling_program = 0	mul_count,scaling_program	
+C1636_ScheduleProgramCount.v	control_extra_multiply_count	mul_count (add_multiply cariow_program) = 123 /\ mul_count (add_multiply cariow_program) <> mul_count cariow_program	add_multiply,cariow_program,mul_count	
