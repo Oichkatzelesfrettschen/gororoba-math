@@ -22,3 +22,41 @@ module that proves the claimed structure or scopes the claim; `owed` marks a
 successor not yet landed. A claim over every level of the Cayley-Dickson tower
 goes to the Lean library (`AGENTS.md`, "Lean library"), so its row names the
 Lean module and theorem.
+
+## Successors of the original files
+
+The 14 files that carry a `header overclaims` row keep their bytes, since
+retained records cite them by sha256. The `addressed_by` column of
+`header-verdicts.tsv` is the one home of the mapping from an original file to
+its successor, and a reader finds the successor of a file with
+
+    awk -F'\t' -v f=PATH 'index($1, f) == 1 {print $5}' ci/census/header-verdicts.tsv
+
+where `PATH` is the file's path from the repository root. A successor proves
+part of the claimed structure and scopes the rest; its header states which part.
+
+## File-local candidates
+
+`python3 -I ci/theorem_census.py --objects DIR --file-local` also lists a theorem
+whose statement names only definitions of its own file (the default listing
+leaves these out, since a local definition is a project constant). Measured with
+Rocq 9.3.0 on the tree at commit 6d00d47 (175 verified sources, 810 declarations):
+the default mode lists 115 theorems, and the file-local mode lists those 115
+plus 176 more, in 30 files. 69 of the 176 sit in the 11 successor modules and 107
+in 19 other files. With more than 80 new rows, the rows carry no verdict yet:
+`file-local-candidates.tsv` holds them with an empty `verdict` column, and
+`local_names` gives the file-local definitions each statement names. The file
+is the output of the census with `--file-local --candidates
+ci/census/file-local-candidates.tsv`: the file-local rows that have no row in
+`header-verdicts.tsv`, so a run after a verdict lands drops that row. A verdict
+reads the file header and the statement under the criterion above, and its row
+then moves to `header-verdicts.tsv`.
+
+The mode calibrates itself before it reports. Known good: `at_attractor_vanishes`
+of `C_OverImbalancedSign` and `pg32_length_labels` of `C881_GF2CubicMinDegree`
+list as file-local with exactly the named definition. Known bad:
+`C028_lo_subalgebra_closed`, whose statement names a local definition and a
+`theories/` constant, stays out. Six printed types check the name rule alone
+(another file, a stem that extends this one, a local name beside a `theories/`
+name, a nested module, no project name). A calibration that reads a changed
+expectation exits 1 (three mutated copies each exited 1).
