@@ -25,8 +25,11 @@
 
     Graph.  [zd_edges] lists the edges (u, v), u < v < 42, with [adjb]
     true.  [zd_edges_adj_spec] ties the list to [zd_adj] in both
-    directions and [zd_adj_symmetric] shows the relation is symmetric on
-    the assessors.  [zd_graph_regular] gives every assessor degree 4, so no
+    directions for distinct vertices, [zd_adj_irreflexive] shows no assessor
+    is adjacent to itself, and [zd_edges_adj_total] states the equivalence
+    of the edge list with [zd_adj] for all pairs of vertices, with no
+    distinctness hypothesis.  [zd_adj_symmetric] shows the relation is
+    symmetric on the assessors.  [zd_graph_regular] gives every assessor degree 4, so no
     assessor is isolated, and [zd_edge_count] gives 84 edges.
 
     Components.  [box_comp] sends the vertex u to the index 0..6 of the
@@ -35,7 +38,13 @@
     joins two assessors of one box-kite.  [boxkite_connected] states that
     two assessors of one box-kite are joined by a path of edges, and
     [boxkites_are_components] that two assessors are joined by a path
-    exactly when they lie in one box-kite.  [zd_graph_needs_six_bridges] is
+    exactly when they lie in one box-kite.  [box_comp_iff_member] ties each
+    label to the list of [boxkites] in both directions: the label of the
+    vertex u is c exactly when the assessor of u is a member of the c-th
+    list.  [boxkites_are_components_member] states the component theorem
+    through that membership: two vertices are joined by a path exactly
+    when some one of the seven lists holds both assessors.
+    [zd_graph_needs_six_bridges] is
     [bridge_lower_bound] of C010_ComponentBridgeBound applied to this graph
     and this labeling with no assumed premise.
 
@@ -476,6 +485,29 @@ Proof.
   rewrite adj_idx_symmetric by assumption. reflexivity.
 Qed.
 
+Theorem zd_adj_irreflexive :
+  forall u, (u < 42)%nat -> ~ zd_adj (vtx u) (vtx u).
+Proof.
+  assert (H : forallb (fun u => negb (adj_idx u u)) (seq 0 42) = true)
+    by (vm_compute; reflexivity).
+  intros u Hu Hadj. pose proof (forall_lt _ _ H u Hu) as E. cbv beta in E.
+  apply (proj1 (zd_adj_vtx_iff u u Hu Hu)) in Hadj.
+  rewrite Hadj in E. discriminate E.
+Qed.
+
+(** The edge list is the adjacency of the sedenion product for every pair
+    of vertices: the case u = v is the irreflexivity above. *)
+Theorem zd_edges_adj_total :
+  forall u v, (u < 42)%nat -> (v < 42)%nat ->
+    (In (u, v) zd_edges \/ In (v, u) zd_edges) <-> zd_adj (vtx u) (vtx v).
+Proof.
+  intros u v Hu Hv. destruct (Nat.eq_dec u v) as [E | Hne].
+  - subst v. split.
+    + intros [H | H]; destruct (proj1 (zd_edges_iff _ _) H) as [Hlt _]; lia.
+    + intros H. exfalso. exact (zd_adj_irreflexive u Hu H).
+  - exact (zd_edges_adj_spec u v Hu Hv Hne).
+Qed.
+
 (** (a) Adjacent assessors, and the two ends of every edge, lie in one
     box-kite. *)
 Theorem adjacent_same_boxkite :
@@ -603,6 +635,42 @@ Proof.
   intros u v Hu Hv. split.
   - exact (boxkite_connected u v Hu Hv).
   - intros H. symmetry. exact (reach_same_boxkite u v H).
+Qed.
+
+(** Each label fiber is the corresponding list of [boxkites]. *)
+Theorem box_comp_iff_member :
+  forall u c, (u < 42)%nat -> (c < 7)%nat ->
+    box_comp u = c <-> In (vtx u) (nth c boxkites []).
+Proof.
+  assert (H : forallb (fun u => forallb (fun c =>
+      implb (if in_dec pair_eq_dec (vtx u) (nth c boxkites []) then true else false)
+            (Nat.eqb (box_comp u) c)) (seq 0 7)) (seq 0 42) = true)
+    by (vm_compute; reflexivity).
+  intros u c Hu Hc. split.
+  - intros E. subst c. exact (proj2 (box_comp_spec u Hu)).
+  - intros Hin.
+    pose proof (forall_lt _ _ H u Hu) as E1. cbv beta in E1.
+    pose proof (forall_lt _ _ E1 c Hc) as E2. cbv beta in E2.
+    assert (Hb : (if in_dec pair_eq_dec (vtx u) (nth c boxkites []) then true else false) = true).
+    { destruct (in_dec pair_eq_dec (vtx u) (nth c boxkites [])) as [_ | Hn];
+        [reflexivity | exfalso; exact (Hn Hin)]. }
+    exact (proj1 (Nat.eqb_eq _ _) (implb_elim _ _ E2 Hb)).
+Qed.
+
+Theorem boxkites_are_components_member :
+  forall u v, (u < 42)%nat -> (v < 42)%nat ->
+    Reach zd_edges [u] v <->
+    exists c, (c < 7)%nat /\ In (vtx u) (nth c boxkites []) /\
+              In (vtx v) (nth c boxkites []).
+Proof.
+  intros u v Hu Hv. split.
+  - intros H. apply (proj2 (boxkites_are_components u v Hu Hv)) in H.
+    destruct (box_comp_spec u Hu) as [Hc Hmu]. exists (box_comp u).
+    split; [exact Hc | split; [exact Hmu |]].
+    rewrite H. exact (proj2 (box_comp_spec v Hv)).
+  - intros [c [Hc [Hmu Hmv]]]. apply (proj1 (boxkites_are_components u v Hu Hv)).
+    rewrite (proj2 (box_comp_iff_member u c Hu Hc) Hmu),
+            (proj2 (box_comp_iff_member v c Hv Hc) Hmv). reflexivity.
 Qed.
 
 (** The labeling meets the hypotheses of [bridge_lower_bound]. *)
@@ -821,12 +889,16 @@ Print Assumptions sed_pair_product_zero_iff.
 Print Assumptions zd_adj_iff_adjb.
 Print Assumptions zd_edges_adj_spec.
 Print Assumptions zd_adj_symmetric.
+Print Assumptions zd_adj_irreflexive.
+Print Assumptions zd_edges_adj_total.
 Print Assumptions zd_graph_regular.
 Print Assumptions zd_edge_count.
 Print Assumptions adjacent_same_boxkite.
 Print Assumptions zd_edge_same_boxkite.
 Print Assumptions boxkite_connected.
 Print Assumptions boxkites_are_components.
+Print Assumptions box_comp_iff_member.
+Print Assumptions boxkites_are_components_member.
 Print Assumptions zd_graph_needs_six_bridges.
 Print Assumptions bridges_suffice.
 Print Assumptions bridges_suffice_no_label.
