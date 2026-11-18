@@ -243,6 +243,15 @@ gororoba repository shares; this file governs where the two differ.
   row to have a tracked configuration that names its theorem and solution
   module, permits exactly `propext`, `Quot.sound` and `Classical.choice`,
   and names a tracked challenge module.
+- The claims ledger `ci/claims/ledger.tsv` places each stated mathematical
+  claim of gororoba-open and gororoba-quantum by the clauses above and
+  records its formal status; `ci/check_claims_ledger.py`, which `ci/check.sh`
+  runs, checks its rules and that each proof entry names a declaration of
+  the library or of a project-listed Rocq source (`ci/claims/README.md`), and
+  the ledger sources to equal those of `ci/claims/expected-sources.tsv`, so a
+  deleted row fails. `ci/claims/expected_sources.py` compares that list with
+  the commits of gororoba-open and gororoba-quantum it names, on demand, and
+  needs `GOROROBA_OPEN` and `GOROROBA_QUANTUM`.
 - A module docstring states the convention the file fixes (the product, the
   index order, the sign) before its results, because the workspace's
   Rocq, Python and Rust code each carry one and a theorem reads on another

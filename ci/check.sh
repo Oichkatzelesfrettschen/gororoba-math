@@ -42,6 +42,12 @@
 #      "Lean library" table of README.md names, and each partner to be owed
 #      with its tracking issue or to name a theorem of a project-listed Rocq
 #      source.
+#   9. ci/check_claims_ledger.py calibrates itself on known-bad copies of its
+#      inputs and then requires every row of ci/claims/ledger.tsv to hold the
+#      columns, enumerations and status rules of ci/claims/README.md and every
+#      proof entry to name a declaration of the library or of a project-listed
+#      Rocq source, and the ledger sources to equal those of
+#      ci/claims/expected-sources.tsv.
 # Needs git, shellcheck, ruff, actionlint, lake (elan, with the toolchain
 # of lean/lean-toolchain) and Python 3 (PYTHON, default python3) on PATH. Exit status: 0 every check passed, 1 a check failed,
 # 2 a tool is missing. Writes only under a temporary directory it removes.
@@ -141,6 +147,7 @@ if [ -s "$work/python.txt" ]; then
 fi
 
 "$PYTHON" -I ci/check_headline_results.py
+"$PYTHON" -I ci/check_claims_ledger.py
 
 git ls-files -- '.github/workflows/*.yml' >"$work/workflows.txt"
 if [ -s "$work/workflows.txt" ]; then
