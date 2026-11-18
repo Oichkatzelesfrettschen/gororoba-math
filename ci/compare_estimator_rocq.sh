@@ -35,7 +35,9 @@ opam switch list --short | grep -q -x -F "$switch" || {
 here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 root=$(git -C "$here" rev-parse --show-toplevel)
 work=$(mktemp -d)
-trap 'rm -r "$work" </dev/null' EXIT INT TERM
+trap 'rm -r "$work" </dev/null' EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 "$PYTHON" -I "$here/compare_estimator_rocq.py" cases "$work/Estimator.lean" "$work/Bridge.v" "$work/BridgeMutant.v"
 cp "$root/rocq/quantum/KernelMapEstimator.v" "$work/"

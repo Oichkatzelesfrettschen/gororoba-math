@@ -45,7 +45,11 @@ gororoba repository shares; this file governs where the two differ.
   and `ci/check_delegation_sources.sh` renders them again from the checkout
   `GOROROBA_OPEN` names, on demand.
 - `ci/check.sh` is the Lean half of the admission gate and
-  `ci/check_rocq.sh` the Rocq half; `ci/install_rocq.sh` builds the opam
+  `ci/check_rocq.sh` the Rocq half; `ci/check_signal_traps.sh`, which
+  `ci/check.sh` runs, requires each `trap` of a tracked shell script to
+  read `trap ACTION EXIT`, `trap 'exit 130' INT` or `trap 'exit 143' TERM`
+  on one line, since a trap action on INT or TERM that returns lets the
+  script run on, and interrupts five scripts under stub tools; `ci/install_rocq.sh` builds the opam
   switch the Rocq half needs. `ci/compare_signs.sh` runs on demand and needs
   `GOROROBA_QUANTUM` and `ROCQ_BUILD_TREE`, the `rocq` directory of a tree
   that `make rocq` compiled; `ci/audit/SignTable.v` is its Rocq source,
@@ -146,6 +150,11 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/CdTowerAlignedPairSpectrum.v`,
   `CdTowerAlignedPairClosedForm.v`, `CdTowerAssociatorSpace.v` and
   `CdTowerTwoTermBins.v`.
+  `ci/compare_anf.sh` compares `Tower.anfCoeff` and `Tower.anfEval` with `anf_coef`
+  and `anf_eval` of `rocq/quantum/CdSignRowAnf.v` and with `boolean_anf.anf_coefficients`
+  and `boolean_anf.evaluate_anf` of gororoba-quantum, and `ci/compare_assoc_phase.sh`
+  compares `Tower.assocPhase` with `assoc` of `rocq/quantum/CdAssociatorAnf.v` and with
+  `predict.associator_phase` of gororoba-quantum; both need `GOROROBA_QUANTUM`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
@@ -301,7 +310,13 @@ gororoba repository shares; this file governs where the two differ.
   the checkout that tracks the tree; gororoba-open ingests the file and never runs Rocq.
   Evidence that lists Flocq objects names its producer in `flocq_producer`, the
   manifest entry whose objects equal the copied ones, and the run is refused
-  when no entry matches. A
+  when no entry matches. Rocq's default load path also holds the switch's
+  own Flocq, so the producer compiles with `ROCQLIB` at a linked copy of
+  the installation's library directory without Flocq, under which only the
+  mapped `external/Flocq` resolves (same arguments, same objects), and
+  reads the libraries the closure loads (`Print Libraries`, outside the
+  evidence), refusing a run that loads a `Flocq` library while it maps
+  none. A
   change to the compile or checker argument vectors, the closure order or
   the Flocq handling of the script changes the evidence contract that
   `theorem_replay.rs` of gororoba-open validates, so both land together, and

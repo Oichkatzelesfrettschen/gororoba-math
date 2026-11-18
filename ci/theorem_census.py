@@ -5,7 +5,7 @@ Usage, with the `rocq` of Rocq 9.3.0 on PATH (for example under
 `rocq/open` directory that `make rocq-open` builds under `BUILD_DIR`:
 
     opam exec --switch=rocq-9.3 -- "$PYTHON" -I ci/theorem_census.py \\
-        --objects "$BUILD_DIR/rocq/open" [--tsv FILE]
+        --objects "$BUILD_DIR/rocq/open" [--file-local] [--tsv FILE] [--candidates FILE]
 
 Criterion. A declaration counts as listed when the type that Rocq prints for it
 refers to no constant, inductive type or constructor of the logical roots
@@ -24,22 +24,42 @@ declaration names and statement text come from the copy, so they describe the
 object that Rocq prints.
 
 Scope. A declaration is listed when it names no project constant, whatever it claims:
-a theorem over a definition local to its own file is not listed (the local
+a theorem over a definition local to its own file is not listed by default (the local
 definition is a project constant), and a theorem over standard-library names alone is
 listed even when it states the file's claim. The list bounds where a statement
 carries no project content; it does not decide whether a header overclaims.
 Declarations of other kinds (Definition, Remark) are not read.
 
+File-local mode. `--file-local` also lists a declaration whose project references
+all lie in its own file: each referenced constant, inductive type or constructor
+is `OpenGororobaVerified.<stem>.<name>` for the stem of the declaration's file,
+including names of modules nested in that file. A reference to a theories/
+constant or to another verified/ file keeps a declaration out. The mode adds
+rows and removes none, so its listing contains the default listing. Stdout
+reports the default count and the file-local count, and `--tsv` gains a scope
+column (`closed` or `file-local`) and a column with the local names a
+file-local row references.
+
 Calibration. Every run checks four declarations against the criterion before it
 reports: C029_three_embeddings and C029_s3_order of C029_FermionGenerations are
 listed, chern_sum_zero_under_trs of C1233_ChernSumZero and
-C028_lo_subalgebra_closed of C028_SedenionAutGroup are not. A different verdict,
+C028_lo_subalgebra_closed of C028_SedenionAutGroup are not. A `--file-local` run
+also checks the file-local rule: the declarations of CALIBRATION_FILE_LOCAL are
+listed as file-local with exactly the named local constants (known good), and
+those of CALIBRATION_FILE_LOCAL_REJECTED, whose statements reference a project
+constant of another file or of theories/, stay unlisted (known bad); CALIBRATION_NAME_RULE
+checks the matching rule on printed types: a name of another file, a name of a file whose
+stem extends this one and a local name beside a theories/ name each keep a type out. A different verdict,
 a missing declaration, an object missing for a listed source, a Rocq error or
 any stderr output exits 1.
 
 Output. Stdout gets one line per source file with its count of listed and of
 all declarations, then the total. `--tsv FILE` writes the listed declarations as
-file, theorem and statement columns.
+file, theorem and statement columns. `--candidates FILE`, with `--file-local`,
+writes the verdict queue: a header line, then each file-local row that has no row
+in the `--verdicts` table (default ci/census/header-verdicts.tsv), as file,
+theorem, the statement without its leading colon, the local names without their
+file prefix, and an empty verdict column. ci/census/file-local-candidates.tsv is that output.
 """
 
 import argparse
@@ -51,6 +71,7 @@ import tempfile
 from pathlib import Path
 
 ROOT_REFERENCE = re.compile(r"\bOpenGororoba(?:Verified)?\.[A-Za-z_]")
+PROJECT_NAME = re.compile(r"\bOpenGororoba(?:Verified)?\.[A-Za-z_][A-Za-z0-9_'.]*")
 DECLARATION = re.compile(
     r"(?m)^[ \t]*(?:(?:#\[[^\]]*\]|Local|Global)[ \t]+)*"
     r"(Theorem|Lemma|Corollary|Fact|Proposition|Example)[ \t]+([A-Za-z_][A-Za-z0-9_']*)"
@@ -62,6 +83,26 @@ CALIBRATION_LISTED = (
 CALIBRATION_UNLISTED = (
     ("C1233_ChernSumZero", "chern_sum_zero_under_trs"),
     ("C028_SedenionAutGroup", "C028_lo_subalgebra_closed"),
+)
+CALIBRATION_FILE_LOCAL = (
+    ("C_OverImbalancedSign", "at_attractor_vanishes", ["OpenGororobaVerified.C_OverImbalancedSign.york_correction"]),
+    ("C881_GF2CubicMinDegree", "pg32_length_labels", ["OpenGororobaVerified.C881_GF2CubicMinDegree.pg32_labels"]),
+)
+CALIBRATION_FILE_LOCAL_REJECTED = (("C028_SedenionAutGroup", "C028_lo_subalgebra_closed"),)
+# Printed types for the matching rule alone: a name of another file, a name of a file whose
+# stem extends this one, and a local name beside a theories/ name each keep a type out.
+CANDIDATE_HEADER = ("file", "theorem", "statement", "local_names", "verdict")
+CALIBRATION_NAME_RULE = (
+    ("A", "x : OpenGororobaVerified.A.f 1 = 1", ["OpenGororobaVerified.A.f"]),
+    ("A", "x : OpenGororobaVerified.B.f 1 = 1", None),
+    ("A", "x : OpenGororobaVerified.AB.f 1 = 1", None),
+    ("A", "x : OpenGororobaVerified.A.f 1 = OpenGororoba.Prelude.g 1", None),
+    (
+        "A",
+        "x : OpenGororobaVerified.A.f 1 = OpenGororobaVerified.A.m.g 1",
+        ["OpenGororobaVerified.A.f", "OpenGororobaVerified.A.m.g"],
+    ),
+    ("A", "x : 1 = 1", None),
 )
 
 
@@ -230,13 +271,65 @@ def run_checks(objects: Path, decls: dict[str, list[tuple[str, str]]]) -> dict[t
     return types
 
 
+def file_local_names(stem: str, text: str) -> list[str] | None:
+    """Project names of a printed type when all of them lie in the file of `stem`, else None.
+
+    A type that names no project constant returns None as well: it is listed by the
+    default rule, and the file-local rule adds only the declarations that name a local one.
+    """
+    names = {match.rstrip(".") for match in PROJECT_NAME.findall(text)}
+    prefix = f"OpenGororobaVerified.{stem}."
+    if names and all(name.startswith(prefix) for name in names):
+        return sorted(names)
+    return None
+
+
+def verdict_keys(table: Path) -> set[tuple[str, str]]:
+    """(file, theorem) of each row of the verdict table, whose location reads PATH/FILE.v:LINE."""
+    lines = table.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0].split("\t")[:2] != ["location", "theorem"]:
+        raise CensusError(f"{table} does not start with the location and theorem columns")
+    keys = set()
+    for line in lines[1:]:
+        cells = line.split("\t")
+        if len(cells) < 2 or ":" not in cells[0]:
+            raise CensusError(f"{table}: row without a PATH:LINE location and a theorem: {line[:80]!r}")
+        keys.add((cells[0].rsplit(":", 1)[0].rsplit("/", 1)[-1], cells[1]))
+    return keys
+
+
+def short_local_names(file: str, names: str) -> str:
+    """The comma-separated local names of a row with the prefix of the row's own file removed."""
+    prefix = f"OpenGororobaVerified.{file[: -len('.v')]}."
+    return ",".join(name.removeprefix(prefix) for name in names.split(","))
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--objects", required=True, type=Path, help="compiled rocq/open tree (theories/ and verified/)")
     parser.add_argument("--tree", type=Path, default=Path(__file__).resolve().parent.parent / "rocq" / "open")
+    parser.add_argument(
+        "--file-local",
+        action="store_true",
+        help="also list declarations whose project references all lie in their own file",
+    )
     parser.add_argument("--tsv", type=Path, help="write the listed declarations (file, theorem, statement) here")
+    parser.add_argument(
+        "--candidates",
+        type=Path,
+        help="with --file-local: write the file-local rows that hold no verdict yet, as the verdict queue",
+    )
+    parser.add_argument(
+        "--verdicts",
+        type=Path,
+        default=Path(__file__).resolve().parent / "census" / "header-verdicts.tsv",
+        help="table of the rows that hold a verdict (location, theorem, ...); --candidates leaves these out",
+    )
     args = parser.parse_args()
+    if args.candidates and not args.file_local:
+        parser.error("--candidates needs --file-local")
     try:
+        judged = verdict_keys(args.verdicts) if args.candidates else set()
         if resolve_dir(Path("relative-directory")) != Path.cwd() / "relative-directory":
             raise CensusError("calibration: a relative directory must resolve against the caller's directory")
         tree, objects = resolve_dir(args.tree), resolve_dir(args.objects)
@@ -251,19 +344,51 @@ def main() -> int:
         for stem, name in CALIBRATION_UNLISTED:
             if listed.get((stem, name)) is not False:
                 raise CensusError(f"calibration: {stem}.{name} must be unlisted, verdict {listed.get((stem, name))}")
+        local = {key: file_local_names(key[0], text) for key, text in types.items()}
+        if args.file_local:
+            for stem, text, expected in CALIBRATION_NAME_RULE:
+                if file_local_names(stem, text) != expected:
+                    raise CensusError(f"calibration: name rule on {text!r} must give {expected}")
+            for stem, name, expected in CALIBRATION_FILE_LOCAL:
+                if local.get((stem, name)) != expected:
+                    raise CensusError(
+                        f"calibration: {stem}.{name} must be file-local with {expected}, got {local.get((stem, name))}"
+                    )
+            for stem, name in CALIBRATION_FILE_LOCAL_REJECTED:
+                if (stem, name) not in local or listed[(stem, name)] or local[(stem, name)] is not None:
+                    raise CensusError(f"calibration: {stem}.{name} must stay unlisted in file-local mode")
     except (CensusError, OSError) as error:
         print(f"theorem_census: {error}", file=sys.stderr)
         return 1
     rows = []
     total = 0
+    file_local_count = 0
     for stem, items in decls.items():
         hits = [(name, text) for name, text in items if listed[(stem, name)]]
-        rows += [(f"{stem}.v", name, text) for name, text in hits]
+        local_hits = [(name, text, local[(stem, name)]) for name, text in items if local[(stem, name)] is not None]
+        if args.file_local:
+            rows += [(f"{stem}.v", name, text, "closed", "") for name, text in hits]
+            rows += [(f"{stem}.v", name, text, "file-local", ",".join(names)) for name, text, names in local_hits]
+            file_local_count += len(local_hits)
+            print(f"{stem}.v\t{len(hits)}\t{len(local_hits)}\t{len(items)}")
+        else:
+            rows += [(f"{stem}.v", name, text) for name, text in hits]
+            print(f"{stem}.v\t{len(hits)}\t{len(items)}")
         total += len(items)
-        print(f"{stem}.v\t{len(hits)}\t{len(items)}")
-    print(f"total\t{len(rows)}\t{total}\t(listed, declarations; calibration passed)")
+    if args.file_local:
+        closed = len(rows) - file_local_count
+        print(f"total\t{closed}\t{file_local_count}\t{total}\t(closed, file-local, declarations; calibration passed)")
+    else:
+        print(f"total\t{len(rows)}\t{total}\t(listed, declarations; calibration passed)")
     if args.tsv:
-        args.tsv.write_text("".join(f"{a}\t{b}\t{c}\n" for a, b, c in rows), encoding="utf-8")
+        args.tsv.write_text("".join("\t".join(row) + "\n" for row in rows), encoding="utf-8")
+    if args.candidates:
+        queue = [CANDIDATE_HEADER]
+        for file, name, text, scope, names in rows:
+            if scope == "file-local" and (file, name) not in judged:
+                queue.append((file, name, text.removeprefix(": "), short_local_names(file, names), ""))
+        args.candidates.write_text("".join("\t".join(row) + "\n" for row in queue), encoding="utf-8")
+        print(f"candidates\t{len(queue) - 1}\t(file-local rows without a verdict)")
     return 0
 
 

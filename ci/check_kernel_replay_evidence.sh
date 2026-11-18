@@ -24,10 +24,20 @@
 #     answer on each row of ci/flocq-import-corpus.tsv, which gororoba-open's
 #     consumer (theorem_replay.rs, command_imports_flocq) pins by digest, and
 #     no rule that drops one control flag or legacy attribute does.
+#   - every Rocq process runs with COQPATH and ROCQPATH set empty and every
+#     compile with ROCQLIB at the hidden library directory (a recording
+#     wrapper rocq; each check rejects a synthetic known-bad line first);
+#   - an import under Fail that the rule misses loads nothing on the hidden
+#     load path and yields evidence without Flocq objects.
 # Known-bad cases must be refused: a source whose compilation prints a
 # warning but exits 0, a source that fails to compile, a declaration name the
 # source lacks, a Rocq that reports another version, a Flocq library
-# directory without Core/Core.vo, a manifest with no entry for the switch's
+# directory without Core/Core.vo, thirteen malformed library reports, a
+# source that reaches the switch's own Flocq
+# through an import the rule misses (a producer whose rule reads no import:
+# a plain import and one under Succeed find no Flocq on the hidden load path,
+# and with that path switched off the library query refuses the plain one), a
+# manifest with no entry for the switch's
 # objects, with two such entries, of the wrong schema or unreadable, an output
 # directory inside the checkout, a
 # git that fails, an output directory that is a symbolic link or becomes one
@@ -471,6 +481,97 @@ grep -q 'Flocq Core.vo is missing' "$work/no-flocq.log" || fail "no-flocq: the r
 [ ! -e "$work/out-no-flocq/C900_Test.evidence.json" ] || fail "no-flocq: a refused run left an evidence file"
 echo "check_kernel_replay_evidence: missing Flocq library refused"
 
+# Known-bad: library reports the producer must refuse, and one it must read.
+"$PYTHON" -I -B - "$here" <<'EOF' || fail "loaded_libraries misread a library report"
+import sys
+
+sys.path.insert(0, sys.argv[1])
+from kernel_replay_evidence import Refusal, loaded_libraries
+
+if loaded_libraries("Loaded library files: \n  Corelib.Init.Prelude\n  M\n\n", "") != ["Corelib.Init.Prelude", "M"]:
+    sys.exit("the well-formed report parsed differently")
+bad = {
+    "no output": ("", ""),
+    "text before the report": ("note\nLoaded library files: \n  M\n", ""),
+    "two reports": ("Loaded library files: \n  M\nLoaded library files: \n  M\n", ""),
+    "a blank line inside the report": ("Loaded library files: \n  M\n\n  Flocq.Core.Zaux\n", ""),
+    "text after the report": ("Loaded library files: \n  M\n\nnote\n", ""),
+    "an entry of two words": ("Loaded library files: \n  M N\n", ""),
+    "an unindented entry": ("Loaded library files: \nM\n", ""),
+    "an empty report": ("Loaded library files: \n", ""),
+    "standard error": ("Loaded library files: \n  M\n", "note\n"),
+    "a punctuation entry": ("Loaded library files: \n  M\n  ???\n", ""),
+    "an empty name component": ("Loaded library files: \n  M\n  M..N\n", ""),
+    "a leading digit": ("Loaded library files: \n  M\n  1M\n", ""),
+    "a trailing dot": ("Loaded library files: \n  M\n  M.\n", ""),
+}
+for name, (stdout, stderr) in bad.items():
+    try:
+        loaded_libraries(stdout, stderr)
+    except Refusal:
+        continue
+    sys.exit(f"loaded_libraries accepted {name}")
+print(f"check_kernel_replay_evidence: {len(bad)} malformed library reports refused")
+EOF
+
+# Known-bad: Flocq reached through an import the rule misses. The wrapper runs
+# the producer with a rule that reads no import, so no command maps
+# external/Flocq: under the hidden load path the compile finds no Flocq, for a
+# plain import and for one under Succeed, whose load Rocq rolls back. With the
+# hidden load path also switched off, the plain import loads the switch's
+# Flocq from Rocq's default load path, and the library query refuses the run.
+cat >"$work/blind.py" <<'EOF'
+import sys
+
+sys.path.insert(0, sys.argv[1])
+import kernel_replay_evidence
+
+kernel_replay_evidence.uses_flocq = lambda contents: False
+if sys.argv[2] == "open":
+    kernel_replay_evidence.hidden_flocq_environment = lambda program, scratch: {}
+sys.exit(kernel_replay_evidence.main(sys.argv[3:]))
+EOF
+tree "$work/flocq-succeed"
+printf '%s\n' 'Succeed Require Import Flocq.Core.Core.' 'From OpenGororoba Require Import Prelude.' \
+  'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-succeed/verified/C900_Test.v"
+# blind NAME MODE TREE CAUSE: the wrapped producer must exit 1 with a message
+# that holds CAUSE and leave no evidence file.
+blind() {
+  if opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/blind.py" "$here" "$2" --tree "$3" \
+    --out "$work/out-$1" --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_default \
+    >"$work/$1.log" 2>&1; then
+    fail "$1: the producer accepted a closure that reaches Flocq its import rule missed"
+  fi
+  [ ! -e "$work/out-$1/C900_Test.evidence.json" ] || fail "$1: a refused run left an evidence file"
+  grep -q "$4" "$work/$1.log" || fail "$1: the refusal names another cause: $(head -n 1 "$work/$1.log")"
+  echo "check_kernel_replay_evidence: $1 refused"
+}
+blind blind-import hidden "$work/flocq" '^Core with prefix Flocq\.$'
+blind blind-succeed hidden "$work/flocq-succeed" 'bound to logical path Flocq\.Core\.Core\.$'
+blind blind-open open "$work/flocq" "loads Flocq.Core.Zaux from Rocq's default load path"
+
+# Known-good: an import under Fail that the rule misses. On the hidden load
+# path the Require finds no Flocq, so Fail succeeds, nothing is loaded, and
+# the evidence lists no Flocq objects.
+tree "$work/flocq-fail"
+printf '%s\n' 'Fail Require Import Flocq.Core.Core.' 'From OpenGororoba Require Import Prelude.' \
+  'Theorem fixture : True. Proof. exact I. Qed.' >"$work/flocq-fail/verified/C900_Test.v"
+opam exec --switch="$switch" -- "$PYTHON" -I -B "$work/blind.py" "$here" hidden --tree "$work/flocq-fail" \
+  --out "$work/out-blind-fail" --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_default \
+  >"$work/blind-fail.log" 2>&1 || {
+  cat "$work/blind-fail.log" >&2
+  fail "blind-fail: the producer refused an import under Fail that loads nothing"
+}
+! grep -q flocq_objects "$work/out-blind-fail/C900_Test.evidence.json" ||
+  fail "blind-fail: the evidence lists Flocq objects"
+echo "check_kernel_replay_evidence: blind-fail accepted with no Flocq loaded"
+# The same source on the open load path: the Require succeeds there, so Fail
+# itself fails and the run is refused, which shows that the accepted run's
+# Require found no Flocq. (A Fail whose import names a missing filter, such as
+# Core(Rnd), succeeds on both paths, after reading Flocq on the open one, so it
+# cannot tell them apart.)
+blind blind-fail-open open "$work/flocq-fail" 'command has not failed'
+
 # Known-bad: a manifest that cannot name this producer. The scratch copies
 # below differ from the recorded manifest in one way each.
 cat >"$work/edit_manifest.py" <<'EOF'
@@ -597,6 +698,38 @@ fi
 grep -q 'symbolic link' "$work/swap.log" || fail "swap: the refusal names another cause"
 echo "check_kernel_replay_evidence: output directory replaced during the replay refused"
 
+# Known-good: every Rocq process of the producer runs with COQPATH and
+# ROCQPATH set empty, since Rocq fills an absent variable from the
+# coq_environment.txt beside its executable, and every compile with ROCQLIB at
+# the hidden library directory. A wrapper rocq first on PATH records each call.
+mkdir "$work/envlog"
+cat >"$work/envlog/rocq" <<'EOF'
+#!/bin/sh
+if [ "$1" != --version ]; then
+  printf '%s rocqpath=%s coqpath=%s rocqlib=%s\n' "$1" "${ROCQPATH-absent}" "${COQPATH-absent}" \
+    "${ROCQLIB:+set}" >>"$ENV_LOG"
+fi
+exec "$REAL_BIN/rocq" "$@"
+EOF
+chmod +x "$work/envlog/rocq"
+if ! REAL_BIN=$(opam var --switch="$switch" bin) ENV_LOG="$work/env.calls" PATH="$work/envlog:$PATH" \
+  "$PYTHON" -I -B "$producer" --tree "$work/good" --out "$work/out-envlog" --proof verified/C900_Test.v \
+  --declaration fixture --warning-policy fatal_all >"$work/envlog.log" 2>&1; then
+  cat "$work/envlog.log" >&2
+  fail "the producer refused the known-good fixture under the recording wrapper"
+fi
+[ -s "$work/env.calls" ] || fail "envlog: the wrapper recorded no call"
+# The two checks below reject a synthetic known-bad line each first.
+printf '%s\n' 'compile rocqpath=absent coqpath= rocqlib=set' | grep -v -q -E '^[^ ]+ rocqpath= coqpath= ' ||
+  fail "envlog: the path-variable check accepted an absent ROCQPATH"
+printf '%s\n' 'compile rocqpath= coqpath= rocqlib=' | grep -E '^compile ' | grep -v -q ' rocqlib=set$' ||
+  fail "envlog: the library-directory check accepted a compile without ROCQLIB"
+! grep -v -q -E '^[^ ]+ rocqpath= coqpath= ' "$work/env.calls" ||
+  fail "envlog: a Rocq call ran with COQPATH or ROCQPATH absent or set: $(grep -v -E '^[^ ]+ rocqpath= coqpath= ' "$work/env.calls" | head -n 1)"
+! grep -E '^compile ' "$work/env.calls" | grep -v -q ' rocqlib=set$' ||
+  fail "envlog: a compile ran without the hidden library directory"
+echo "check_kernel_replay_evidence: $(wc -l <"$work/env.calls") Rocq calls ran with empty path variables, each compile on the hidden library directory"
+
 # Known-bad: a summary that cannot be printed leaves no evidence file.
 if opam exec --switch="$switch" -- "$PYTHON" -I -B "$producer" --tree "$work/good" --out "$work/out-full" \
   --proof verified/C900_Test.v --declaration fixture --warning-policy fatal_all >/dev/full 2>"$work/full.log"; then
@@ -605,4 +738,4 @@ fi
 [ ! -e "$work/out-full/C900_Test.evidence.json" ] || fail "a failed summary left an evidence file"
 grep -q 'cannot print the summary' "$work/full.log" || fail "full: the refusal names another cause"
 echo "check_kernel_replay_evidence: unwritable summary leaves no evidence"
-echo "check_kernel_replay_evidence: 5 known-good and $((16 + mutants)) known-bad cases behaved"
+echo "check_kernel_replay_evidence: 7 known-good and $((35 + mutants)) known-bad cases behaved"
