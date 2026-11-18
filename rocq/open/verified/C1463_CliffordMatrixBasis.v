@@ -13,8 +13,9 @@
     of the G_a with a in S in increasing order, G_empty = Idmat; [Gm m] is
     G_S for the S whose indicator is the bit pattern of m < 256 (bit a - 1
     set exactly when a is in S).  The signature is Cl(0, 8): each
-    generator squares to -1.  The header of C1463_ArithmeticInventory writes
-    Cl(8) for the 256-dimensional algebra without fixing the sign.
+    generator squares to -1.  C1463_ArithmeticInventory names the
+    256-dimensional algebra Cl8 (cl8_dim, cl8_is_mat16) and fixes no
+    signature.
 
     Theorems.
     - [Gmat_is_left_mult_on_basis] and [Gmat_is_left_mult] tie [Gmat a] to
@@ -57,6 +58,11 @@
     covers it directly.  The index m of [Gm] covers all 256 bit patterns;
     that the subsets so listed are pairwise distinct is a consequence of
     [C1463_monomials_independent] and is not stated separately.
+
+    Cost (Rocq 9.3.0, one 4-vCPU host): the compile takes 51 s; rocq check
+    of this module with its required libraries takes 76 s, 34 s of which
+    re-check the imports (CDFusedBilinear, C1467_XORSignCocycle,
+    C1463_MatrixColumnIdeal and their closure).
 
     Trust.  The proofs use the real-number axioms that Stdlib Reals carries
     (see Print Assumptions below).  [gram_check] and [comp_check] are
