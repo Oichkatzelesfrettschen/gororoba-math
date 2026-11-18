@@ -150,6 +150,11 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/CdTowerAlignedPairSpectrum.v`,
   `CdTowerAlignedPairClosedForm.v`, `CdTowerAssociatorSpace.v` and
   `CdTowerTwoTermBins.v`.
+  `ci/compare_anf.sh` compares `Tower.anfCoeff` and `Tower.anfEval` with `anf_coef`
+  and `anf_eval` of `rocq/quantum/CdSignRowAnf.v` and with `boolean_anf.anf_coefficients`
+  and `boolean_anf.evaluate_anf` of gororoba-quantum, and `ci/compare_assoc_phase.sh`
+  compares `Tower.assocPhase` with `assoc` of `rocq/quantum/CdAssociatorAnf.v` and with
+  `predict.associator_phase` of gororoba-quantum; both need `GOROROBA_QUANTUM`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at

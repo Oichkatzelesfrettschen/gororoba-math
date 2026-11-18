@@ -11,5 +11,10 @@ public import GororobaMath.CayleyDickson.AlignedPairClosedForm
 public import GororobaMath.CayleyDickson.AssociatorSpace
 public import GororobaMath.CayleyDickson.AnnihilatorSymmetry
 public import GororobaMath.CayleyDickson.NonAssociative
+public import GororobaMath.CayleyDickson.Map
+public import GororobaMath.CayleyDickson.TraceForm
+public import GororobaMath.CayleyDickson.AssociatorPhase
+public import GororobaMath.CayleyDickson.BasisExt
+public import GororobaMath.CayleyDickson.BooleanAnf
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins
