@@ -488,6 +488,8 @@ open	verified/C1636_Cariow2013SedenionSchedule.v	deprecated-transitive-library-f
 open	verified/C1636_Cariow2013SedenionSchedule.v	disj-pattern-notation
 open	verified/C1636_ScheduleProductCount.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1636_ScheduleProductCount.v	disj-pattern-notation
+open	verified/C1636_ScheduleProgramCount.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1636_ScheduleProgramCount.v	disj-pattern-notation
 open	verified/C1637_R300SedenionZeroDivisor.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1637_R300SedenionZeroDivisor.v	disj-pattern-notation
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	deprecated-transitive-library-file-since-Stdlib-9.0
