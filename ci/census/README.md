@@ -6,7 +6,10 @@ read against the header and docstring of its file. With Rocq 9.3.0 the census
 lists 106 theorems in 33 files on the tree at commit abff5ec, and 115 in 36
 files on the tree that holds the successor modules: the nine added rows are
 helper lemmas of C1138_WickDampingMaximum, C1141_ZDGraphCountingIdentities and
-C1142_XORScatterGatherSums, and the other successors list none.
+C1142_XORScatterGatherSums, and the other successors list none. The three
+sources of issue 44 items 2 to 4 raise the listing to 125 theorems in 38 files:
+ten more helper lemmas, three of C010_ZDGraphComponents and seven of
+C1463_CliffordMatrixBasis, while C1636_ScheduleProgramCount lists none.
 
 Criterion. The verdict is `statement is the claim` when the docstring of the
 declaration or the module header describes the declaration as the arithmetic or
@@ -40,10 +43,11 @@ part of the claimed structure and scopes the rest; its header states which part.
 `python3 -I ci/theorem_census.py --objects DIR --file-local` also lists a theorem
 whose statement names only definitions of its own file (the default listing
 leaves these out, since a local definition is a project constant). Measured with
-Rocq 9.3.0 on the tree at commit 6d00d47 (175 verified sources, 810 declarations):
-the default mode lists 115 theorems, and the file-local mode lists those 115
-plus 176 more, in 30 files. 69 of the 176 sit in the 11 successor modules and 107
-in 19 other files. With more than 80 new rows, the rows carry no verdict yet:
+Rocq 9.3.0 on the tree that holds the three sources of issue 44 items 2 to 4
+(178 verified sources, 956 declarations): the default mode lists 125 theorems,
+and the file-local mode lists those 125 plus 233 more, in 33 files. 126 of the
+233 sit in the 14 successor modules and 107 in 19 other files. With more than
+80 new rows, the rows carry no verdict yet:
 `file-local-candidates.tsv` holds them with an empty `verdict` column, and
 `local_names` gives the file-local definitions each statement names. The file
 is the output of the census with `--file-local --candidates

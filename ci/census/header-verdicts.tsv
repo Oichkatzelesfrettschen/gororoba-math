@@ -114,3 +114,13 @@ rocq/open/verified/C1141_ZDGraphCountingIdentities.v:186	zd_giant_density_strict
 rocq/open/verified/C1142_XORScatterGatherSums.v:26	lxor_below_pow2	statement is the claim	helper lemma: xor keeps the index range, under the header section XOR on the index range	
 rocq/open/verified/C1142_XORScatterGatherSums.v:41	lxor_solve	statement is the claim	helper lemma: the index equivalence the sums reindex by	
 rocq/open/verified/C1142_XORScatterGatherSums.v:49	xor_map_bijective_on_range	statement is the claim	helper lemma: j -> i xor j is a bijection of the index range, the reindexing of the sums	
+rocq/open/verified/C010_ZDGraphComponents.v:231	xor_lt_16	statement is the claim	helper lemma: xor keeps the index range 0 .. 15, used by the coordinate model of a two-blade product	
+rocq/open/verified/C010_ZDGraphComponents.v:368	forall_lt	statement is the claim	helper lemma: a Boolean check over seq 0 n gives the property at each index below n	
+rocq/open/verified/C010_ZDGraphComponents.v:586	implb_elim	statement is the claim	helper lemma: elimination of a Boolean implication, used to read the reflected checks	
+rocq/open/verified/C1463_CliffordMatrixBasis.v:182	nth_map_seq	statement is the claim	helper lemma: reading an entry of a list built by map over seq	
+rocq/open/verified/C1463_CliffordMatrixBasis.v:192	xor_lt16	statement is the claim	helper lemma: xor keeps the index range 0 .. 15	
+rocq/open/verified/C1463_CliffordMatrixBasis.v:201	xor_shift	statement is the claim	helper lemma: an xor rearrangement on the index range, used to move a generator across a row index	
+rocq/open/verified/C1463_CliffordMatrixBasis.v:214	xor_cancel	statement is the claim	helper lemma: xor by a fixed index is injective on the index range	
+rocq/open/verified/C1463_CliffordMatrixBasis.v:227	xor_iff	statement is the claim	helper lemma: the two readings of an entry position of a generator matrix agree	
+rocq/open/verified/C1463_CliffordMatrixBasis.v:240	xor_sym	statement is the claim	helper lemma: the entry positions of a generator matrix are symmetric under exchanging row and column	
+rocq/open/verified/C1463_CliffordMatrixBasis.v:954	div16_comm	statement is the claim	helper lemma: a commutation of real factors around the division by 16 of the spanning coefficients	
