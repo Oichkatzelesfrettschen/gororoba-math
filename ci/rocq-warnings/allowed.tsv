@@ -367,6 +367,9 @@ open	verified/C008_AlphaFreeParameter.v	deprecated-transitive-library-file-since
 open	verified/C008_AlphaFreeParameter.v	disj-pattern-notation
 open	verified/C009_EntropyScalingRefuted.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C009_EntropyScalingRefuted.v	disj-pattern-notation
+open	verified/C010_ZDGraphComponents.v	bad-template-constraint
+open	verified/C010_ZDGraphComponents.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C010_ZDGraphComponents.v	disj-pattern-notation
 open	verified/C011_AssociatorObstruction.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C011_AssociatorObstruction.v	disj-pattern-notation
 open	verified/C012_NegDimRefuted.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -490,6 +493,8 @@ open	verified/C1636_Cariow2013SedenionSchedule.v	deprecated-transitive-library-f
 open	verified/C1636_Cariow2013SedenionSchedule.v	disj-pattern-notation
 open	verified/C1636_ScheduleProductCount.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1636_ScheduleProductCount.v	disj-pattern-notation
+open	verified/C1636_ScheduleProgramCount.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1636_ScheduleProgramCount.v	disj-pattern-notation
 open	verified/C1637_R300SedenionZeroDivisor.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1637_R300SedenionZeroDivisor.v	disj-pattern-notation
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	deprecated-transitive-library-file-since-Stdlib-9.0
