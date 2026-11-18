@@ -368,6 +368,7 @@ verified/C1141_ZDGraphCountingIdentities.v
 verified/C1142_XORScatterGatherSums.v
 verified/C016_FanoOrientedTriples.v
 verified/C010_ComponentBridgeBound.v
+verified/C010_ZDGraphComponents.v
 verified/C1463_MatrixColumnIdeal.v
 verified/C1636_ScheduleProductCount.v
 verified/C1636_ScheduleProgramCount.v
