@@ -44,7 +44,8 @@ claim, sorted by `source` in byte order, sources unique.
   pass had linked to a file without reading its theorems, was re-read against
   the statements of its declarations on 2026-11-17 (131 rows: 28 of the 92
   `proved` rows lost the status, 14 of the 39 file-linked rows gained it, and
-  78 rows read `proved` afterwards). A sentence of a claim that reports the
+  78 rows read `proved` afterwards; the hosted review then added C-001, which
+  the every-level Lean theorem proves). A sentence of a claim that reports the
   agreement of code with the stated identity is a measurement and stays
   outside the reading. `partial` means that the proofs
   state an instance, a fixed level or a part of the claim, and the note says
