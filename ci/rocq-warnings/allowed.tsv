@@ -459,6 +459,8 @@ open	verified/C1364_HomotopyBridgeLaw.v	deprecated-transitive-library-file-since
 open	verified/C1364_HomotopyBridgeLaw.v	disj-pattern-notation
 open	verified/C1455_AssociatorTrilinear.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1455_AssociatorTrilinear.v	disj-pattern-notation
+open	verified/C1463_CliffordMatrixBasis.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1463_CliffordMatrixBasis.v	disj-pattern-notation
 open	verified/C1463_MatrixColumnIdeal.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1463_MatrixColumnIdeal.v	disj-pattern-notation
 open	verified/C1464_SedenionAnticommutation.v	deprecated-transitive-library-file-since-Stdlib-9.0
