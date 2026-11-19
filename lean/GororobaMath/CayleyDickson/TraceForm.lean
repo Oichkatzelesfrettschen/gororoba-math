@@ -49,6 +49,10 @@ equivalent.
   `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero`: purity and orthogonality of
   zero divisors, with the kernel swap `Tower.swap_mul_eq_zero` of Lemma 9.5.
 
+* `Tower.re_mul_star`, `Tower.dot_e_e`, `Tower.dot_eq_sum_repr`: `re (a * star b) = dot a b`, the
+  standard basis is orthonormal for `dot` (its Gram matrix is the identity) and `dot x y` is the
+  sum of the products of corresponding coordinates, at every level over every commutative ring
+  with the identity as star.
 * `Tower.mul_comm_of_two_eq_zero`: in characteristic 2 every level is commutative, the Rocq
   `two_zero_commutative` of the functor `RingTower` in `rocq/quantum/CdTowerRing.v`.
 * `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero_right`: the mirror of the zero-divisor
@@ -288,6 +292,61 @@ theorem mul_comm_of_two_eq_zero (h2 : (2 : R) = 0) :
     simp only [star_eq_self_of_two_eq_zero h2]
     refine mk_inj.2 ⟨?_, add_comm _ _⟩
     rw [mul_comm_of_two_eq_zero h2 a c, mul_comm_of_two_eq_zero h2 d b]
+
+section Gram
+
+variable {k : ℕ}
+
+/-- The coordinate of `1` of `a * star b` is the trace form: `B(a, b) = Re (a * conj b)` of
+claim C-218 of gororoba-open. -/
+theorem re_mul_star (a b : Tower R k) : re k (a * star b) = dot k a b := by
+  have h := (dot_mul_adjoint k 1 b a).2
+  rw [one_mul, dot_comm k 1, dot_one_right] at h
+  rw [← h, dot_comm]
+
+omit [TrivialStar R] in
+/-- The Gram matrix of the standard basis under the trace form is the identity matrix, at every
+level over every commutative ring with the identity as star. -/
+theorem dot_e_e : ∀ (k : ℕ) (p q : BitVec k),
+    dot k (e R k p) (e R k q) = if p = q then 1 else 0
+  | 0, p, q => by
+    have h : p = q := Subsingleton.elim _ _
+    subst h
+    simp only [e_zero_level, ↓reduceIte]
+    exact one_mul _
+  | k + 1, p, q => by
+    have key : p.msb = q.msb → (p = q ↔ p.setWidth k = q.setWidth k) := fun hm =>
+      ⟨fun h => by rw [h], fun h => by
+        rw [← BitVec.cons_msb_setWidth p, ← BitVec.cons_msb_setWidth q, h, hm]⟩
+    have ne : p.msb ≠ q.msb → p ≠ q := fun hm h => hm (by rw [h])
+    cases hp : p.msb <;> cases hq : q.msb
+    · rw [e_succ_of_not_msb hp, e_succ_of_not_msb hq, dot_mk, dot_e_e k, dot_zero_left,
+        add_zero]
+      simp only [key (by rw [hp, hq])]
+    · rw [e_succ_of_not_msb hp, e_succ_of_msb hq, dot_mk, dot_zero_right, dot_zero_left, add_zero]
+      simp only [ne (by rw [hp, hq]; decide), ↓reduceIte]
+    · rw [e_succ_of_msb hp, e_succ_of_not_msb hq, dot_mk, dot_zero_right, dot_zero_left, add_zero]
+      simp only [ne (by rw [hp, hq]; decide), ↓reduceIte]
+    · rw [e_succ_of_msb hp, e_succ_of_msb hq, dot_mk, dot_e_e k, dot_zero_left, zero_add]
+      simp only [key (by rw [hp, hq])]
+
+omit [TrivialStar R] in
+/-- The trace form is the sum of the products of corresponding coordinates in the standard
+basis, so `dot k x x` is the sum of the squares of the coordinates of `x`. -/
+theorem dot_eq_sum_repr (x y : Tower R k) :
+    dot k x y = ∑ i, (basis R k).repr x i * (basis R k).repr y i := by
+  let D : Tower R k →ₗ[R] Tower R k →ₗ[R] R :=
+    LinearMap.mk₂ R (dot k) (dot_add_left k) (dot_smul_left k) (dot_add_right k)
+      (dot_smul_right k)
+  have hD : ∀ x y, D x y = dot k x y := fun _ _ => rfl
+  rw [← hD]
+  conv_lhs => rw [← (basis R k).sum_repr x, ← (basis R k).sum_repr y]
+  simp only [map_sum, LinearMap.sum_apply, map_smul, LinearMap.smul_apply, hD, basis_apply,
+    dot_e_e, smul_eq_mul]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  simp [mul_comm]
+
+end Gram
 
 section Ordered
 
