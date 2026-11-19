@@ -275,6 +275,72 @@ extract-c-check: extract-c
 	echo "MATCH: FP24 emission matches golden and compiles with warnings as errors" || \
 	{ echo "FAIL: FP24 emission differs from golden or does not compile"; exit 1; }
 
+# CompCert build of the same emitted units, glue and runtime source, beside the
+# gcc build above (gcc stays the reference). It runs extract-r2vb-check and
+# extract-c-check first, so it reads freshly emitted units whose digests match
+# their golden manifests. CCOMP is the CompCert driver of the
+# active switch (coq-compcert 3.18 in rocq-certirocq: its sources report 3.17).
+# Each unit compiles with the default language options (no -fall). The hand
+# written harnesses and gc_stack.c compile under -Werror. ccomp prints some
+# diagnostics of the emitted units with no -W name ("incompatible conversion"),
+# so -Werror cannot be scoped to them: their counts per unit are compared with
+# golden/r2vb_dp4_compcert.golden instead. The two ccomp-built tests run, and
+# their output is compared byte for byte with the gcc-built tests'. Then
+# ccomp -interp executes each test, since the preservation theorem of CompCert
+# holds for a program whose source semantics does not go wrong. The interpreter
+# links one file only, so each run reads a file that includes the units
+# (struct closure of the glue is renamed there, because gc_stack.c declares the
+# same tag). The golden file holds the interpreter's verdict; the recipe does
+# not fail on it. The compiler record lands in
+# extraction/compcert/r2vb_dp4_compcert_record.txt.
+CCOMP ?= ccomp
+CCOMP_VERSION = v=$$($(CCOMP) -version) && printf '%s\n' "$$v" | head -n 1
+extract-c-compcert:
+	@$(MAKE) --no-print-directory extract-r2vb-check
+	@$(MAKE) --no-print-directory extract-c-check
+	@$(MAKE) --no-print-directory test-r2vb-correspondence
+	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
+	set -eu; cd extraction; mkdir -p compcert; rm -f compcert/*; \
+	N() { grep -c ': warning: ' "compcert/$$1.log" || true; }; \
+	$(CCOMP) -Werror -I "$$RT" -c "$$RT/gc_stack.c" -o compcert/gc_stack.o >compcert/gc_stack.log 2>&1; \
+	$(CCOMP) -I "$$RT" -c OpenGororoba.R2VBTransformDP4.dp4.c -o compcert/dp4.o >compcert/dp4.log 2>&1; \
+	$(CCOMP) -I "$$RT" -c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c -o compcert/dp4_operand_admit.o >compcert/dp4_operand_admit.log 2>&1; \
+	$(CCOMP) -I "$$RT" -c r2vb_dp4_glue.c -o compcert/r2vb_dp4_glue.o >compcert/r2vb_dp4_glue.log 2>&1; \
+	$(CCOMP) -I "$$RT" -c $(FP24_C).c -o compcert/fp24.o >compcert/fp24.log 2>&1; \
+	$(CCOMP) -Werror -I "$$RT" -c test_r2vb_dp4_correspondence.c -o compcert/test_r2vb_dp4_correspondence.o >compcert/test_dp4.log 2>&1; \
+	$(CCOMP) -Werror -I "$$RT" -c test_r2vb_dp4_admit_correspondence.c -o compcert/test_r2vb_dp4_admit_correspondence.o >compcert/test_admit.log 2>&1; \
+	$(CCOMP) -o compcert/test_r2vb_dp4 compcert/test_r2vb_dp4_correspondence.o compcert/dp4.o compcert/r2vb_dp4_glue.o compcert/gc_stack.o; \
+	$(CCOMP) -o compcert/test_r2vb_dp4_admit compcert/test_r2vb_dp4_admit_correspondence.o compcert/dp4_operand_admit.o compcert/r2vb_dp4_glue.o compcert/gc_stack.o; \
+	compcert/test_r2vb_dp4 >compcert/out_ccomp_dp4.txt; compcert/test_r2vb_dp4_admit >compcert/out_ccomp_admit.txt; \
+	./test_r2vb_dp4 >compcert/out_gcc_dp4.txt; ./test_r2vb_dp4_admit >compcert/out_gcc_admit.txt; \
+	cmp compcert/out_ccomp_dp4.txt compcert/out_gcc_dp4.txt; cmp compcert/out_ccomp_admit.txt compcert/out_gcc_admit.txt; \
+	printf '%s\n' '#include "gc_stack.c"' '#include "OpenGororoba.R2VBTransformDP4.dp4.c"' '#define closure r2vb_glue_closure' \
+	  '#include "r2vb_dp4_glue.c"' '#undef closure' '#include "test_r2vb_dp4_correspondence.c"' >compcert/unity_dp4.c; \
+	printf '%s\n' '#include "gc_stack.c"' '#include "OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c"' '#define closure r2vb_glue_closure' \
+	  '#include "r2vb_dp4_glue.c"' '#undef closure' '#include "test_r2vb_dp4_admit_correspondence.c"' >compcert/unity_admit.c; \
+	for t in dp4 admit; do \
+	  $(CCOMP) -interp -quiet -I "$$RT" -I . "compcert/unity_$$t.c" >"compcert/interp_$$t.log" 2>&1 || true; \
+	done; \
+	{ $(CCOMP_VERSION); opam list --installed --columns=name,version coq-compcert | tail -n 1; \
+	  echo "diagnostics: gc_stack=$$(N gc_stack) dp4=$$(N dp4) dp4_operand_admit=$$(N dp4_operand_admit) glue=$$(N r2vb_dp4_glue) fp24=$$(N fp24) test_dp4=$$(N test_dp4) test_admit=$$(N test_admit)"; \
+	  echo "output: ccomp and gcc test outputs equal"; \
+	  for t in dp4 admit; do echo "interp $$t:"; grep -E '^(Stuck subexpression|ERROR:|Time [0-9]+: program terminated)' "compcert/interp_$$t.log"; done; } >compcert/golden_view.txt; \
+	diff -u golden/r2vb_dp4_compcert.golden compcert/golden_view.txt; \
+	for u in OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c r2vb_dp4_glue.c; do \
+	  $(CCOMP) -E -I "$$RT" "$$u" >"compcert/pp_$$u" 2>/dev/null; \
+	  $(CCOMP) -E -Dclosure=r2vb_glue_closure -I "$$RT" "$$u" >"compcert/pp_renamed_$$u" 2>/dev/null; \
+	done; \
+	{ cat compcert/golden_view.txt; $(GCC_VERSION); \
+	  echo "verified sources: r2vb_dp4_extraction.sha256.new certirocq_runtime.sha256.new fp24_admit_extraction.sha256.new"; \
+	  sha256sum r2vb_dp4_extraction.sha256.new certirocq_runtime.sha256.new fp24_admit_extraction.sha256.new; \
+	  for u in OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c $(FP24_C).c; do \
+	    echo "occurrences of '& 1' in $$u: $$(grep -o '& 1' "$$u" | wc -l)"; done; \
+	  for u in OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c r2vb_dp4_glue.c; do \
+	    echo "lines changed by the closure rename in $$u: $$(diff "compcert/pp_$$u" "compcert/pp_renamed_$$u" | grep -c '^>' || true)"; done; \
+	  sha256sum compcert/unity_dp4.c compcert/unity_admit.c compcert/out_ccomp_dp4.txt compcert/out_ccomp_admit.txt \
+	    compcert/test_r2vb_dp4 compcert/test_r2vb_dp4_admit; } >compcert/r2vb_dp4_compcert_record.txt; \
+	echo "MATCH: ccomp-built tests print what the gcc-built tests print; golden record, ccomp -interp verdict included, matches"
+
 count:
 	@echo "Theory files:  $$(ls theories/*.v 2>/dev/null | wc -l)"
 	@echo "Verified files: $$(ls verified/*.v 2>/dev/null | wc -l)"
@@ -283,4 +349,4 @@ count:
 	@echo "Interfaces .vos: $$(ls theories/*.vos verified/*.vos 2>/dev/null | wc -l)"
 	@echo "Checked .vok:    $$(ls theories/*.vok verified/*.vok 2>/dev/null | wc -l)"
 
-.PHONY: all vos vok clean check check-plugins extract extract-check extract-c extract-c-check extract-r2vb-c extract-r2vb-check test-r2vb-correspondence count rocq-makefile-check
+.PHONY: all vos vok clean check check-plugins extract extract-check extract-c extract-c-check extract-r2vb-c extract-r2vb-check test-r2vb-correspondence extract-c-compcert count rocq-makefile-check

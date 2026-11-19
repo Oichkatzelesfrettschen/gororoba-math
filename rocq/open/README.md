@@ -139,6 +139,67 @@ been inspected and correspondence has been measured. A successful core proof
 build establishes proof compilation, while each extraction backend needs its
 own execution evidence.
 
+### CompCert build of the C targets
+
+`OPAMSWITCH=rocq-certirocq opam exec --switch=rocq-certirocq -- make
+extract-c-compcert` runs (the exported `OPAMSWITCH` makes `opam var lib`
+name the CertiRocq switch); `extract-r2vb-check` and `extract-c-check`
+first, so the units it reads are freshly emitted and match their pinned
+digests, then compiles the emitted units, the glue and the CertiRocq runtime
+source `gc_stack.c` with `ccomp` of the active switch
+(`rocq-certirocq`: opam package coq-compcert 3.18, Rocq 9.1.1; the compiler
+reports version 3.17, because its source tree carries that VERSION file),
+links both correspondence tests, runs them, and compares their output with
+the gcc-built tests' (`test-r2vb-correspondence` runs first and stays
+unchanged). `extraction/golden/r2vb_dp4_compcert.golden` pins the compiler
+version, the diagnostic count of each unit and the `ccomp -interp` verdict;
+the binaries' digests and the gcc version land in
+`extraction/compcert/r2vb_dp4_compcert_record.txt`. CompCert is distributed
+under the INRIA Non-Commercial License Agreement, for research and
+evaluation use.
+
+Measured result (2026-11-19, ccomp 3.17 sources, gcc 15.2.0 as preprocessor,
+assembler and linker): every unit is accepted with the default language
+options, without `-fall`. The emitted units and the glue print diagnostics
+(dp4 8, dp4_operand_admit 4, glue 30, FP24 sint_range_admit 6 compiled only);
+`gc_stack.c` and the two harnesses print none and compile under `-Werror`.
+The ccomp-built tests print the same lines as the gcc-built tests (nine and
+nine fixtures, zero failures).
+
+`ccomp -interp` reports undefined behavior in both tests: each goes stuck at
+`(<ptr> & 1) == 0`, CertiRocq's inline test for a boxed value, which masks a
+`long` that holds a pointer, and CompCert C leaves the bitwise AND of a
+pointer undefined (`sem_and` of `cfrontend/Cop.v` yields no value for a
+pointer operand). CompCert's correctness theorem still holds for these
+units: each behavior of the compiled program improves on one of the source
+(`behavior_improves` of `common/Behaviors.v`, CompCert 3.17). A source
+behavior `Goes_wrong t` is improved by every target behavior that begins
+with the trace `t`, so the theorem fixes only the output printed before the
+stuck point (the line of fixture 0) and nothing after it; the C-to-assembly
+link stays in the trusted base for the rest of each test. The same construct (text matches of `& 1`)
+occurs in each emitted unit; `extraction/compcert/r2vb_dp4_compcert_record.txt`
+records the counts (24, 26 and 25 for dp4, dp4_operand_admit and
+sint_range_admit at the measurement). The harness is therefore a second
+compiler's differential build of the same C. The construct is in the
+emitted C, so no language option is expected to change the verdict
+(hypothesis: `-f` options were not tried, since none was needed to
+compile).
+
+The interpreter links one file, so each run reads a file that includes the
+units; a `#define` renames `struct closure` of the glue there, since
+`gc_stack.c` declares the same tag. The record counts the preprocessed lines
+that the rename changes in each unit and the glue under `-D`, which renames
+across the whole glue and so bounds the scoped `#define` from above, and keeps the digests of
+both unity files. The FP24 unit has no driver, so its
+`-interp` run is not run; it is compiled only.
+
+Where the source of a unit does not go wrong (its `-interp` run
+terminates), the theorem gives the target the source's behavior and covers
+the step from CompCert C to assembly. The preprocessor
+(gcc), the parser and elaboration to CompCert C, the assembly printer, the
+assembler, the linker and the C library stay outside it, and so does the
+emission of the C by CertiRocq.
+
 The CertiRocq port also needs a repository extraction-runner correction:
 `ExtractFP24Admit.v` emits `sint_range_admit`, while `extract-c` and
 `extract-c-check` select `fp24_value_admit` filenames. Align the moved and
