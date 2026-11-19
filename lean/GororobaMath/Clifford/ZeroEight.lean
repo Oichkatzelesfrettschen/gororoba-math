@@ -33,9 +33,11 @@ indices of the octonion block and the doubling unit; the relations are checked f
 * `Clifford.ZeroEight.mono_linearIndependent`: the 256 ordered monomials of the
   generator matrices are linearly independent (by the characters that conjugation by
   a generator defines on them, and the trace).
-* `Clifford.ZeroEight.cliffordEquivMatrix`: `CliffordAlgebra quadForm ≃ₐ[ℝ] Matrix (Fin 16) (Fin 16) ℝ`,
+* `Clifford.ZeroEight.cliffordEquivMatrix`:
+  `CliffordAlgebra quadForm ≃ₐ[ℝ] Matrix (Fin 16) (Fin 16) ℝ`,
   the algebra map of `CliffordAlgebra.lift` at `v ↦ ∑ i, v i • G i`. Its Rocq partner
-  for the matrix half is `rocq/open/verified/C1463_CliffordMatrixBasis.v:C1463_clifford_matrix_basis`.
+  for the matrix half is
+  `rocq/open/verified/C1463_CliffordMatrixBasis.v:C1463_clifford_matrix_basis`.
 -/
 
 @[expose] public section
@@ -136,7 +138,8 @@ theorem genLin_sq (v : Fin 8 → ℝ) : genLin v * genLin v = algebraMap ℝ Mat
     rw [Finset.mul_sum]
     exact Finset.sum_congr rfl fun i _ => by ring
   have hS' : genLin v * genLin v = ∑ i, ∑ j, (v i * v j) • (G j * G i) := hS.trans hT
-  have h3 : genLin v * genLin v + genLin v * genLin v = (∑ i, (v i * v i) * (-2 : ℝ)) • (1 : Mat16) := by
+  have h3 : genLin v * genLin v + genLin v * genLin v =
+      (∑ i, (v i * v i) * (-2 : ℝ)) • (1 : Mat16) := by
     calc genLin v * genLin v + genLin v * genLin v
         = (∑ i, ∑ j, (v i * v j) • (G i * G j)) + ∑ i, ∑ j, (v i * v j) • (G j * G i) := by
           rw [← hS, ← hS']
@@ -266,8 +269,7 @@ theorem mono_linearIndependent : LinearIndependent ℝ mono := by
   simp only [Matrix.trace_smul] at h1
   rw [Finset.sum_eq_single T] at h1
   · rw [hT] at h1
-    simp at h1
-    exact h1
+    simpa using h1
   · intro n _ hn
     rw [trace_mono_mul_inv n T _ hT hT' hn, smul_zero]
   · intro h
