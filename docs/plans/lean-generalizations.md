@@ -162,7 +162,7 @@ theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparis
 | 18 | `TraceForm` | `Tower.re_mul_assoc` |
 | 19 | `TraceForm` | `Tower.mul_star_mul_left` |
 | 20 | `TraceForm` | `Tower.mul_mul_star_right` |
-| 21 | `TraceForm` | `Tower.mul_mul_self_eq` |
+| 21 | `TraceForm` | `Tower.mul_mul_self_eq`, `Tower.mul_mul_self_eq'` |
 | 22 | `TraceForm` | `Tower.mul_eq_zero_iff_star_mul_eq_zero` |
 | 23 | `TraceForm` | `Tower.re_eq_zero_of_mul_eq_zero_rev` |
 | 24 | `TraceForm` | `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero` |
