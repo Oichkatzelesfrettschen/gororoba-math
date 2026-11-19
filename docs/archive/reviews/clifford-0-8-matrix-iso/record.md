@@ -13,4 +13,4 @@ Branch `lean/clifford-0-8-matrix-iso` of gororoba-math (issue 44, item 3). Revie
 
 ## Advisor
 
-The final verdict is recorded at the last call before the merge.
+At the final review of the round, the Advisor confirmed the branch: the statement is the one item 3 of issue 44 asks for, the docstring fix bdeec98 removes the only overclaim, and codex reported no finding.
