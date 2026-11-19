@@ -10,6 +10,8 @@ reviews:
   high_level_summary: false
   high_level_summary_in_walkthrough: false
   review_status: false
+  review_progress: false
+  commit_status: false
   poem: false
   collapse_walkthrough: true
   changed_files_summary: false
