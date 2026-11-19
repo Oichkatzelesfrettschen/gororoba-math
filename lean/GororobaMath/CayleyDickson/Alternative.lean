@@ -109,21 +109,24 @@ variable {R : Type u} [CommRing R] [StarRing R] [TrivialStar R]
 theorem flexible_three (x y : Tower R 3) : x * y * x = x * (y * x) := by
   obtain ⟨a0, a1, a2, a3, a4, a5, a6, a7, rfl⟩ := exists_coordinates_three x
   obtain ⟨b0, b1, b2, b3, b4, b5, b6, b7, rfl⟩ := exists_coordinates_three y
-  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub, ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
+  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub,
+    ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
   refine ⟨⟨⟨?_, ?_⟩, ?_, ?_⟩, ⟨?_, ?_⟩, ?_, ?_⟩ <;> ring
 
 /-- Left alternative law at level 3. -/
 theorem left_alternative_three (x y : Tower R 3) : x * (x * y) = x * x * y := by
   obtain ⟨a0, a1, a2, a3, a4, a5, a6, a7, rfl⟩ := exists_coordinates_three x
   obtain ⟨b0, b1, b2, b3, b4, b5, b6, b7, rfl⟩ := exists_coordinates_three y
-  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub, ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
+  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub,
+    ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
   refine ⟨⟨⟨?_, ?_⟩, ?_, ?_⟩, ⟨?_, ?_⟩, ?_, ?_⟩ <;> ring
 
 /-- Right alternative law at level 3. -/
 theorem right_alternative_three (x y : Tower R 3) : y * x * x = y * (x * x) := by
   obtain ⟨a0, a1, a2, a3, a4, a5, a6, a7, rfl⟩ := exists_coordinates_three x
   obtain ⟨b0, b1, b2, b3, b4, b5, b6, b7, rfl⟩ := exists_coordinates_three y
-  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub, ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
+  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub,
+    ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
   refine ⟨⟨⟨?_, ?_⟩, ?_, ?_⟩, ⟨?_, ?_⟩, ?_, ?_⟩ <;> ring
 
 /-- Left Moufang identity at level 3. -/
@@ -131,7 +134,8 @@ theorem moufang_left_three (x y z : Tower R 3) : x * (y * (x * z)) = x * y * x *
   obtain ⟨a0, a1, a2, a3, a4, a5, a6, a7, rfl⟩ := exists_coordinates_three x
   obtain ⟨b0, b1, b2, b3, b4, b5, b6, b7, rfl⟩ := exists_coordinates_three y
   obtain ⟨c0, c1, c2, c3, c4, c5, c6, c7, rfl⟩ := exists_coordinates_three z
-  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub, ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
+  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub,
+    ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
   refine ⟨⟨⟨?_, ?_⟩, ?_, ?_⟩, ⟨?_, ?_⟩, ?_, ?_⟩ <;> ring
 
 /-- Middle Moufang identity at level 3. -/
@@ -139,7 +143,8 @@ theorem moufang_middle_three (x y z : Tower R 3) : x * y * (z * x) = x * (y * z 
   obtain ⟨a0, a1, a2, a3, a4, a5, a6, a7, rfl⟩ := exists_coordinates_three x
   obtain ⟨b0, b1, b2, b3, b4, b5, b6, b7, rfl⟩ := exists_coordinates_three y
   obtain ⟨c0, c1, c2, c3, c4, c5, c6, c7, rfl⟩ := exists_coordinates_three z
-  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub, ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
+  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub,
+    ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
   refine ⟨⟨⟨?_, ?_⟩, ?_, ?_⟩, ⟨?_, ?_⟩, ?_, ?_⟩ <;> ring
 
 /-- Right Moufang identity at level 3. -/
@@ -147,11 +152,13 @@ theorem moufang_right_three (x y z : Tower R 3) : x * y * z * y = x * (y * (z * 
   obtain ⟨a0, a1, a2, a3, a4, a5, a6, a7, rfl⟩ := exists_coordinates_three x
   obtain ⟨b0, b1, b2, b3, b4, b5, b6, b7, rfl⟩ := exists_coordinates_three y
   obtain ⟨c0, c1, c2, c3, c4, c5, c6, c7, rfl⟩ := exists_coordinates_three z
-  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub, ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
+  simp only [mk_mul_mk, star_mk, ofPair_star, ofPair_mul, mk_sub_mk, mk_add_mk, ofPair_sub,
+    ofPair_add, ofPair_neg, mk_inj, ofPair_inj]
   refine ⟨⟨⟨?_, ?_⟩, ?_, ?_⟩, ⟨?_, ?_⟩, ?_, ?_⟩ <;> ring
 
 /-- Left alternative law at every level `k ≤ 3`. -/
-theorem left_alternative_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) : x * (x * y) = x * x * y := by
+theorem left_alternative_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) :
+    x * (x * y) = x * x * y := by
   interval_cases k
   · apply lift_injective 0 3
     simp only [lift_mul]
@@ -165,7 +172,8 @@ theorem left_alternative_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) 
   · exact left_alternative_three x y
 
 /-- Right alternative law at every level `k ≤ 3`. -/
-theorem right_alternative_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) : y * x * x = y * (x * x) := by
+theorem right_alternative_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) :
+    y * x * x = y * (x * x) := by
   interval_cases k
   · apply lift_injective 0 3
     simp only [lift_mul]
@@ -179,7 +187,8 @@ theorem right_alternative_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k)
   · exact right_alternative_three x y
 
 /-- Flexible law at every level `k ≤ 3`. -/
-theorem flexible_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) : x * y * x = x * (y * x) := by
+theorem flexible_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) :
+    x * y * x = x * (y * x) := by
   interval_cases k
   · apply lift_injective 0 3
     simp only [lift_mul]
@@ -193,7 +202,8 @@ theorem flexible_of_le_three {k : ℕ} (hk : k ≤ 3) (x y : Tower R k) : x * y 
   · exact flexible_three x y
 
 /-- Left Moufang identity at every level `k ≤ 3`. -/
-theorem moufang_left_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) : x * (y * (x * z)) = x * y * x * z := by
+theorem moufang_left_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) :
+    x * (y * (x * z)) = x * y * x * z := by
   interval_cases k
   · apply lift_injective 0 3
     simp only [lift_mul]
@@ -207,7 +217,8 @@ theorem moufang_left_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) : 
   · exact moufang_left_three x y z
 
 /-- Middle Moufang identity at every level `k ≤ 3`. -/
-theorem moufang_middle_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) : x * y * (z * x) = x * (y * z * x) := by
+theorem moufang_middle_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) :
+    x * y * (z * x) = x * (y * z * x) := by
   interval_cases k
   · apply lift_injective 0 3
     simp only [lift_mul]
@@ -221,7 +232,8 @@ theorem moufang_middle_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) 
   · exact moufang_middle_three x y z
 
 /-- Right Moufang identity at every level `k ≤ 3`. -/
-theorem moufang_right_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) : x * y * z * y = x * (y * (z * y)) := by
+theorem moufang_right_of_le_three {k : ℕ} (hk : k ≤ 3) (x y z : Tower R k) :
+    x * y * z * y = x * (y * (z * y)) := by
   interval_cases k
   · apply lift_injective 0 3
     simp only [lift_mul]
