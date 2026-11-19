@@ -31,3 +31,4 @@ registry/
 CoqMakefile
 CoqMakefile.conf
 .CoqMakefile.d
+extraction/compcert/

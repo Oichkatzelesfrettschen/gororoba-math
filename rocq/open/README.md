@@ -139,6 +139,50 @@ been inspected and correspondence has been measured. A successful core proof
 build establishes proof compilation, while each extraction backend needs its
 own execution evidence.
 
+### CompCert build of the C targets
+
+`make extract-c-compcert` compiles the emitted units, the glue and the
+CertiRocq runtime source `gc_stack.c` with `ccomp` of the active switch
+(`rocq-certirocq`: opam package coq-compcert 3.18, Rocq 9.1.1; the compiler
+reports version 3.17, because its source tree carries that VERSION file),
+links both correspondence tests, runs them, and compares their output with
+the gcc-built tests' (`test-r2vb-correspondence` runs first and stays
+unchanged). `extraction/golden/r2vb_dp4_compcert.golden` pins the compiler
+version, the diagnostic count of each unit and the `ccomp -interp` verdict;
+the binaries' digests and the gcc version land in
+`extraction/compcert/r2vb_dp4_compcert_record.txt`. CompCert is distributed
+under the INRIA Non-Commercial License Agreement, for research and
+evaluation use.
+
+Measured result (2026-11-19, ccomp 3.17 sources, gcc 15.2.0 as preprocessor,
+assembler and linker): every unit is accepted with the default language
+options, without `-fall`. The emitted units and the glue print diagnostics
+(dp4 8, dp4_operand_admit 4, glue 30, FP24 sint_range_admit 6 compiled only);
+`gc_stack.c` and the two harnesses print none and compile under `-Werror`.
+The ccomp-built tests print the same lines as the gcc-built tests (nine and
+nine fixtures, zero failures).
+
+`ccomp -interp` meets the premise of CompCert's semantic-preservation
+theorem and fails it. Both tests go stuck at `(<ptr> & 1) == 0`: CertiRocq's
+inline test for a boxed value masks a `long` that holds a pointer, and
+CompCert's semantics leaves the bitwise AND of a pointer undefined. The
+theorem holds for a program whose source semantics does not go wrong, so it
+does not apply to these units, and the same construct (the `& 1` and
+`>> 1` forms) occurs in each emitted unit (24, 26 and 25 times for dp4,
+dp4_operand_admit and sint_range_admit). The harness is therefore a second
+compiler's differential build of the same C, and the C-to-assembly link is not
+covered by CompCert's theorem for these units. No `-f` option changes this.
+The interpreter links one file, so each run reads a file that includes the
+units; a `#define` renames `struct closure` of the glue there, since
+`gc_stack.c` declares the same tag. The FP24 unit has no driver, so its
+`-interp` run is not run; it is compiled only.
+
+Where CompCert's theorem would apply (a unit whose `-interp` run
+terminates), it covers the step from CompCert C to assembly. The preprocessor
+(gcc), the parser and elaboration to CompCert C, the assembly printer, the
+assembler, the linker and the C library stay outside it, and so does the
+emission of the C by CertiRocq.
+
 The CertiRocq port also needs a repository extraction-runner correction:
 `ExtractFP24Admit.v` emits `sint_range_admit`, while `extract-c` and
 `extract-c-check` select `fp24_value_admit` filenames. Align the moved and

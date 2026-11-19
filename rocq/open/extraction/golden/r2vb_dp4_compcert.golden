@@ -1,0 +1,10 @@
+The CompCert C verified compiler, version 3.17
+coq-compcert 3.18
+diagnostics: gc_stack=0 dp4=8 dp4_operand_admit=4 glue=30 fp24=6 test_dp4=0 test_admit=0
+output: ccomp and gcc test outputs equal
+interp dp4:
+Stuck subexpression: <ptr> & 1
+ERROR: Undefined behavior
+interp admit:
+Stuck subexpression: <ptr> & 1
+ERROR: Undefined behavior
