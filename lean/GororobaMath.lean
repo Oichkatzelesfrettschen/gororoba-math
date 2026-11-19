@@ -30,6 +30,7 @@ public import GororobaMath.CayleyDickson.Hurwitz
 public import GororobaMath.CayleyDickson.Quaternion
 public import GororobaMath.CayleyDickson.QuaternionModule
 public import GororobaMath.CayleyDickson.Associator
+public import GororobaMath.CayleyDickson.Alternative
 public import GororobaMath.CayleyDickson.SignLaws
 public import GororobaMath.CayleyDickson.BaseChange
 public import GororobaMath.CayleyDickson.KernelCertificate
