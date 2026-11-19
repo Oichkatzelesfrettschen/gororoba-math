@@ -134,11 +134,14 @@ statement uses them.
 
 ## Proved rows
 
-The library proves the ten rows of the first tranche and the rows of the second and third tranches
+The library proves the ten rows of the first tranche and the rows of the second to sixth tranches
 (issue 55), each in the module its row names; rows 14 to 16 are the theorems of rows 11 to 13, rows
-66 and 67 share one theorem, rows 69, 70, 71 and 110 share one theorem, and rows 103 and 105 share one
-theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparisons that their
-`comparison` cells name (`ci/compare_isum.sh`, `ci/compare_am_exponent.sh`) are owed:
+66 and 67 share one theorem, rows 69, 70, 71 and 110 share one theorem, rows 87 and 88 share one
+theorem, rows 98 and 99 share one theorem, and rows 103 and 105 share one theorem. Row 72 is the
+one row with a Lean reading that is not proved (its narrowing cell records the level-4 evaluation).
+The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
+`ci/compare_order_three.sh`, `ci/compare_isum.sh`, `ci/compare_am_exponent.sh` and
+`ci/compare_schreier.sh`:
 
 | Row | Module | Theorem |
 |---|---|---|

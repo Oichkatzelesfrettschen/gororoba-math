@@ -596,7 +596,9 @@ end DegreeSteps
 
 /-- For `k ≥ 3` and distinct nonzero `p`, `q` the associator phase has algebraic degree
 `max 1 (bitlen (max p q) - 2)`, independent of `k`, where `bitlen n - 2 = Nat.log2 n - 1` for
-`n ≥ 1`. The Rocq original is `assoc_degree_is` of `rocq/quantum/CdAssociatorAnf.v`
+`n ≥ 1`. The Rocq originals are `assoc_degree_is` of `rocq/quantum/CdAssociatorAnf.v` (row 87)
+and `associator_phase_degree` of `rocq/open/theories/CDPhaseDegree.v` (row 88), the second with
+the same statement in the open tree's vocabulary; the first reads
 (`degree_is k (assoc k p q) (assoc_degree p q)`, whose `assoc k p q x` is `assocPhase` at
 `p.toNat`, `q.toNat`, `x.toNat`). The proof inducts on the level: a pair in the low half keeps the
 degree of the level below, since the top bit of `x` adds a constant; a pair reaching the top

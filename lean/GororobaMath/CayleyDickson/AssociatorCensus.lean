@@ -364,8 +364,9 @@ theorem card_assocPhase_true_eq (k : ℕ) :
   rw [Fintype.sum_prod_type]
 
 /-- At order `k + 1` with `n = 2^(k+1)` the number of non-associating ordered basis triples is
-`(n - 2) (n - 4) (n + 6) / 2`, stated as twice the count. The Rocq original is
-`associator_census_formula` of `rocq/open/theories/CDAssociatorCensus.v`, whose
+`(n - 2) (n - 4) (n + 6) / 2`, stated as twice the count, the denominator-cleared form of
+`associator_census_integrality` of `rocq/open/theories/CDAssociatorCensus.v`, from which the
+divided formula `associator_census_formula` of the same file follows; there
 `associator_phase order l m r` is `assocPhase l m r` (value `168` at the octonions). The proof sums
 over the three top bits: by `assocPhase_cons` a triple of the low parts contributes `4` unless its
 three pairs are degenerate, in which case it contributes `0`, and `7 * 2^k - 6` triples are of the
