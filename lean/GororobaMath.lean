@@ -23,5 +23,10 @@ public import GororobaMath.CayleyDickson.Ideals
 public import GororobaMath.CayleyDickson.Certificates
 public import GororobaMath.CayleyDickson.RingTowerI
 public import GororobaMath.CayleyDickson.ImaginarySum
+public import GororobaMath.CayleyDickson.HalfFold
+public import GororobaMath.CayleyDickson.Fold
+public import GororobaMath.CayleyDickson.ZeroDivisors
+public import GororobaMath.CayleyDickson.Hurwitz
+public import GororobaMath.CayleyDickson.Quaternion
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins
