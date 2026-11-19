@@ -29,5 +29,6 @@ public import GororobaMath.CayleyDickson.ZeroDivisors
 public import GororobaMath.CayleyDickson.Hurwitz
 public import GororobaMath.CayleyDickson.Quaternion
 public import GororobaMath.CayleyDickson.QuaternionModule
+public import GororobaMath.CayleyDickson.SignLaws
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins
