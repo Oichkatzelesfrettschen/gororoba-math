@@ -12,7 +12,9 @@ Convention: the associator of three elements is `associator a b c = (a * b) * c 
 the product of the double being `(a, b) * (c, d) = (a * c - star d * b, d * a + b * star c)`
 (`GororobaMath.CayleyDickson.Basic`). The scalar results read in the context of
 `TowerModule.lean`: a commutative ring `R` with the identity as star, acting on `Tower R k`
-by `•`; the additive and star results hold over every non-associative ring.
+by `•`. The additive results and `star_associator` hold over every non-associative ring
+with a star; `Tower.associator_star` holds at every level of the tower over a commutative
+ring with the identity as star in which `2` is left regular.
 
 ## Main results
 
