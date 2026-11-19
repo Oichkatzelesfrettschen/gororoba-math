@@ -37,5 +37,6 @@ public import GororobaMath.CayleyDickson.KernelCertificate
 public import GororobaMath.CayleyDickson.SparseSupport
 public import GororobaMath.CayleyDickson.NormMultiplicative
 public import GororobaMath.CayleyDickson.SignCode
+public import GororobaMath.CayleyDickson.OrderThree
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins

@@ -186,6 +186,8 @@ theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparis
 | 42 | `BaseChange` | `Tower.baseChange_mul` |
 | 43 | `BaseChange` | `Tower.baseChange_leibniz` |
 | 44 | `KernelCertificate` | `Tower.ker_mulLeft_basis_of_certificate` |
+| 45 | `OrderThree` | `Tower.orderThree_mul` |
+| 46 | `OrderThree` | `Tower.orderThree_star` |
 | 47 | `Ideals` | `Ideal.add_mul_mem_and_sub_mul_mem_iff` |
 | 48 | `Certificates` | `Matrix.linearIndependent_cols_of_mul_eq_smul_one` |
 | 49 | `Certificates` | `Matrix.smul_eq_mulVec_of_splitting` |
