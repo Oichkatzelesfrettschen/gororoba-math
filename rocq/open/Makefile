@@ -295,7 +295,7 @@ CCOMP ?= ccomp
 CCOMP_VERSION = v=$$($(CCOMP) -version) && printf '%s\n' "$$v" | head -n 1
 extract-c-compcert: test-r2vb-correspondence
 	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
-	set -eu; cd extraction; rm -rf compcert; mkdir compcert; \
+	set -eu; cd extraction; mkdir -p compcert; rm -f compcert/*; \
 	N() { grep -c ': warning: ' "compcert/$$1.log" || true; }; \
 	$(CCOMP) -Werror -I "$$RT" -c "$$RT/gc_stack.c" -o compcert/gc_stack.o >compcert/gc_stack.log 2>&1; \
 	$(CCOMP) -I "$$RT" -c OpenGororoba.R2VBTransformDP4.dp4.c -o compcert/dp4.o >compcert/dp4.log 2>&1; \

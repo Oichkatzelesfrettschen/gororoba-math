@@ -171,7 +171,9 @@ does not apply to these units, and the same construct (the `& 1` and
 `>> 1` forms) occurs in each emitted unit (24, 26 and 25 times for dp4,
 dp4_operand_admit and sint_range_admit). The harness is therefore a second
 compiler's differential build of the same C, and the C-to-assembly link is not
-covered by CompCert's theorem for these units. No `-f` option changes this.
+covered by CompCert's theorem for these units. The construct is in the
+emitted C, so no language option is expected to change the verdict
+(hypothesis: `-f` options were not tried, since none was needed to compile).
 The interpreter links one file, so each run reads a file that includes the
 units; a `#define` renames `struct closure` of the glue there, since
 `gc_stack.c` declares the same tag. The FP24 unit has no driver, so its
