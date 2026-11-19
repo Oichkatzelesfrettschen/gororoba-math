@@ -28,7 +28,7 @@ Lean module and theorem.
 
 ## Successors of the original files
 
-The 17 files that carry a `header overclaims` row keep their bytes, since
+The 18 files that carry a `header overclaims` row keep their bytes, since
 retained records cite them by sha256. The `addressed_by` column of
 `header-verdicts.tsv` is the one home of the mapping from an original file to
 its successor, and a reader finds the successor of a file with
@@ -53,12 +53,15 @@ The file is the output of the census with `--file-local --candidates
 ci/census/file-local-candidates.tsv`: the file-local rows that have no row in
 `header-verdicts.tsv`, so a run after a verdict lands drops that row. A verdict
 reads the file header and the statement under the criterion above. Of the 233,
-228 read `statement is the claim` and 5 read `header overclaims`: one in
+215 read `statement is the claim` and 18 read `header overclaims`: thirteen in
+C1469_TowerTrilinearity (a header that claims every CD level over checks at
+dimensions 16 to 256, which the Lean tower states at every level), one in
 C018_WheelsAxioms (a model that is not absorbing, with seven of eight axioms),
 one in C959_CHSHClassicalBound (a local-hidden-variable reading of a constant)
 and three in C1468_SlotShiftEquivariance (all 168 pairs at any offset, checked
-on one pair); each reads `owed`, since no successor module exists. With them
-`header-verdicts.tsv` holds 358 rows, 31 of them `header overclaims`; the two
+on one pair); the five outside C1469 read `owed`, since no successor module
+exists. With them
+`header-verdicts.tsv` holds 358 rows, 44 of them `header overclaims`; the two
 rows of C010_ConnectivityObstruction name the false K6 claim and point at
 C010_ZDGraphComponents.v, which proves each component has degree 4 and the
 graph 84 edges.
