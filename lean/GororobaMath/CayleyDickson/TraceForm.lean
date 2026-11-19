@@ -49,6 +49,17 @@ equivalent.
   `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero`: purity and orthogonality of
   zero divisors, with the kernel swap `Tower.swap_mul_eq_zero` of Lemma 9.5.
 
+* `Tower.mul_comm_of_two_eq_zero`: in characteristic 2 every level is commutative, the Rocq
+  `two_zero_commutative` of the functor `RingTower` in `rocq/quantum/CdTowerRing.v`.
+* `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero_right`: the mirror of the zero-divisor
+  orthogonality for `y * x = 0`, the Rocq `annihilator_orthogonal` of `rocq/quantum/CdTowerDomain.v`.
+* `Tower.int_mul_mul_self_eq`, `Tower.int_mul_dot_smul_sub_star_eq_zero`,
+  `Tower.real_mul_mul_self_eq`, `Tower.real_exists_eq_inv_dot_smul_star_add`,
+  `Tower.real_dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero`,
+  `Tower.real_pathion_dot_mul_left_of_star_eq_neg`: the instances at `R := ℤ` and `R := ℝ` that
+  the integer and real Rocq files `CdTowerDomainZ.v`, `CdTowerDomainR.v`,
+  `CdAnnihilatorSymmetry.v`, `CdAnnihilatorSymmetryReal.v` and `MorenoTowerInstance.v` state.
+
 The Rocq functor `CdTower` takes an ordered domain; the first two identities
 hold here over every commutative ring with the identity as star, and Lemma 9.2
 under the ordered hypotheses of `GororobaMath.CayleyDickson.AnnihilatorSymmetry`.

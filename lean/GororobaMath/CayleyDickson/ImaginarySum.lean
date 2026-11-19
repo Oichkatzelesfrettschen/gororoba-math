@@ -98,7 +98,6 @@ theorem star_isum : ∀ k : ℕ, star (isum R k) = -isum R k
   | k + 1 => by rw [isum_succ, star_mk, neg_mk, star_isum k]
 
 variable (R) in
-set_option linter.unusedSimpArgs false in
 theorem isum_laws_aux1 (k : ℕ)
     (L2 : ∀ x : Tower R k, isum R k * (isum R k * x) = (-(2 ^ k - 1 : R)) • x)
     (R2 : ∀ x : Tower R k, x * isum R k * isum R k = (-(2 ^ k - 1 : R)) • x)
@@ -114,13 +113,12 @@ theorem isum_laws_aux1 (k : ℕ)
   have hb := star_eq_smul_one_sub b
   generalize isum R k = s at *
   simp only [mk_mul_mk, smul_mk, mk_inj]
-  simp only [star_add, star_sub, star_neg, star_mul, star_star, star_one, hs, star_smul', ha, hb,
+  simp only [star_add, star_sub, star_mul, star_one, hs, star_smul', ha, hb,
     mul_add, add_mul, mul_sub, sub_mul, smul_mul_assoc', mul_smul_comm', mul_one, one_mul, mul_neg,
     neg_mul, Sq, L2, R2, F]
   constructor <;> module
 
 variable (R) in
-set_option linter.unusedSimpArgs false in
 theorem isum_laws_aux2 (k : ℕ)
     (L2 : ∀ x : Tower R k, isum R k * (isum R k * x) = (-(2 ^ k - 1 : R)) • x)
     (R2 : ∀ x : Tower R k, x * isum R k * isum R k = (-(2 ^ k - 1 : R)) • x)
@@ -136,13 +134,12 @@ theorem isum_laws_aux2 (k : ℕ)
   have hb := star_eq_smul_one_sub b
   generalize isum R k = s at *
   simp only [mk_mul_mk, smul_mk, mk_inj]
-  simp only [star_add, star_sub, star_neg, star_mul, star_star, star_one, hs, star_smul', ha, hb,
-    mul_add, add_mul, mul_sub, sub_mul, smul_mul_assoc', mul_smul_comm', mul_one, one_mul, mul_neg,
-    neg_mul, Sq, L2, R2, F]
+  simp only [star_add, star_one, hs,
+    mul_add, add_mul, mul_sub, sub_mul, one_mul, mul_neg,
+    neg_mul, L2, R2, F]
   constructor <;> module
 
 variable (R) in
-set_option linter.unusedSimpArgs false in
 theorem isum_laws_aux3 (k : ℕ)
     (L2 : ∀ x : Tower R k, isum R k * (isum R k * x) = (-(2 ^ k - 1 : R)) • x)
     (R2 : ∀ x : Tower R k, x * isum R k * isum R k = (-(2 ^ k - 1 : R)) • x)
@@ -157,8 +154,8 @@ theorem isum_laws_aux3 (k : ℕ)
   have ha := star_eq_smul_one_sub a
   have hb := star_eq_smul_one_sub b
   generalize isum R k = s at *
-  simp only [mk_mul_mk, smul_mk, mk_inj]
-  simp only [star_add, star_sub, star_neg, star_mul, star_star, star_one, hs, star_smul', ha, hb,
+  simp only [mk_mul_mk, mk_inj]
+  simp only [star_add, star_sub, star_neg, star_mul, star_one, hs, ha, hb,
     mul_add, add_mul, mul_sub, sub_mul, smul_mul_assoc', mul_smul_comm', mul_one, one_mul, mul_neg,
     neg_mul, Sq, L2, R2, F]
   constructor <;> module
