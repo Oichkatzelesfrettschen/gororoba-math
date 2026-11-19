@@ -28,7 +28,7 @@ Lean module and theorem.
 
 ## Successors of the original files
 
-The 14 files that carry a `header overclaims` row keep their bytes, since
+The 17 files that carry a `header overclaims` row keep their bytes, since
 retained records cite them by sha256. The `addressed_by` column of
 `header-verdicts.tsv` is the one home of the mapping from an original file to
 its successor, and a reader finds the successor of a file with
@@ -46,15 +46,22 @@ leaves these out, since a local definition is a project constant). Measured with
 Rocq 9.3.0 on the tree that holds the three sources of issue 44 items 2 to 4
 (178 verified sources, 956 declarations): the default mode lists 125 theorems,
 and the file-local mode lists those 125 plus 233 more, in 33 files. 126 of the
-233 sit in the 14 successor modules and 107 in 19 other files. With more than
-80 new rows, the rows carry no verdict yet:
-`file-local-candidates.tsv` holds them with an empty `verdict` column, and
-`local_names` gives the file-local definitions each statement names. The file
-is the output of the census with `--file-local --candidates
+233 sit in the 14 successor modules and 107 in 19 other files. All 233 now carry
+a verdict in `header-verdicts.tsv`, so `file-local-candidates.tsv` holds its
+header line and no row, and no file-local candidate remains without a verdict.
+The file is the output of the census with `--file-local --candidates
 ci/census/file-local-candidates.tsv`: the file-local rows that have no row in
 `header-verdicts.tsv`, so a run after a verdict lands drops that row. A verdict
-reads the file header and the statement under the criterion above, and its row
-then moves to `header-verdicts.tsv`.
+reads the file header and the statement under the criterion above. Of the 233,
+228 read `statement is the claim` and 5 read `header overclaims`: one in
+C018_WheelsAxioms (a model that is not absorbing, with seven of eight axioms),
+one in C959_CHSHClassicalBound (a local-hidden-variable reading of a constant)
+and three in C1468_SlotShiftEquivariance (all 168 pairs at any offset, checked
+on one pair); each reads `owed`, since no successor module exists. With them
+`header-verdicts.tsv` holds 358 rows, 31 of them `header overclaims`; the two
+rows of C010_ConnectivityObstruction name the false K6 claim and point at
+C010_ZDGraphComponents.v, which proves each component has degree 4 and the
+graph 84 edges.
 
 The mode calibrates itself before it reports. Known good: `at_attractor_vanishes`
 of `C_OverImbalancedSign` and `pg32_length_labels` of `C881_GF2CubicMinDegree`
@@ -64,3 +71,11 @@ list as file-local with exactly the named definition. Known bad:
 (another file, a stem that extends this one, a local name beside a `theories/`
 name, a nested module, no project name). A calibration that reads a changed
 expectation exits 1 (three mutated copies each exited 1).
+
+## Citation corrections
+
+`citation-corrections.tsv` holds one row per citation of a pinned header that
+names a work that does not exist or gives a wrong location: the file and line,
+the citation as written, the work meant, and the evidence. A source that a
+retained record cites by sha256 keeps its bytes, so the correction lives in
+this table and the header text stays as retained.
