@@ -21,5 +21,6 @@ public import GororobaMath.CayleyDickson.BasisExt
 public import GororobaMath.CayleyDickson.BooleanAnf
 public import GororobaMath.CayleyDickson.Ideals
 public import GororobaMath.CayleyDickson.Certificates
+public import GororobaMath.CayleyDickson.RingTowerI
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins
