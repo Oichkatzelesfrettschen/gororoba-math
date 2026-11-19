@@ -139,7 +139,7 @@ Proof. intros []; split; reflexivity. Qed.
 (** In any structure that satisfies (8) with an absorbing zero, every
     element is zero: 0/0 = 0 * /0 = 0, so x + 0 = 0. *)
 Theorem absorbing_zero_forces_trivial :
-  forall {H : Type} (zero : H) (add mul : H -> H -> H) (inv : H -> H),
+  forall (H : Type) (zero : H) (add mul : H -> H -> H) (inv : H -> H),
     (forall x, add x zero = x) ->
     (forall x, mul zero x = zero) ->
     (forall x, add x (mul zero (inv zero)) = mul zero (inv zero)) ->
