@@ -35,6 +35,7 @@ public import GororobaMath.CayleyDickson.AlternativeCoordinates
 public import GororobaMath.CayleyDickson.AlternativeIdentities
 public import GororobaMath.CayleyDickson.Artin
 public import GororobaMath.CayleyDickson.Kaplansky
+public import GororobaMath.CayleyDickson.InverseReversal
 public import GororobaMath.CayleyDickson.SignLaws
 public import GororobaMath.CayleyDickson.BaseChange
 public import GororobaMath.CayleyDickson.KernelCertificate
