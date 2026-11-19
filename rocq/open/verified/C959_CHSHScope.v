@@ -21,22 +21,30 @@
       the 512-dimensional experiment is the S of a local deterministic
       mixture ([chsh_observed_value_lhv]).
 
-    Scope.  These theorems prove the mathematical bound and that a single
-    value of S below 2 in absolute value does not separate local from
+    Scope.  These theorems prove the mathematical bound, and that one
+    value of S below 2 in absolute value is reproduced by a local
+    deterministic mixture, so it does not by itself separate local from
     non-local models.  They prove nothing about the Cayley-Dickson
     associator experiment.  The interpretation that its statistics come
     from a local deterministic assignment (the claim of the docstring of
     [cd_lhv_interpretation] in [C959_CHSHClassicalBound]) is not proved,
-    for three reasons.  The original theorem bounds the constant
-    -1506/1000, which is a recorded measurement, and holds for every
-    process that produced that number.  A statistic of the associator
-    probes needs a formal sampling model (the distribution of the probes,
-    the measurement operator as a function on them, the pairing of the two
-    parties) and the repository holds none.  And the inequality
-    |S| <= 2 is one necessary condition for a local model of four
-    correlations: the full local polytope has further facet inequalities
-    (A. Fine, Phys. Rev. Lett. 48 (1982) 291), so S alone neither proves
-    nor excludes a local model of the underlying correlations. *)
+    for three reasons.
+    - The original theorem bounds the constant -1506/1000, a recorded
+      measurement; its statement mentions no probe, algebra or
+      correlation, so it holds whatever process produced that number.
+    - A statement about associator-probe statistics needs a formal sampling
+      model: the distribution of the probes, the measurement operator as a
+      function of them, and the pairing of the two parties.  A search for
+      the word chsh over rocq/ at this commit finds only [BellCHSH], the
+      original and this file, and the original imports only [Prelude] and
+      [BellCHSH]; none defines such a model.
+    - |S| <= 2 is one necessary condition on four correlations, and a
+      proof that it holds for a process would not make the process a
+      mixture of deterministic assignments: the criterion for that is the
+      full set of CHSH inequalities (A. Fine, Phys. Rev. Lett. 48 (1982)
+      291, the publication record of which OpenAlex matches by title,
+      author and year).  This file proves only the necessary direction,
+      for the single combination S. *)
 
 From Stdlib Require Import Reals Lra List.
 From OpenGororoba Require Import Prelude BellCHSH.

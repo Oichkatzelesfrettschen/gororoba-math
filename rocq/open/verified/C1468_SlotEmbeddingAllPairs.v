@@ -20,16 +20,28 @@
 
     Results.
     - [assessors_count], [quads_count]: 42 assessors, 1764 ordered pairs.
-    - [zd_pairs16_count]: 168 of the 1764 ordered pairs have a zero product
-      at level 4 for some sign pair (s, t) ([zd_pairs16]).
-      [signed_zero_count_16]: 336 sign-resolved products vanish.
-      [zero_pairs_pp_16] and [zero_pairs_pm_16]: 84 ordered pairs vanish at
-      (+, +) and 84 at (+, -); [sign_patterns_16]: a pair vanishing at
+    - [zd_pairs16_count]: 168 of the 1764 ordered assessor pairs have a
+      zero product at level 4 for some sign pair (s, t) ([zd_pairs16]).
+      [signed_zero_count_16]: 336 sign-resolved ordered products vanish.
+      [zero_product_symmetric] and [no_blade_squares_to_zero]: the product
+      of two blades vanishes in one order exactly when in the other, and no
+      blade has a zero square, so the 336 ordered sign-resolved products are
+      168 unordered pairs of blades: 168 counts either the ordered
+      assessor pairs with some vanishing sign pair or the unordered
+      sign-resolved pairs of blades.
+    - [zero_pairs_pp_16], [zero_pairs_pm_16], [sign_patterns_16]: 84
+      ordered pairs vanish at (+, +) and 84 at (+, -); a pair vanishing at
       (+, +) vanishes at (-, -), one vanishing at (+, -) vanishes at
-      (-, +), and no pair vanishes in both groups, so the four patterns
-      account for the 336.  The 84 of the original file are the (+, +) group: its
-      checker tests that sign pattern only, and 168 counts the ordered
-      pairs of both groups.
+      (-, +), and no pair vanishes in both groups, so the four sign
+      patterns account for the 336.
+      [original_checker_is_plus_plus]: the checker of the original file
+      decides the sign pattern (+, +) on every ordered assessor pair, so
+      its count 84 is the (+, +) group and not a sign-level undercount of
+      the 168.
+    - [all_blade_zero_products_are_assessor_pairs]: among all 240
+      sign-resolved 2-blades e_i +- e_j (0 <= i < j <= 15) of level 4, the
+      ordered pairs with zero product number 336 and every such pair is of
+      assessor form, so assessors exhaust the 2-blade zero divisors.
     - [slot_embedding_dim32]: for each offset o in {0, 16}, every ordered
       assessor pair shifted by o has a zero product at level 5 for the
       sign pair st exactly when the unshifted pair has one at level 4.
@@ -37,8 +49,11 @@
     - [slot_embedding_dim64]: for each o in {0, 16, 32, 48}, each of the
       168 pairs shifted by o keeps its zero product at level 6 for every
       sign pair that vanishes at level 4.  The converse (no new zero
-      product at level 6) is not decided here: it needs about 28000
-      products of 64-dimensional vectors.
+      product at level 6) is not decided here: the decision on all 1764
+      pairs at four offsets is 28224 products of 64-dimensional vectors,
+      and a version of this file that decided it measured 1 min 54 s to
+      compile and 3 min 20 s for the kernel check (Rocq 9.3.0, one
+      host).
     - [slot_embedding_tower_dim32], [slot_embedding_tower_dim64]: the same
       preservation as a statement about [tower_mul] over the reals.
     The claim of the original header (the 168 pairs keep their zero
@@ -54,6 +69,7 @@
 From Stdlib Require Import Arith PeanoNat Bool List ZArith Reals.
 From OpenGororoba Require Import RecursiveCDTower SchreierSignCode
   CDSignNumericCorrespondence CDTowerSignCorrespondence.
+From OpenGororobaVerified Require C1468_SlotShiftEquivariance.
 Import ListNotations.
 
 Fixpoint tz (order : nat) : Type :=
@@ -281,6 +297,64 @@ Theorem zero_pairs_pp_16 : pattern_count 4 (false, false) = 84.
 Proof. vm_compute. reflexivity. Qed.
 
 Theorem zero_pairs_pm_16 : pattern_count 4 (false, true) = 84.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The checker of the original file ([zd_product_zero] on its [sign16])
+    decides the sign pattern (+, +) on each of the 1764 ordered pairs. *)
+Theorem original_checker_is_plus_plus :
+  forallb (fun q => match q with
+    | (i, j, k, l) =>
+        Bool.eqb
+          (C1468_SlotShiftEquivariance.zd_product_zero
+             C1468_SlotShiftEquivariance.sign16 i j k l)
+          (zero_product 4 q (false, false))
+    end) quads = true.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Every 2-blade e_i +- e_j with 0 <= i < j <= 15, assessor or not. *)
+Definition blades16 : list (nat * nat * bool) :=
+  flat_map (fun i =>
+    flat_map (fun j => [(i, j, false); (i, j, true)]) (seq (S i) (15 - i)))
+    (seq 0 15).
+
+Definition is_assessor (b : nat * nat * bool) : bool :=
+  match b with
+  | (i, j, _) =>
+      (Nat.leb 1 i && Nat.leb i 7 && Nat.leb 9 j && Nat.leb j 15
+       && negb (Nat.eqb j (i + 8)))%bool
+  end.
+
+Definition blade_product_zero (a b : nat * nat * bool) : bool :=
+  match a, b with
+  | (i, j, s), (k, l, t) =>
+      tz_eqb 4 (tz_mul 4 (blade 4 i j s) (blade 4 k l t)) (tz_zero 4)
+  end.
+
+Theorem blades16_count : length blades16 = 240.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Among all 240 sign-resolved 2-blades of level 4, exactly 336 ordered
+    pairs have a zero product, and both blades of each such pair are of
+    assessor form. *)
+Theorem all_blade_zero_products_are_assessor_pairs :
+  length (filter (fun p => blade_product_zero (fst p) (snd p))
+            (list_prod blades16 blades16)) = 336
+  /\ forallb (fun a => forallb (fun b =>
+        implb (blade_product_zero a b) (is_assessor a && is_assessor b))
+        blades16) blades16 = true.
+Proof. split; vm_compute; reflexivity. Qed.
+
+Theorem zero_product_symmetric :
+  forallb (fun q => forallb (fun st =>
+    match q with
+    | (i, j, k, l) =>
+        Bool.eqb (zero_product 4 q st)
+          (zero_product 4 (k, l, i, j) (snd st, fst st))
+    end) signs) quads = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem no_blade_squares_to_zero :
+  forallb (fun a => negb (blade_product_zero a a)) blades16 = true.
 Proof. vm_compute. reflexivity. Qed.
 
 (** At (+, +) a zero product forces one at (-, -), and at (+, -) one at
