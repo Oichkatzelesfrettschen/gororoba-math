@@ -37,14 +37,14 @@ variable {K : Type u} [Field K] [StarRing K] [TrivialStar K] [PartialOrder K] [I
 /-- `x * ((dot x x)⁻¹ • star x) = 1` for nonzero `x`, at every level. -/
 theorem mul_inv_dot_smul_star (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ} {x : Tower K k} (hx : x ≠ 0) :
     x * ((dot k x x)⁻¹ • star x) = 1 := by
-  rw [mul_smul_comm', (mul_star_eq_dot k x).1, smul_smul, inv_mul_cancel₀ (dot_self_ne_zero hsq hx),
-    one_smul]
+  rw [mul_smul_comm', (mul_star_eq_dot k x).1, smul_smul,
+    inv_mul_cancel₀ (dot_self_ne_zero hsq hx), one_smul]
 
 /-- `((dot x x)⁻¹ • star x) * x = 1` for nonzero `x`, at every level. -/
 theorem inv_dot_smul_star_mul (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ} {x : Tower K k} (hx : x ≠ 0) :
     ((dot k x x)⁻¹ • star x) * x = 1 := by
-  rw [smul_mul_assoc', (mul_star_eq_dot k x).2, smul_smul, inv_mul_cancel₀ (dot_self_ne_zero hsq hx),
-    one_smul]
+  rw [smul_mul_assoc', (mul_star_eq_dot k x).2, smul_smul,
+    inv_mul_cancel₀ (dot_self_ne_zero hsq hx), one_smul]
 
 /-- Every nonzero element of the tower over an ordered field has the two-sided inverse
 `(dot x x)⁻¹ • star x`, at every level. -/

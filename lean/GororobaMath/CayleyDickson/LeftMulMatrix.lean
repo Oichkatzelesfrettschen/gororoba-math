@@ -36,7 +36,7 @@ variable {R : Type u} [CommRing R] [StarRing R] [TrivialStar R] {k : ℕ}
 
 /-- The coordinate of `x` at `i` is its trace form with the basis unit `e i`. -/
 theorem dot_e_right (x : Tower R k) (i : BitVec k) : dot k x (e R k i) = (basis R k).repr x i := by
-  rw [dot_eq_sum_repr, ← basis_apply, Basis.repr_self, Finsupp.single_apply]
+  rw [dot_eq_sum_repr, ← basis_apply, Module.Basis.repr_self, Finsupp.single_apply]
   simp
 
 /-- The matrix of left multiplication by `star a` in the basis of `Tower.basis` is the transpose
