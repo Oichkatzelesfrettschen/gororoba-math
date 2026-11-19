@@ -39,7 +39,7 @@ def write_cases(lean_file: Path, rocq_file: Path, mutant_file: Path) -> None:
         "",
         "def coords : (k : Nat) -> Tower Int k -> List Int",
         "  | 0, x => [x]",
-        "  | k + 1, x => coords k x.re ++ coords k x.im",
+        "  | k + 1, x => coords k (CayleyDickson.re x) ++ coords k (CayleyDickson.im x)",
         "",
         "def main : IO Unit := do",
         f"  for level in List.range {len(LEVELS)} do",
