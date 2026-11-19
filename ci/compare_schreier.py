@@ -30,7 +30,7 @@ def write_cases(lean_file: Path, rocq_file: Path, mutant_file: Path) -> None:
         "",
         "def row (k : Nat) (l r : Nat) : String :=",
         "  String.join ((List.range (2 ^ k)).map fun x =>",
-        "    if Tower.schreier (BitVec.ofNat k l) (BitVec.ofNat k r) (BitVec.ofNat k x) then \"1\\n\" else \"0\\n\")",
+        '    if Tower.schreier (BitVec.ofNat k l) (BitVec.ofNat k r) (BitVec.ofNat k x) then "1\\n" else "0\\n")',
         "",
         "def main : IO Unit := do",
     ]
