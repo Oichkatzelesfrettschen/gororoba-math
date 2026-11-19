@@ -17,6 +17,8 @@ public import GororobaMath.CayleyDickson.ScalarAction
 public import GororobaMath.CayleyDickson.Derivation
 public import GororobaMath.CayleyDickson.TraceForm
 public import GororobaMath.CayleyDickson.AssociatorPhase
+public import GororobaMath.CayleyDickson.AssociatorCensus
+public import GororobaMath.CayleyDickson.FlexibleLaw
 public import GororobaMath.CayleyDickson.BasisExt
 public import GororobaMath.CayleyDickson.BooleanAnf
 public import GororobaMath.CayleyDickson.Ideals
@@ -42,5 +44,6 @@ public import GororobaMath.CayleyDickson.KernelCertificate
 public import GororobaMath.CayleyDickson.SparseSupport
 public import GororobaMath.CayleyDickson.NormMultiplicative
 public import GororobaMath.CayleyDickson.SignCode
+public import GororobaMath.CayleyDickson.OrderThree
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins

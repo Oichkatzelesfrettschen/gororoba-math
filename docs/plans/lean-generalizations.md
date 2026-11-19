@@ -134,11 +134,14 @@ statement uses them.
 
 ## Proved rows
 
-The library proves the ten rows of the first tranche and the rows of the second and third tranches
+The library proves the ten rows of the first tranche and the rows of the second to sixth tranches
 (issue 55), each in the module its row names; rows 14 to 16 are the theorems of rows 11 to 13, rows
-66 and 67 share one theorem, rows 69, 70, 71 and 110 share one theorem, and rows 103 and 105 share one
-theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparisons that their
-`comparison` cells name (`ci/compare_isum.sh`, `ci/compare_am_exponent.sh`) are owed:
+66 and 67 share one theorem, rows 69, 70, 71 and 110 share one theorem, rows 87 and 88 share one
+theorem, rows 98 and 99 share one theorem, and rows 103 and 105 share one theorem. Row 72 is the
+one row with a Lean reading that is not proved (its narrowing cell records the level-4 evaluation).
+The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
+`ci/compare_order_three.sh`, `ci/compare_isum.sh`, `ci/compare_am_exponent.sh` and
+`ci/compare_schreier.sh`:
 
 | Row | Module | Theorem |
 |---|---|---|
@@ -162,7 +165,7 @@ theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparis
 | 18 | `TraceForm` | `Tower.re_mul_assoc` |
 | 19 | `TraceForm` | `Tower.mul_star_mul_left` |
 | 20 | `TraceForm` | `Tower.mul_mul_star_right` |
-| 21 | `TraceForm` | `Tower.mul_mul_self_eq` |
+| 21 | `TraceForm`, `FlexibleLaw` | `Tower.mul_mul_self_eq`, `Tower.mul_mul_self_eq'` |
 | 22 | `TraceForm` | `Tower.mul_eq_zero_iff_star_mul_eq_zero` |
 | 23 | `TraceForm` | `Tower.re_eq_zero_of_mul_eq_zero_rev` |
 | 24 | `TraceForm` | `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero` |
@@ -186,6 +189,8 @@ theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparis
 | 42 | `BaseChange` | `Tower.baseChange_mul` |
 | 43 | `BaseChange` | `Tower.baseChange_leibniz` |
 | 44 | `KernelCertificate` | `Tower.ker_mulLeft_basis_of_certificate` |
+| 45 | `OrderThree` | `Tower.orderThree_mul` |
+| 46 | `OrderThree` | `Tower.orderThree_star` |
 | 47 | `Ideals` | `Ideal.add_mul_mem_and_sub_mul_mem_iff` |
 | 48 | `Certificates` | `Matrix.linearIndependent_cols_of_mul_eq_smul_one` |
 | 49 | `Certificates` | `Matrix.smul_eq_mulVec_of_splitting` |
@@ -225,6 +230,15 @@ theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparis
 | 84 | `AssociatorPhase` | `Tower.assocPhase_two` |
 | 85 | `AssociatorPhase` | `Tower.assocPhase_cons` |
 | 86 | `AssociatorPhase` | `Tower.pairCoeff_eq_true` |
+| 87 | `AssociatorPhase` | `Tower.anfDegree_assocPhase` |
+| 88 | `AssociatorPhase` | `Tower.anfDegree_assocPhase` |
+| 89 | `AssociatorPhase` | `Tower.assocPhase_point_pair` |
+| 90 | `AssociatorCensus` | `Tower.card_anfDegree_assocPhase_eq` |
+| 91 | `AssociatorCensus` | `Tower.card_anfDegree_assocPhase_eq_one` |
+| 92 | `AssociatorCensus` | `Tower.sum_card_anfDegree_assocPhase` |
+| 93 | `AssociatorCensus` | `Tower.card_assocPhase_true` |
+| 94 | `SignCode` | `Tower.mem_signSpan_iff` |
+| 95 | `SignCode` | `Tower.card_normalizedSignSpan` |
 | 96 | `SignCode` | `Tower.schreier_xor_schreier_zero` |
 | 97 | `SparseSupport` | `Tower.repr_mul_ne_zero_mem` |
 | 98 | `SparseSupport` | `Tower.mul_eq_zero_iff_forall_sector` |

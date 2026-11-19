@@ -159,6 +159,11 @@ gororoba repository shares; this file governs where the two differ.
   and `boolean_anf.evaluate_anf` of gororoba-quantum, and `ci/compare_assoc_phase.sh`
   compares `Tower.assocPhase` with `assoc` of `rocq/quantum/CdAssociatorAnf.v` and with
   `predict.associator_phase` of gororoba-quantum; both need `GOROROBA_QUANTUM`.
+  `ci/compare_order_three.sh` compares `Tower.orderThree` with `OrderThreeMap.psi2` of
+  `rocq/quantum/CdTowerOrderThreeMap.v` on the 16 basis images of level 4 over `ℤ[√3]`, and
+  `ci/compare_schreier.sh` compares `Tower.schreier` with `schreier` of
+  `rocq/open/theories/SchreierSignCode.v` on every triple at orders 1 to 5; both reject a
+  mutated Rocq reference and need `rocq-9.3`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at

@@ -121,8 +121,10 @@ theorem repr_sectorProj {k : ℕ} (G : Set (BitVec k)) (c : BitVec k) (v : Tower
   · simp
 
 /-- For an operand supported on one coset, a vector is annihilated exactly when each of its
-sector projections is. The Rocq original is `sparse_kernel_decomposition` of
-`rocq/open/theories/CDSparseBlockTransport.v`. -/
+sector projections is. The Rocq originals are `sparse_kernel_decomposition` of
+`rocq/open/theories/CDSparseBlockTransport.v` (row 98) and the kernel form of
+`sparse_field_rank_decomposition` of `rocq/open/theories/CDSparseMatrixTransport.v` (row 99,
+the matrix-shape restatement, which has no separate Lean declaration). -/
 theorem mul_eq_zero_iff_forall_sector {k : ℕ} {G : Set (BitVec k)} (hG0 : 0#k ∈ G)
     (hG : ∀ a ∈ G, ∀ b ∈ G, a ^^^ b ∈ G) {y : Tower R k} {s : BitVec k}
     (hy : ∀ p, (basis R k).repr y p ≠ 0 → s ^^^ p ∈ G) (v : Tower R k) :
