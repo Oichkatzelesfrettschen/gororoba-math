@@ -28,6 +28,10 @@ public import GororobaMath.CayleyDickson.ImaginarySum
 public import GororobaMath.CayleyDickson.HalfFold
 public import GororobaMath.CayleyDickson.Fold
 public import GororobaMath.CayleyDickson.ZeroDivisors
+public import GororobaMath.CayleyDickson.ZeroDivisorsZMod
+public import GororobaMath.CayleyDickson.AssociatorUnrestricted
+public import GororobaMath.CayleyDickson.TowerInverse
+public import GororobaMath.CayleyDickson.LeftMulMatrix
 public import GororobaMath.CayleyDickson.Hurwitz
 public import GororobaMath.CayleyDickson.Quaternion
 public import GororobaMath.CayleyDickson.QuaternionModule
