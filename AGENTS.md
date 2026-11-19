@@ -150,6 +150,10 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/CdTowerAlignedPairSpectrum.v`,
   `CdTowerAlignedPairClosedForm.v`, `CdTowerAssociatorSpace.v` and
   `CdTowerTwoTermBins.v`.
+  `ci/compare_isum.sh` compares the coordinates of `Tower.isum` over the integers with `isum` of
+  `rocq/quantum/CdImaginarySumConference.v` at levels 1 to 6, and `ci/compare_am_exponent.sh` compares
+  `Tower.amExponent` with `am_exponent` of `rocq/quantum/CdTowerBasisSign.v` at levels 1 to 6; each
+  rejects a mutated Rocq reference, reads no other repository, and runs on demand.
   `ci/compare_anf.sh` compares `Tower.anfCoeff` and `Tower.anfEval` with `anf_coef`
   and `anf_eval` of `rocq/quantum/CdSignRowAnf.v` and with `boolean_anf.anf_coefficients`
   and `boolean_anf.evaluate_anf` of gororoba-quantum, and `ci/compare_assoc_phase.sh`
