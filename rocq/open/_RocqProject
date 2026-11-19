@@ -34,10 +34,12 @@ verified/C871_CasimirExact.v
 verified/C868_PainleveGullstrand.v
 verified/C876_QuaternionRotation.v
 verified/C869_InteriorFlat.v
+verified/C869_InteriorFlatModel.v
 verified/C870_NacelleModulationDistinct.v
 verified/C872_PillarCasimirFinite.v
 verified/C873_SphereInCylinderFinite.v
 verified/C874_YorkTimeVanishesInterior.v
+verified/C874_YorkTimeModelFunctions.v
 verified/C_QIBoundNegative.v
 verified/C_QITauScaling.v
 verified/C_WarpEnergyNonpositive.v

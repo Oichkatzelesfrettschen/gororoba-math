@@ -503,6 +503,8 @@ open	verified/C868_PainleveGullstrand.v	deprecated-transitive-library-file-since
 open	verified/C868_PainleveGullstrand.v	disj-pattern-notation
 open	verified/C869_InteriorFlat.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C869_InteriorFlat.v	disj-pattern-notation
+open	verified/C869_InteriorFlatModel.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C869_InteriorFlatModel.v	disj-pattern-notation
 open	verified/C870_NacelleModulationDistinct.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C870_NacelleModulationDistinct.v	disj-pattern-notation
 open	verified/C871_CasimirExact.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -515,6 +517,8 @@ open	verified/C873_SphereInCylinderFinite.v	deprecated-transitive-library-file-s
 open	verified/C873_SphereInCylinderFinite.v	disj-pattern-notation
 open	verified/C874_YorkTimeVanishesInterior.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C874_YorkTimeVanishesInterior.v	disj-pattern-notation
+open	verified/C874_YorkTimeModelFunctions.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C874_YorkTimeModelFunctions.v	disj-pattern-notation
 open	verified/C875_HamiltonianVacuum.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C875_HamiltonianVacuum.v	disj-pattern-notation
 open	verified/C876_QuaternionRotation.v	deprecated-transitive-library-file-since-Stdlib-9.0
