@@ -137,9 +137,13 @@ statement uses them.
 The library proves the ten rows of the first tranche and the rows of the second to sixth tranches
 (issue 55), each in the module its row names; rows 14 to 16 are the theorems of rows 11 to 13, rows
 66 and 67 share one theorem, rows 69, 70, 71 and 110 share one theorem, rows 87 and 88 share one
-theorem, rows 98 and 99 share one theorem, and rows 103 and 105 share one theorem. Row 72 is the
-one row with a Lean reading that is not proved (its narrowing cell records the level-4 evaluation).
-The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
+theorem, rows 98 and 99 share one theorem, and rows 103 and 105 share one theorem. Row 72 is proved at
+every level without the H_a-action of the Rocq source: the kernel of left multiplication by a doubly
+pure `(p, q)` is read as the kernel of the complex matrix `A + i B`, with `A` and `B` the matrices of
+left multiplication by `p` and right multiplication by `q` (both skew), and the nullity of a skew-symmetric
+matrix of even size is even, so the real nullity is twice an even number. A numpy rank evaluation
+of the nullity of 2000 to 6000 sparse operands per level at levels 4 to 7 found only multiples of 4,
+the same spectrum the proof gives (measured, one build; not part of any gate). The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
 `ci/compare_order_three.sh`, `ci/compare_isum.sh`, `ci/compare_am_exponent.sh` and
 `ci/compare_schreier.sh`:
 
@@ -216,6 +220,7 @@ The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
 | 69 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
 | 70 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
 | 71 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
+| 72 | `MorenoKernel` | `Tower.four_dvd_finrank_ker_mulLeft` |
 | 73 | `SignLaws` | `Tower.negSign_xor_left_right` |
 | 74 | `SignLaws` | `Tower.amExponent_eq` |
 | 75 | `BooleanAnf` | `Tower.anfEval_anfCoeff` |
@@ -257,10 +262,11 @@ The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
 
 `ci/compare_anf.sh` and `ci/compare_assoc_phase.sh` compare the definitions
 of rows 75 and 81 with their Rocq partners of `rocq/quantum` and with the
-Python of gororoba-quantum. The open-tree spellings (`canonical_anf` of
-`BooleanANFDegree.v`, `associator_phase` of `CDAssociatorDoubling.v`) are
-outside both scripts: their cube carrier needs the compiled open tree, and
-the `comparison` cells of rows 75 and 81 mark that part owed. A row leaves
+Python of gororoba-quantum, and `ci/compare_open_tree.sh` compares them with
+the open-tree spellings `anf_evaluate` and `anf_degree` of `BooleanANFDegree.v`
+and `associator_phase` of `CDAssociatorDoubling.v`, whose cube carrier it
+compiles from the tracked sources (they import only the standard library and
+`SchreierSignCode.v`). A row leaves
 the plan's open work when its theorem is in the library; the table grows
 with each tranche.
 
