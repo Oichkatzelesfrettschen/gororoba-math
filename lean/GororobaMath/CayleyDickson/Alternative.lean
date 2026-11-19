@@ -254,13 +254,13 @@ variable {R : Type u} [NonAssocRing R] [StarRing R]
 
 /-- The integer coefficient of the associator of three basis elements, in the signs of
 `Tower.sign`. -/
-def assocCoeff (k : ℕ) (p q r : BitVec k) : ℤ :=
+def basisAssocCoeff (k : ℕ) (p q r : BitVec k) : ℤ :=
   sign k p q * sign k (p ^^^ q) r - sign k q r * sign k p (q ^^^ r)
 
 /-- The associator of three basis elements is an integer multiple of a basis element. -/
 theorem associator_e_e_e (k : ℕ) (p q r : BitVec k) :
-    associator (e R k p) (e R k q) (e R k r) = assocCoeff k p q r • e R k (p ^^^ q ^^^ r) := by
-  unfold associator assocCoeff
+    associator (e R k p) (e R k q) (e R k r) = basisAssocCoeff k p q r • e R k (p ^^^ q ^^^ r) := by
+  unfold associator basisAssocCoeff
   simp only [e_mul_e_sign, smul_mul_assoc, mul_smul_comm, smul_smul, BitVec.xor_assoc, sub_smul]
 
 end Basis
@@ -282,10 +282,10 @@ theorem associator_witness_left :
     associator (e R 4 1#4 + e R 4 10#4) (e R 4 1#4 + e R 4 10#4) (e R 4 4#4) =
       (2 : ℤ) • e R 4 15#4 := by
   simp only [associator_add_left, associator_add_mid, associator_e_e_e]
-  have h1 : assocCoeff 4 1#4 1#4 4#4 = 0 := by decide
-  have h2 : assocCoeff 4 1#4 10#4 4#4 = 2 := by decide
-  have h3 : assocCoeff 4 10#4 1#4 4#4 = 0 := by decide
-  have h4 : assocCoeff 4 10#4 10#4 4#4 = 0 := by decide
+  have h1 : basisAssocCoeff 4 1#4 1#4 4#4 = 0 := by decide
+  have h2 : basisAssocCoeff 4 1#4 10#4 4#4 = 2 := by decide
+  have h3 : basisAssocCoeff 4 10#4 1#4 4#4 = 0 := by decide
+  have h4 : basisAssocCoeff 4 10#4 10#4 4#4 = 0 := by decide
   have hx : (1#4 ^^^ 10#4 ^^^ 4#4) = 15#4 := by decide
   have hx2 : (10#4 ^^^ 1#4 ^^^ 4#4) = 15#4 := by decide
   have hx3 : (1#4 ^^^ 1#4 ^^^ 4#4) = 4#4 := by decide
@@ -299,10 +299,10 @@ theorem associator_witness_right :
     associator (e R 4 4#4) (e R 4 1#4 + e R 4 10#4) (e R 4 1#4 + e R 4 10#4) =
       (-2 : ℤ) • e R 4 15#4 := by
   simp only [associator_add_right, associator_add_mid, associator_e_e_e]
-  have h1 : assocCoeff 4 4#4 1#4 1#4 = 0 := by decide
-  have h2 : assocCoeff 4 4#4 1#4 10#4 = 0 := by decide
-  have h3 : assocCoeff 4 4#4 10#4 1#4 = -2 := by decide
-  have h4 : assocCoeff 4 4#4 10#4 10#4 = 0 := by decide
+  have h1 : basisAssocCoeff 4 4#4 1#4 1#4 = 0 := by decide
+  have h2 : basisAssocCoeff 4 4#4 1#4 10#4 = 0 := by decide
+  have h3 : basisAssocCoeff 4 4#4 10#4 1#4 = -2 := by decide
+  have h4 : basisAssocCoeff 4 4#4 10#4 10#4 = 0 := by decide
   have hx : (4#4 ^^^ 1#4 ^^^ 1#4) = 4#4 := by decide
   have hx2 : (4#4 ^^^ 1#4 ^^^ 10#4) = 15#4 := by decide
   have hx3 : (4#4 ^^^ 10#4 ^^^ 1#4) = 15#4 := by decide
@@ -467,8 +467,8 @@ theorem exists_associator_swap_left_ne (h2 : (2 : R) ≠ 0) (k : ℕ) (hk : 4 �
   intro h
   have h4 := lift_injective 4 m (h.trans (lift_zero 4 m).symm)
   rw [associator_e_e_e, associator_e_e_e] at h4
-  have h5 : assocCoeff 4 1#4 10#4 4#4 = 2 := by decide
-  have h6 : assocCoeff 4 10#4 1#4 4#4 = 0 := by decide
+  have h5 : basisAssocCoeff 4 1#4 10#4 4#4 = 2 := by decide
+  have h6 : basisAssocCoeff 4 10#4 1#4 4#4 = 0 := by decide
   have hx : (1#4 ^^^ 10#4 ^^^ 4#4) = 15#4 := by decide
   have hx2 : (10#4 ^^^ 1#4 ^^^ 4#4) = 15#4 := by decide
   rw [h5, h6, hx, hx2, zero_smul, add_zero] at h4
@@ -484,8 +484,8 @@ theorem exists_associator_swap_right_ne (h2 : (2 : R) ≠ 0) (k : ℕ) (hk : 4 �
   intro h
   have h4 := lift_injective 4 m (h.trans (lift_zero 4 m).symm)
   rw [associator_e_e_e, associator_e_e_e] at h4
-  have h5 : assocCoeff 4 4#4 1#4 10#4 = 0 := by decide
-  have h6 : assocCoeff 4 4#4 10#4 1#4 = -2 := by decide
+  have h5 : basisAssocCoeff 4 4#4 1#4 10#4 = 0 := by decide
+  have h6 : basisAssocCoeff 4 4#4 10#4 1#4 = -2 := by decide
   have hx : (4#4 ^^^ 1#4 ^^^ 10#4) = 15#4 := by decide
   have hx2 : (4#4 ^^^ 10#4 ^^^ 1#4) = 15#4 := by decide
   rw [h5, h6, hx, hx2, zero_smul, zero_add, neg_smul] at h4
@@ -511,8 +511,8 @@ theorem exists_associator_cyclic_ne (h2 : (2 : R) ≠ 0) (k : ℕ) (hk : 4 ≤ k
   intro h
   have h4 := lift_injective 4 m h
   rw [associator_e_e_e, associator_e_e_e] at h4
-  have h5 : assocCoeff 4 1#4 10#4 4#4 = 2 := by decide
-  have h6 : assocCoeff 4 10#4 4#4 1#4 = 0 := by decide
+  have h5 : basisAssocCoeff 4 1#4 10#4 4#4 = 2 := by decide
+  have h6 : basisAssocCoeff 4 10#4 4#4 1#4 = 0 := by decide
   have hx : (1#4 ^^^ 10#4 ^^^ 4#4) = 15#4 := by decide
   have hx2 : (10#4 ^^^ 4#4 ^^^ 1#4) = 15#4 := by decide
   rw [h5, h6, hx, hx2, zero_smul] at h4
