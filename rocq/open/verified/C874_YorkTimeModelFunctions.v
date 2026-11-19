@@ -7,9 +7,11 @@
     statements of the original header.
 
     Convention: [axial_taper], [axial_taper_deriv] and [shape_fun] are the
-    model functions of OpenGororoba.WarpShapeFunction; x, L, sigma_x, r_s,
-    R and sigma are real numbers with the positivity hypotheses each
-    theorem names.
+    model functions of OpenGororoba.WarpShapeFunction.  Each theorem
+    evaluates the first argument (the axial coordinate x, or the radius
+    r_s) at 0 and quantifies over the remaining real parameters: L and
+    sigma_x with sigma_x > 0 and L > 0; Rb and sig with sig > 0 and
+    Rb > 0.
 
     [C874_model_axial_deriv_zero]: the derivative of the axial taper
     vanishes at x = 0.  [C874_model_axial_taper_unity]: the axial taper is
@@ -22,12 +24,14 @@
     about the divergence of the shift of the implemented metric, is not
     proved here.
 
-    Corresponding tests in crates/gr_core/src/warp_metric.rs of
-    gororoba-open (commit 957fc28f): test_axial_taper_center and
-    test_shape_function_at_center assert the values these theorems state;
-    test_york_time_zero_at_center asserts |theta| < 0.1 for the default
-    parameters.  The original header names test_york_time_center_zero,
-    which names no test. *)
+    Numerical tests in crates/gr_core/src/warp_metric.rs of gororoba-open
+    (commit 957fc28f), each at fixed parameters in f64 and none an
+    instance of a theorem here: test_axial_taper_center and
+    test_shape_function_at_center assert values within 0.01 of 1 at 0;
+    test_york_time_zero_at_center asserts |theta| < 0.1 at the origin for
+    the default parameters, the York time statement this file does not
+    prove.  The original header names test_york_time_center_zero, which
+    names no test. *)
 
 From Stdlib Require Import Rtrigo_def.
 From OpenGororoba Require Import Prelude Tanh WarpShapeFunction.
