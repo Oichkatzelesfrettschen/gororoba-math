@@ -276,7 +276,9 @@ extract-c-check: extract-c
 	{ echo "FAIL: FP24 emission differs from golden or does not compile"; exit 1; }
 
 # CompCert build of the same emitted units, glue and runtime source, beside the
-# gcc build above (gcc stays the reference). CCOMP is the CompCert driver of the
+# gcc build above (gcc stays the reference). It runs extract-r2vb-check and
+# extract-c-check first, so it reads freshly emitted units whose digests match
+# their golden manifests. CCOMP is the CompCert driver of the
 # active switch (coq-compcert 3.18 in rocq-certirocq: its sources report 3.17).
 # Each unit compiles with the default language options (no -fall). The hand
 # written harnesses and gc_stack.c compile under -Werror. ccomp prints some

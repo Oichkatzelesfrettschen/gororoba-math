@@ -141,7 +141,9 @@ own execution evidence.
 
 ### CompCert build of the C targets
 
-`make extract-c-compcert` runs `extract-r2vb-check` and `extract-c-check`
+`OPAMSWITCH=rocq-certirocq opam exec --switch=rocq-certirocq -- make
+extract-c-compcert` runs (the exported `OPAMSWITCH` makes `opam var lib`
+name the CertiRocq switch); `extract-r2vb-check` and `extract-c-check`
 first, so the units it reads are freshly emitted and match their pinned
 digests, then compiles the emitted units, the glue and the CertiRocq runtime
 source `gc_stack.c` with `ccomp` of the active switch
@@ -167,13 +169,15 @@ nine fixtures, zero failures).
 `ccomp -interp` reports undefined behavior in both tests: each goes stuck at
 `(<ptr> & 1) == 0`, CertiRocq's inline test for a boxed value, which masks a
 `long` that holds a pointer, and CompCert C leaves the bitwise AND of a
-pointer undefined (`Cop.v`, the semantics of `Oand`). CompCert's
-correctness theorem still holds for these units: the compiled program
-improves on the behaviors of the source (`Compiler.v`, `Behaviors.v`). A
-source that goes wrong admits every target behavior as an improvement, so
-the theorem constrains nothing here, and the C-to-assembly link stays in the
-trusted base for these units. The same construct (the `& 1` form) occurs
-in each emitted unit; `extraction/compcert/r2vb_dp4_compcert_record.txt`
+pointer undefined (`sem_and` of `cfrontend/Cop.v` yields no value for a
+pointer operand). CompCert's correctness theorem still holds for these
+units: each behavior of the compiled program improves on one of the source
+(`behavior_improves` of `common/Behaviors.v`, CompCert 3.17). A source
+behavior `Goes_wrong t` is improved by every target behavior that begins
+with the trace `t`, so the theorem fixes only the output printed before the
+stuck point (the line of fixture 0) and nothing after it; the C-to-assembly
+link stays in the trusted base for the rest of each test. The same construct (text matches of `& 1`)
+occurs in each emitted unit; `extraction/compcert/r2vb_dp4_compcert_record.txt`
 records the counts (24, 26 and 25 for dp4, dp4_operand_admit and
 sint_range_admit at the measurement). The harness is therefore a second
 compiler's differential build of the same C. The construct is in the
@@ -184,7 +188,8 @@ compile).
 The interpreter links one file, so each run reads a file that includes the
 units; a `#define` renames `struct closure` of the glue there, since
 `gc_stack.c` declares the same tag. The record counts the preprocessed lines
-that the rename changes in each unit and the glue, and keeps the digests of
+that the rename changes in each unit and the glue under `-D`, which renames
+across the whole glue and so bounds the scoped `#define` from above, and keeps the digests of
 both unity files. The FP24 unit has no driver, so its
 `-interp` run is not run; it is compiled only.
 
