@@ -410,6 +410,24 @@ theorem exists_commutator_cyclic_sum_ne (h4 : (4 : R) ≠ 0) (k : ℕ) (hk : 4 �
   simp only [associator_e_e_e, BitVec.reduceXOr, ← add_smul, ← sub_smul, smul_smul] at h5
   exact zsmul_e_ne_zsmul_e (d := 4) (by decide) (by simpa using h4) 4 15#4 h5
 
+/-- At every level `k ≥ 4`, over a ring in which `4 ≠ 0`, the Jacobi sum is not minus six times
+the associator. -/
+theorem exists_jacobi_ne (h4 : (4 : R) ≠ 0) (k : ℕ) (hk : 4 ≤ k) :
+    ∃ x y z : Tower R k, commutator x (commutator y z) + commutator y (commutator z x) +
+        commutator z (commutator x y) ≠ (-6 : ℤ) • associator x y z := by
+  obtain ⟨x, y, z, h⟩ := exists_commutator_cyclic_sum_ne h4 k hk
+  refine ⟨x, y, z, fun h' => h ?_⟩
+  rw [commutator_anticomm x (commutator y z), commutator_anticomm y (commutator z x),
+    commutator_anticomm z (commutator x y)] at h'
+  have e : ∀ u v w : Tower R k, -u + -v + -w = -(w + u + v) := by
+    intro u v w
+    abel
+  rw [e] at h'
+  calc _ = -(-(commutator (commutator x y) z + commutator (commutator y z) x +
+          commutator (commutator z x) y)) := (neg_neg _).symm
+    _ = -((-6 : ℤ) • associator x y z) := by rw [h']
+    _ = (6 : ℤ) • associator x y z := by rw [neg_smul, neg_neg]
+
 /-- At every level `k ≥ 4`, over a ring with `2 ≠ 0`, the inner derivation violates the Leibniz
 rule: `D(e 1, e 8)(e 2 * e 4) - D(e 1, e 8)(e 2) * e 4 - e 2 * D(e 1, e 8)(e 4) = 2 e 15`. -/
 theorem exists_innerDer_leibniz_ne (h2 : (2 : R) ≠ 0) (k : ℕ) (hk : 4 ≤ k) :
