@@ -52,6 +52,9 @@ and the Rocq `assoc` of `rocq/quantum/CdAssociatorAnf.v` on every triple at leve
   `assocPhase p q` has algebraic degree `max 1 (Nat.log2 (max p.toNat q.toNat) - 1)`, the Rocq
   `assoc_degree_is` of `rocq/quantum/CdAssociatorAnf.v` and `associator_phase_degree` of
   `rocq/open/theories/CDPhaseDegree.v`.
+* `Tower.assocPhase_point_pair`: for `i = 2^(n-1) + m` and `j = i + 2^(n-2)` the phase is a
+  point indicator in `x mod 2^(n-2)` plus the top bit of `x` when `m ≠ 0`, the Rocq
+  `point_indicator_pairs` of `rocq/quantum/CdAssociatorPointIndicators.v`.
 -/
 
 @[expose] public section
@@ -603,6 +606,120 @@ theorem anfDegree_assocPhase {k : ℕ} (hk : 3 ≤ k) {p q : BitVec k} (hp : p �
     (hpq : p ≠ q) :
     anfDegree (assocPhase p q) = max 1 (Nat.log2 (max p.toNat q.toNat) - 1) :=
   assocDegreeAt_of_le hk p q hp hq hpq
+
+/-- A mask with top bit `a` and low part `x` is nonzero exactly when `a` or `x ≠ 0`. -/
+theorem decide_cons_ne_zero {n : ℕ} (a : Bool) (x : BitVec n) :
+    decide (BitVec.cons a x ≠ 0#(n + 1)) = (a || decide (x ≠ 0#n)) := by
+  cases a
+  · by_cases hx : x = 0#n
+    · subst hx
+      simp
+    · have : BitVec.cons false x ≠ 0#(n + 1) := by
+        intro h
+        apply hx
+        have := congrArg (BitVec.setWidth n) h
+        simpa using this
+      simp [this, hx]
+  · have : BitVec.cons true x ≠ 0#(n + 1) := by
+      intro h
+      have := congrArg BitVec.msb h
+      simp at this
+    simp [this]
+
+/-- Cancelling a repeated xor operand. -/
+theorem xor_xor_self_left {n : ℕ} (a b : BitVec n) : a ^^^ (a ^^^ b) = b := by
+  rw [← BitVec.xor_assoc, BitVec.xor_self, BitVec.zero_xor]
+
+/-- The value of two top bits above `z`, read modulo the weight of the top bit of `z`, is `z`. -/
+theorem toNat_cons_cons_mod {j : ℕ} (X Y : Bool) (z : BitVec (j + 1)) :
+    (BitVec.cons X (BitVec.cons Y z)).toNat % 2 ^ (j + 1) = z.toNat := by
+  have hz := z.isLt
+  have h2 : 2 ^ (j + 2) = 2 * 2 ^ (j + 1) := pow_succ' 2 (j + 1)
+  have key : ∀ c, (2 ^ (j + 1) * c + z.toNat) % 2 ^ (j + 1) = z.toNat := fun c => by
+    rw [Nat.mul_add_mod, Nat.mod_eq_of_lt hz]
+  cases X <;> cases Y <;> simp only [toNat_cons_false', toNat_cons_true']
+  · exact Nat.mod_eq_of_lt hz
+  · rw [show 2 ^ (j + 1) + z.toNat = 2 ^ (j + 1) * 1 + z.toNat by omega]
+    exact key 1
+  · rw [show 2 ^ (j + 2) + z.toNat = 2 ^ (j + 1) * 2 + z.toNat by omega]
+    exact key 2
+  · rw [show 2 ^ (j + 2) + (2 ^ (j + 1) + z.toNat) = 2 ^ (j + 1) * 3 + z.toNat by omega]
+    exact key 3
+
+/-- For `i = 2^(n-1) + m` and `j = i + 2^(n-2)` the associator phase is a point indicator in
+`x mod 2^(n-2)`, plus the top bit of `x` when `m` is nonzero. The Rocq original is
+`point_indicator_pairs` of `rocq/quantum/CdAssociatorPointIndicators.v`. The proof writes both
+indices as top bits over `μ`, applies `assocPhase_cons` twice, and the degenerate phase
+`assocPhase μ μ _ = false` removes the low part. -/
+theorem assocPhase_point_pair {n m : ℕ} (hn : 3 ≤ n) (hm : m < 2 ^ (n - 2)) (x : BitVec n) :
+    assocPhase (BitVec.ofNat n (2 ^ (n - 1) + m)) (BitVec.ofNat n (2 ^ (n - 1) + m + 2 ^ (n - 2)))
+        x =
+      if m = 0 then decide (x.toNat % 2 ^ (n - 2) ≠ 0)
+      else (x.msb ^^ decide (x.toNat % 2 ^ (n - 2) = m)) := by
+  obtain ⟨j, rfl⟩ : ∃ j, n = j + 3 := ⟨n - 3, by omega⟩
+  have e1 : j + 3 - 1 = j + 2 := by omega
+  have e2 : j + 3 - 2 = j + 1 := by omega
+  have hm' : m < 2 ^ (j + 1) := by rw [e2] at hm; exact hm
+  rw [e1, e2]
+  have hμ : (BitVec.ofNat (j + 1) m).toNat = m := by
+    rw [BitVec.toNat_ofNat]
+    exact Nat.mod_eq_of_lt hm'
+  have h2 : 2 ^ (j + 2) = 2 * 2 ^ (j + 1) := pow_succ' 2 (j + 1)
+  have h3 : 2 ^ (j + 3) = 2 * 2 ^ (j + 2) := pow_succ' 2 (j + 2)
+  have hp : BitVec.ofNat (j + 3) (2 ^ (j + 2) + m) =
+      BitVec.cons true (BitVec.cons false (BitVec.ofNat (j + 1) m)) := by
+    apply BitVec.eq_of_toNat_eq
+    rw [toNat_cons_true', toNat_cons_false', hμ, BitVec.toNat_ofNat]
+    exact Nat.mod_eq_of_lt (by omega)
+  have hq : BitVec.ofNat (j + 3) (2 ^ (j + 2) + m + 2 ^ (j + 1)) =
+      BitVec.cons true (BitVec.cons true (BitVec.ofNat (j + 1) m)) := by
+    apply BitVec.eq_of_toNat_eq
+    rw [toNat_cons_true', toNat_cons_true', hμ, BitVec.toNat_ofNat,
+      Nat.mod_eq_of_lt (by omega)]
+    have h4 : 2 ^ (j + 1 + 1) = 2 * 2 ^ (j + 1) := pow_succ' 2 (j + 1)
+    omega
+  rw [hp, hq]
+  generalize hμ' : BitVec.ofNat (j + 1) m = μ at *
+  obtain ⟨X, x', rfl⟩ : ∃ X x', x = BitVec.cons X x' := ⟨_, _, (BitVec.cons_msb_setWidth x).symm⟩
+  obtain ⟨Y, z, rfl⟩ : ∃ Y z, x' = BitVec.cons Y z := ⟨_, _, (BitVec.cons_msb_setWidth x').symm⟩
+  rw [toNat_cons_cons_mod, BitVec.msb_cons]
+  have hdeg : ∀ y, assocPhase μ μ y = false := fun y =>
+    assocPhase_eq_false_of_degenerate (Or.inr (Or.inr rfl)) y
+  have hμm : μ.toNat = m := hμ
+  rw [assocPhase_cons, assocPhase_cons]
+  simp only [commPhase_eq_cst, BitVec.cons_xor_cons, decide_cons_ne_zero, hdeg, BitVec.xor_self,
+    xor_xor_self_left, BitVec.zero_xor]
+  by_cases hm0 : m = 0
+  · have hμ0 : μ = 0#(j + 1) := BitVec.eq_of_toNat_eq (by simp [hμm, hm0])
+    subst hμ0
+    have hz0 : (z.toNat ≠ 0) ↔ (z ≠ 0#(j + 1)) := by
+      rw [ne_eq, ne_eq, ← BitVec.toNat_inj]
+      simp
+    simp only [hm0, ↓reduceIte]
+    have hz0' : decide (z.toNat ≠ 0) = decide (z ≠ 0#(j + 1)) := decide_eq_decide.2 hz0
+    rw [hz0']
+    simp only [BitVec.zero_xor, ne_eq, not_true_eq_false, decide_false, Bool.false_xor,
+      Bool.false_and, Bool.true_and, Bool.false_or, Bool.true_or, Bool.xor_false]
+    generalize decide (z ≠ 0#(j + 1)) = d2
+    revert X Y d2
+    decide
+  · have hμne : μ ≠ 0#(j + 1) := fun h => hm0 (by rw [← hμm, h]; simp)
+    have hz : decide (z.toNat = m) = !decide (μ ^^^ z ≠ 0#(j + 1)) := by
+      rw [← hμm]
+      by_cases h : z = μ
+      · subst h
+        simp
+      · have h1 : μ ^^^ z ≠ 0#(j + 1) := fun h0 => h (BitVec.xor_eq_zero_iff.1 h0).symm
+        have h2 : z.toNat ≠ μ.toNat := fun e => h (BitVec.eq_of_toNat_eq e)
+        simp [h1, h2]
+    simp only [hm0, ↓reduceIte]
+    rw [hz, decide_eq_true hμne]
+    simp only [ne_eq, not_true_eq_false, decide_false, Bool.false_xor, Bool.false_and,
+      Bool.true_and, Bool.false_or, Bool.true_or, Bool.xor_false]
+    generalize decide (μ ^^^ z ≠ 0#(j + 1)) = d3
+    generalize decide (z ≠ 0#(j + 1)) = d2
+    revert X Y d2 d3
+    decide
 
 end Tower
 
