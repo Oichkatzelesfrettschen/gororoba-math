@@ -31,6 +31,7 @@ BOOL = re.compile(r"true|false")
 ROWS = [(k, p) for k in LEVELS for p in range(2**k)]
 VALUES = sum(4**k for k in LEVELS)
 
+
 def write_cases(lean_file: Path, rocq_file: Path, mutant_file: Path) -> None:
     lean = [
         "import GororobaMath.CayleyDickson.SignLaws",
@@ -114,9 +115,11 @@ def read_lean(path: Path) -> list[tuple[int, int, str]]:
         rows.append((int(k), int(p), row))
     return rows
 
+
 def read_rocq(path: Path) -> list[str]:
     text = path.read_text(encoding="utf-8")
     return ["".join("1" if v == "true" else "0" for v in BOOL.findall(m.group(1))) for m in EVAL.finditer(text)]
+
 
 def compare(lean_path: Path, rocq_path: Path) -> int:
     try:
