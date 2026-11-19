@@ -43,7 +43,8 @@
       mixture of deterministic assignments: the criterion for that is the
       full set of CHSH inequalities (A. Fine, Phys. Rev. Lett. 48 (1982)
       291, the publication record of which OpenAlex matches by title,
-      author and year).  This file proves only the necessary direction,
+      author and year; the criterion is stated here from the
+      literature as recalled, not from a held copy of the paper).  This file proves only the necessary direction,
       for the single combination S. *)
 
 From Stdlib Require Import Reals Lra List.
