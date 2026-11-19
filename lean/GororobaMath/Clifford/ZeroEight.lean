@@ -18,10 +18,10 @@ the output coordinate: its entry at row `j` and column `l` is the coefficient of
 otherwise (`leftMulZ`). A matrix of the library is the function of its row and
 column; `Matrix (Fin 16) (Fin 16) ℝ` carries the usual product.
 
-The sedenions are not alternative, and left multiplication by `e_a` squares to
-`-1` (`Tower.negSign_xor_right`) while two such operators anticommute only for
-indices of the octonion block and the doubling unit; the relations are checked for
-`e_1 .. e_8` by evaluation (`genMat_sq`, `genMat_anti`).
+The sedenions are not alternative: left multiplication by `e_a` squares to `-1`
+(`Tower.negSign_xor_right`), and the anticommutation of two such operators is
+checked here for the units `e_1 .. e_8` alone, by evaluation (`genMat_sq`,
+`genMat_anti`); no statement is made about other pairs of units.
 
 ## Main results
 
