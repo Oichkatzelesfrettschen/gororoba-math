@@ -255,6 +255,28 @@ theorem dot_add_self_add_dot_sub_self {k : ℕ} (x y : Tower R k) :
   simp only [dot_add_left, dot_add_right, dot_sub_left, dot_sub_right]
   ring
 
+
+/-- When `2 = 0` in the coefficient ring, conjugation is the identity at every level. -/
+theorem star_eq_self_of_two_eq_zero (h2 : (2 : R) = 0) {k : ℕ} (x : Tower R k) : star x = x := by
+  have hs := star_add_self k x
+  rw [h2, zero_mul, zero_smul, add_eq_zero_iff_eq_neg] at hs
+  have hx : x + x = 0 := by
+    rw [← two_smul R x, h2, zero_smul]
+  rw [hs]
+  exact (neg_eq_of_add_eq_zero_left hx)
+
+/-- When `2 = 0` in the coefficient ring the product commutes at every level. The Rocq original
+is `two_zero_commutative` of the functor `RingTower` in `rocq/quantum/CdTowerRing.v`. -/
+theorem mul_comm_of_two_eq_zero (h2 : (2 : R) = 0) :
+    ∀ {k : ℕ} (x y : Tower R k), x * y = y * x
+  | 0, x, y => mul_comm (show R from x) (show R from y)
+  | k + 1, ⟨a, b⟩, ⟨c, d⟩ => by
+    change mk a b * mk c d = mk c d * mk a b
+    rw [mk_mul_mk, mk_mul_mk]
+    simp only [star_eq_self_of_two_eq_zero h2]
+    refine mk_inj.2 ⟨?_, add_comm _ _⟩
+    rw [mul_comm_of_two_eq_zero h2 a c, mul_comm_of_two_eq_zero h2 d b]
+
 section Ordered
 
 variable [PartialOrder R] [IsOrderedAddMonoid R] [NoZeroDivisors R]
@@ -397,6 +419,55 @@ theorem exists_eq_inv_dot_smul_star_add (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ}
       one_smul, sub_self]
 
 end Field
+
+section Instances
+
+/-- The flexible law at every level of the integer tower. The Rocq original is `flexible` of
+`ZBridge` in `rocq/quantum/CdTowerDomainZ.v`; this is the instance `R := ℤ` of
+`mul_mul_self_eq`. -/
+theorem int_mul_mul_self_eq {k : ℕ} (x y : Tower ℤ k) : x * y * x = x * (y * x) :=
+  mul_mul_self_eq (mul_right_injective₀ two_ne_zero) x y
+
+/-- The flexible law at every level of the real tower. The Rocq originals are `flexible` of
+`RBridge` in `rocq/quantum/CdTowerDomainR.v` and `flexible` of
+`rocq/quantum/CdAnnihilatorSymmetryReal.v`; this is the instance `R := ℝ` of
+`mul_mul_self_eq`. -/
+theorem real_mul_mul_self_eq {k : ℕ} (x y : Tower ℝ k) : x * y * x = x * (y * x) :=
+  mul_mul_self_eq (mul_right_injective₀ two_ne_zero) x y
+
+/-- Over the reals every right inverse of `a` is `conj(a) / dot a a` plus a kernel element. The
+Rocq original is `right_inverse_form` of `RFieldBridge` in
+`rocq/quantum/CdTowerDomainR.v`; this is the instance `K := ℝ` of
+`exists_eq_inv_dot_smul_star_add`. -/
+theorem real_exists_eq_inv_dot_smul_star_add {k : ℕ} {a b : Tower ℝ k} (h : a * b = 1) :
+    ∃ w, a * w = 0 ∧ b = (dot k a a)⁻¹ • star a + w :=
+  exists_eq_inv_dot_smul_star_add (fun x => mul_self_nonneg x) h
+
+/-- A zero divisor of the real tower at level `k + 1` is orthogonal to `1` and to the adjoined
+unit. The Rocq original is `lemma_9_5` of `rocq/quantum/CdAnnihilatorSymmetryReal.v`; this is the
+instance `R := ℝ` of `dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero`. -/
+theorem real_dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero {k : ℕ} {x y : Tower ℝ (k + 1)}
+    (h : x * y = 0) (hy : y ≠ 0) : dot (k + 1) x 1 = 0 ∧ dot (k + 1) x (mk 0 1) = 0 :=
+  dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero (fun x => mul_self_nonneg x) h hy
+
+/-- Every right inverse `b` of `a` in the integer tower satisfies
+`a * (dot a a • b - star a) = 0`. The Rocq original is `right_inverse_affine` of
+`rocq/quantum/CdAnnihilatorSymmetry.v`; this is the instance `R := ℤ` of
+`mul_dot_smul_sub_star_eq_zero`. -/
+theorem int_mul_dot_smul_sub_star_eq_zero {k : ℕ} {a b : Tower ℤ k} (h : a * b = 1) :
+    a * (dot k a a • b - star a) = 0 := by
+  convert mul_dot_smul_sub_star_eq_zero h
+  exact (congrArg (fun M : Module ℤ (Tower ℤ k) => M.toDistribMulAction.toDistribSMul.toSMul)
+    (instModule_int k)).symm
+
+/-- For pure `x` of the pathions over the reals, `dot (x * y) z = -dot y (x * z)`. The Rocq
+original is `pathion_l_x_skew_symm` of `rocq/open/theories/MorenoTowerInstance.v`; this is the
+instance `k = 5` of `dot_mul_left_of_star_eq_neg`. -/
+theorem real_pathion_dot_mul_left_of_star_eq_neg {x : Pathion ℝ} (hx : star x = -x)
+    (y z : Pathion ℝ) : dot 5 (x * y) z = -dot 5 y (x * z) :=
+  dot_mul_left_of_star_eq_neg hx y z
+
+end Instances
 
 /-- The ordered hypotheses hold over the rationals, at level 5. -/
 example (x y : Tower ℚ 5) (h : x * y = 0) : star x * y = 0 :=

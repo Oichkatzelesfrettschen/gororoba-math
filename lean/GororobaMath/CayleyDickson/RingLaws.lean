@@ -100,6 +100,14 @@ theorem mul_eq_one_iff_mul_sub_eq_zero {k : ℕ} {a b b₂ : Tower R k} (h : a *
     a * b₂ = 1 ↔ a * (b₂ - b) = 0 := by
   rw [mul_sub, h, sub_eq_zero]
 
+/-- The reflection carries annihilators onto annihilators in the integer tower. The Rocq original
+is `reflect_kernel` of `ZRingBridge` in `rocq/quantum/CdTowerRingDomain.v`; this is the
+instance `R := ℤ` of `mul_eq_zero_iff_reflect_mul_reflect`. -/
+theorem int_mul_eq_zero_iff_reflect_mul_reflect {k : ℕ} (x z : Tower ℤ (k + 1)) :
+    x * z = 0 ↔ CayleyDickson.reflect x * CayleyDickson.reflect z = 0 :=
+  mul_eq_zero_iff_reflect_mul_reflect x z
+
+
 end Tower
 
 end CayleyDickson
