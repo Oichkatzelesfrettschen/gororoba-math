@@ -26,11 +26,13 @@ sources of the directory that TARGET.v requires, TARGET.v last.
 
 `compare` reads the rows each side printed (the Lean program prints one row per line; Rocq prints
 each Eval as "= [b; ...]", wrapped over lines, followed by ": list bool"), computes the Python rows
-(anf_coefficients, then evaluate_anf at every input of the masks it returned, then anf_degree), and exits 0 when all three
+(anf_coefficients, then evaluate_anf at every input of the masks it returned, then anf_degree),
+and exits 0 when all three
 agree on every row and every eval row equals its truth table, 1 on the first difference, and 2 when an
 output is unreadable or incomplete or the Python modules do not import. With --mutate-python the Python
 side toggles the coefficient of the mask 0 in the first table with a variable, and with
---mutate-python-degree it adds 1 to the degree of that table; each comparison must exit 1. On agreement it prints the sha256 of each Python file read from the checkout.
+--mutate-python-degree it adds 1 to the degree of that table; each comparison must exit 1.
+On agreement it prints the sha256 of each Python file read from the checkout.
 """
 
 import hashlib
@@ -198,7 +200,9 @@ def read_lean(path: Path) -> list[tuple[str, int, int, str]]:
 def read_rocq(path: Path) -> list[str]:
     text = path.read_text(encoding="utf-8")
     return [
-        NUMBER.search(m.group(1)).group() if m.group(2) == "nat" else "".join("1" if v == "true" else "0" for v in BOOL.findall(m.group(1)))
+        "".join(NUMBER.findall(m.group(1)))
+        if m.group(2) == "nat"
+        else "".join("1" if v == "true" else "0" for v in BOOL.findall(m.group(1)))
         for m in EVAL.finditer(text)
     ]
 
@@ -248,7 +252,10 @@ def compare(quantum: Path, lean_path: Path, rocq_path: Path, mutate: str) -> int
             break
     if status:
         return status
-    print(f"compare_anf: {len(table_list)} tables, {len(python)} rows (coefficients, evaluations, degrees) agree in Lean, Rocq and Python")
+    print(
+        f"compare_anf: {len(table_list)} tables, {len(python)} rows (coefficients, evaluations, degrees)"
+        " agree in Lean, Rocq and Python"
+    )
     for name in read_files(quantum):
         print(f"compare_anf: sha256 {hashlib.sha256(name.read_bytes()).hexdigest()} {name.name}")
     return 0
