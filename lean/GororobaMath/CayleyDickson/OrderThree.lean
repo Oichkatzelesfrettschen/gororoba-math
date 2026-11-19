@@ -51,7 +51,8 @@ theorem orderThree_mk (r3 : R) {k : ℕ} (A B : Tower R k) :
         ((3 * re k B) • (1 : Tower R k) - B - r3 • A + (r3 * re k A) • (1 : Tower R k)) := rfl
 
 omit [TrivialStar R] in
-theorem re_one : ∀ k : ℕ, re k (1 : Tower R k) = 1
+/-- The local copy of `re_one` of `Kaplansky`; private, so the two modules import together. -/
+private theorem re_one : ∀ k : ℕ, re k (1 : Tower R k) = 1
   | 0 => rfl
   | k + 1 => by
     rw [one_eq_mk, re_mk, re_one k]
@@ -61,7 +62,7 @@ theorem re_neg (k : ℕ) (x : Tower R k) : re k (-x) = -re k x := by
   rw [← dot_one_right, ← dot_one_right, dot_neg_left]
 
 omit [TrivialStar R] in
-theorem re_smul (k : ℕ) (r : R) (x : Tower R k) : re k (r • x) = r * re k x := by
+private theorem re_smul (k : ℕ) (r : R) (x : Tower R k) : re k (r • x) = r * re k x := by
   rw [← dot_one_right, ← dot_one_right, dot_smul_left]
 
 theorem re_star (k : ℕ) (x : Tower R k) : re k (star x) = re k x := by
