@@ -6,30 +6,50 @@ public import GororobaMath.CayleyDickson.AlternativeCoordinates
 public import GororobaMath.CayleyDickson.NormMultiplicative
 
 /-!
-# Identities of alternative algebras in the tower, levels up to 3
+# Identities of alternative algebras in the tower, levels up to 3, and their failure from level 4
 
 Convention: the product of `Tower R k` is the Cayley-Dickson product
 `(a, b) (c, d) = (a c - star d b, d a + b star c)` of `GororobaMath.CayleyDickson.Basic`,
 the associator is `associator a b c = (a * b) * c - a * (b * c)` and the commutator is
 `commutator a b = a * b - b * a`. The level results read over a commutative ring `R` with the
-identity as star, the failure results over a ring in which `2 ≠ 0`.
+identity as star. The failure results read over a ring in which `2 ≠ 0` (cyclic associator sum,
+inner derivation, left inverse property, skew map), `4 ≠ 0` (the Jacobi sum and the sum of three
+double commutators) or a field (the norm inverse).
 
 ## Main results
 
 * `commutator_commutator_cyclic_sum`: in every non-associative ring the cyclic sum of the double
   commutators `[[a, b], c]` is the cyclic sum of the associators minus the anticyclic sum.
 * `Tower.commutator_commutator_cyclic_sum_of_le_three`: with the alternating associator of
-  levels up to 3, that cyclic sum is `6 A(a, b, c)`; `Tower.jacobi_of_le_three` is the Jacobi sum
-  `[a, [b, c]] + [b, [c, a]] + [c, [a, b]] = -6 A(a, b, c)`, which vanishes at levels up to 2.
-* `Tower.associator_cyclic_sum_of_le_three`: `A(a, b, c) + A(b, c, a) + A(c, a, b) = 3 A(a, b, c)`.
-* `Tower.associator_add_swap_eq_zero_of_le_three`, `Tower.dot_alt_add_dot_sym`: the symmetric part
-  of the associator in its first two slots vanishes, and the two parts of the split satisfy the
-  parallelogram law at every level.
-* `Tower.innerDer_leibniz_of_le_three`: `D(a, b)(x) = [[a, b], x] - 3 A(a, b, x)` satisfies the
-  Leibniz rule at levels up to 3.
-* `Tower.mulLeft_sq_of_le_three`: `L_a^2 = L_(a a)` at levels up to 3, and
-  `Tower.mulLeft_sq_iff`: it holds at every `a` exactly at the levels up to 3.
-* `Tower.star_mul_mul_of_le_three`: the left inverse property `star x * (x * y) = dot x x • y`.
+  levels up to 3 that sum is `6 A(a, b, c)`; `Tower.jacobi_of_le_three` is the Jacobi sum
+  `[a, [b, c]] + [b, [c, a]] + [c, [a, b]] = -6 A(a, b, c)`, which vanishes at levels up to 2
+  (`Tower.jacobi_eq_zero_of_le_two`); `Tower.exists_commutator_cyclic_sum_ne` and
+  `Tower.exists_jacobi_ne` give the failure at every level from 4 (`4 ≠ 0`).
+* `Tower.associator_cyclic_sum_of_le_three`: `A(a, b, c) + A(b, c, a) + A(c, a, b) = 3 A(a, b, c)`;
+  `Tower.exists_associator_cyclic_sum_ne` is its failure from level 4.
+* `Tower.associator_sub_swap_of_le_three`, `Tower.dot_alt_of_le_three`,
+  `Tower.dot_sub_self_add_dot_add_self`: at levels up to 3 the alternating part of the associator
+  in its first two slots is twice the associator, and the parallelogram law of the two parts holds
+  at every level.
+* `Tower.associator_commutator_mul_of_le_three`, `Tower.innerDer_leibniz_of_le_three`: the inner
+  derivation `D(a, b)(x) = [[a, b], x] - 3 A(a, b, x)` (`innerDer`) satisfies the Leibniz rule at
+  levels up to 3; `Tower.innerDerSum_eq_two_smul_of_le_three` and
+  `Tower.innerDerSum_leibniz_of_le_three` give the same for the sum of three double commutators;
+  `Tower.exists_innerDer_leibniz_ne`, `Tower.exists_innerDerSum_leibniz_ne` and
+  `Tower.exists_innerDerSum_ne_zero` give the failure from level 4 and the non-triviality from
+  level 2. The level-3 identity is proved in `AlternativeCoordinates.lean`.
+* `Tower.mulLeft_sq_of_le_three`, `Tower.mulLeft_sq_iff`: `L_a^2 = L_(a a)` at levels up to 3, and
+  for every `a` exactly there.
+* `Tower.star_mul_mul_sub_eq`, `Tower.star_mul_mul_of_le_three`, `Tower.mul_mul_star_of_le_three`:
+  the left and right inverse properties `star x * (x * y) = dot x x • y`, whose defect is that of
+  the left alternative law at every level; `Tower.normInv` is the norm inverse
+  `(dot x x)⁻¹ • star x`, with `Tower.normInv_mul_mul_of_le_three`,
+  `Tower.mul_mul_normInv_of_le_three` and `Tower.normInv_mul_of_le_three`
+  (`(a b)⁻¹ = b⁻¹ a⁻¹`); `Tower.exists_star_mul_mul_ne` is the failure from level 4.
+* `Tower.dot_associator_self_right_of_le_three`,
+  `Tower.dot_associator_add_dot_associator_of_le_three`: the map `c ↦ A(a, b, c)` is skew for the
+  trace form at levels up to 3, and
+  `Tower.exists_dot_associator_skew_ne` is its failure from level 4.
 -/
 
 @[expose] public section
@@ -466,6 +486,22 @@ theorem exists_innerDerSum_leibniz_ne (h4 : (4 : R) ≠ 0) (k : ℕ) (hk : 4 ≤
   simp only [e_mul_e_sign, innerDerSum_zsmul_right, innerDerSum_e_e_e, smul_mul_assoc,
     mul_smul_comm, smul_smul, BitVec.reduceXOr, ← add_smul] at h5
   exact zsmul_e_ne_zsmul_e (d := -4) (by decide) (by simpa using h4) 4 15#4 h5
+
+/-- Over a ring in which `8 ≠ 0`, the sum of three double commutators is nonzero at every level
+`k ≥ 2`: it is `8 e 2` at `(e 1, e 2, e 1)`. -/
+theorem exists_innerDerSum_ne_zero (h8 : (8 : R) ≠ 0) (k : ℕ) (hk : 2 ≤ k) :
+    ∃ a b x : Tower R k, innerDerSum a b x ≠ 0 := by
+  obtain ⟨m, rfl⟩ := Nat.exists_eq_add_of_le hk
+  refine ⟨lift 2 m (e R 2 1#2), lift 2 m (e R 2 2#2), lift 2 m (e R 2 1#2), ?_⟩
+  rw [← lift_innerDerSum]
+  intro h
+  have h4 := lift_injective 2 m (h.trans (lift_zero 2 m).symm)
+  rw [innerDerSum_e_e_e] at h4
+  simp only [BitVec.reduceXOr, ← add_smul] at h4
+  have hN : ccCoeff 2 1#2 2#2 1#2 + ccCoeff 2 1#2 1#2 2#2 + ccCoeff 2 1#2 2#2 1#2 = 8 := by
+    decide
+  rw [hN] at h4
+  exact zsmul_e_ne_zero (by simpa using h8) 2 2#2 h4
 
 end Failure
 
