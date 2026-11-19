@@ -134,21 +134,126 @@ statement uses them.
 
 ## Proved rows
 
-The library proves the ten rows of the first tranche, each in the module its
-row names:
+The library proves the ten rows of the first tranche and the rows of the second to sixth tranches
+(issue 55), each in the module its row names; rows 14 to 16 are the theorems of rows 11 to 13, rows
+66 and 67 share one theorem, rows 69, 70, 71 and 110 share one theorem, rows 87 and 88 share one
+theorem, rows 98 and 99 share one theorem, and rows 103 and 105 share one theorem. Row 72 is the
+one row with a Lean reading that is not proved (its narrowing cell records the level-4 evaluation).
+The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
+`ci/compare_order_three.sh`, `ci/compare_isum.sh`, `ci/compare_am_exponent.sh` and
+`ci/compare_schreier.sh`:
 
 | Row | Module | Theorem |
 |---|---|---|
+| 1 | `RingLaws` | `Tower.mul_eq_zero_iff_star_mul_star` |
+| 2 | `RingLaws` | `Tower.mul_eq_zero_iff_star_mul_of_star_eq_neg` |
+| 3 | `RingLaws` | `Tower.mul_eq_zero_iff_mul_star_of_star_eq_neg` |
+| 4 | `RingLaws` | `Tower.mk_mul_mk_eq_zero_iff_of_star_eq_neg` |
+| 5 | `RingLaws` | `Tower.mul_eq_zero_iff_reflect_mul_reflect` |
+| 6 | `RingLaws` | `Tower.mul_eq_one_iff_mul_sub_eq_zero` |
 | 7 | `Map` | `CayleyDickson.map_mul` |
+| 8 | `Map` | `Tower.lift_mul` |
+| 9 | `Map` | `Tower.lift_injective` |
+| 10 | `Derivation` | `CayleyDickson.mapAdd_leibniz` |
+| 11 | `ScalarAction` | `CayleyDickson.smul_mul_assoc` |
+| 12 | `ScalarAction` | `CayleyDickson.mul_smul_comm` |
+| 13 | `ScalarAction` | `CayleyDickson.instStarModule` |
+| 14 | `ScalarAction` | `CayleyDickson.smul_mul_assoc` |
+| 15 | `ScalarAction` | `CayleyDickson.mul_smul_comm` |
+| 16 | `ScalarAction` | `CayleyDickson.instStarModule` |
+| 17 | `TraceForm` | `Tower.re_mul_comm` |
+| 18 | `TraceForm` | `Tower.re_mul_assoc` |
 | 19 | `TraceForm` | `Tower.mul_star_mul_left` |
 | 20 | `TraceForm` | `Tower.mul_mul_star_right` |
+| 21 | `TraceForm`, `FlexibleLaw` | `Tower.mul_mul_self_eq`, `Tower.mul_mul_self_eq'` |
 | 22 | `TraceForm` | `Tower.mul_eq_zero_iff_star_mul_eq_zero` |
+| 23 | `TraceForm` | `Tower.re_eq_zero_of_mul_eq_zero_rev` |
+| 24 | `TraceForm` | `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero` |
+| 25 | `TraceForm` | `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero_right` |
+| 26 | `TraceForm` | `Tower.mul_dot_smul_sub_star_eq_zero` |
+| 27 | `TraceForm` | `Tower.exists_eq_inv_dot_smul_star_add` |
+| 28 | `TraceForm` | `Tower.dot_eq_zero_of_mul_eq_zero` |
 | 29 | `TraceForm` | `Tower.dot_mul_left_of_star_eq_neg` |
+| 30 | `TraceForm` | `Tower.dot_mul_right_of_star_eq_neg` |
+| 31 | `TraceForm` | `Tower.mul_eq_zero_iff_forall_dot_mul_eq_zero` |
+| 32 | `TraceForm` | `Tower.dot_star_mul_self` |
+| 33 | `TraceForm` | `Tower.dot_mul_self_comm` |
+| 34 | `TraceForm` | `Tower.dot_add_self_add_dot_sub_self` |
+| 35 | `NormMultiplicative` | `Tower.dot_mul_self_of_le_three` |
+| 36 | `TraceForm` | `Tower.mul_comm_of_two_eq_zero` |
+| 37 | `RingTowerI` | `Tower.kernel_swap_iff_two_eq_zero` |
+| 38 | `RingTowerI` | `Tower.pure_kernel_swap_two_eq_zero` |
+| 39 | `RingTowerI` | `Tower.zmod5_not_pure_kernel_swap` |
 | 40 | `BasisExt` | `Tower.map_mul_of_map_e_mul_e` |
+| 41 | `BasisExt` | `Tower.leibniz_of_leibniz_e` |
+| 42 | `BaseChange` | `Tower.baseChange_mul` |
+| 43 | `BaseChange` | `Tower.baseChange_leibniz` |
+| 44 | `KernelCertificate` | `Tower.ker_mulLeft_basis_of_certificate` |
+| 45 | `OrderThree` | `Tower.orderThree_mul` |
+| 46 | `OrderThree` | `Tower.orderThree_star` |
+| 47 | `Ideals` | `Ideal.add_mul_mem_and_sub_mul_mem_iff` |
+| 48 | `Certificates` | `Matrix.linearIndependent_cols_of_mul_eq_smul_one` |
+| 49 | `Certificates` | `Matrix.smul_eq_mulVec_of_splitting` |
+| 50 | `ImaginarySum` | `Tower.isum_laws` |
+| 51 | `ImaginarySum` | `Tower.dot_isum_mul` |
+| 52 | `ImaginarySum` | `Tower.dot_mul_isum_mul_isum` |
+| 53 | `ImaginarySum` | `Tower.dot_add_mul_isum` |
+| 54 | `ImaginarySum` | `Tower.dot_smul_add_smul_mul_isum` |
+| 55 | `ImaginarySum` | `Tower.repr_e_mul_isum` |
+| 56 | `HalfFold` | `Tower.mk_left_mul_eq_zero_iff` |
+| 57 | `HalfFold` | `Tower.mk_right_mul_eq_zero_iff` |
+| 58 | `HalfFold` | `Tower.finrank_ker_mulLeft_mk_left` |
+| 59 | `HalfFold` | `Tower.finrank_ker_mulLeft_mk_right` |
+| 60 | `HalfFold` | `Tower.finrank_ker_mulLeft_mk_left_of_star_eq_neg` |
+| 61 | `HalfFold` | `Tower.finrank_range_mulRight_of_star_eq_neg` |
+| 62 | `Fold` | `Tower.dot_fold_self` |
+| 63 | `ZeroDivisors` | `Tower.exists_zero_divisor` |
+| 64 | `ZeroDivisors` | `Tower.exists_dot_mul_self_ne` |
+| 65 | `Hurwitz` | `Tower.hurwitzRadon_lt` |
+| 66 | `Quaternion` | `Tower.mul_assoc_two` |
+| 67 | `Quaternion` | `Tower.mul_assoc_two` |
+| 68 | `NormMultiplicative` | `Tower.dot_mul_self_of_le_three` |
+| 69 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
+| 70 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
+| 71 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
+| 73 | `SignLaws` | `Tower.negSign_xor_left_right` |
+| 74 | `SignLaws` | `Tower.amExponent_eq` |
 | 75 | `BooleanAnf` | `Tower.anfEval_anfCoeff` |
 | 76 | `BooleanAnf` | `Tower.anfCoeff_unique` |
+| 77 | `BooleanAnf` | `Tower.anfDegree_two_point` |
+| 78 | `BooleanAnf` | `Tower.anfDegree_negSign_left` |
+| 79 | `BooleanAnf` | `Tower.anfDegree_negSign_left` |
+| 80 | `BooleanAnf` | `Tower.anfDegree_negSign_right` |
 | 81 | `AssociatorPhase` | `Tower.e_mul_e_mul_e` |
+| 82 | `AssociatorPhase` | `Tower.assocPhase_eq_false_of_dependent` |
+| 83 | `AssociatorPhase` | `Tower.assocPhase_eq_false_of_degenerate` |
+| 84 | `AssociatorPhase` | `Tower.assocPhase_two` |
 | 85 | `AssociatorPhase` | `Tower.assocPhase_cons` |
+| 86 | `AssociatorPhase` | `Tower.pairCoeff_eq_true` |
+| 87 | `AssociatorPhase` | `Tower.anfDegree_assocPhase` |
+| 88 | `AssociatorPhase` | `Tower.anfDegree_assocPhase` |
+| 89 | `AssociatorPhase` | `Tower.assocPhase_point_pair` |
+| 90 | `AssociatorCensus` | `Tower.card_anfDegree_assocPhase_eq` |
+| 91 | `AssociatorCensus` | `Tower.card_anfDegree_assocPhase_eq_one` |
+| 92 | `AssociatorCensus` | `Tower.sum_card_anfDegree_assocPhase` |
+| 93 | `AssociatorCensus` | `Tower.card_assocPhase_true` |
+| 94 | `SignCode` | `Tower.mem_signSpan_iff` |
+| 95 | `SignCode` | `Tower.card_normalizedSignSpan` |
+| 96 | `SignCode` | `Tower.schreier_xor_schreier_zero` |
+| 97 | `SparseSupport` | `Tower.repr_mul_ne_zero_mem` |
+| 98 | `SparseSupport` | `Tower.mul_eq_zero_iff_forall_sector` |
+| 99 | `SparseSupport` | `Tower.mul_eq_zero_iff_forall_sector` |
+| 100 | `Derivation` | `Tower.leibniz_four_iff_of_restricts` |
+| 101 | `Derivation` | `Tower.finrank_leibniz_of_certificate` |
+| 102 | `TraceForm` | `Tower.int_mul_mul_self_eq` |
+| 103 | `TraceForm` | `Tower.real_mul_mul_self_eq` |
+| 104 | `TraceForm` | `Tower.real_exists_eq_inv_dot_smul_star_add` |
+| 105 | `TraceForm` | `Tower.real_mul_mul_self_eq` |
+| 106 | `TraceForm` | `Tower.real_dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero` |
+| 107 | `TraceForm` | `Tower.int_mul_dot_smul_sub_star_eq_zero` |
+| 108 | `RingLaws` | `Tower.int_mul_eq_zero_iff_reflect_mul_reflect` |
+| 109 | `TraceForm` | `Tower.real_pathion_dot_mul_left_of_star_eq_neg` |
+| 110 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
 
 `ci/compare_anf.sh` and `ci/compare_assoc_phase.sh` compare the definitions
 of rows 75 and 81 with their Rocq partners of `rocq/quantum` and with the
@@ -199,7 +304,9 @@ Further rows carry a narrower Lean reading and say so in `narrowing`: row
 35 (norm multiplicativity, levels 0 to 3 only),
 row 70 (an inductive
 predicate on nat read as a module statement), row 71 (the
-abstract lane of Moreno's Theorem 1.16), row 96 (a group-cochain
+abstract lane of Moreno's Theorem 1.16), row 93 (the
+denominator-cleared census equation), row 95 (`Nat.card` for the
+span's cardinality), row 96 (a group-cochain
 identity read for the tower cochain), row 99 (a MathComp block
 rank read as the kernel decomposition), and rows 39 and
 45 (fixed levels over a class of rings).

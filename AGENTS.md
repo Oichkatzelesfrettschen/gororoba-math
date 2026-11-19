@@ -150,11 +150,21 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/CdTowerAlignedPairSpectrum.v`,
   `CdTowerAlignedPairClosedForm.v`, `CdTowerAssociatorSpace.v` and
   `CdTowerTwoTermBins.v`.
-  `ci/compare_anf.sh` compares `Tower.anfCoeff` and `Tower.anfEval` with `anf_coef`
-  and `anf_eval` of `rocq/quantum/CdSignRowAnf.v` and with `boolean_anf.anf_coefficients`
-  and `boolean_anf.evaluate_anf` of gororoba-quantum, and `ci/compare_assoc_phase.sh`
+  `ci/compare_isum.sh` compares the coordinates of `Tower.isum` over the integers with `isum` of
+  `rocq/quantum/CdImaginarySumConference.v` at levels 1 to 6, and `ci/compare_am_exponent.sh` compares
+  `Tower.amExponent` with `am_exponent` of `rocq/quantum/CdTowerBasisSign.v` at levels 1 to 6; each
+  rejects a mutated Rocq reference, reads no other repository, and runs on demand.
+  `ci/compare_anf.sh` compares `Tower.anfCoeff`, `Tower.anfEval` and `Tower.anfDegree` with
+  `anf_coef` and `anf_eval` of `rocq/quantum/CdSignRowAnf.v`, `anf_degree` of
+  `rocq/quantum/CdAssociatorCensus.v` and with `boolean_anf.anf_coefficients`,
+  `boolean_anf.evaluate_anf` and `boolean_anf.anf_degree` of gororoba-quantum, and `ci/compare_assoc_phase.sh`
   compares `Tower.assocPhase` with `assoc` of `rocq/quantum/CdAssociatorAnf.v` and with
   `predict.associator_phase` of gororoba-quantum; both need `GOROROBA_QUANTUM`.
+  `ci/compare_order_three.sh` compares `Tower.orderThree` with `OrderThreeMap.psi2` of
+  `rocq/quantum/CdTowerOrderThreeMap.v` on the 16 basis images of level 4 over `ℤ[√3]`, and
+  `ci/compare_schreier.sh` compares `Tower.schreier` with `schreier` of
+  `rocq/open/theories/SchreierSignCode.v` on every triple at orders 1 to 5; both reject a
+  mutated Rocq reference and need `rocq-9.3`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
