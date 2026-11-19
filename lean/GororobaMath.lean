@@ -16,5 +16,6 @@ public import GororobaMath.CayleyDickson.TraceForm
 public import GororobaMath.CayleyDickson.AssociatorPhase
 public import GororobaMath.CayleyDickson.BasisExt
 public import GororobaMath.CayleyDickson.BooleanAnf
+public import GororobaMath.Clifford.ZeroEight
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins
