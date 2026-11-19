@@ -315,6 +315,12 @@ noncomputable def cliffordEquivMatrix : CliffordAlgebra quadForm ≃ₐ[ℝ] Mat
       (f := liftMat.toLinearMap) (by rw [finrank_clifford, finrank_mat16])).2
         liftMat_surjective, liftMat_surjective⟩
 
+/-- The algebra of the quadratic form `quadForm` (generators squaring to `-1`) is isomorphic to
+the algebra of `16 × 16` real matrices. -/
+theorem cliffordAlgebra_equiv_matrix :
+    Nonempty (CliffordAlgebra quadForm ≃ₐ[ℝ] Matrix (Fin 16) (Fin 16) ℝ) :=
+  ⟨cliffordEquivMatrix⟩
+
 theorem cliffordEquivMatrix_ι (i : Fin 8) :
     cliffordEquivMatrix (CliffordAlgebra.ι quadForm (Pi.single i 1)) = G i :=
   liftMat_ι i
