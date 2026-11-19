@@ -2,6 +2,7 @@
 module
 
 public import GororobaMath.CayleyDickson.AssociatorSpace
+public import GororobaMath.CayleyDickson.SignLaws
 
 /-!
 # The associator phase of three basis elements
@@ -145,6 +146,69 @@ example : ∀ r : BitVec 2, assocPhase 1#2 2#2 r = false := by decide
 /-- In the octonions the phase of `e 1`, `e 2` and `e r` is the top bit of `r`,
 the Rocq example `octonion_pair_parity`. -/
 example : ∀ r : BitVec 3, assocPhase 1#3 2#3 r = r.msb := by decide
+
+/-- A basis triple with a zero member, a repeated member or `r = l ^^^ m` associates: the
+associator phase vanishes. The Rocq original is `dependent_basis_triple_associates` of
+`rocq/open/theories/CDAssociatorCensus.v`, whose `associator_phase` is `assocPhase l m r`
+through `cube_encode`. -/
+theorem assocPhase_eq_false_of_dependent {k : ℕ} {l m r : BitVec k}
+    (h : l = 0#k ∨ m = 0#k ∨ r = 0#k ∨ l = m ∨ l = r ∨ m = r ∨ l ^^^ m = r) :
+    assocPhase l m r = false := by
+  have e1 : ∀ a b : BitVec k, (a ^^^ b = 0#k) ↔ a = b := fun a b => BitVec.xor_eq_zero_iff
+  have e2 : ∀ a b : BitVec k, (a = a ^^^ b) ↔ b = 0#k := fun a b =>
+    eq_comm.trans xor_left_eq_self_iff
+  rw [assocPhase_eq]
+  rcases h with h | h | h | h | h | h | h
+  · rw [h]
+    simp [negSign_zero_left]
+  · rw [h]
+    simp [negSign_zero_left, negSign_zero_right]
+  · rw [h]
+    simp [negSign_zero_right]
+  · rw [← h, BitVec.xor_self, negSign_xor_right, negSign_self_eq, negSign_zero_left]
+    cases negSign k l r <;> cases decide (l ≠ 0#k) <;> simp
+  · rw [← h, BitVec.xor_comm m l, negSign_xor_right, negSign_swap_xor k l (l ^^^ m),
+      negSign_swap_xor k l m, negSign_xor_right]
+    simp only [ne_eq, e1, e2]
+    by_cases hl : l = 0#k <;> by_cases hm : m = 0#k <;> by_cases hlm : l = m <;>
+      simp_all [negSign_zero_right]
+  · rw [← h, BitVec.xor_self]
+    by_cases hm : m = 0#k
+    · simp [hm, negSign_zero_right]
+    · have key := negSign_xor_left_right l m hm
+      simp only [negSign_zero_right, negSign_self_eq, Bool.xor_false, key, Bool.true_xor]
+      simp [hm]
+  · have h3 : m ^^^ (m ^^^ l) = l := by rw [← BitVec.xor_assoc, BitVec.xor_self, BitVec.zero_xor]
+    have hml : m = l ↔ l = m := eq_comm
+    have h0l : 0#k = l ↔ l = 0#k := eq_comm
+    rw [← h, BitVec.xor_comm l m, h3]
+    simp only [negSign_self_eq]
+    rw [negSign_xor_right k m l, negSign_swap_xor k l m]
+    simp only [ne_eq, e1]
+    by_cases hl : l = 0#k <;> by_cases hm : m = 0#k <;> by_cases hlm : l = m <;>
+      simp [hl, hm, hlm, hml, h0l]
+
+/-- The associator phase vanishes when `p = 0`, `q = 0` or `p = q`. The Rocq original is
+`assoc_degenerate` of `rocq/quantum/CdAssociatorAnf.v`. -/
+theorem assocPhase_eq_false_of_degenerate {k : ℕ} {p q : BitVec k}
+    (h : p = 0#k ∨ q = 0#k ∨ p = q) (x : BitVec k) : assocPhase p q x = false := by
+  rcases h with h | h | h
+  · exact assocPhase_eq_false_of_dependent (Or.inl h)
+  · exact assocPhase_eq_false_of_dependent (Or.inr (Or.inl h))
+  · exact assocPhase_eq_false_of_dependent (Or.inr (Or.inr (Or.inr (Or.inl h))))
+
+/-- Every basis triple of the quaternions associates. The Rocq original is
+`quaternion_associator_all` of `rocq/open/theories/CDPhaseDegree.v`. -/
+theorem assocPhase_two (p q x : BitVec 2) : assocPhase p q x = false := by
+  revert p q x
+  decide
+
+/-- For distinct nonzero `l` and `r` the pair coefficient is `1`. The Rocq original is
+`independent_pair_coefficient` of `rocq/open/theories/CDAssociatorDoubling.v`. -/
+theorem pairCoeff_eq_true {k : ℕ} {l r : BitVec k} (hl : l ≠ 0#k) (hr : r ≠ 0#k) (hlr : l ≠ r) :
+    (decide (l ≠ 0#k) ^^ decide (r ≠ 0#k) ^^ decide (l ^^^ r ≠ 0#k)) = true := by
+  have h : l ^^^ r ≠ 0#k := fun h => hlr (BitVec.xor_eq_zero_iff.1 h)
+  simp [hl, hr, h]
 
 end Tower
 
