@@ -33,7 +33,8 @@ def schreier {k : ℕ} (l r x : BitVec k) : Bool :=
   negSign k r x ^^ negSign k l (r ^^^ x) ^^ negSign k (l ^^^ r) x
 
 /-- The Schreier exponent normalized at `x = 0` is the coboundary of the sign cochain. The Rocq
-original is `normalized_schreier_is_coboundary` of `rocq/open/theories/BooleanCochainFiltration.v`. -/
+original is `normalized_schreier_is_coboundary` of
+`rocq/open/theories/BooleanCochainFiltration.v`. -/
 theorem schreier_xor_schreier_zero {k : ℕ} (l r x : BitVec k) :
     (schreier l r x ^^ schreier l r 0#k) =
       (negSign k r x ^^ negSign k l (r ^^^ x) ^^ negSign k (l ^^^ r) x ^^ negSign k l r) := by

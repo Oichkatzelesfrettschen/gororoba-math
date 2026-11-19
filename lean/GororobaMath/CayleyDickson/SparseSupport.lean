@@ -51,7 +51,8 @@ theorem xor_aux2 {k : ℕ} (s c p i : BitVec k) :
   simp only [BitVec.getElem_xor]
   exact h _ _ _ _
 
-theorem xor_aux1' {k : ℕ} (s i c p : BitVec k) : s ^^^ i ^^^ (c ^^^ (i ^^^ p)) = s ^^^ c ^^^ p := xor_aux1 s i c p
+theorem xor_aux1' {k : ℕ} (s i c p : BitVec k) :
+    s ^^^ i ^^^ (c ^^^ (i ^^^ p)) = s ^^^ c ^^^ p := xor_aux1 s i c p
 
 theorem xor_aux3 {k : ℕ} (s p : BitVec k) : s ^^^ (s ^^^ p) ^^^ p = 0#k := by
   have h : ∀ s p : Bool, (s ^^ (s ^^ p) ^^ p) = false := by decide
@@ -166,3 +167,7 @@ theorem mul_eq_zero_iff_forall_sector {k : ℕ} {G : Set (BitVec k)} (hG0 : 0#k 
       rw [← mul_add]; congr 1; abel
     rw [this, h2, zero_add]
     exact h1
+
+end Tower
+
+end CayleyDickson

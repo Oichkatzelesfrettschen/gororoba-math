@@ -665,7 +665,7 @@ theorem anfDegree_negSign_right_aux : ∀ (k : ℕ) (m : BitVec k), m ≠ 0#k �
             revert μ
             decide
           · have := anfDegree_negSign_left hk hμ
-            show anfDegree (negSign k μ) = _
+            change anfDegree (negSign k μ) = _
             omega
         apply le_antisymm
         · apply anfDegree_cons_le (f := fun x => negSign (k + 1) x (BitVec.cons true μ))

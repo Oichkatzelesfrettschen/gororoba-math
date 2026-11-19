@@ -19,7 +19,8 @@ of `Tower S k` that sends `e S k p` to `map φ k (F (e R k p))`: the transport o
 ## Main results
 
 * `Tower.baseChange_mul`: a scaled multiplicativity `F (e i) * F (e j) = c • F (e i * e j)` on
-  the basis pairs over `R` gives `baseChange φ F x * baseChange φ F y = φ c • baseChange φ F (x * y)`
+  the basis pairs over `R` gives
+  `baseChange φ F x * baseChange φ F y = φ c • baseChange φ F (x * y)`
   over `S`. The Rocq original is `scaled_multiplicative_transport` of the functor `BaseChange`
   in `rocq/quantum/CdTowerRingBaseChange.v`.
 * `Tower.baseChange_leibniz`: the Leibniz rule on the basis pairs over `R` gives the Leibniz rule
@@ -74,7 +75,8 @@ theorem map_add (φ : R →+* S) :
   | k + 1, x, y => by
     obtain ⟨a, b⟩ := x
     obtain ⟨c, d⟩ := y
-    change map φ (k + 1) (mk (a + c) (b + d)) = mk (map φ k a) (map φ k b) + mk (map φ k c) (map φ k d)
+    change map φ (k + 1) (mk (a + c) (b + d)) =
+      mk (map φ k a) (map φ k b) + mk (map φ k c) (map φ k d)
     rw [map_mk, map_add φ k, map_add φ k]
     rfl
 

@@ -52,7 +52,8 @@ equivalent.
 * `Tower.mul_comm_of_two_eq_zero`: in characteristic 2 every level is commutative, the Rocq
   `two_zero_commutative` of the functor `RingTower` in `rocq/quantum/CdTowerRing.v`.
 * `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero_right`: the mirror of the zero-divisor
-  orthogonality for `y * x = 0`, the Rocq `annihilator_orthogonal` of `rocq/quantum/CdTowerDomain.v`.
+  orthogonality for `y * x = 0`, the Rocq `annihilator_orthogonal` of
+  `rocq/quantum/CdTowerDomain.v`.
 * `Tower.int_mul_mul_self_eq`, `Tower.int_mul_dot_smul_sub_star_eq_zero`,
   `Tower.real_mul_mul_self_eq`, `Tower.real_exists_eq_inv_dot_smul_star_add`,
   `Tower.real_dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero`,
