@@ -2,6 +2,7 @@
 module
 
 public import GororobaMath.CayleyDickson.AssociatorSpace
+public import GororobaMath.CayleyDickson.BooleanAnf
 public import GororobaMath.CayleyDickson.SignLaws
 
 /-!
@@ -47,6 +48,10 @@ and the Rocq `assoc` of `rocq/quantum/CdAssociatorAnf.v` on every triple at leve
   whose `associator_phase order l m r` (`schreier l m r` plus `sign_exponent l m`)
   is `assocPhase l m r`, with the cube pair `(x, high)` read as `BitVec.cons high x`
   and `sign_exponent` as `negSign`.
+* `Tower.anfDegree_assocPhase`: for `3 ≤ k` and distinct nonzero `p`, `q` the phase
+  `assocPhase p q` has algebraic degree `max 1 (Nat.log2 (max p.toNat q.toNat) - 1)`, the Rocq
+  `assoc_degree_is` of `rocq/quantum/CdAssociatorAnf.v` and `associator_phase_degree` of
+  `rocq/open/theories/CDPhaseDegree.v`.
 -/
 
 @[expose] public section
@@ -209,6 +214,395 @@ theorem pairCoeff_eq_true {k : ℕ} {l r : BitVec k} (hl : l ≠ 0#k) (hr : r �
     (decide (l ≠ 0#k) ^^ decide (r ≠ 0#k) ^^ decide (l ^^^ r ≠ 0#k)) = true := by
   have h : l ^^^ r ≠ 0#k := fun h => hlr (BitVec.xor_eq_zero_iff.1 h)
   simp [hl, hr, h]
+
+section Degree
+
+theorem commPhase_eq_xor {k : ℕ} (a b : BitVec k) :
+    commPhase a b = (decide (a ≠ 0#k) ^^ decide (b = 0#k) ^^ decide (b = a)) := by
+  rw [commPhase_eq]
+  by_cases ha : a = 0#k
+  · subst ha
+    simp
+  · by_cases hb : b = 0#k
+    · subst hb
+      simp [ha, Ne.symm ha]
+    · by_cases hba : b = a
+      · subst hba
+        simp [ha]
+      · simp [ha, hb, hba, Ne.symm hba]
+
+theorem commPhase_eq_cst {k : ℕ} (a b : BitVec k) :
+    commPhase a b = (decide (a ≠ 0#k) ^^ decide (b ≠ 0#k) ^^ decide (a ^^^ b ≠ 0#k)) := by
+  rw [commPhase_eq]
+  have e : (a ^^^ b = 0#k) ↔ a = b := BitVec.xor_eq_zero_iff
+  by_cases ha : a = 0#k
+  · subst ha
+    simp
+  · by_cases hb : b = 0#k
+    · subst hb
+      simp [ha]
+    · by_cases hab : a = b
+      · subst hab
+        simp [ha]
+      · simp [ha, hb, hab, e]
+
+/-- The coefficient of the top bit of the third index in `assocPhase_cons` is the constant
+`[l ≠ 0] + [m ≠ 0] + [l ^^^ m ≠ 0]`, whatever the low part `r` is. -/
+theorem commPhase_xor_triple {k : ℕ} (l m r : BitVec k) :
+    (commPhase (l ^^^ m) r ^^ commPhase m r ^^ commPhase l (m ^^^ r)) =
+      (decide (l ≠ 0#k) ^^ decide (m ≠ 0#k) ^^ decide (l ^^^ m ≠ 0#k)) := by
+  rw [commPhase_eq_cst, commPhase_eq_cst, commPhase_eq_cst, ← BitVec.xor_assoc]
+  generalize decide (l ^^^ m ≠ 0#k) = d1
+  generalize decide (r ≠ 0#k) = d2
+  generalize decide (l ^^^ m ^^^ r ≠ 0#k) = d3
+  generalize decide (m ≠ 0#k) = d4
+  generalize decide (m ^^^ r ≠ 0#k) = d5
+  generalize decide (l ≠ 0#k) = d6
+  revert d1 d2 d3 d4 d5 d6
+  decide
+
+theorem decide_xor_eq_zero {n : ℕ} (m y : BitVec n) : decide (m ^^^ y = 0#n) = decide (y = m) := by
+  have e : (m ^^^ y = 0#n) ↔ (y = m) := by
+    rw [BitVec.xor_eq_zero_iff]
+    exact eq_comm
+  exact decide_eq_decide.2 e
+
+theorem decide_xor_eq {n : ℕ} (q y p : BitVec n) : decide (q ^^^ y = p) = decide (y = q ^^^ p) := by
+  have e : (q ^^^ y = p) ↔ (y = q ^^^ p) := by
+    constructor
+    · intro h
+      rw [← h, ← BitVec.xor_assoc, BitVec.xor_self, BitVec.zero_xor]
+    · intro h
+      rw [h, ← BitVec.xor_assoc, BitVec.xor_self, BitVec.zero_xor]
+  exact decide_eq_decide.2 e
+
+/-- A function of positive degree has a monomial of that degree. -/
+theorem exists_anfCoeff_weight_eq {k : ℕ} {f : BitVec k → Bool} (h : 1 ≤ anfDegree f) :
+    ∃ s, anfCoeff f s = true ∧ weight s = anfDegree f := by
+  by_cases hne : (Finset.univ.filter fun s => anfCoeff f s = true).Nonempty
+  · obtain ⟨s, hs, h'⟩ := Finset.exists_mem_eq_sup _ hne weight
+    exact ⟨s, (Finset.mem_filter.1 hs).2, h'.symm⟩
+  · rw [Finset.not_nonempty_iff_eq_empty] at hne
+    unfold anfDegree at h
+    rw [hne] at h
+    simp at h
+
+/-- A function whose half with top bit `false` is `A` and whose half with top bit `true` differs
+from it by a constant has the degree of `A`, when that is positive. -/
+theorem anfDegree_lift {k : ℕ} {g : BitVec (k + 1) → Bool} {A : BitVec k → Bool} (c : Bool)
+    (hd : 1 ≤ anfDegree A) (h0 : ∀ y, g (BitVec.cons false y) = A y)
+    (h1 : ∀ y, g (BitVec.cons true y) = (g (BitVec.cons false y) ^^ c)) :
+    anfDegree g = anfDegree A := by
+  have hA : (fun q => g (BitVec.cons false q)) = A := funext h0
+  have hc : (fun q => g (BitVec.cons true q) ^^ g (BitVec.cons false q)) = fun _ => c := by
+    funext q
+    rw [h1]
+    cases c <;> cases g (BitVec.cons false q) <;> rfl
+  apply le_antisymm
+  · apply anfDegree_cons_le
+    · intro s hs
+      rw [hA] at hs
+      exact le_anfDegree hs
+    · intro s hs
+      rw [hc] at hs
+      cases c
+      · rw [anfCoeff_false] at hs
+        exact absurd hs (by simp)
+      · rw [anfCoeff_true] at hs
+        have : s = 0#k := by simpa using hs
+        subst this
+        rw [weight_zero]
+        omega
+  · obtain ⟨s, hs, hw⟩ := exists_anfCoeff_weight_eq hd
+    have := le_anfDegree_cons_false (f := g) (s := s) (by rw [hA]; exact hs)
+    omega
+
+/-- The function that is `false` on the lower half and `true` on the upper half has degree `1`. -/
+theorem anfDegree_lift_zero {k : ℕ} {g : BitVec (k + 1) → Bool}
+    (h0 : ∀ y, g (BitVec.cons false y) = false) (h1 : ∀ y, g (BitVec.cons true y) = true) :
+    anfDegree g = 1 := by
+  have hA : (fun q => g (BitVec.cons false q)) = fun _ => false := funext h0
+  have hc : (fun q => g (BitVec.cons true q) ^^ g (BitVec.cons false q)) = fun _ => true := by
+    funext q
+    rw [h1, h0]
+    rfl
+  apply le_antisymm
+  · apply anfDegree_cons_le
+    · intro s hs
+      rw [hA, anfCoeff_false] at hs
+      exact absurd hs (by simp)
+    · intro s hs
+      rw [hc, anfCoeff_true] at hs
+      have : s = 0#k := by simpa using hs
+      subst this
+      rw [weight_zero]
+  · have := le_anfDegree_cons_true (f := g) (s := 0#k) (by rw [hc, anfCoeff_true]; simp)
+    rw [weight_zero] at this
+    exact this
+
+/-- Adding terms of lower degree keeps a positive degree. -/
+theorem anfDegree_xor_lower {k : ℕ} {F G : BitVec k → Bool} {d e : ℕ} (hF : anfDegree F = d)
+    (hd : 1 ≤ d) (hG : ∀ s, anfCoeff G s = true → weight s ≤ e) (he : e < d) :
+    anfDegree (fun x => F x ^^ G x) = d := by
+  obtain ⟨s0, hs0, hw0⟩ := exists_anfCoeff_weight_eq (f := F) (by omega)
+  apply le_antisymm
+  · apply anfDegree_le
+    intro s hs
+    rw [anfCoeff_xor] at hs
+    cases hFs : anfCoeff F s
+    · rw [hFs] at hs
+      have hGs : anfCoeff G s = true := by simpa using hs
+      have := hG s hGs
+      omega
+    · rw [← hF]
+      exact le_anfDegree hFs
+  · have hGs : anfCoeff G s0 = false := by
+      by_contra hne
+      have := hG s0 (by simpa using hne)
+      omega
+    have : anfCoeff (fun x => F x ^^ G x) s0 = true := by
+      rw [anfCoeff_xor, hs0, hGs]
+      rfl
+    have := le_anfDegree this
+    omega
+
+/-- Two point indicators over a lower-degree function have degree `n - 1`. -/
+theorem anfDegree_point_pair {n : ℕ} (hn : 2 ≤ n) {G g : BitVec n → Bool} {u v : BitVec n}
+    (huv : u ≠ v) (c0 : Bool) (hG : ∀ s, anfCoeff G s = true → weight s ≤ n - 2)
+    (hg : ∀ y, g y = (G y ^^ (decide (y = u) ^^ decide (y = v)) ^^ c0)) :
+    anfDegree g = n - 1 := by
+  have hg' : g = fun y => (decide (y = u) ^^ decide (y = v)) ^^ (G y ^^ c0) := by
+    funext y
+    rw [hg]
+    cases G y <;> cases c0 <;> cases decide (y = u) <;> cases decide (y = v) <;> rfl
+  rw [hg']
+  refine anfDegree_xor_lower (F := fun y => decide (y = u) ^^ decide (y = v))
+    (G := fun y => G y ^^ c0) (e := n - 2) (anfDegree_two_point huv) (by omega) ?_ (by omega)
+  intro s hs
+  have hx : anfCoeff (fun y => G y ^^ c0) s = (anfCoeff G s ^^ anfCoeff (fun _ => c0) s) :=
+    anfCoeff_xor G (fun _ => c0) s
+  rw [hx] at hs
+  by_cases hGs : anfCoeff G s = true
+  · exact hG s hGs
+  · have hGs' : anfCoeff G s = false := by simpa using hGs
+    rw [hGs'] at hs
+    cases c0
+    · rw [anfCoeff_false] at hs
+      exact absurd hs (by simp)
+    · rw [anfCoeff_true] at hs
+      have : s = 0#n := by simpa using hs
+      subst this
+      rw [weight_zero]
+      omega
+
+end Degree
+
+section DegreeSteps
+
+/-- The degree of the associator phase of two nonzero distinct indices, as a function of their
+integer values: `max 1 (bitlen (max p q) - 2)`, with `bitlen n - 2 = Nat.log2 n - 1` for `n ≥ 1`. -/
+def assocDegree (p q : ℕ) : ℕ := max 1 (Nat.log2 (max p q) - 1)
+
+/-- The degree statement at level `n`. -/
+def AssocDegreeAt (n : ℕ) : Prop :=
+  ∀ a b : BitVec n, a ≠ 0#n → b ≠ 0#n → a ≠ b →
+    anfDegree (assocPhase a b) = assocDegree a.toNat b.toNat
+
+theorem assocDegree_le {n : ℕ} (hn : 3 ≤ n) {a b : BitVec n} (ha : a ≠ 0#n) :
+    assocDegree a.toNat b.toNat ≤ n - 2 := by
+  have ha' : a.toNat ≠ 0 := fun h => ha (BitVec.eq_of_toNat_eq (by simpa using h))
+  have hm : max a.toNat b.toNat < 2 ^ n := max_lt a.isLt b.isLt
+  have hm0 : max a.toNat b.toNat ≠ 0 := by
+    intro h
+    exact ha' (by omega)
+  have := (Nat.log2_lt hm0).2 hm
+  unfold assocDegree
+  omega
+
+theorem coeff_weight_le {n : ℕ} (hn : 2 ≤ n) (ih : n = 2 ∨ (3 ≤ n ∧ AssocDegreeAt n))
+    (a b : BitVec n) (s : BitVec n) (hs : anfCoeff (assocPhase a b) s = true) :
+    weight s ≤ n - 2 := by
+  by_cases hdeg : a = 0#n ∨ b = 0#n ∨ a = b
+  · have : assocPhase a b = fun _ => false := funext (assocPhase_eq_false_of_degenerate hdeg)
+    rw [this, anfCoeff_false] at hs
+    exact absurd hs (by simp)
+  · simp only [not_or] at hdeg
+    obtain ⟨ha, hb, hab⟩ := hdeg
+    rcases ih with rfl | ⟨h3, ih⟩
+    · have : assocPhase a b = fun _ => false := funext (assocPhase_two a b)
+      rw [this, anfCoeff_false] at hs
+      exact absurd hs (by simp)
+    · have h1 := le_anfDegree hs
+      rw [ih a b ha hb hab] at h1
+      have := assocDegree_le h3 (b := b) ha
+      omega
+
+/-- A pair whose top bits are not both clear: the phase of the low parts plus two point
+indicators and a constant has degree `n - 1`. -/
+theorem anfDegree_assocPhase_top {n : ℕ} (hn : 2 ≤ n) (ih : n = 2 ∨ (3 ≤ n ∧ AssocDegreeAt n))
+    (L M : Bool) (l m u v : BitVec n) (huv : u ≠ v) (c0 : Bool)
+    (hform : ∀ y, (assocPhase l m y ^^
+        (L && (decide (m ≠ 0#n) ^^ decide (y ≠ 0#n) ^^ decide (m ^^^ y ≠ 0#n))) ^^
+        (M && (commPhase l m ^^ commPhase l (m ^^^ y)))) =
+      (assocPhase l m y ^^ (decide (y = u) ^^ decide (y = v)) ^^ c0)) :
+    anfDegree (assocPhase (BitVec.cons L l) (BitVec.cons M m)) = n - 1 := by
+  set A : BitVec n → Bool := fun y =>
+    assocPhase l m y ^^ (L && (decide (m ≠ 0#n) ^^ decide (y ≠ 0#n) ^^ decide (m ^^^ y ≠ 0#n))) ^^
+      (M && (commPhase l m ^^ commPhase l (m ^^^ y))) with hAdef
+  have hA : anfDegree A = n - 1 :=
+    anfDegree_point_pair hn huv c0 (coeff_weight_le hn ih l m) hform
+  have h0 : ∀ y, assocPhase (BitVec.cons L l) (BitVec.cons M m) (BitVec.cons false y) = A y := by
+    intro y
+    rw [assocPhase_cons]
+    simp [hAdef]
+  have h1 : ∀ y, assocPhase (BitVec.cons L l) (BitVec.cons M m) (BitVec.cons true y) =
+      (assocPhase (BitVec.cons L l) (BitVec.cons M m) (BitVec.cons false y) ^^
+        (decide (l ≠ 0#n) ^^ decide (m ≠ 0#n) ^^ decide (l ^^^ m ≠ 0#n))) := by
+    intro y
+    rw [assocPhase_cons, assocPhase_cons, commPhase_xor_triple]
+    simp
+  rw [anfDegree_lift _ (by rw [hA]; omega) h0 h1, hA]
+
+
+
+theorem cons_false_ne_zero {n : ℕ} {x : BitVec n} (h : BitVec.cons false x ≠ 0#(n + 1)) :
+    x ≠ 0#n := by
+  intro hx
+  apply h
+  subst hx
+  simp
+
+theorem ne_xor_of_ne_zero {n : ℕ} {a b : BitVec n} (hb : b ≠ 0#n) : a ≠ a ^^^ b := by
+  intro h
+  apply hb
+  have key : a ^^^ (a ^^^ b) = b := by
+    rw [← BitVec.xor_assoc, BitVec.xor_self, BitVec.zero_xor]
+  rw [← h, BitVec.xor_self] at key
+  exact key.symm
+
+theorem assocDegree_step {n : ℕ} (hn : 2 ≤ n) (ih : n = 2 ∨ (3 ≤ n ∧ AssocDegreeAt n)) :
+    AssocDegreeAt (n + 1) := by
+  intro a b ha hb hab
+  obtain ⟨P, p, rfl⟩ : ∃ P p', a = BitVec.cons P p' :=
+    ⟨_, _, (BitVec.cons_msb_setWidth a).symm⟩
+  obtain ⟨Q, q, rfl⟩ : ∃ Q q', b = BitVec.cons Q q' :=
+    ⟨_, _, (BitVec.cons_msb_setWidth b).symm⟩
+  cases P <;> cases Q
+  · have hp := cons_false_ne_zero ha
+    have hq := cons_false_ne_zero hb
+    have hpq : p ≠ q := fun h => hab (by rw [h])
+    have hdeg : assocDegree (BitVec.cons false p).toNat (BitVec.cons false q).toNat =
+        assocDegree p.toNat q.toNat := by
+      simp [assocDegree]
+    rw [hdeg]
+    rcases ih with rfl | ⟨h3, ih⟩
+    · have hp' : p.toNat ≠ 0 := fun h => hp (BitVec.eq_of_toNat_eq (by simpa using h))
+      have hm : max p.toNat q.toNat < 4 := max_lt p.isLt q.isLt
+      have hm0 : max p.toNat q.toNat ≠ 0 := by omega
+      have hl := (Nat.log2_lt hm0).2 (show max p.toNat q.toNat < 2 ^ 2 from hm)
+      have hd : assocDegree p.toNat q.toNat = 1 := by
+        unfold assocDegree
+        omega
+      rw [hd]
+      refine anfDegree_lift_zero (fun y => ?_) (fun y => ?_)
+      · rw [assocPhase_cons]
+        simp [assocPhase_two]
+      · rw [assocPhase_cons, commPhase_xor_triple, pairCoeff_eq_true hp hq hpq]
+        simp [assocPhase_two]
+    · have hd1 : 1 ≤ anfDegree (assocPhase p q) := by
+        rw [ih p q hp hq hpq]
+        exact le_max_left _ _
+      refine (anfDegree_lift true hd1 (fun y => ?_) (fun y => ?_)).trans (ih p q hp hq hpq)
+      · rw [assocPhase_cons]
+        simp
+      · rw [assocPhase_cons, assocPhase_cons, commPhase_xor_triple, pairCoeff_eq_true hp hq hpq]
+        simp
+  · have hp := cons_false_ne_zero ha
+    have hle : (BitVec.cons false p).toNat ≤ (BitVec.cons true q).toNat := by
+      rw [toNat_cons_false', toNat_cons_true']
+      have := p.isLt
+      omega
+    have hdeg : assocDegree (BitVec.cons false p).toNat (BitVec.cons true q).toNat = n - 1 := by
+      unfold assocDegree
+      rw [max_eq_right hle, log2_cons_true]
+      omega
+    rw [hdeg]
+    refine anfDegree_assocPhase_top hn ih false true p q q (q ^^^ p)
+      (ne_xor_of_ne_zero hp) (decide (q = 0#n) ^^ decide (q = p)) fun y => ?_
+    have hp' : decide (p ≠ 0#n) = true := decide_eq_true hp
+    simp only [Bool.false_and, Bool.true_and, Bool.xor_false, commPhase_eq_xor, decide_xor_eq_zero,
+      hp']
+    simp only [decide_xor_eq]
+    generalize assocPhase p q y = g
+    generalize decide (q = 0#n) = a1
+    generalize decide (q = p) = a2
+    generalize decide (y = q) = a3
+    generalize decide (y = q ^^^ p) = a4
+    revert g a1 a2 a3 a4
+    decide
+  · have hq := cons_false_ne_zero hb
+    have hle : (BitVec.cons false q).toNat ≤ (BitVec.cons true p).toNat := by
+      rw [toNat_cons_false', toNat_cons_true']
+      have := q.isLt
+      omega
+    have hdeg : assocDegree (BitVec.cons true p).toNat (BitVec.cons false q).toNat = n - 1 := by
+      unfold assocDegree
+      rw [max_eq_left hle, log2_cons_true]
+      omega
+    rw [hdeg]
+    refine anfDegree_assocPhase_top hn ih true false p q 0#n q hq.symm true fun y => ?_
+    have hq' : decide (q = 0#n) = false := decide_eq_false hq
+    simp only [Bool.false_and, Bool.true_and, Bool.xor_false, ne_eq, decide_not,
+      decide_xor_eq_zero, hq']
+    generalize assocPhase p q y = g
+    generalize decide (y = 0#n) = a1
+    generalize decide (y = q) = a2
+    revert g a1 a2
+    decide
+  · have hpq : p ≠ q := fun h => hab (by rw [h])
+    have hdeg : assocDegree (BitVec.cons true p).toNat (BitVec.cons true q).toNat = n - 1 := by
+      unfold assocDegree
+      have hl : Nat.log2 (max (BitVec.cons true p).toNat (BitVec.cons true q).toNat) = n := by
+        rcases le_total (BitVec.cons true p).toNat (BitVec.cons true q).toNat with h | h
+        · rw [max_eq_right h, log2_cons_true]
+        · rw [max_eq_left h, log2_cons_true]
+      rw [hl]
+      omega
+    rw [hdeg]
+    have hv : (0#n) ≠ q ^^^ p := fun h => hpq (BitVec.xor_eq_zero_iff.1 h.symm).symm
+    refine anfDegree_assocPhase_top hn ih true true p q 0#n (q ^^^ p) hv
+      (true ^^ decide (q = p)) fun y => ?_
+    simp only [Bool.true_and, ne_eq, decide_not, commPhase_eq_xor, decide_xor_eq_zero]
+    simp only [decide_xor_eq]
+    generalize assocPhase p q y = g
+    generalize decide (p = 0#n) = a0
+    generalize decide (q = 0#n) = a1
+    generalize decide (q = p) = a2
+    generalize decide (y = 0#n) = a3
+    generalize decide (y = q) = a4
+    generalize decide (y = q ^^^ p) = a5
+    revert g a0 a1 a2 a3 a4 a5
+    decide
+
+theorem assocDegreeAt_of_le {k : ℕ} (hk : 3 ≤ k) : AssocDegreeAt k := by
+  induction k, hk using Nat.le_induction with
+  | base => exact assocDegree_step (le_refl 2) (Or.inl rfl)
+  | succ n hn ih => exact assocDegree_step (by omega) (Or.inr ⟨hn, ih⟩)
+
+end DegreeSteps
+
+/-- For `k ≥ 3` and distinct nonzero `p`, `q` the associator phase has algebraic degree
+`max 1 (bitlen (max p q) - 2)`, independent of `k`, where `bitlen n - 2 = Nat.log2 n - 1` for
+`n ≥ 1`. The Rocq original is `assoc_degree_is` of `rocq/quantum/CdAssociatorAnf.v`
+(`degree_is k (assoc k p q) (assoc_degree p q)`, whose `assoc k p q x` is `assocPhase` at
+`p.toNat`, `q.toNat`, `x.toNat`). The proof inducts on the level: a pair in the low half keeps the
+degree of the level below, since the top bit of `x` adds a constant; a pair reaching the top
+half adds two distinct point indicators, of degree `k - 2`, to the phase of the low parts, whose
+degree is at most `k - 3`. -/
+theorem anfDegree_assocPhase {k : ℕ} (hk : 3 ≤ k) {p q : BitVec k} (hp : p ≠ 0#k) (hq : q ≠ 0#k)
+    (hpq : p ≠ q) :
+    anfDegree (assocPhase p q) = max 1 (Nat.log2 (max p.toNat q.toNat) - 1) :=
+  assocDegreeAt_of_le hk p q hp hq hpq
 
 end Tower
 

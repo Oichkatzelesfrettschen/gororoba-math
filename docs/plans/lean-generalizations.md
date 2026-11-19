@@ -225,6 +225,8 @@ theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparis
 | 84 | `AssociatorPhase` | `Tower.assocPhase_two` |
 | 85 | `AssociatorPhase` | `Tower.assocPhase_cons` |
 | 86 | `AssociatorPhase` | `Tower.pairCoeff_eq_true` |
+| 87 | `AssociatorPhase` | `Tower.anfDegree_assocPhase` |
+| 88 | `AssociatorPhase` | `Tower.anfDegree_assocPhase` |
 | 96 | `SignCode` | `Tower.schreier_xor_schreier_zero` |
 | 97 | `SparseSupport` | `Tower.repr_mul_ne_zero_mem` |
 | 98 | `SparseSupport` | `Tower.mul_eq_zero_iff_forall_sector` |
