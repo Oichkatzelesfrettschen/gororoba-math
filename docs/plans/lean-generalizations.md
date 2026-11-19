@@ -134,16 +134,45 @@ statement uses them.
 
 ## Proved rows
 
-The library proves the ten rows of the first tranche, each in the module its
-row names:
+The library proves the ten rows of the first tranche and the rows of the second tranche
+(issue 55), each in the module its row names; rows 14 to 16 are the theorems of rows 11 to 13:
 
 | Row | Module | Theorem |
 |---|---|---|
+| 1 | `RingLaws` | `Tower.mul_eq_zero_iff_star_mul_star` |
+| 2 | `RingLaws` | `Tower.mul_eq_zero_iff_star_mul_of_star_eq_neg` |
+| 3 | `RingLaws` | `Tower.mul_eq_zero_iff_mul_star_of_star_eq_neg` |
+| 4 | `RingLaws` | `Tower.mk_mul_mk_eq_zero_iff_of_star_eq_neg` |
+| 5 | `RingLaws` | `Tower.mul_eq_zero_iff_reflect_mul_reflect` |
+| 6 | `RingLaws` | `Tower.mul_eq_one_iff_mul_sub_eq_zero` |
 | 7 | `Map` | `CayleyDickson.map_mul` |
+| 8 | `Map` | `Tower.lift_mul` |
+| 9 | `Map` | `Tower.lift_injective` |
+| 10 | `Derivation` | `CayleyDickson.mapAdd_leibniz` |
+| 11 | `ScalarAction` | `CayleyDickson.smul_mul_assoc` |
+| 12 | `ScalarAction` | `CayleyDickson.mul_smul_comm` |
+| 13 | `ScalarAction` | `CayleyDickson.instStarModule` |
+| 14 | `ScalarAction` | `CayleyDickson.smul_mul_assoc` |
+| 15 | `ScalarAction` | `CayleyDickson.mul_smul_comm` |
+| 16 | `ScalarAction` | `CayleyDickson.instStarModule` |
+| 17 | `TraceForm` | `Tower.re_mul_comm` |
+| 18 | `TraceForm` | `Tower.re_mul_assoc` |
 | 19 | `TraceForm` | `Tower.mul_star_mul_left` |
 | 20 | `TraceForm` | `Tower.mul_mul_star_right` |
+| 21 | `TraceForm` | `Tower.mul_mul_self_eq` |
 | 22 | `TraceForm` | `Tower.mul_eq_zero_iff_star_mul_eq_zero` |
+| 23 | `TraceForm` | `Tower.re_eq_zero_of_mul_eq_zero_rev` |
+| 24 | `TraceForm` | `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero` |
+| 25 | `TraceForm` | `Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero_right` |
+| 26 | `TraceForm` | `Tower.mul_dot_smul_sub_star_eq_zero` |
+| 27 | `TraceForm` | `Tower.exists_eq_inv_dot_smul_star_add` |
+| 28 | `TraceForm` | `Tower.dot_eq_zero_of_mul_eq_zero` |
 | 29 | `TraceForm` | `Tower.dot_mul_left_of_star_eq_neg` |
+| 30 | `TraceForm` | `Tower.dot_mul_right_of_star_eq_neg` |
+| 31 | `TraceForm` | `Tower.mul_eq_zero_iff_forall_dot_mul_eq_zero` |
+| 32 | `TraceForm` | `Tower.dot_star_mul_self` |
+| 33 | `TraceForm` | `Tower.dot_mul_self_comm` |
+| 34 | `TraceForm` | `Tower.dot_add_self_add_dot_sub_self` |
 | 40 | `BasisExt` | `Tower.map_mul_of_map_e_mul_e` |
 | 75 | `BooleanAnf` | `Tower.anfEval_anfCoeff` |
 | 76 | `BooleanAnf` | `Tower.anfCoeff_unique` |
