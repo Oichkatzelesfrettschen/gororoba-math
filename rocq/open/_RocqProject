@@ -141,6 +141,7 @@ verified/C014_AnnihilatorDim4.v
 verified/C015_FourPartners.v
 verified/C026_ZDGraphBlocks.v
 verified/C018_WheelsAxioms.v
+verified/C018_WheelAxiomsModel.v
 verified/C019_WheelsNoContent.v
 verified/C020_BasisNonzero.v
 verified/C021_LatticeInconsistency.v
@@ -192,6 +193,7 @@ verified/C957_VoudonZD.v
 verified/C958_ZDGraphTopology.v
 verified/C958b_ZDAdjacencyAnalytical.v
 verified/C959_CHSHClassicalBound.v
+verified/C959_CHSHScope.v
 theories/SedenionAssociator.v
 theories/SedenionSignBridge.v
 theories/SedenionGapWitnesses.v
@@ -228,6 +230,7 @@ verified/C1465_KoebisuEqualNorm.v
 verified/C1466_SubalgebraClosure.v
 verified/C1467_XORSignCocycle.v
 verified/C1468_SlotShiftEquivariance.v
+verified/C1468_SlotEmbeddingAllPairs.v
 verified/C1469_TowerTrilinearity.v
 verified/C1470_PathionTrilinearity.v
 theories/HigherCD.v
