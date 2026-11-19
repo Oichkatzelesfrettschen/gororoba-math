@@ -134,8 +134,11 @@ statement uses them.
 
 ## Proved rows
 
-The library proves the ten rows of the first tranche and the rows of the second tranche
-(issue 55), each in the module its row names; rows 14 to 16 are the theorems of rows 11 to 13:
+The library proves the ten rows of the first tranche and the rows of the second and third tranches
+(issue 55), each in the module its row names; rows 14 to 16 are the theorems of rows 11 to 13, rows
+66 and 67 share one theorem, rows 69, 70, 71 and 110 share one theorem, and rows 103 and 105 share one
+theorem. Rows 50 and 74 define `Tower.isum` and `Tower.amExponent`; the comparisons that their
+`comparison` cells name (`ci/compare_isum.sh`, `ci/compare_am_exponent.sh`) are owed:
 
 | Row | Module | Theorem |
 |---|---|---|
@@ -173,11 +176,53 @@ The library proves the ten rows of the first tranche and the rows of the second 
 | 32 | `TraceForm` | `Tower.dot_star_mul_self` |
 | 33 | `TraceForm` | `Tower.dot_mul_self_comm` |
 | 34 | `TraceForm` | `Tower.dot_add_self_add_dot_sub_self` |
+| 36 | `TraceForm` | `Tower.mul_comm_of_two_eq_zero` |
+| 37 | `RingTowerI` | `Tower.kernel_swap_iff_two_eq_zero` |
+| 38 | `RingTowerI` | `Tower.pure_kernel_swap_two_eq_zero` |
+| 39 | `RingTowerI` | `Tower.zmod5_not_pure_kernel_swap` |
 | 40 | `BasisExt` | `Tower.map_mul_of_map_e_mul_e` |
+| 41 | `BasisExt` | `Tower.leibniz_of_leibniz_e` |
+| 47 | `Ideals` | `Ideal.add_mul_mem_and_sub_mul_mem_iff` |
+| 48 | `Certificates` | `Matrix.linearIndependent_cols_of_mul_eq_smul_one` |
+| 49 | `Certificates` | `Matrix.smul_eq_mulVec_of_splitting` |
+| 50 | `ImaginarySum` | `Tower.isum_laws` |
+| 51 | `ImaginarySum` | `Tower.dot_isum_mul` |
+| 52 | `ImaginarySum` | `Tower.dot_mul_isum_mul_isum` |
+| 53 | `ImaginarySum` | `Tower.dot_add_mul_isum` |
+| 54 | `ImaginarySum` | `Tower.dot_smul_add_smul_mul_isum` |
+| 55 | `ImaginarySum` | `Tower.repr_e_mul_isum` |
+| 56 | `HalfFold` | `Tower.mk_left_mul_eq_zero_iff` |
+| 57 | `HalfFold` | `Tower.mk_right_mul_eq_zero_iff` |
+| 58 | `HalfFold` | `Tower.finrank_ker_mulLeft_mk_left` |
+| 59 | `HalfFold` | `Tower.finrank_ker_mulLeft_mk_right` |
+| 60 | `HalfFold` | `Tower.finrank_ker_mulLeft_mk_left_of_star_eq_neg` |
+| 61 | `HalfFold` | `Tower.finrank_range_mulRight_of_star_eq_neg` |
+| 62 | `Fold` | `Tower.dot_fold_self` |
+| 63 | `ZeroDivisors` | `Tower.exists_zero_divisor` |
+| 64 | `ZeroDivisors` | `Tower.exists_dot_mul_self_ne` |
+| 65 | `Hurwitz` | `Tower.hurwitzRadon_lt` |
+| 66 | `Quaternion` | `Tower.mul_assoc_two` |
+| 67 | `Quaternion` | `Tower.mul_assoc_two` |
+| 69 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
+| 70 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
+| 71 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
+| 73 | `SignLaws` | `Tower.negSign_xor_left_right` |
+| 74 | `SignLaws` | `Tower.amExponent_eq` |
 | 75 | `BooleanAnf` | `Tower.anfEval_anfCoeff` |
 | 76 | `BooleanAnf` | `Tower.anfCoeff_unique` |
 | 81 | `AssociatorPhase` | `Tower.e_mul_e_mul_e` |
 | 85 | `AssociatorPhase` | `Tower.assocPhase_cons` |
+| 100 | `Derivation` | `Tower.leibniz_four_iff_of_restricts` |
+| 101 | `Derivation` | `Tower.finrank_leibniz_of_certificate` |
+| 102 | `TraceForm` | `Tower.int_mul_mul_self_eq` |
+| 103 | `TraceForm` | `Tower.real_mul_mul_self_eq` |
+| 104 | `TraceForm` | `Tower.real_exists_eq_inv_dot_smul_star_add` |
+| 105 | `TraceForm` | `Tower.real_mul_mul_self_eq` |
+| 106 | `TraceForm` | `Tower.real_dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero` |
+| 107 | `TraceForm` | `Tower.int_mul_dot_smul_sub_star_eq_zero` |
+| 108 | `RingLaws` | `Tower.int_mul_eq_zero_iff_reflect_mul_reflect` |
+| 109 | `TraceForm` | `Tower.real_pathion_dot_mul_left_of_star_eq_neg` |
+| 110 | `QuaternionModule` | `Module.four_dvd_finrank_of_quaternion` |
 
 `ci/compare_anf.sh` and `ci/compare_assoc_phase.sh` compare the definitions
 of rows 75 and 81 with their Rocq partners of `rocq/quantum` and with the
