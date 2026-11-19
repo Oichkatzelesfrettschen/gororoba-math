@@ -18,4 +18,8 @@ Branch `rocq/census-owed-successors` of gororoba-math (issue 44), based on `cens
 
 ## Advisor
 
-The final verdict is recorded at the last call before the merge.
+At the final review of the round, the Advisor confirmed the theorems and asked for three checks before the pull request opens. All three are done.
+
+- The parent read Definition 1.1 on page 146 of the held copy of Carlstrom 2004. The fourteen fields of the header match axioms (1) to (8), and the involution laws //x = x and /(xy) = /y/x. The counterexamples to the reversal law at (W0, Wbot) and to axiom (8) at W1 were checked by hand against the model's tables.
+- The claims ledger has a row for C-1468 only. ea8e858 adds the successor's 168-pair count and its dimension-32 embedding to that row, which stays partial for its 3-form claims.
+- The C959 header now says its Fine 1982 criterion is recalled, not read from a held copy; fe09fe9 moves the seven census rows of that file to their shifted lines.
