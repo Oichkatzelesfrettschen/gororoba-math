@@ -9,7 +9,11 @@ helper lemmas of C1138_WickDampingMaximum, C1141_ZDGraphCountingIdentities and
 C1142_XORScatterGatherSums, and the other successors list none. The three
 sources of issue 44 items 2 to 4 raise the listing to 125 theorems in 38 files:
 ten more helper lemmas, three of C010_ZDGraphComponents and seven of
-C1463_CliffordMatrixBasis, while C1636_ScheduleProgramCount lists none.
+C1463_CliffordMatrixBasis, while C1636_ScheduleProgramCount lists none. The
+successors of the five rows that read `owed` (C1468_SlotEmbeddingAllPairs,
+C018_WheelAxiomsModel, C959_CHSHScope) raise it to 126 theorems in 39 files:
+C018_WheelAxiomsModel lists one generic statement, and the two others list
+none.
 
 Criterion. The verdict is `statement is the claim` when the docstring of the
 declaration or the module header describes the declaration as the arithmetic or
@@ -59,9 +63,14 @@ dimensions 16 to 256, which the Lean tower states at every level), one in
 C018_WheelsAxioms (a model that is not absorbing, with seven of eight axioms),
 one in C959_CHSHClassicalBound (a local-hidden-variable reading of a constant)
 and three in C1468_SlotShiftEquivariance (all 168 pairs at any offset, checked
-on one pair); the five outside C1469 read `owed`, since no successor module
-exists. With them
-`header-verdicts.tsv` holds 358 rows, 44 of them `header overclaims`; the two
+on one pair); the five outside C1469 named `owed` until their successors landed and now
+name C018_WheelAxiomsModel.v, C959_CHSHScope.v and
+C1468_SlotEmbeddingAllPairs.v. Those three sources add 61 declarations (181
+verified sources, 1017 declarations; 126 listed theorems and 269 file-local
+ones), and the 37 theorems they add to either listing (one listed, 36
+file-local, in C018_WheelAxiomsModel, C959_CHSHScope and
+C1468_SlotEmbeddingAllPairs) carry `statement is the claim` verdicts. With them
+`header-verdicts.tsv` holds 395 rows, 44 of them `header overclaims`; the two
 rows of C010_ConnectivityObstruction name the false K6 claim and point at
 C010_ZDGraphComponents.v, which proves each component has degree 4 and the
 graph 84 edges.
