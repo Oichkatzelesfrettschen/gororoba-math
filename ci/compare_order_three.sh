@@ -56,7 +56,6 @@ lake build --no-build -q GororobaMath.CayleyDickson.OrderThree || {
   exit 2
 }
 lake env lean --run "$work/OrderThree.lean" >"$work/lean.txt"
-"$PYTHON" -I "$here/compare_order_three.py" compare "$work/lean.txt" "$work/rocq.txt"
 status=0
 "$PYTHON" -I "$here/compare_order_three.py" compare "$work/lean.txt" "$work/mutant.txt" >/dev/null 2>&1 || status=$?
 [ "$status" -eq 1 ] || {
@@ -64,3 +63,4 @@ status=0
   exit 1
 }
 echo "compare_order_three: the mutated reference is rejected"
+"$PYTHON" -I "$here/compare_order_three.py" compare "$work/lean.txt" "$work/rocq.txt"

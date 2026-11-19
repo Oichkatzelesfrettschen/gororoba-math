@@ -304,7 +304,9 @@ Further rows carry a narrower Lean reading and say so in `narrowing`: row
 35 (norm multiplicativity, levels 0 to 3 only),
 row 70 (an inductive
 predicate on nat read as a module statement), row 71 (the
-abstract lane of Moreno's Theorem 1.16), row 96 (a group-cochain
+abstract lane of Moreno's Theorem 1.16), row 93 (the
+denominator-cleared census equation), row 95 (`Nat.card` for the
+span's cardinality), row 96 (a group-cochain
 identity read for the tower cochain), row 99 (a MathComp block
 rank read as the kernel decomposition), and rows 39 and
 45 (fixed levels over a class of rings).

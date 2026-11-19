@@ -50,7 +50,6 @@ lake build --no-build -q GororobaMath.CayleyDickson.SignCode || {
   exit 2
 }
 lake env lean --run "$work/Schreier.lean" >"$work/lean.txt"
-"$PYTHON" -I "$here/compare_schreier.py" compare "$work/lean.txt" "$work/rocq.txt"
 status=0
 "$PYTHON" -I "$here/compare_schreier.py" compare "$work/lean.txt" "$work/mutant.txt" >/dev/null 2>&1 || status=$?
 [ "$status" -eq 1 ] || {
@@ -58,3 +57,4 @@ status=0
   exit 1
 }
 echo "compare_schreier: the mutated reference is rejected"
+"$PYTHON" -I "$here/compare_schreier.py" compare "$work/lean.txt" "$work/rocq.txt"
