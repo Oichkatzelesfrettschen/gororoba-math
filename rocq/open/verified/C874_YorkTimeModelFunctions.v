@@ -29,8 +29,9 @@
     instance of a theorem here: test_axial_taper_center and
     test_shape_function_at_center assert values within 0.01 of 1 at 0;
     test_york_time_zero_at_center asserts |theta| < 0.1 at the origin for
-    the default parameters, the York time statement this file does not
-    prove.  The original header names test_york_time_center_zero, which
+    the default parameters, and test_center_extrinsic_curvature_is_zero
+    asserts that the ADM York time and nacelle_york_time are 0.0 there in
+    f64: the York time statement this file does not prove.  The original header names test_york_time_center_zero, which
     names no test. *)
 
 From Stdlib Require Import Rtrigo_def.
