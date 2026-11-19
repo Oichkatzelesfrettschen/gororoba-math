@@ -358,13 +358,13 @@ rocq/open/verified/C1636_ScheduleProgramCount.v:267	control_two_multiply_count	s
 rocq/open/verified/C1636_ScheduleProgramCount.v:270	control_scaling_count	statement is the claim	statement is the multiplication count or output count of the program, or a known-bad control of the counter, as the header lists	
 rocq/open/verified/C1636_ScheduleProgramCount.v:274	control_extra_multiply_count	statement is the claim	statement is the multiplication count or output count of the program, or a known-bad control of the counter, as the header lists	
 rocq/open/verified/C018_WheelAxiomsModel.v:141	absorbing_zero_forces_trivial	statement is the claim	statement is the generic consequence of rule (8) with an absorbing zero that the header names	
-rocq/open/verified/C959_CHSHScope.v:67	chsh_deterministic_bound	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
-rocq/open/verified/C959_CHSHScope.v:78	chsh_deterministic_attains_two	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
-rocq/open/verified/C959_CHSHScope.v:117	mix_S_linear	statement is the claim	helper lemma of the mixture bound: linearity of S and the weighted bound the header names under chsh_lhv_bound	
-rocq/open/verified/C959_CHSHScope.v:125	mix_S_sum_bounds	statement is the claim	helper lemma of the mixture bound: linearity of S and the weighted bound the header names under chsh_lhv_bound	
-rocq/open/verified/C959_CHSHScope.v:144	chsh_lhv_bound	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
-rocq/open/verified/C959_CHSHScope.v:153	chsh_lhv_attains_every_value	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
-rocq/open/verified/C959_CHSHScope.v:167	chsh_observed_value_lhv	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
+rocq/open/verified/C959_CHSHScope.v:68	chsh_deterministic_bound	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
+rocq/open/verified/C959_CHSHScope.v:79	chsh_deterministic_attains_two	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
+rocq/open/verified/C959_CHSHScope.v:118	mix_S_linear	statement is the claim	helper lemma of the mixture bound: linearity of S and the weighted bound the header names under chsh_lhv_bound	
+rocq/open/verified/C959_CHSHScope.v:126	mix_S_sum_bounds	statement is the claim	helper lemma of the mixture bound: linearity of S and the weighted bound the header names under chsh_lhv_bound	
+rocq/open/verified/C959_CHSHScope.v:145	chsh_lhv_bound	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
+rocq/open/verified/C959_CHSHScope.v:154	chsh_lhv_attains_every_value	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
+rocq/open/verified/C959_CHSHScope.v:168	chsh_observed_value_lhv	statement is the claim	statement is the bound or attainment result that the header names for deterministic assignments and their mixtures	
 rocq/open/verified/C1468_SlotEmbeddingAllPairs.v:186	tz_eqb_true	statement is the claim	helper lemma of the decision procedure: a boolean check implies the equality or flag statement the theorems below cite	
 rocq/open/verified/C1468_SlotEmbeddingAllPairs.v:242	zero_product_sound	statement is the claim	helper lemma of the decision procedure: a boolean check implies the equality or flag statement the theorems below cite	
 rocq/open/verified/C1468_SlotEmbeddingAllPairs.v:284	assessors_count	statement is the claim	statement is the count that the Results list of the header names, evaluated by vm_compute	
