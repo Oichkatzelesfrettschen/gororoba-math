@@ -364,6 +364,107 @@ theorem mem_signSpan_iff {k : ℕ} (f : BitVec (k + 3) → ZMod 2) :
   rw [signSpan_eq_signCode]
   exact mem_signCode
 
+section Cardinality
+
+open Module
+
+/-- The map `(g, c) ↦ (x ↦ g (x.setWidth (k + 2)) + c * [x.msb])` of the code parameters to the
+functions of order `k + 3`. -/
+def codeMap (k : ℕ) : ((BitVec (k + 2) → ZMod 2) × ZMod 2) →ₗ[ZMod 2] (BitVec (k + 3) → ZMod 2) :=
+  (LinearMap.funLeft (ZMod 2) (ZMod 2) (fun x : BitVec (k + 3) => x.setWidth (k + 2))).comp
+      (LinearMap.fst (ZMod 2) _ _) +
+    (LinearMap.toSpanSingleton (ZMod 2) (BitVec (k + 3) → ZMod 2)
+      (fun x => if x.msb then (1 : ZMod 2) else 0)).comp (LinearMap.snd (ZMod 2) _ _)
+
+theorem codeMap_apply {k : ℕ} (p : (BitVec (k + 2) → ZMod 2) × ZMod 2) (x : BitVec (k + 3)) :
+    codeMap k p x = p.1 (x.setWidth (k + 2)) + p.2 * (if x.msb then 1 else 0) := by
+  simp [codeMap]
+
+/-- The values of a function of the low bits at `0` and its sum. -/
+def valueSum (k : ℕ) : (BitVec (k + 2) → ZMod 2) →ₗ[ZMod 2] ZMod 2 × ZMod 2 :=
+  (LinearMap.proj (0#(k + 2))).prod (∑ y, LinearMap.proj y)
+
+theorem valueSum_apply {k : ℕ} (g : BitVec (k + 2) → ZMod 2) :
+    valueSum k g = (g 0#(k + 2), ∑ y, g y) := by
+  simp [valueSum]
+
+theorem valueSum_surjective (k : ℕ) : Function.Surjective (valueSum k) := by
+  have he : BitVec.cons true (0#(k + 1)) ≠ 0#(k + 2) := by
+    intro h
+    have := congrArg BitVec.msb h
+    simp at this
+  rintro ⟨a, b⟩
+  refine ⟨Pi.single 0#(k + 2) a + Pi.single (BitVec.cons true (0#(k + 1))) (b - a), ?_⟩
+  rw [valueSum_apply]
+  simp [Finset.sum_add_distrib, Pi.single_apply]
+
+theorem finrank_ker_valueSum (k : ℕ) :
+    finrank (ZMod 2) (LinearMap.ker (valueSum k)) = 2 ^ (k + 2) - 2 := by
+  have h := LinearMap.finrank_range_add_finrank_ker (valueSum k)
+  rw [LinearMap.range_eq_top.2 (valueSum_surjective k), finrank_top, Module.finrank_prod,
+    Module.finrank_self, Module.finrank_fintype_fun_eq_card, card_bitVec] at h
+  omega
+
+theorem codeMap_injective (k : ℕ) : Function.Injective (codeMap k) := by
+  intro p q h
+  have h1 : ∀ x' : BitVec (k + 2), p.1 x' = q.1 x' := fun x' => by
+    have := congrFun h (BitVec.cons false x')
+    simpa [codeMap_apply] using this
+  have h2 := congrFun h (BitVec.cons true (0#(k + 2)))
+  simp only [codeMap_apply, BitVec.setWidth_cons, BitVec.msb_cons, ite_true, mul_one] at h2
+  rw [h1] at h2
+  exact Prod.ext (funext h1) (add_left_cancel h2)
+
+/-- The normalized Schreier span of order `k + 3` has `2 ^ (2 ^ (k + 2) - 1)` elements. The Rocq
+original is `normalized_code_cardinality` of `rocq/open/theories/SignCodeCardinality.v`, which
+counts a duplicate-free list of tables; Lean counts the elements of the submodule with
+`Nat.card`. -/
+theorem card_normalizedSignSpan (k : ℕ) :
+    Nat.card (signSpan (k + 3) ⊓
+      LinearMap.ker (LinearMap.proj (R := ZMod 2) (φ := fun _ : BitVec (k + 3) => ZMod 2)
+        0#(k + 3)) : Submodule (ZMod 2) (BitVec (k + 3) → ZMod 2)) = 2 ^ (2 ^ (k + 2) - 1) := by
+  set S : Submodule (ZMod 2) (BitVec (k + 3) → ZMod 2) := signSpan (k + 3) ⊓
+    LinearMap.ker (LinearMap.proj (R := ZMod 2) (φ := fun _ : BitVec (k + 3) => ZMod 2) 0#(k + 3))
+    with hS
+  let Γ : (LinearMap.ker (valueSum k) × ZMod 2) →ₗ[ZMod 2] (BitVec (k + 3) → ZMod 2) :=
+    (codeMap k).comp ((LinearMap.ker (valueSum k)).subtype.prodMap LinearMap.id)
+  have hinj : Function.Injective Γ := by
+    intro a b h
+    have := codeMap_injective k h
+    obtain ⟨h1, h2⟩ := Prod.ext_iff.1 this
+    exact Prod.ext (Subtype.ext h1) h2
+  have hrange : LinearMap.range Γ = S := by
+    ext f
+    simp only [hS, LinearMap.mem_range, Submodule.mem_inf, LinearMap.mem_ker, LinearMap.proj_apply]
+    constructor
+    · rintro ⟨⟨⟨g, hg⟩, c⟩, rfl⟩
+      rw [LinearMap.mem_ker, valueSum_apply, Prod.mk_eq_zero] at hg
+      refine ⟨(mem_signSpan_iff _).2 ⟨g, c, hg.2, fun x => codeMap_apply _ x⟩, ?_⟩
+      simp [Γ, codeMap_apply, hg.1]
+    · rintro ⟨hs, h0⟩
+      obtain ⟨g, c, hsum, hf⟩ := (mem_signSpan_iff f).1 hs
+      have hg0 : g 0#(k + 2) = 0 := by
+        have := hf 0#(k + 3)
+        simpa [h0] using this.symm
+      refine ⟨⟨⟨g, ?_⟩, c⟩, ?_⟩
+      · rw [LinearMap.mem_ker, valueSum_apply, hg0, hsum]
+        rfl
+      · funext x
+        simp [Γ, codeMap_apply, hf x]
+  have hfin : Module.finrank (ZMod 2) S = 2 ^ (k + 2) - 1 := by
+    rw [← hrange, LinearMap.finrank_range_of_inj hinj, Module.finrank_prod, Module.finrank_self,
+      finrank_ker_valueSum]
+    have : 4 ≤ 2 ^ (k + 2) := by
+      rw [pow_add]
+      have := Nat.one_le_two_pow (n := k)
+      omega
+    omega
+  have : Fintype S := Fintype.ofFinite S
+  rw [Nat.card_eq_fintype_card, Module.card_eq_pow_finrank (K := ZMod 2) (V := S), hfin,
+    ZMod.card]
+
+end Cardinality
+
 end Tower
 
 end CayleyDickson
