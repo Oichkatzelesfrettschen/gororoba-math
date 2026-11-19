@@ -141,8 +141,10 @@ own execution evidence.
 
 ### CompCert build of the C targets
 
-`make extract-c-compcert` compiles the emitted units, the glue and the
-CertiRocq runtime source `gc_stack.c` with `ccomp` of the active switch
+`make extract-c-compcert` runs `extract-r2vb-check` and `extract-c-check`
+first, so the units it reads are freshly emitted and match their pinned
+digests, then compiles the emitted units, the glue and the CertiRocq runtime
+source `gc_stack.c` with `ccomp` of the active switch
 (`rocq-certirocq`: opam package coq-compcert 3.18, Rocq 9.1.1; the compiler
 reports version 3.17, because its source tree carries that VERSION file),
 links both correspondence tests, runs them, and compares their output with
@@ -162,25 +164,33 @@ options, without `-fall`. The emitted units and the glue print diagnostics
 The ccomp-built tests print the same lines as the gcc-built tests (nine and
 nine fixtures, zero failures).
 
-`ccomp -interp` meets the premise of CompCert's semantic-preservation
-theorem and fails it. Both tests go stuck at `(<ptr> & 1) == 0`: CertiRocq's
-inline test for a boxed value masks a `long` that holds a pointer, and
-CompCert's semantics leaves the bitwise AND of a pointer undefined. The
-theorem holds for a program whose source semantics does not go wrong, so it
-does not apply to these units, and the same construct (the `& 1` and
-`>> 1` forms) occurs in each emitted unit (24, 26 and 25 times for dp4,
-dp4_operand_admit and sint_range_admit). The harness is therefore a second
-compiler's differential build of the same C, and the C-to-assembly link is not
-covered by CompCert's theorem for these units. The construct is in the
+`ccomp -interp` reports undefined behavior in both tests: each goes stuck at
+`(<ptr> & 1) == 0`, CertiRocq's inline test for a boxed value, which masks a
+`long` that holds a pointer, and CompCert C leaves the bitwise AND of a
+pointer undefined (`Cop.v`, the semantics of `Oand`). CompCert's
+correctness theorem still holds for these units: the compiled program
+improves on the behaviors of the source (`Compiler.v`, `Behaviors.v`). A
+source that goes wrong admits every target behavior as an improvement, so
+the theorem constrains nothing here, and the C-to-assembly link stays in the
+trusted base for these units. The same construct (the `& 1` form) occurs
+in each emitted unit; `extraction/compcert/r2vb_dp4_compcert_record.txt`
+records the counts (24, 26 and 25 for dp4, dp4_operand_admit and
+sint_range_admit at the measurement). The harness is therefore a second
+compiler's differential build of the same C. The construct is in the
 emitted C, so no language option is expected to change the verdict
-(hypothesis: `-f` options were not tried, since none was needed to compile).
+(hypothesis: `-f` options were not tried, since none was needed to
+compile).
+
 The interpreter links one file, so each run reads a file that includes the
 units; a `#define` renames `struct closure` of the glue there, since
-`gc_stack.c` declares the same tag. The FP24 unit has no driver, so its
+`gc_stack.c` declares the same tag. The record counts the preprocessed lines
+that the rename changes in each unit and the glue, and keeps the digests of
+both unity files. The FP24 unit has no driver, so its
 `-interp` run is not run; it is compiled only.
 
-Where CompCert's theorem would apply (a unit whose `-interp` run
-terminates), it covers the step from CompCert C to assembly. The preprocessor
+Where the source of a unit does not go wrong (its `-interp` run
+terminates), the theorem gives the target the source's behavior and covers
+the step from CompCert C to assembly. The preprocessor
 (gcc), the parser and elaboration to CompCert C, the assembly printer, the
 assembler, the linker and the C library stay outside it, and so does the
 emission of the C by CertiRocq.

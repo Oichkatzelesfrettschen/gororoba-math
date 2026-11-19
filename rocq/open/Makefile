@@ -293,7 +293,10 @@ extract-c-check: extract-c
 # extraction/compcert/r2vb_dp4_compcert_record.txt.
 CCOMP ?= ccomp
 CCOMP_VERSION = v=$$($(CCOMP) -version) && printf '%s\n' "$$v" | head -n 1
-extract-c-compcert: test-r2vb-correspondence
+extract-c-compcert:
+	@$(MAKE) --no-print-directory extract-r2vb-check
+	@$(MAKE) --no-print-directory extract-c-check
+	@$(MAKE) --no-print-directory test-r2vb-correspondence
 	@RT="$$(opam var lib)/coq/user-contrib/CertiRocq/Plugin/runtime"; \
 	set -eu; cd extraction; mkdir -p compcert; rm -f compcert/*; \
 	N() { grep -c ': warning: ' "compcert/$$1.log" || true; }; \
@@ -321,7 +324,19 @@ extract-c-compcert: test-r2vb-correspondence
 	  echo "output: ccomp and gcc test outputs equal"; \
 	  for t in dp4 admit; do echo "interp $$t:"; grep -E '^(Stuck subexpression|ERROR:|Time [0-9]+: program terminated)' "compcert/interp_$$t.log"; done; } >compcert/golden_view.txt; \
 	diff -u golden/r2vb_dp4_compcert.golden compcert/golden_view.txt; \
-	{ cat compcert/golden_view.txt; $(GCC_VERSION); sha256sum compcert/test_r2vb_dp4 compcert/test_r2vb_dp4_admit; } >compcert/r2vb_dp4_compcert_record.txt; \
+	for u in OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c r2vb_dp4_glue.c; do \
+	  $(CCOMP) -E -I "$RT" "$u" >"compcert/pp_$u" 2>/dev/null; \
+	  $(CCOMP) -E -Dclosure=r2vb_glue_closure -I "$RT" "$u" >"compcert/pp_renamed_$u" 2>/dev/null; \
+	done; \
+	{ cat compcert/golden_view.txt; $(GCC_VERSION); \
+	  echo "verified sources: r2vb_dp4_extraction.sha256.new certirocq_runtime.sha256.new fp24_admit_extraction.sha256.new"; \
+	  sha256sum r2vb_dp4_extraction.sha256.new certirocq_runtime.sha256.new fp24_admit_extraction.sha256.new; \
+	  for u in OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c $(FP24_C).c; do \
+	    echo "occurrences of '& 1' in $u: $(grep -o '& 1' "$u" | wc -l)"; done; \
+	  for u in OpenGororoba.R2VBTransformDP4.dp4.c OpenGororoba.R2VBTransformDP4.dp4_operand_admit.c r2vb_dp4_glue.c; do \
+	    echo "lines changed by the closure rename in $u: $(diff "compcert/pp_$u" "compcert/pp_renamed_$u" | grep -c '^>' || true)"; done; \
+	  sha256sum compcert/unity_dp4.c compcert/unity_admit.c compcert/out_ccomp_dp4.txt compcert/out_ccomp_admit.txt \
+	    compcert/test_r2vb_dp4 compcert/test_r2vb_dp4_admit; } >compcert/r2vb_dp4_compcert_record.txt; \
 	echo "MATCH: ccomp-built tests print what the gcc-built tests print; golden record, ccomp -interp verdict included, matches"
 
 count:
