@@ -1,7 +1,7 @@
 /- SPDX-License-Identifier: Apache-2.0 -/
 module
 
-public import GororobaMath.CayleyDickson.Basic
+public import GororobaMath.CayleyDickson.NonAssociative
 
 /-!
 # Maps of a Cayley-Dickson double
@@ -31,6 +31,13 @@ products and conjugates. Here `f` maps between two star rings, neither
 commutative nor associative; additivity makes it `ℤ`-linear, and a map
 `D`-linear for scalars acting on both halves is `D`-linear on the double
 (`CayleyDickson.map_smul`).
+
+`Tower.lift j k` is the iterated embedding `x ↦ (x, 0)` of level `j` into level `j + k`,
+with `lift j 0 = id` and `lift j (k + 1) x = mk (lift j k x) 0`. It preserves products
+(`Tower.lift_mul`) and is injective (`Tower.lift_injective`); the Rocq original is
+`lift_mul` and `lift_injective` of the functor `RingTower` in `rocq/quantum/CdTowerRing.v`,
+whose `lift j k` lands in `cd (k + j)`, while here the target is `Tower R (j + k)`, so that
+`j + (k + 1)` unfolds to `(j + k) + 1` by `rfl`.
 -/
 
 @[expose] public section
@@ -110,5 +117,35 @@ example {A : Type*} [NonAssocRing A] [StarRing A] (x y : CayleyDickson (CayleyDi
       map_zero' := by ext <;> simp
       map_add' := reflect_add }
   exact CayleyDickson.map_mul f reflect_star x y
+
+namespace Tower
+
+universe u
+
+variable {R : Type u} [NonAssocRing R] [StarRing R]
+
+/-- The iterated embedding `x ↦ (x, 0)` of level `j` into level `j + k`. -/
+def lift (j : ℕ) : (k : ℕ) → Tower R j → Tower R (j + k)
+  | 0, x => x
+  | k + 1, x => mk (lift j k x) 0
+
+/-- The iterated embedding preserves products. The Rocq original is `lift_mul` of the functor
+`RingTower` in `rocq/quantum/CdTowerRing.v`. -/
+theorem lift_mul (j k : ℕ) (x y : Tower R j) :
+    lift j k (x * y) = lift j k x * lift j k y := by
+  induction k with
+  | zero => rfl
+  | succ k ih =>
+    change mk (lift j k (x * y)) 0 = mk (lift j k x) 0 * mk (lift j k y) 0
+    rw [mk_zero_mul_mk_zero, ih]
+
+/-- The iterated embedding is injective. The Rocq original is `lift_injective` of the functor
+`RingTower` in `rocq/quantum/CdTowerRing.v`. -/
+theorem lift_injective (j k : ℕ) : Function.Injective (lift (R := R) j k) := by
+  induction k with
+  | zero => exact fun _ _ h => h
+  | succ k ih => exact fun x y h => ih (mk_inj.1 h).1
+
+end Tower
 
 end CayleyDickson

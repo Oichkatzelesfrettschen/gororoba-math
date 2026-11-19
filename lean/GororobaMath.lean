@@ -12,6 +12,9 @@ public import GororobaMath.CayleyDickson.AssociatorSpace
 public import GororobaMath.CayleyDickson.AnnihilatorSymmetry
 public import GororobaMath.CayleyDickson.NonAssociative
 public import GororobaMath.CayleyDickson.Map
+public import GororobaMath.CayleyDickson.RingLaws
+public import GororobaMath.CayleyDickson.ScalarAction
+public import GororobaMath.CayleyDickson.Derivation
 public import GororobaMath.CayleyDickson.TraceForm
 public import GororobaMath.CayleyDickson.AssociatorPhase
 public import GororobaMath.CayleyDickson.BasisExt
