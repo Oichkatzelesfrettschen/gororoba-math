@@ -21,6 +21,7 @@ public import GororobaMath.CayleyDickson.AssociatorCensus
 public import GororobaMath.CayleyDickson.FlexibleLaw
 public import GororobaMath.CayleyDickson.BasisExt
 public import GororobaMath.CayleyDickson.BooleanAnf
+public import GororobaMath.Clifford.ZeroEight
 public import GororobaMath.CayleyDickson.Ideals
 public import GororobaMath.CayleyDickson.Certificates
 public import GororobaMath.CayleyDickson.RingTowerI

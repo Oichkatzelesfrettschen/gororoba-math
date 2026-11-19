@@ -380,6 +380,7 @@ open	verified/C015_FourPartners.v	deprecated-transitive-library-file-since-Stdli
 open	verified/C015_FourPartners.v	disj-pattern-notation
 open	verified/C016_FanoOrientedTriples.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C016_FanoOrientedTriples.v	disj-pattern-notation
+open	verified/C018_WheelAxiomsModel.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C018_WheelsAxioms.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C018_WheelsAxioms.v	disj-pattern-notation
 open	verified/C019_WheelsNoContent.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -472,6 +473,8 @@ open	verified/C1465_KoebisuEqualNorm.v	deprecated-transitive-library-file-since-
 open	verified/C1465_KoebisuEqualNorm.v	disj-pattern-notation
 open	verified/C1467_XORSignCocycle.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1467_XORSignCocycle.v	disj-pattern-notation
+open	verified/C1468_SlotEmbeddingAllPairs.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1468_SlotEmbeddingAllPairs.v	disj-pattern-notation
 open	verified/C1468_SlotShiftEquivariance.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1468_SlotShiftEquivariance.v	disj-pattern-notation
 open	verified/C1469_TowerTrilinearity.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -643,6 +646,8 @@ open	verified/C958b_ZDAdjacencyAnalytical.v	deprecated-transitive-library-file-s
 open	verified/C958b_ZDAdjacencyAnalytical.v	disj-pattern-notation
 open	verified/C959_CHSHClassicalBound.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C959_CHSHClassicalBound.v	disj-pattern-notation
+open	verified/C959_CHSHScope.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C959_CHSHScope.v	disj-pattern-notation
 open	verified/C993_CarlsonBranchFree.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C993_CarlsonBranchFree.v	disj-pattern-notation
 open	verified/C999_PathionEntropyBound.v	deprecated-transitive-library-file-since-Stdlib-9.0
