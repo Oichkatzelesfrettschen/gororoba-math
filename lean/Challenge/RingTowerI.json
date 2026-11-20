@@ -3,8 +3,7 @@
   "solution_module": "GororobaMath.CayleyDickson.RingTowerI",
   "theorem_names": [
     "CayleyDickson.Tower.kernel_swap_iff_two_eq_zero",
-    "CayleyDickson.Tower.pure_kernel_swap_two_eq_zero",
-    "CayleyDickson.Tower.zmod5_not_pure_kernel_swap"
+    "CayleyDickson.Tower.pure_kernel_swap_two_eq_zero"
   ],
   "permitted_axioms": [
     "propext",

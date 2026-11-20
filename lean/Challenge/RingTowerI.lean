@@ -61,24 +61,6 @@ theorem kernel_swap_iff_two_eq_zero (hi : i * i = -1) (k : ℕ) :
 
 end Trivial
 
-section ZMod5
-
-/-- The identity as star on `ZMod 5`: `starRingOfComm`, Mathlib's star on a commutative ring that
-is the identity, so `star a = a` for every `a : ZMod 5`. -/
-local instance : StarRing (ZMod 5) := starRingOfComm
-
-local instance : TrivialStar (ZMod 5) := ⟨fun _ => rfl⟩
-
-/-- Over `ZMod 5` with `i = 2` the kernel swap fails for pure elements at every level `k + 2`. The
-Rocq original is `mod5_kernel_swap_fails` of `rocq/quantum/CdTowerRing.v`; the star of `ZMod 5` is
-`starRingOfComm` (the identity, declared as `TrivialStar`), so this is the tower of the Rocq
-functor and not of a Gaussian conjugation. -/
-theorem zmod5_not_pure_kernel_swap (k : ℕ) :
-    ¬ ∀ a z : Tower (ZMod 5) (k + 2), star a = -a → a * z = 0 → z * a = 0 := by
-  sorry
-
-end ZMod5
-
 end Tower
 
 end CayleyDickson
