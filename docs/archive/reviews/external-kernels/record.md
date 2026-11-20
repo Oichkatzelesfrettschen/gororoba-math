@@ -14,4 +14,11 @@ Pull request 91 of gororoba-math. Reviewers: the `codex` command-line agent (gpt
 
 ## Advisor
 
-(recorded after the Advisor call)
+The Advisor confirmed the seven codex findings and the rewrite at 91c7746, and asked for three changes before the pull request leaves draft. All three are done in 2df618d:
+- **The axiom rationale was unmeasured.** On the export of `AuditFixture.usesDeclaredAxiom`:
+  - con-leche exits 2, "not implemented yet: non-standard axiom";
+  - con-ron exits 2, "declined: non-standard axiom";
+  - nanoda exits 1, "unpermitted axiom".
+  The script, the record and AGENTS.md now state these measured refusals in place of the claim that the checkers accept declared axioms. The calibration also requires the export check to refuse that axiom.
+- **The soundness claims were the tools' help text.** They are attributed to `--help`, and the record states con-ron's remaining hypothesis: the driver runs the extracted stages in the order it does on the file's bytes.
+- **The record lacked the 91c7746 run.** It now carries that run (108 theorems in 33 modules). It also carries the 4.33.1 archive closure of 36,631 declarations that all four checkers accepted, which bounds the claim that the 4.35.0 checkers read 4.33.1 exports.
