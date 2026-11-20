@@ -14,6 +14,8 @@
     - lift_mul is Tower.lift_mul, with the level k + j in place of j + k.
     - lift_injective is Tower.lift_injective, with the level k + j in place of j + k.
 
+    Substituted values: R := D with the identity as star, j and k the Rocq levels, and the Lean map f the endomap f of one level.
+
     The Rocq statements are narrower than the Lean ones: the coefficients form a commutative ring whose conjugation is the identity
     (the signature CommutativeRing), where Lean takes every NonAssocRing with a StarRing; diag_mul takes an endomap of one level
     that preserves sums, scalars, products and conjugates, where Lean takes a non-unital ring homomorphism between two star rings

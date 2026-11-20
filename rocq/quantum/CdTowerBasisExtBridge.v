@@ -13,6 +13,8 @@
     - multiplicative_by_basis is Tower.map_mul_of_map_e_mul_e.
     - derivation_by_basis is Tower.leibniz_of_leibniz_e.
 
+    Substituted values: R := D with the identity as star, the Lean linear map f the Rocq map f with the hypothesis linear k f, and a BitVec index p the natural number i below 2^k.
+
     The Rocq statements are narrower than the Lean ones: indices i, j below 2^k, where Lean takes bit vectors of width k, and the coefficients form a commutative ring
     whose conjugation is the identity (the signature CommutativeRing), as in Lean.
     IntegerBasisExtBridge instantiates the functor at the integers. *)

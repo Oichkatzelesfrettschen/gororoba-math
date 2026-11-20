@@ -13,6 +13,8 @@
     - kernel_swap_iff_two_zero is Tower.kernel_swap_iff_two_eq_zero.
     - pure_kernel_swap_two_zero is Tower.pure_kernel_swap_two_eq_zero.
 
+    Substituted values: R := D with the identity as star and i := D.i, so that i * i = -1 is the axiom i_squared of D.
+
     The Rocq statements are those of the Lean module: the coefficients form a commutative ring with a square root i of -1
     whose conjugation is the identity (the signature CommutativeRingWithI), and D.i is the Lean i.
     mod5_kernel_swap_fails of CdTowerRing.v is the Lean zmod5_not_pure_kernel_swap, over the integers modulo 5.

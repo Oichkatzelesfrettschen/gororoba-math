@@ -14,6 +14,8 @@
     combination of the vectors with the coefficients inverse times the pairing of the functionals with z. This is
     Tower.ker_mulLeft_basis_of_certificate at a ring in which d is a unit.
 
+    Substituted values: R := B for the target ring with the unit d replaced by h(d) and its inverse, the vectors v and functionals g the Rocq lists vectors and functionals below n, and back the Rocq list back.
+
     The Rocq statement is narrower than the Lean one: it states that the kernel is spanned by the vectors, by the explicit
     combination formula, where Lean states a Basis of the kernel submodule, whose independence is the separate
     theorem combination_zero_coefficients, the families are indexed by natural numbers below n, where Lean takes

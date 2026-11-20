@@ -24,6 +24,8 @@
     - right_inverse_form is Tower.exists_eq_inv_dot_smul_star_add.
     - two_zero_commutative is Tower.mul_comm_of_two_eq_zero.
 
+    Substituted values: R := D (the ordered domain, the commutative ring or the field F of the three functors), the star of R the identity, the level k the Rocq k, and the Lean trace form dot k and real part re k the Rocq dot k and re k.
+
     The Rocq statements are narrower than the Lean ones: the coefficients form an ordered domain whose conjugation is the identity
     (the signature OrderedDomain), where Lean takes a commutative ring with the identity as star, and for the order-dependent
     theorems the ordered section of its module.

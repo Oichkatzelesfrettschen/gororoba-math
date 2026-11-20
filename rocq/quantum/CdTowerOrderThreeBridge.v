@@ -14,6 +14,8 @@
     - psi2_mul is Tower.orderThree_mul.
     - psi2_conj is Tower.orderThree_star.
 
+    Substituted values: R := D with the identity as star, r3 := D.r3 with r3 * r3 = 3 (the axiom r3_squared), and the level 4 of psi2_mul.
+
     The Rocq statements are those of the Lean module: the coefficients form a commutative ring with a square root of 3
     (the signature RingWithRoot3) whose conjugation is the identity. ci/compare_order_three.sh compares Tower.orderThree with psi2.
     Root3OrderThreeBridge instantiates the functor at the integers adjoined a square root of 3. *)

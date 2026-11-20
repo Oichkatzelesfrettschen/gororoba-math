@@ -13,6 +13,8 @@
     - pure_kernel_conj is Tower.mul_eq_zero_iff_star_mul_of_star_eq_neg.
     - reflect_kernel is Tower.mul_eq_zero_iff_reflect_mul_reflect.
 
+    Substituted values: R := D, the star of R the identity, the level k the Rocq k, and the Lean zero, negation and pure predicate as stated above.
+
     The Rocq statements are narrower than the Lean ones: the coefficients form a commutative ring whose conjugation is the identity
     (the signature CommutativeRing), where Lean takes every NonAssocRing with a StarRing.
     IntegerRingLawsBridge instantiates the functor at the integers. *)

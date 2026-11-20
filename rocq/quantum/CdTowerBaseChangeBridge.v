@@ -13,6 +13,8 @@
     - scaled_multiplicative_transport is Tower.baseChange_mul.
     - derivation_transport is Tower.baseChange_leibniz.
 
+    Substituted values: R := A, S := B and phi := H.h, the Lean linear map F the map source_map k images of the list images of its values, and c an element of A.
+
     The Rocq statements are narrower than the Lean ones: the map F is given by the list images of its values on the source basis, where Lean takes an R-linear map F, and
     indices below 2^k stand for bit vectors of width k.
     IntegerBaseChangeBridge instantiates the functor at the base change from the integers to the integers. *)

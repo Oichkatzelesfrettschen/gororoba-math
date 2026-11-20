@@ -11,6 +11,8 @@
     - first_half is Tower.mk_left_mul_eq_zero_iff.
     - second_half is Tower.mk_right_mul_eq_zero_iff.
 
+    Substituted values: R := D, the ordered domain with the identity as star, and the level k the Rocq k.
+
     The Rocq statements are narrower than the Lean ones: the coefficients form an ordered domain whose conjugation is the identity
     (the signature OrderedDomain), where Lean takes a commutative ring with the identity as star and the ordered section of its module.
     IntegerHalfFoldBridge instantiates the functor at the integers. *)
