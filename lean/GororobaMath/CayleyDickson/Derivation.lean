@@ -65,16 +65,20 @@ universe u
 
 variable {K : Type u} [Field K] [StarRing K] [TrivialStar K]
 
-/-- The `K`-linear maps of `Tower K k` that satisfy the Leibniz rule. -/
+/-- The `K`-linear maps of `Tower K k` that satisfy the Leibniz rule. The closure proofs use `rw`
+alone: `simp` and `abel` add auxiliary lemmas named after the elaborating module, so a challenge
+module that restates this definition would not reproduce its proof terms. -/
 def leibnizSubmodule (K : Type u) [Field K] [StarRing K] [TrivialStar K] (k : ℕ) :
     Submodule K (Tower K k →ₗ[K] Tower K k) where
   carrier := {F | ∀ x y, F (x * y) = F x * y + x * F y}
   add_mem' := fun {F G} hF hG x y => by
-    simp only [LinearMap.add_apply, hF x y, hG x y, mul_add, add_mul]
-    abel
-  zero_mem' := fun x y => by simp only [LinearMap.zero_apply, mul_zero, zero_mul, add_zero]
+    rw [LinearMap.add_apply, LinearMap.add_apply, LinearMap.add_apply, hF x y, hG x y, add_mul, mul_add]
+    exact add_add_add_comm _ _ _ _
+  zero_mem' := fun x y => by
+    rw [LinearMap.zero_apply, LinearMap.zero_apply, LinearMap.zero_apply, zero_mul, mul_zero, add_zero]
   smul_mem' := fun c F hF x y => by
-    simp only [LinearMap.smul_apply, hF x y, smul_add, smul_mul_assoc', mul_smul_comm']
+    rw [LinearMap.smul_apply, LinearMap.smul_apply, LinearMap.smul_apply, hF x y, smul_add,
+      smul_mul_assoc', mul_smul_comm']
 
 theorem mem_leibnizSubmodule {k : ℕ} {F : Tower K k →ₗ[K] Tower K k} :
     F ∈ leibnizSubmodule K k ↔ ∀ x y, F (x * y) = F x * y + x * F y := Iff.rfl
