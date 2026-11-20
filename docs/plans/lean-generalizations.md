@@ -4,10 +4,10 @@ This plan orders the Lean work of issue 55. `lean-generalizations.tsv`
 beside it holds one row per headline theorem of each Rocq source whose results
 quantify over every level of the Cayley-Dickson tower or over a class of
 coefficient rings, with the Lean statement a proof worker writes, the
-declarations it reuses, the rows it depends on and an effort estimate. No
-statement in either file has been compiled; each is a proposal checked by
-reading the library source at origin/main 6d00d47 and the Rocq source it
-translates.
+declarations it reuses, the rows it depends on and an effort estimate. The
+rows were written as proposals against origin/main 6d00d47 and the Rocq source
+each translates; a row whose theorem has landed names the compiled declaration,
+and `ci/headline-results.tsv` lists the rows that carry a Rocq partner.
 
 ## Columns
 
@@ -285,12 +285,13 @@ with each tranche.
 
 Rows 118 to 121 are certificates at a fixed level or matrix whose general
 lemma is a Lean row (44, 43, 48 and 47), so each claim lands on both axes
-and owes an instance bridge (`AGENTS.md`, "Statements and proofs"): a Rocq
+and takes an instance bridge (`AGENTS.md`, "Statements and proofs"): a Rocq
 theorem in a new file whose comment names the Lean theorem by path and name
 and the values substituted for its parameters, and whose statement is the
 substituted proposition. The `narrowing` cell of each row names the Lean
 partner and the substitution, and the bridge lands with the partner row.
-The bridge of row 119, `CdTowerG2DerivationBridge.v`, also states the
+The bridge of row 119 has landed; rows 118, 120 and 121 still owe theirs.
+That bridge, `CdTowerG2DerivationBridge.v`, also states the
 hypotheses of row 101 at `k := 4`, `n := 14`, `d := 6`; the dimension 14
 follows from them by the Lean theorem over a field with a square root of
 `-1` in which `6` is nonzero, since Rocq holds no module dimension.
