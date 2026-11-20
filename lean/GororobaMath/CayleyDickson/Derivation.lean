@@ -72,7 +72,7 @@ def leibnizSubmodule (K : Type u) [Field K] [StarRing K] [TrivialStar K] (k : â„
   add_mem' := fun {F G} hF hG x y => by
     simp only [LinearMap.add_apply, hF x y, hG x y, mul_add, add_mul]
     abel
-  zero_mem' := fun x y => by simp
+  zero_mem' := fun x y => by simp only [LinearMap.zero_apply, mul_zero, zero_mul, add_zero]
   smul_mem' := fun c F hF x y => by
     simp only [LinearMap.smul_apply, hF x y, smul_add, smul_mul_assoc', mul_smul_comm']
 
