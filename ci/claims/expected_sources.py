@@ -64,11 +64,14 @@ OPEN_COMMIT = "f81aba2b4e9f18fef4ac751422972bf1d8f3a764"
 QUANTUM_COMMIT = "78c780bc6993dcb1f14e72c3d9dd1e4e23da4ba3"
 QUANTUM_LATER = "b7c2b373ca05be1f7096694d50f0c4638231b778"
 # Files of gororoba-quantum read at the later commit: the findings ledger, whose rows A5-565 to
-# A5-571 the earlier commit lacks, and the two topic notes of the second pass.
+# A5-571 the earlier commit lacks, the two topic notes of the second pass, and the analysis of the
+# scratch runs, which the earlier commits lack.
+QUANTUM_SCRATCH = "5f6107278075d8c967ec375df5591cd0b9b9a061"
 PINS = {
     "docs/evidence/a5-exceptional-fibers/ledger.tsv": QUANTUM_LATER,
     "docs/notes/topics/cd-star-lattice-tower.md": QUANTUM_LATER,
     "docs/notes/topics/c5-zero-divisor-code-falsification.md": QUANTUM_LATER,
+    "docs/evidence/a5-exceptional-fibers/scratch-runs/ANALYSIS.md": QUANTUM_SCRATCH,
 }
 CLAIM = re.compile(r"^gororoba-open:(C-[0-9]+)$")
 DOCUMENT = re.compile(r"^gororoba-open:doc:([A-Za-z0-9_./-]+\.md):([1-9][0-9]*)$")
