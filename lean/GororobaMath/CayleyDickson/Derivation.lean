@@ -72,10 +72,12 @@ def leibnizSubmodule (K : Type u) [Field K] [StarRing K] [TrivialStar K] (k : �
     Submodule K (Tower K k →ₗ[K] Tower K k) where
   carrier := {F | ∀ x y, F (x * y) = F x * y + x * F y}
   add_mem' := fun {F G} hF hG x y => by
-    rw [LinearMap.add_apply, LinearMap.add_apply, LinearMap.add_apply, hF x y, hG x y, add_mul, mul_add]
+    rw [LinearMap.add_apply, LinearMap.add_apply, LinearMap.add_apply, hF x y, hG x y, add_mul,
+      mul_add]
     exact add_add_add_comm _ _ _ _
   zero_mem' := fun x y => by
-    rw [LinearMap.zero_apply, LinearMap.zero_apply, LinearMap.zero_apply, zero_mul, mul_zero, add_zero]
+    rw [LinearMap.zero_apply, LinearMap.zero_apply, LinearMap.zero_apply, zero_mul, mul_zero,
+      add_zero]
   smul_mem' := fun c F hF x y => by
     rw [LinearMap.smul_apply, LinearMap.smul_apply, LinearMap.smul_apply, hF x y, smul_add,
       smul_mul_assoc', mul_smul_comm']
