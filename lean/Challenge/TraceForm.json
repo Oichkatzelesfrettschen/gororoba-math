@@ -1,0 +1,25 @@
+{
+  "challenge_module": "Challenge.TraceForm",
+  "solution_module": "GororobaMath.CayleyDickson.TraceForm",
+  "theorem_names": [
+    "CayleyDickson.Tower.re_mul_comm",
+    "CayleyDickson.Tower.re_mul_assoc",
+    "CayleyDickson.Tower.mul_star_mul_left",
+    "CayleyDickson.Tower.mul_mul_star_right",
+    "CayleyDickson.Tower.mul_mul_self_eq",
+    "CayleyDickson.Tower.mul_eq_zero_iff_star_mul_eq_zero",
+    "CayleyDickson.Tower.re_eq_zero_of_mul_eq_zero_rev",
+    "CayleyDickson.Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero",
+    "CayleyDickson.Tower.dot_one_eq_zero_and_dot_mk_zero_one_of_mul_eq_zero_right",
+    "CayleyDickson.Tower.mul_dot_smul_sub_star_eq_zero",
+    "CayleyDickson.Tower.exists_eq_inv_dot_smul_star_add",
+    "CayleyDickson.Tower.dot_mul_left_of_star_eq_neg",
+    "CayleyDickson.Tower.dot_mul_right_of_star_eq_neg",
+    "CayleyDickson.Tower.mul_comm_of_two_eq_zero"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

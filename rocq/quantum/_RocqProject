@@ -34,6 +34,8 @@ CdTowerLeibnizSystem.v
 CdTowerModuleBridge.v
 CdTowerMulStarSelf.v
 CdTowerNonAssociative.v
+CdTowerRingLawsBridge.v
+CdTowerTraceFormBridge.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v

@@ -1,0 +1,16 @@
+{
+  "challenge_module": "Challenge.RingLaws",
+  "solution_module": "GororobaMath.CayleyDickson.RingLaws",
+  "theorem_names": [
+    "CayleyDickson.Tower.mul_eq_zero_iff_star_mul_star",
+    "CayleyDickson.Tower.mul_eq_zero_iff_star_mul_of_star_eq_neg",
+    "CayleyDickson.Tower.mul_eq_zero_iff_mul_star_of_star_eq_neg",
+    "CayleyDickson.Tower.mk_mul_mk_eq_zero_iff_of_star_eq_neg",
+    "CayleyDickson.Tower.mul_eq_zero_iff_reflect_mul_reflect"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
