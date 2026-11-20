@@ -7,14 +7,16 @@
 
     The functor KernelCertificateBridge restates kernel_free_basis of the functor KernelCertificate at the
     ring homomorphism H from A to B, with the hypotheses of its section as arguments in their order:
-    the vectors annihilate the source element y, the splitting of d times a basis element,
-    and the duality of the functionals with the vectors at the scalar d. The conclusion is that, when h(d) has an
+    the vectors annihilate the source element y and the splitting of d times a basis element.
+    The duality of the functionals with the vectors at d is not a hypothesis of this theorem: it is the hypothesis of the
+    independence theorem combination_zero_coefficients of CdTowerKernelCertificate.v. The conclusion is that, when h(d) has an
     inverse in B, an element z lies in the kernel of left multiplication by the image of y exactly when z is the
     combination of the vectors with the coefficients inverse times the pairing of the functionals with z. This is
     Tower.ker_mulLeft_basis_of_certificate at a ring in which d is a unit.
 
-    The Rocq statement is narrower than the Lean one: it is stated by the explicit combination formula, where Lean
-    states a Basis of the kernel submodule, the families are indexed by natural numbers below n, where Lean takes
+    The Rocq statement is narrower than the Lean one: it states that the kernel is spanned by the vectors, by the explicit
+    combination formula, where Lean states a Basis of the kernel submodule, whose independence is the separate
+    theorem combination_zero_coefficients, the families are indexed by natural numbers below n, where Lean takes
     Fin n, and the hypotheses live over a source ring A and are transported along H, where Lean takes one ring.
     IntegerKernelCertificateBridge instantiates the functor at the identity of the integers. *)
 
@@ -29,15 +31,13 @@ Theorem kernel_free_basis k n (y : TA.cd k) (d : A.t) (back functionals vectors 
   (splitting_on_basis : forall i, (i < Nat.pow 2 k)%nat ->
     TA.scale k d (SA.basis k i) =
     TA.add k (source_map k back (TA.mul k y (SA.basis k i))) (source_comb k n functionals vectors (SA.basis k i)))
-  (functionals_dual : forall j l, (j < n)%nat -> (l < n)%nat ->
-    source_pair k (functionals j) (vectors l) = if Nat.eqb j l then d else A.zero)
   (inverse : B.t) (inverse_law : B.mul (H.h d) inverse = B.one) :
   forall z,
   TB.mul k (tmap k y) z = TB.zero k <->
   z = SB.tsum k n (fun j => TB.scale k (B.mul inverse (target_pair k (tmap k (functionals j)) z)) (tmap k (vectors j))).
 Proof.
   exact (KC.kernel_free_basis k n y d back functionals vectors vectors_annihilated splitting_on_basis
-    functionals_dual inverse inverse_law).
+    inverse inverse_law).
 Qed.
 
 End KernelCertificateBridge.
