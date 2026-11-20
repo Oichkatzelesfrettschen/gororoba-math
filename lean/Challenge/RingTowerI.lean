@@ -61,6 +61,13 @@ theorem kernel_swap_iff_two_eq_zero (hi : i * i = -1) (k : ℕ) :
 
 end Trivial
 
+/-- Over `ZMod 5` with the identity as star and `i = 2`, the kernel swap fails for pure elements
+at every level `k + 2`. The Rocq original is `mod5_kernel_swap_fails` of
+`rocq/quantum/CdTowerRing.v`. -/
+theorem zmod5_not_pure_kernel_swap [StarRing (ZMod 5)] [TrivialStar (ZMod 5)] (k : ℕ) :
+    ¬ ∀ a z : Tower (ZMod 5) (k + 2), star a = -a → a * z = 0 → z * a = 0 := by
+  sorry
+
 end Tower
 
 end CayleyDickson
