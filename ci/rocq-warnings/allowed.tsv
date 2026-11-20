@@ -724,6 +724,7 @@ quantum	CdTowerG2DerivationSpan.v	using-fallback-loc
 quantum	CdTowerG2Derivations.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerG2Derivations.v	disj-pattern-notation
 quantum	CdTowerG2Derivations.v	using-fallback-loc
+quantum	CdTowerHalfFoldBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerKernelCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerKernelCertificate.v	using-fallback-loc
 quantum	CdTowerLeibnizSystem.v	deprecated-transitive-library-file-since-Stdlib-9.0

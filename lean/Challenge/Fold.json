@@ -1,0 +1,12 @@
+{
+  "challenge_module": "Challenge.Fold",
+  "solution_module": "GororobaMath.CayleyDickson.Fold",
+  "theorem_names": [
+    "CayleyDickson.Tower.dot_fold_self"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

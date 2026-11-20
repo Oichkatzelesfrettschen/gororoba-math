@@ -1,0 +1,17 @@
+{
+  "challenge_module": "Challenge.HalfFold",
+  "solution_module": "GororobaMath.CayleyDickson.HalfFold",
+  "theorem_names": [
+    "CayleyDickson.Tower.mk_left_mul_eq_zero_iff",
+    "CayleyDickson.Tower.mk_right_mul_eq_zero_iff",
+    "CayleyDickson.Tower.finrank_ker_mulLeft_mk_left",
+    "CayleyDickson.Tower.finrank_ker_mulLeft_mk_right",
+    "CayleyDickson.Tower.finrank_ker_mulLeft_mk_left_of_star_eq_neg",
+    "CayleyDickson.Tower.finrank_range_mulRight_of_star_eq_neg"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

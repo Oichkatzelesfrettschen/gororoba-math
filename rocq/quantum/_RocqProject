@@ -41,6 +41,7 @@ CdTowerRingTowerIBridge.v
 CdTowerBasisExtBridge.v
 CdTowerBaseChangeBridge.v
 CdTowerOrderThreeBridge.v
+CdTowerHalfFoldBridge.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v
