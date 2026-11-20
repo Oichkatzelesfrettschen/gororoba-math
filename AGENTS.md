@@ -175,13 +175,13 @@ gororoba repository shares; this file governs where the two differ.
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
   level 5, 6 or 7, and on the coset-block circuits of the wide runs.
   `ci/check_external_kernels.sh` exports the dependency closure of each
-  module's headline theorems with lean4export and checks it with nanoda,
-  a Lean type checker written independently in Rust, permitting only
-  `propext`, `Classical.choice` and `Quot.sound`; it first requires
-  nanoda to reject `ReplayFixture.bogus` and accept a known-good theorem.
-  `ci/install_external_kernels.sh` builds both tools, pinned, outside the
-  checkout. It runs on demand. lean4lean has no 4.35 port
-  (`docs/archive/measurements/external-kernels.md`).
+  module's headline theorems with the toolchain's `leanexport` and checks it
+  with the external checkers Lean 4.35 bundles: `con-leche --verified` and
+  `con-ron --verified`, whose soundness theorems state that no file declaring
+  a theorem of type `False` is accepted, and `nanoda_bin`, with `propext`,
+  `Classical.choice` and `Quot.sound` as the only axioms. It first requires
+  each to reject `ReplayFixture.bogus` and accept a known-good theorem, and
+  runs on demand (`docs/archive/measurements/external-kernels.md`).
 - A new result, a statement that the README or a record cites, is placed
   on two axes, checked in this order; a helper lemma goes where its result
   is.
