@@ -6,8 +6,8 @@ Measured 2026-11-20 on the Windows compute workstation (WSL, 32 threads, 54 GB).
 
 The Lean 4.35.0 toolchain ships external checkers in its `bin` directory, beside `lean` and `leanchecker`:
 - `leanexport`, which writes named declarations and their dependency closure in NDJSON format 3.1.0;
-- `con-leche`, a checker written in Lean. Its `--verified` mode is the one its main theorem covers: no file that declares a theorem of type `False` is accepted (`ConLeche.no_False_declaration`);
-- `con-ron`, a Rust arena checker with the same command line and exit codes. The same statements are proved about its pipeline on an Aeneas model of the Rust, using only `propext`, `Classical.choice` and `Quot.sound`;
+- `con-leche`, a checker written in Lean. By its `--help`, its `--verified` mode is the one its main theorem covers: no file that declares a theorem of type `False` is accepted (`ConLeche.no_False_declaration`, `ConLeche/MainTheorem.lean`);
+- `con-ron`, a Rust arena checker with the same command line and exit codes. By its `--help`, the same statements are proved about its pipeline on an Aeneas model of the Rust, using only `propext`, `Classical.choice` and `Quot.sound`. They still assume, as hypotheses, that the driver runs the extracted stages in the order it does on the file's bytes (its `OVERVIEW.md`, section 3.1);
 - `nanoda_bin` 0.4.19, a type checker for Lean written independently in Rust;
 - `lean4lean` and `leanchecker-paranoid`.
 
@@ -23,9 +23,29 @@ The bad inputs are exports of exactly `ReplayFixture.bogus` and its dependencies
 | 4.33.1 fixture, the same declaration | status 1, the same message | status 1, the same message |
 | 4.33.1 fixture, a theorem of type `True` | status 0: `accepted 3 declarations` | status 0: `accepted 3 declarations` |
 
-`ci/external_kernel_export.py` adds three checks: each requested theorem is declared as a theorem in the export, the export declares no axiom outside the allow list, and it declares something. con-leche and con-ron accept a declared axiom as part of the environment they check, so without that check an export carrying an extra axiom would pass.
+`ci/external_kernel_export.py` adds three checks: each requested theorem is declared as a theorem in the export, the export declares no axiom outside the allow list, and it declares something.
+
+On the export of `AuditFixture.usesDeclaredAxiom`, which rests on the declared `AuditFixture.declaredAxiom`, the four refusals differ:
+- the export check exits 1, naming the axiom;
+- con-leche exits 2: `not implemented yet: non-standard axiom (AuditFixture.declaredAxiom)`;
+- con-ron exits 2: `declined: non-standard axiom`;
+- nanoda exits 1: `export file declares unpermitted axiom`.
+
+The axiom rule therefore rests on the export check rather than on any one checker, and the calibration requires that refusal.
+
+On a real 4.33.1 closure, lean4export 4.33.1 exported `GroundTheory.Automorphic.contDiff_integral_of_iteratedFDeriv` of the alpo.ge archive in 64 s at 6.5 GB peak: 4,053,366 lines, 219 MB, 36,631 declarations, with the three standard axioms. All four checkers accepted it:
+
+| Checker | Wall time | Peak memory |
+|---|---|---|
+| con-leche --verified | 14.6 s | 0.30 GB |
+| con-ron --verified | 11.5 s | 0.58 GB |
+| bundled nanoda_bin | 10.8 s | 0.33 GB |
+| nanoda master | 14.9 s | 0.35 GB |
 
 ## Run over the headline theorems
+
+At 91c7746, `ci/check_external_kernels.sh` passed calibration, and con-leche, con-ron and nanoda accepted all 108 Lean rows of `ci/headline-results.tsv` (33 solution modules). Each export declares exactly the three standard axioms.
+
 
 At gororoba-math b00bb43 (pull request 89's head), nanoda (built from its master branch, commit 0da9f98f) accepted all 110 Lean rows of `ci/headline-results.tsv`. The rows fall in 34 solution modules. The exports came from lean4export v4.35.0, and only the three standard axioms were permitted. The closures ran from 26,034 export lines (`CayleyDickson.Basic`) to 3,207,192 (`CayleyDickson.HalfFold`).
 

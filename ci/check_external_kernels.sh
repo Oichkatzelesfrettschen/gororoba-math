@@ -12,13 +12,19 @@
 #     its pipeline on an Aeneas model;
 #   - nanoda_bin, a type checker for Lean written independently in Rust, with
 #     propext, Classical.choice and Quot.sound as the only permitted axioms.
+# The soundness statements above are those of each tool's --help text; con-ron
+# states that its proofs still assume, as hypotheses, that the driver runs the
+# extracted stages in the order it does on the file's bytes.
 # ci/external_kernel_export.py first requires each requested theorem to be
 # declared as a theorem in the export and the export to declare no axiom
-# beyond those three, since con-leche and con-ron accept a declared axiom as
-# part of the environment. Calibration comes first: every checker must reject
-# ReplayFixture.bogus of lean/ReplayFixture.lean (type False, added with the
-# kernel switched off), and con-leche and con-ron must name it, and every
-# checker must accept CayleyDickson.Tower.e_mul_e.
+# beyond those three, so the axiom rule does not rest on any one checker
+# (con-leche and con-ron decline a non-standard axiom with status 2, and nanoda
+# exits 1 under its hard-error rule; measured on AuditFixture.declaredAxiom).
+# Calibration comes first: every checker must reject ReplayFixture.bogus of
+# lean/ReplayFixture.lean (type False, added with the kernel switched off),
+# and con-leche and con-ron must name it; the export check must refuse
+# AuditFixture.usesDeclaredAxiom of lean/AuditFixture.lean; and every checker
+# must accept CayleyDickson.Tower.e_mul_e.
 # Runs on demand, outside ci/check.sh. The largest closure, that of
 # CayleyDickson.HalfFold, ran to 3.2 million export lines (measured 2026-11-20,
 # Lean 4.35.0, docs/archive/measurements/external-kernels.md).
@@ -54,7 +60,7 @@ for tool in leanexport con-leche con-ron nanoda_bin; do
     exit 2
   }
 done
-lake build GororobaMath ReplayFixture >"$work/build.log" 2>&1 || {
+lake build GororobaMath ReplayFixture AuditFixture >"$work/build.log" 2>&1 || {
   echo "check_external_kernels: lake build failed (log follows)" >&2
   tail -20 "$work/build.log" >&2
   exit 2
@@ -125,6 +131,12 @@ if [ "$verdict" != rejected ] || [ "$rejects" != 3 ] || [ "$named" != 2 ]; then
   show_logs
   exit 2
 fi
+verdict=$(check AuditFixture AuditFixture.usesDeclaredAxiom) || :
+grep -q 'axioms outside the allow list: AuditFixture.declaredAxiom' "$work/export.err" || {
+  echo "check_external_kernels: calibration: the export check did not refuse AuditFixture.declaredAxiom (verdict $verdict)" >&2
+  show_logs
+  exit 2
+}
 verdict=$(check GororobaMath.CayleyDickson.Tower CayleyDickson.Tower.e_mul_e) || :
 accepts=$(grep -c ' accept$' "$work/verdicts.txt") || :
 [ "$verdict" = accepted ] && [ "$accepts" = 3 ] || {
