@@ -1,0 +1,15 @@
+{
+  "challenge_module": "Challenge.AssociatorCensus",
+  "solution_module": "GororobaMath.CayleyDickson.AssociatorCensus",
+  "theorem_names": [
+    "CayleyDickson.Tower.card_anfDegree_assocPhase_eq",
+    "CayleyDickson.Tower.card_anfDegree_assocPhase_eq_one",
+    "CayleyDickson.Tower.sum_card_anfDegree_assocPhase",
+    "CayleyDickson.Tower.card_assocPhase_true"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

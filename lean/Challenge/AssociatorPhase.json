@@ -1,0 +1,19 @@
+{
+  "challenge_module": "Challenge.AssociatorPhase",
+  "solution_module": "GororobaMath.CayleyDickson.AssociatorPhase",
+  "theorem_names": [
+    "CayleyDickson.Tower.e_mul_e_mul_e",
+    "CayleyDickson.Tower.assocPhase_eq_false_of_dependent",
+    "CayleyDickson.Tower.assocPhase_eq_false_of_degenerate",
+    "CayleyDickson.Tower.assocPhase_two",
+    "CayleyDickson.Tower.assocPhase_cons",
+    "CayleyDickson.Tower.pairCoeff_eq_true",
+    "CayleyDickson.Tower.anfDegree_assocPhase",
+    "CayleyDickson.Tower.assocPhase_point_pair"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

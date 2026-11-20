@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.SignLaws",
+  "solution_module": "GororobaMath.CayleyDickson.SignLaws",
+  "theorem_names": [
+    "CayleyDickson.Tower.negSign_xor_left_right",
+    "CayleyDickson.Tower.amExponent_eq"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

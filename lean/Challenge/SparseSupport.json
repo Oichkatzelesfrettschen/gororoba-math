@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.SparseSupport",
+  "solution_module": "GororobaMath.CayleyDickson.SparseSupport",
+  "theorem_names": [
+    "CayleyDickson.Tower.repr_mul_ne_zero_mem",
+    "CayleyDickson.Tower.mul_eq_zero_iff_forall_sector"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

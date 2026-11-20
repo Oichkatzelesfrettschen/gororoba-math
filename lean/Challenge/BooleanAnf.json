@@ -1,0 +1,16 @@
+{
+  "challenge_module": "Challenge.BooleanAnf",
+  "solution_module": "GororobaMath.CayleyDickson.BooleanAnf",
+  "theorem_names": [
+    "CayleyDickson.Tower.anfEval_anfCoeff",
+    "CayleyDickson.Tower.anfCoeff_unique",
+    "CayleyDickson.Tower.anfDegree_two_point",
+    "CayleyDickson.Tower.anfDegree_negSign_left",
+    "CayleyDickson.Tower.anfDegree_negSign_right"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
