@@ -63,6 +63,12 @@ end Trivial
 
 section ZMod5
 
+/-- The identity as star on `ZMod 5`: `starRingOfComm`, Mathlib's star on a commutative ring that
+is the identity, so `star a = a` for every `a : ZMod 5`. -/
+local instance : StarRing (ZMod 5) := starRingOfComm
+
+local instance : TrivialStar (ZMod 5) := ⟨fun _ => rfl⟩
+
 /-- Over `ZMod 5` with `i = 2` the kernel swap fails for pure elements at every level `k + 2`. The
 Rocq original is `mod5_kernel_swap_fails` of `rocq/quantum/CdTowerRing.v`; the star of `ZMod 5` is
 `starRingOfComm` (the identity, declared as `TrivialStar`), so this is the tower of the Rocq
