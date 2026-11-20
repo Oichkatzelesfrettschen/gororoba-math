@@ -16,10 +16,10 @@
 # lake env lean --run, Rocq evaluates with vm_compute after compiling the
 # closure of the Rocq source from a copy of rocq/quantum of this checkout, and
 # the Python side generates the tables with cd_core.cd_sign and hands them to
-# the other two as integer literals. The open-tree spelling canonical_anf of
-# rocq/open/theories/BooleanANFDegree.v is outside the comparison, since its
-# cube carrier needs the compiled open tree. Before the verdict counts, the
-# comparison must reject a Rocq reference whose submask test is reversed, a
+# the other two as integer literals. The open-tree spelling anf_evaluate
+# (canonical_anf) of rocq/open/theories/BooleanANFDegree.v is compared by
+# ci/compare_open_tree.sh. Before the verdict counts, the comparison must
+# reject a Rocq reference whose submask test is reversed, a
 # Rocq reference whose degree skips the monomial of every variable, a Python
 # reference with one coefficient changed and a Python reference with one
 # degree raised. Prints the gororoba-quantum
