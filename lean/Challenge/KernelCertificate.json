@@ -1,0 +1,12 @@
+{
+  "challenge_module": "Challenge.KernelCertificate",
+  "solution_module": "GororobaMath.CayleyDickson.KernelCertificate",
+  "theorem_names": [
+    "CayleyDickson.Tower.ker_mulLeft_basis_of_certificate"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

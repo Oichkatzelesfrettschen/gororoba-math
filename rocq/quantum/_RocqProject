@@ -42,6 +42,7 @@ CdTowerBasisExtBridge.v
 CdTowerBaseChangeBridge.v
 CdTowerOrderThreeBridge.v
 CdTowerHalfFoldBridge.v
+CdTowerKernelCertificateBridge.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v
