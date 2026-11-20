@@ -718,6 +718,7 @@ quantum	CdTowerDomainZ.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerDomainZ.v	disj-pattern-notation
 quantum	CdTowerE1E18Kernel.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerE1E18Kernel.v	disj-pattern-notation
+quantum	CdTowerG2DerivationBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerG2DerivationSpan.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerG2DerivationSpan.v	disj-pattern-notation
 quantum	CdTowerG2DerivationSpan.v	using-fallback-loc
