@@ -1,0 +1,12 @@
+{
+  "challenge_module": "Challenge.Derivation",
+  "solution_module": "GororobaMath.CayleyDickson.Derivation",
+  "theorem_names": [
+    "CayleyDickson.Tower.finrank_leibniz_of_certificate"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

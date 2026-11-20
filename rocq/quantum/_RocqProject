@@ -43,6 +43,7 @@ CdTowerBaseChangeBridge.v
 CdTowerOrderThreeBridge.v
 CdTowerHalfFoldBridge.v
 CdTowerKernelCertificateBridge.v
+CdTowerG2DerivationBridge.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v
