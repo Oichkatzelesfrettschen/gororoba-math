@@ -11,4 +11,9 @@ Row 13 (an instance) and row 101 (a different statement) stay out, and so does t
 
 ## Advisor
 
-The Advisor's verdict is recorded at its call before the merge.
+The Advisor asked for three things before the merge, all done:
+- **Count.** The TSV adds 72 rows, with 20 new challenge configurations; the PR body was corrected to match.
+- **Row 71 partner.** The narrower text now says which side states less. The Rocq side takes the module dimension and the free quaternion action as hypotheses of a signature; Lean derives divisibility for every finite real quaternion module. The plan cell lost its `unsure:` prefix.
+- **Issue 55.** The PR body carries no `Closes:` line, because the mod-5 row (39) and row 101 stay owed on the issue.
+
+The owner's ruling of 2026-11-18 sets the review chain for new gororoba-math pull requests at local codex and the Advisor, so this pull request has no hosted round.
