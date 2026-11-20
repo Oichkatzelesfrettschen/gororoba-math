@@ -27,8 +27,9 @@ universe u
 variable {K : Type u} [Field K] [StarRing K] [TrivialStar K]
 
 /-- The `K`-linear maps of `Tower K k` that satisfy the Leibniz rule. The closure proofs use `rw`
-alone: `simp` and `abel` add auxiliary lemmas named after the elaborating module, so a challenge
-module that restates this definition would not reproduce its proof terms. -/
+alone: with `simp only` and `abel` the comparator rejected the challenge restatement at
+`leibnizSubmodule._proof_2`, and with `rw` it accepts it (Lean 4.35.0). hypothesis: those
+tactics leave terms that depend on the elaborating module. -/
 def leibnizSubmodule (K : Type u) [Field K] [StarRing K] [TrivialStar K] (k : ℕ) :
     Submodule K (Tower K k →ₗ[K] Tower K k) where
   carrier := {F | ∀ x y, F (x * y) = F x * y + x * F y}
