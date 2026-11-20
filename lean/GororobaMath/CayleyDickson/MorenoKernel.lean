@@ -38,9 +38,12 @@ The proof needs no associativity, no norm condition and no order on the tower.
   the complex nullity of `A + i B`.
 * `Tower.four_dvd_finrank_ker_mulLeft_mk`: for pure `p` and `q` at `k ≥ 1`, the real nullity of
   `(p, q)` is divisible by four.
-* `Tower.four_dvd_finrank_ker_mulLeft`: Moreno 1997, Corollary 1.17 (i), at every level, the Lean
-  reading of `cor_1_17_mod4` of `rocq/open/theories/C1543_MorMod4Bound.v`, whose statement is
-  conditional on an `is_h_module_dim` hypothesis for the kernel.
+* `Tower.four_dvd_finrank_ker_mulLeft`: Moreno 1997, Corollary 1.17 (i), at every level, for the
+  actual kernels. It is a concrete strengthening of `cor_1_17_mod4` of
+  `rocq/open/theories/C1543_MorMod4Bound.v`, not its restatement: the Rocq declaration proves
+  divisibility by four for every dimension that satisfies the abstract hypothesis `is_h_module_dim`
+  (the reading of `Module.four_dvd_finrank_of_quaternion`, plan rows 69 and 70), while this theorem
+  proves it for the kernel of left multiplication itself, with no module hypothesis.
 -/
 
 @[expose] public section

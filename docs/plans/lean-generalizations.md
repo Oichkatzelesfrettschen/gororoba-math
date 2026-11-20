@@ -141,9 +141,7 @@ theorem, rows 98 and 99 share one theorem, and rows 103 and 105 share one theore
 every level without the H_a-action of the Rocq source: the kernel of left multiplication by a doubly
 pure `(p, q)` is read as the kernel of the complex matrix `A + i B`, with `A` and `B` the matrices of
 left multiplication by `p` and right multiplication by `q` (both skew), and the nullity of a skew-symmetric
-matrix of even size is even, so the real nullity is twice an even number. A numpy rank evaluation
-of the nullity of 2000 to 6000 sparse operands per level at levels 4 to 7 found only multiples of 4,
-the same spectrum the proof gives (measured, one build; not part of any gate). The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
+matrix of even size is even, so the real nullity is twice an even number. The theorem gives divisibility by four, not which multiples occur. The comparisons that the `comparison` cells of rows 45, 50, 74 and 94 name are
 `ci/compare_order_three.sh`, `ci/compare_isum.sh`, `ci/compare_am_exponent.sh` and
 `ci/compare_schreier.sh`:
 
