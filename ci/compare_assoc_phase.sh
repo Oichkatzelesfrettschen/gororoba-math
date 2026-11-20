@@ -12,11 +12,10 @@
 # rocq/quantum of this checkout. predict.py imports numpy, so PYTHON names an
 # interpreter that has it; the script exits 2 with a message when the import
 # fails. The open-tree spelling associator_phase of
-# rocq/open/theories/CDAssociatorDoubling.v is outside the comparison, since its
-# cube carrier needs the compiled open tree. Before the verdict counts, the
-# comparison must reject a Rocq reference with its last two arguments swapped
-# (assoc k p x q) and a Python reference with one sign negated. Prints the
-# gororoba-quantum commit and the sha256 of the Python files read. Runs on
+# rocq/open/theories/CDAssociatorDoubling.v is compared by ci/compare_open_tree.sh.
+# Before the verdict counts, the comparison must reject a Rocq reference with
+# its last two arguments swapped (assoc k p x q) and a Python reference with
+# one sign negated. Prints the gororoba-quantum commit and the sha256 of the Python files read. Runs on
 # demand, outside ci/check.sh, because it reads another repository and needs the
 # Rocq switch of ci/install_rocq.sh beside the Lean toolchain with a built
 # lean/.lake (the script runs lake build --no-build, which builds nothing).

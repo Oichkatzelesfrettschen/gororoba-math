@@ -160,6 +160,11 @@ gororoba repository shares; this file governs where the two differ.
   `boolean_anf.evaluate_anf` and `boolean_anf.anf_degree` of gororoba-quantum, and `ci/compare_assoc_phase.sh`
   compares `Tower.assocPhase` with `assoc` of `rocq/quantum/CdAssociatorAnf.v` and with
   `predict.associator_phase` of gororoba-quantum; both need `GOROROBA_QUANTUM`.
+  `ci/compare_open_tree.sh` compares `Tower.anfCoeff`, `Tower.anfEval` and `Tower.anfDegree` with
+  `anf_evaluate` and `anf_degree` of `rocq/open/theories/BooleanANFDegree.v`, and `Tower.assocPhase`
+  with `associator_phase` of `rocq/open/theories/CDAssociatorDoubling.v`; it compiles those two
+  sources and `SchreierSignCode.v` from copies, rejects a mutated coefficient transform, a mutated
+  degree and swapped phase arguments, reads no other repository and needs `rocq-9.3`.
   `ci/compare_order_three.sh` compares `Tower.orderThree` with `OrderThreeMap.psi2` of
   `rocq/quantum/CdTowerOrderThreeMap.v` on the 16 basis images of level 4 over `ℤ[√3]`, and
   `ci/compare_schreier.sh` compares `Tower.schreier` with `schreier` of
