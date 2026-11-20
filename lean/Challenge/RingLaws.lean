@@ -7,11 +7,12 @@ public import GororobaMath.CayleyDickson.Tower
 # Challenge: kernel laws of the tower over a nonassociative star ring
 
 This file restates, with `sorry` as each proof, the headline theorems that
-`GororobaMath.CayleyDickson.RingLaws` proves and that the "Lean library" table of `README.md` names, with the definitions
-those statements use. It imports the library modules that the solution module imports.
-`lake comparator --config` with the JSON file beside this one checks that each named theorem of the
-solution module has the statement written here and depends only on `propext`, `Classical.choice` and
-`Quot.sound`. No library module imports this file, and the admission gate does not build it.
+`GororobaMath.CayleyDickson.RingLaws` proves and that the "Lean library" table of `README.md` names,
+with the definitions those statements use. It imports the library modules that the
+solution module imports. `lake comparator --config` with the JSON file beside this one
+checks that each named theorem of the solution module has the statement written here
+and depends only on `propext`, `Classical.choice` and `Quot.sound`. No library module
+imports this file, and the admission gate does not build it.
 -/
 
 @[expose] public section

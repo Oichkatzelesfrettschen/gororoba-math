@@ -36,6 +36,11 @@ CdTowerMulStarSelf.v
 CdTowerNonAssociative.v
 CdTowerRingLawsBridge.v
 CdTowerTraceFormBridge.v
+CdTowerMapBridge.v
+CdTowerRingTowerIBridge.v
+CdTowerBasisExtBridge.v
+CdTowerBaseChangeBridge.v
+CdTowerOrderThreeBridge.v
 CdTowerOrderThreeMap.v
 CdTowerReal.v
 CdTowerRing.v

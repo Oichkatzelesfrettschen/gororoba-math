@@ -7,11 +7,12 @@ public import GororobaMath.CayleyDickson.AnnihilatorSymmetry
 # Challenge: conjugate identities of the trace form
 
 This file restates, with `sorry` as each proof, the headline theorems that
-`GororobaMath.CayleyDickson.TraceForm` proves and that the "Lean library" table of `README.md` names, with the definitions
-those statements use. It imports the library modules that the solution module imports.
-`lake comparator --config` with the JSON file beside this one checks that each named theorem of the
-solution module has the statement written here and depends only on `propext`, `Classical.choice` and
-`Quot.sound`. No library module imports this file, and the admission gate does not build it.
+`GororobaMath.CayleyDickson.TraceForm` proves and that the "Lean library" table of `README.md` names,
+with the definitions those statements use. It imports the library modules that the
+solution module imports. `lake comparator --config` with the JSON file beside this one
+checks that each named theorem of the solution module has the statement written here
+and depends only on `propext`, `Classical.choice` and `Quot.sound`. No library module
+imports this file, and the admission gate does not build it.
 -/
 
 @[expose] public section

@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.BaseChange",
+  "solution_module": "GororobaMath.CayleyDickson.BaseChange",
+  "theorem_names": [
+    "CayleyDickson.Tower.baseChange_mul",
+    "CayleyDickson.Tower.baseChange_leibniz"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
