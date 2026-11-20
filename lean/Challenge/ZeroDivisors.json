@@ -1,0 +1,12 @@
+{
+  "challenge_module": "Challenge.ZeroDivisors",
+  "solution_module": "GororobaMath.CayleyDickson.ZeroDivisors",
+  "theorem_names": [
+    "CayleyDickson.Tower.exists_dot_mul_self_ne"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

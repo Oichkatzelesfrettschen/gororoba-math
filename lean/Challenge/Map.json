@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.Map",
+  "solution_module": "GororobaMath.CayleyDickson.Map",
+  "theorem_names": [
+    "CayleyDickson.map_mul",
+    "CayleyDickson.Tower.lift_mul",
+    "CayleyDickson.Tower.lift_injective"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

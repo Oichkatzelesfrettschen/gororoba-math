@@ -1,0 +1,17 @@
+{
+  "challenge_module": "Challenge.ImaginarySum",
+  "solution_module": "GororobaMath.CayleyDickson.ImaginarySum",
+  "theorem_names": [
+    "CayleyDickson.Tower.isum_laws",
+    "CayleyDickson.Tower.dot_isum_mul",
+    "CayleyDickson.Tower.dot_mul_isum_mul_isum",
+    "CayleyDickson.Tower.dot_add_mul_isum",
+    "CayleyDickson.Tower.dot_smul_add_smul_mul_isum",
+    "CayleyDickson.Tower.repr_e_mul_isum"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

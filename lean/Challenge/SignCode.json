@@ -1,0 +1,14 @@
+{
+  "challenge_module": "Challenge.SignCode",
+  "solution_module": "GororobaMath.CayleyDickson.SignCode",
+  "theorem_names": [
+    "CayleyDickson.Tower.mem_signSpan_iff",
+    "CayleyDickson.Tower.card_normalizedSignSpan",
+    "CayleyDickson.Tower.schreier_xor_schreier_zero"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.BasisExt",
+  "solution_module": "GororobaMath.CayleyDickson.BasisExt",
+  "theorem_names": [
+    "CayleyDickson.Tower.map_mul_of_map_e_mul_e",
+    "CayleyDickson.Tower.leibniz_of_leibniz_e"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

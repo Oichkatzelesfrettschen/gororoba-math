@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.OrderThree",
+  "solution_module": "GororobaMath.CayleyDickson.OrderThree",
+  "theorem_names": [
+    "CayleyDickson.Tower.orderThree_mul",
+    "CayleyDickson.Tower.orderThree_star"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
