@@ -12,4 +12,7 @@ The argument itself was judged sound: the matrix of the kernel, the parity of a 
 
 ## Advisor
 
-The Advisor's verdict is recorded at its call before the merge.
+The Advisor read ef41c17.
+- **Argument:** confirmed. For pure p and q the two real equations are exactly (A + iB)(u + iw) = 0, and a skew matrix of even size has even nullity. The unit-norm hypothesis matters only at k = 0.
+- **Codex findings:** the P2 and P3 resolutions are right, and the comparison script is justified.
+- **Before the merge:** the commit identities match the repository's, and no claims-ledger row states the row 72 claim (no row names C-1543 or a mod-4 nullity).
