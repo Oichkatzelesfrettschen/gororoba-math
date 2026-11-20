@@ -42,4 +42,5 @@ Proof. apply BC.derivation_transport. Qed.
 
 End BaseChangeBridge.
 
-Module IntegerBaseChangeBridge := BaseChangeBridge IntegerRing ZDomain (IntegerHom ZDomain).
+Module IntegerToIntegerHom := IntegerHom ZDomain.
+Module IntegerBaseChangeBridge := BaseChangeBridge IntegerRing ZDomain IntegerToIntegerHom.

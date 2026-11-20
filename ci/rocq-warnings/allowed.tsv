@@ -700,9 +700,11 @@ quantum	CdTowerAlignedPairSpectrum.v	deprecated-transitive-library-file-since-St
 quantum	CdTowerAssociatorSpace.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerAssociatorSpace.v	disj-pattern-notation
 quantum	CdTowerAssociatorSpace.v	using-fallback-loc
+quantum	CdTowerBaseChangeBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerBasisBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerBasisBridge.v	disj-pattern-notation
 quantum	CdTowerBasisBridge.v	using-fallback-loc
+quantum	CdTowerBasisExtBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerBasisSign.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerBasisSign.v	disj-pattern-notation
 quantum	CdTowerCanonicalKernels.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -726,6 +728,7 @@ quantum	CdTowerKernelCertificate.v	deprecated-transitive-library-file-since-Stdl
 quantum	CdTowerKernelCertificate.v	using-fallback-loc
 quantum	CdTowerLeibnizSystem.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerLeibnizSystem.v	using-fallback-loc
+quantum	CdTowerMapBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerModuleBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerModuleBridge.v	disj-pattern-notation
 quantum	CdTowerModuleBridge.v	using-fallback-loc
@@ -736,6 +739,7 @@ quantum	CdTowerNonAssociative.v	bad-template-constraint
 quantum	CdTowerNonAssociative.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerNonAssociative.v	disj-pattern-notation
 quantum	CdTowerNonAssociative.v	using-fallback-loc
+quantum	CdTowerOrderThreeBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerOrderThreeMap.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerOrderThreeMap.v	disj-pattern-notation
 quantum	CdTowerOrderThreeMap.v	using-fallback-loc
@@ -754,6 +758,9 @@ quantum	CdTowerRingBasis.v	bad-template-constraint
 quantum	CdTowerRingBasis.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerRingBasis.v	using-fallback-loc
 quantum	CdTowerRingDomain.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerRingLawsBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerRingTowerIBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerTraceFormBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerTwoTermBins.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerTwoTermBins.v	disj-pattern-notation
 quantum	CdTowerTwoTermBins.v	using-fallback-loc
