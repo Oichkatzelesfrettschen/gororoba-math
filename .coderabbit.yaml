@@ -1,0 +1,20 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Codex is the repository's only hosted reviewer (workspace AGENTS.md "Reviews and merges"):
+# CodeRabbit reviews only when a comment asks for it, and posts no automatic review, summary,
+# status or chat reply (owner, 2026-11-19).
+reviews:
+  profile: "assertive"
+  auto_review:
+    enabled: false
+  request_changes_workflow: false
+  high_level_summary: false
+  high_level_summary_in_walkthrough: false
+  review_status: false
+  review_progress: false
+  commit_status: false
+  poem: false
+  collapse_walkthrough: true
+  changed_files_summary: false
+  sequence_diagrams: false
+chat:
+  auto_reply: false
