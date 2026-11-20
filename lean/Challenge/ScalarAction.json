@@ -1,0 +1,13 @@
+{
+  "challenge_module": "Challenge.ScalarAction",
+  "solution_module": "GororobaMath.CayleyDickson.ScalarAction",
+  "theorem_names": [
+    "CayleyDickson.smul_mul_assoc",
+    "CayleyDickson.mul_smul_comm"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}

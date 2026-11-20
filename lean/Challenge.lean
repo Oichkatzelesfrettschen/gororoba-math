@@ -8,6 +8,8 @@ public import Challenge.AssociatorSpace
 public import Challenge.BooleanAnf
 public import Challenge.Map
 public import Challenge.NonAssociative
+public import Challenge.QuaternionModule
+public import Challenge.ScalarAction
 public import Challenge.RingLaws
 public import Challenge.SignLaws
 public import Challenge.SparseSupport

@@ -1,0 +1,12 @@
+{
+  "challenge_module": "Challenge.QuaternionModule",
+  "solution_module": "GororobaMath.CayleyDickson.QuaternionModule",
+  "theorem_names": [
+    "Module.four_dvd_finrank_of_quaternion"
+  ],
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
+}
