@@ -23,6 +23,7 @@ variable {A : Type*} [NonAssocRing A] [StarRing A]
   {S : Type*} [CommRing S] [StarRing S] [TrivialStar S] [Module S A] [IsScalarTower S A A]
   [SMulCommClass S A A] [StarModule S A]
 
+omit [StarRing S] [TrivialStar S] [StarModule S A] in
 /-- Scalars pass through the product of the double on the left. -/
 theorem smul_mul_assoc (r : S) (x y : CayleyDickson A) : (r • x) * y = r • (x * y) := by
   sorry
