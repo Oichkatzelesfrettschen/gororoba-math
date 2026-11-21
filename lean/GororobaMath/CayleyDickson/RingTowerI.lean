@@ -24,7 +24,8 @@ induction on `k`, since `k + 2` unfolds to `(k + 1) + 1` by `rfl` while `Tower.l
   functor `RingTowerI` in `rocq/quantum/CdTowerRing.v`.
 * `Tower.kernel_swap_iff_two_eq_zero`: the Rocq `kernel_swap_iff_two_zero` of the same functor.
 * `Tower.zmod5_not_pure_kernel_swap`: the Rocq `mod5_kernel_swap_fails` of
-  `rocq/quantum/CdTowerRing.v`, over `ZMod 5` with the identity as star and `i = 2`.
+  `rocq/quantum/CdTowerRing.v`, over `ZMod 5` with the identity as star and `i = 2`; the star
+  instances are arguments of the theorem.
 -/
 
 @[expose] public section
@@ -161,18 +162,12 @@ end Trivial
 
 section ZMod5
 
-/-- The identity as star on `ZMod 5`: `starRingOfComm`, Mathlib's star on a commutative ring that
-is the identity, so `star a = a` for every `a : ZMod 5` and the tower below has the star of the
-Rocq functor, not a complex conjugation. -/
-local instance : StarRing (ZMod 5) := starRingOfComm
-
-local instance : TrivialStar (ZMod 5) := ⟨fun _ => rfl⟩
-
-/-- Over `ZMod 5` with `i = 2` the kernel swap fails for pure elements at every level `k + 2`. The
-Rocq original is `mod5_kernel_swap_fails` of `rocq/quantum/CdTowerRing.v`; the star of `ZMod 5` is
-`starRingOfComm` (the identity, declared as `TrivialStar`), so this is the tower of the Rocq
-functor and not of a Gaussian conjugation. -/
-theorem zmod5_not_pure_kernel_swap (k : ℕ) :
+/-- Over `ZMod 5` with the identity as star and `i = 2`, the kernel swap fails for pure elements
+at every level `k + 2`. The Rocq original is `mod5_kernel_swap_fails` of
+`rocq/quantum/CdTowerRing.v`. The star of `ZMod 5` enters as instance arguments, and
+`TrivialStar` makes it the identity, so the tower is that of the Rocq functor and not of a
+Gaussian conjugation; `starRingOfComm` with `⟨fun _ => rfl⟩` supplies both at a call site. -/
+theorem zmod5_not_pure_kernel_swap [StarRing (ZMod 5)] [TrivialStar (ZMod 5)] (k : ℕ) :
     ¬ ∀ a z : Tower (ZMod 5) (k + 2), star a = -a → a * z = 0 → z * a = 0 := fun h =>
   absurd (pure_kernel_swap_two_eq_zero (i := (2 : ZMod 5)) (by decide) k h) (by decide)
 
