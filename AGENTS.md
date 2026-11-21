@@ -174,6 +174,15 @@ gororoba repository shares; this file governs where the two differ.
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
   level 5, 6 or 7, and on the coset-block circuits of the wide runs.
+  `ci/check_external_kernels.sh` exports the dependency closure of each
+  module's headline theorems with the toolchain's `leanexport` and checks it
+  with the external checkers Lean 4.35 bundles: `con-leche --verified` and
+  `con-ron --verified`, whose `--help` states proved theorems that no file
+  declaring a theorem of type `False` is accepted, and `nanoda_bin`; an export
+  may declare only `propext`, `Classical.choice` and `Quot.sound`. It first
+  requires each to reject `ReplayFixture.bogus`, the export check to refuse
+  `AuditFixture.declaredAxiom`, and each to accept a known-good theorem, and
+  runs on demand (`docs/archive/measurements/external-kernels.md`).
 - A new result, a statement that the README or a record cites, is placed
   on two axes, checked in this order; a helper lemma goes where its result
   is.
