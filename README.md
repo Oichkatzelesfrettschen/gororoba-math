@@ -92,7 +92,7 @@ the rights the statements name are the table of the chain of that size with
 period 16 (`inventory_is_chain_table`). The tree declares no axiom and its
 ledger is empty.
 
-`rocq/open` is the proof tree of gororoba-open (364 sources under
+`rocq/open` is the proof tree of gororoba-open (365 sources under
 `theories/` and `verified/`, with checkpoints, extraction targets and the
 frozen quantum-observable evidence its bindings cite). `rocq/quantum` holds
 41 sources: the 29 proof files of gororoba-quantum (the Cayley-Dickson
@@ -233,7 +233,7 @@ sh ci/check_rocq.sh
 runs the Rocq half on an export of `HEAD` outside the checkout: every
 tracked source of `rocq/open/theories`, `rocq/open/verified`,
 `rocq/quantum` and `rocq/delegation` is listed in its `_RocqProject` and
-compiles (364, 41 and 4 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
+compiles (365, 41 and 4 sources), `rocq/open` passes `make all check-schur-geometry check-admissions
 check-plugins extract-check`, the build log of `rocq/quantum` holds no
 warning, and none of the four directories holds `Admitted` or `admit`. Of
 the eleven sources elsewhere under `rocq/open`, those make targets compile
