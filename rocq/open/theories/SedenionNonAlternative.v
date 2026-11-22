@@ -12,14 +12,16 @@
     basis units [sed_e i] for i < 16 and basis signs
     [sed_sign i j = cd_sign_fuel 5 16 i j], so that
     e_i * e_j = sed_sign i j * e_(i xor j)
-    (CDFusedBilinear.sed_mul_fused_basis_xor).
+    (CDFusedBilinear.sed_mul_fused_basis_xor on [sed_mul_fused], carried to
+    [sed_mul] by CDFusedBilinear.sed_mul_fused_eq).
 
     Results:
     - [sed_sign_1_10], [sed_sign_1_11]: the two signs are -1 and +1, and
       their product is -1, the value left alternativity requires.
     - [sed_basis_unit_left_alternative]: for every basis unit e_i and every
-      sedenion y, e_i (e_i y) = (e_i e_i) y.  No counterexample to left
-      alternativity repeats a basis unit.
+      sedenion y, e_i (e_i y) = (e_i e_i) y.  Every repeated basis unit
+      satisfies the left alternative law, so a witness of its failure
+      repeats a sum of basis units.
     - [sed_left_alternator_witness]: for a = e_1 + e_10 and b = e_4,
       (a a) b - a (a b) = 2 e_15.
     - [sedenion_not_left_alternative]: some a, b have (a a) b <> a (a b). *)
@@ -106,6 +108,14 @@ Proof.
   lra.
 Qed.
 
+(** Instance bridge: the Lean theorem
+    lean/GororobaMath/CayleyDickson/Alternative.lean,
+    [CayleyDickson.Tower.exists_left_alternative_ne], at R = the reals and
+    k = 4 (so m = 0 and [lift 4 0] is the identity), states that some x, y
+    in [Tower R 4] have x * x * y <> x * (x * y).  Its witness
+    x = e 1 + e 10, y = e 4 is [sed_alt_a], [sed_alt_b] here, and its
+    alternator 2 e 15 (associator_witness_left) is the one of
+    [sed_left_alternator_witness]. *)
 Theorem sedenion_not_left_alternative :
   exists a b : CDSed,
     sed_mul (sed_mul a a) b <> sed_mul a (sed_mul a b).
