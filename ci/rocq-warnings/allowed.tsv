@@ -305,6 +305,8 @@ open	theories/SedenionGapWitnesses.v	deprecated-transitive-library-file-since-St
 open	theories/SedenionGapWitnesses.v	disj-pattern-notation
 open	theories/SedenionMembershipConstraints.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	theories/SedenionMembershipConstraints.v	disj-pattern-notation
+open	theories/SedenionNonAlternative.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	theories/SedenionNonAlternative.v	disj-pattern-notation
 open	theories/SedenionSignBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	theories/SedenionSignBridge.v	disj-pattern-notation
 open	theories/SparsePhotonicCertificates.v	deprecated-transitive-library-file-since-Stdlib-9.0
