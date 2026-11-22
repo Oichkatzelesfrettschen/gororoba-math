@@ -19,9 +19,8 @@
     - [sed_sign_1_10], [sed_sign_1_11]: the two signs are -1 and +1, and
       their product is -1, the value left alternativity requires.
     - [sed_basis_unit_left_alternative]: for every basis unit e_i and every
-      sedenion y, e_i (e_i y) = (e_i e_i) y.  Every repeated basis unit
-      satisfies the left alternative law, so a witness of its failure
-      repeats a sum of basis units.
+      sedenion y, e_i (e_i y) = (e_i e_i) y: every repeated basis unit
+      satisfies the left alternative law.
     - [sed_left_alternator_witness]: for a = e_1 + e_10 and b = e_4,
       (a a) b - a (a b) = 2 e_15.
     - [sedenion_not_left_alternative]: some a, b have (a a) b <> a (a b). *)
@@ -112,9 +111,11 @@ Qed.
     lean/GororobaMath/CayleyDickson/Alternative.lean,
     [CayleyDickson.Tower.exists_left_alternative_ne], at R = the reals and
     k = 4 (so m = 0 and [lift 4 0] is the identity), states that some x, y
-    in [Tower R 4] have x * x * y <> x * (x * y).  Its witness
-    x = e 1 + e 10, y = e 4 is [sed_alt_a], [sed_alt_b] here, and its
-    alternator 2 e 15 (associator_witness_left) is the one of
+    in [Tower R 4] have x * x * y <> x * (x * y); its hypothesis 2 <> 0
+    holds over the reals.  Its witness x = e 1 + e 10, y = e 4 is
+    [sed_alt_a], [sed_alt_b] here, and its associator_witness_left gives
+    associator x x y = (2 : Z) . e 15 with associator a b c =
+    a * b * c - a * (b * c), the order and value of
     [sed_left_alternator_witness]. *)
 Theorem sedenion_not_left_alternative :
   exists a b : CDSed,
