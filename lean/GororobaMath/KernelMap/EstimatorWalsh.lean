@@ -48,14 +48,17 @@ namespace KernelMap
 variable {K : Type*} [Field K] [CharZero K]
 variable {ι : Type*} (B : Finset ι) (pos : ι → Prop) [DecidablePred pos]
 
-/-- The ideal contrast of a bin: `+1` on `posBins`, `-1` elsewhere. -/
+/-- The ideal contrast of a bin: `+1` on `posBins`, `-1` elsewhere. It is the vector `sign` that
+`nhat_spectral.spectral_n_hat` of gororoba-quantum takes. -/
 def sgn (y : ι) : K := if pos y then 1 else -1
 
 section Characters
 
 variable {A : Type*} (χ : A → ι → K)
 
-/-- The coefficient of `f` on the character `a`: the mean of `f * χ a` over `B`. -/
+/-- The coefficient of `f` on the character `a`: the mean of `f * χ a` over `B`. With the Walsh
+characters it is `coefficients` of gororoba-quantum
+`docs/evidence/pathion-kernel-map/nhat-bias/nhat_spectral.py`, compared by `ci/compare_walsh.sh`. -/
 def coeff (f : ι → K) (a : A) : K := (∑ y ∈ B, f y * χ a y) / B.card
 
 variable {B χ}
@@ -215,7 +218,9 @@ theorem nHat_eq_card_mul_div
   ring
 
 /-- **Spectral form of the estimator.** Under a channel diagonal on the characters,
-`nHat = nullity * lam a₀ / ∑ a, σ a ^ 2 * lam a`. -/
+`nHat = nullity * lam a₀ / ∑ a, σ a ^ 2 * lam a`. The sum is `vHat`; where it is `0` the equation
+reads `0 = 0` by the convention `x / 0 = 0`, and the estimator of gororoba-quantum is undefined
+there, so the identity is a reading of the estimator only for `vHat ≠ 0`. -/
 theorem nHat_eq_spectral
     (hχ : ∀ a b,
       ∑ y ∈ B, χ a y * χ b y = if a = b then (B.card : K) else 0)
@@ -263,23 +268,35 @@ theorem nHat_eq_nullity_of_support_eq_single
     div_eq_iff (mul_ne_zero two_ne_zero (mul_ne_zero hγ hσ0))]
   linear_combination (-((B.card : K) * γ a₀)) * h1
 
-/-- **Zero reading.** An ideal with no component on `a₀` is read as `0` by every
-channel that is diagonal at `a₀`, with no hypothesis on `vHat`. -/
+/-- An observed contrast with no component on `a₀` gives `nHat = 0`: the numerator of the
+estimator is `n * γ a₀`. -/
+theorem nHat_eq_zero_of_expansion_coeff_zero
+    (hχ : ∀ a b,
+      ∑ y ∈ B, χ a y * χ b y = if a = b then (B.card : K) else 0)
+    {a₀ : A} (h0 : ∀ y ∈ B, χ a₀ y = 1) {c : ι → K} {γ : A → K}
+    (hc : ∀ y ∈ B, c y = ∑ a, γ a * χ a y) (hz : γ a₀ = 0) : nHat B c pos = 0 := by
+  rw [nHat_eq_card_mul_div pos hχ h0 hc, hz]
+  simp
+
+/-- **Zero reading.** An ideal with no component on `a₀` gives `nHat = 0` under every channel
+that is diagonal at `a₀`. For `vHat ≠ 0` this is the reading `0` of the estimator; for `vHat = 0`
+it is the convention `x / 0 = 0`, where the estimator of gororoba-quantum is undefined. -/
 theorem nHat_eq_zero_of_coeff_zero
     (hχ : ∀ a b,
       ∑ y ∈ B, χ a y * χ b y = if a = b then (B.card : K) else 0)
     {a₀ : A} (h0 : ∀ y ∈ B, χ a₀ y = 1) {c : ι → K} {γ σ lam : A → K}
     (hc : ∀ y ∈ B, c y = ∑ a, γ a * χ a y) (hd : γ a₀ = lam a₀ * σ a₀) (hz : σ a₀ = 0) :
-    nHat B c pos = 0 := by
-  rw [nHat_eq_card_mul_div pos hχ h0 hc, hd, hz]
-  simp
+    nHat B c pos = 0 :=
+  nHat_eq_zero_of_expansion_coeff_zero pos hχ h0 hc (by rw [hd, hz, mul_zero])
 
 end Characters
 
 section Walsh
 
 /-- The Walsh character of index `a` at the bin `y`: `-1` to the number of positions
-where both bit vectors are set. -/
+where both bit vectors are set. It is the entry `H[a, y]` of `walsh_matrix` of gororoba-quantum
+`nhat_spectral.py`, with bit `i` of a bin index read as the coordinate `i`; `ci/compare_walsh.sh`
+compares the two. -/
 def walshChar (L : Type*) [Field L] (d : ℕ) (a y : Fin d → Bool) : L :=
   ∏ i, if a i && y i then (-1 : L) else 1
 
