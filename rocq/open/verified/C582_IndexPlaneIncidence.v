@@ -3,7 +3,7 @@
 
     Convention.  The algebra is level 4 of the integer Cayley-Dickson tower
     [tz] of [C1468_SlotEmbeddingAllPairs], with the product [tz_mul]:
-    (a, b)(c, d) = (a c - conj(d) b, d a + b conj(c)).  [e i] is the unit
+    (a, b)(c, d) = (a c - conj(d) b, d a + b conj(c)).  e_i is the unit
     vector [tz_basis 4 i] of index [i < 16], and e_i e_j = +- e_(i xor j).
     An index plane is the set [plane u] = {i < 16 | parity(u land i) = 0}
     for [u] in 1..15, eight indices closed under xor; it is the index set
@@ -22,10 +22,10 @@
       indices and exactly one line.  The 15 nonzero indices, 35 lines and
       15 planes are the points, lines and planes of PG(3,2).
     - [ordered_nonassociating_counts]: the ordered basis triples with
-      (e_a e_b) e_c <> e_a (e_b e_c) number 0 of 64 on indices below 4,
-      168 of 512 below 8 and 1848 of 4096 below 16.
-      [noncommuting_counts]: 6, 42 and 210 ordered pairs of distinct
-      imaginary units do not commute.
+      (e_a e_b) e_c <> e_a (e_b e_c) number 0 of 64 at level 2, 168 of
+      512 at level 3 and 1848 of 4096 at level 4, each in the product of
+      its own level.  [noncommuting_counts]: 6, 42 and 210 ordered pairs
+      of distinct imaginary units do not commute at levels 2, 3 and 4.
     - [sorted_triple_classes]: of the 455 unordered triples of distinct
       nonzero indices, the 35 lines associate in all six orders, 168
       triples fail in exactly two of the six orders and 252 fail in all
@@ -41,10 +41,12 @@
       [plane u] form a line a, b, a xor b of the octonion index set, the
       remaining four indices are 8 xor i for the four i of 1..7 off that
       line, and the 7 planes give the 7 lines of 1..7.
-    - [kite_plane_incidence]: both blades of a zero product have the same
+    - [key_plane_incidence]: both blades of a zero product have the same
       xor key i xor j, one of 9..15; plane [u] carries zero products of key
       [x] exactly when [x] lies in [plane u], and then 12 of them, so each
-      plane meets 4 keys and each key 4 planes.
+      plane meets 4 keys and each key 4 planes.  The key is the xor
+      signature of [ZDGraph], which [all_boxkites_uniform_xor] proves
+      constant on each of the seven box-kites.
 
     Scope.  The statements concern basis units, 2-blades and index sets of
     level 4.  Alternativity of a span over a ring is the subject of C029;
@@ -142,39 +144,44 @@ Proof. repeat apply conj; vm_compute; reflexivity. Qed.
 
 (** * Associator and commutator census on basis units. *)
 
-Definition e (i : nat) : tz 4 := tz_basis 4 i.
+Definition associates_at (n a b c : nat) : bool :=
+  tz_eqb n
+    (tz_mul n (tz_mul n (tz_basis n a) (tz_basis n b)) (tz_basis n c))
+    (tz_mul n (tz_basis n a) (tz_mul n (tz_basis n b) (tz_basis n c))).
 
-Definition associates (a b c : nat) : bool :=
-  tz_eqb 4 (tz_mul 4 (tz_mul 4 (e a) (e b)) (e c))
-    (tz_mul 4 (e a) (tz_mul 4 (e b) (e c))).
-
-Definition commutes (a b : nat) : bool :=
-  tz_eqb 4 (tz_mul 4 (e a) (e b)) (tz_mul 4 (e b) (e a)).
+Definition commutes_at (n a b : nat) : bool :=
+  tz_eqb n (tz_mul n (tz_basis n a) (tz_basis n b))
+    (tz_mul n (tz_basis n b) (tz_basis n a)).
 
 Definition ordered_triples (l : list nat) : list (nat * nat * nat) :=
   flat_map (fun a => flat_map (fun b => map (fun c => (a, b, c)) l) l) l.
 
-Definition fails (t : nat * nat * nat) : bool :=
-  match t with (a, b, c) => negb (associates a b c) end.
+Definition fails_at (n : nat) (t : nat * nat * nat) : bool :=
+  match t with (a, b, c) => negb (associates_at n a b c) end.
 
-Definition nonassociating (l : list nat) : nat :=
-  length (filter fails (ordered_triples l)).
+Definition fails : nat * nat * nat -> bool := fails_at 4.
+
+(** The count over the basis triples of level [n], in the product of
+    level [n]. *)
+Definition nonassociating (n : nat) : nat :=
+  length (filter (fails_at n) (ordered_triples (seq 0 (Nat.pow 2 n)))).
 
 Theorem ordered_nonassociating_counts :
-  nonassociating (seq 0 4) = 0
-  /\ nonassociating (seq 0 8) = 168
-  /\ nonassociating indices = 1848.
+  nonassociating 2 = 0
+  /\ nonassociating 3 = 168
+  /\ nonassociating 4 = 1848.
 Proof. repeat apply conj; vm_compute; reflexivity. Qed.
 
-Definition noncommuting (l : list nat) : nat :=
+Definition noncommuting (n : nat) : nat :=
   length (filter (fun p =>
-    (negb (Nat.eqb (fst p) (snd p)) && negb (commutes (fst p) (snd p)))%bool)
-    (list_prod l l)).
+    (negb (Nat.eqb (fst p) (snd p))
+     && negb (commutes_at n (fst p) (snd p)))%bool)
+    (list_prod (seq 1 (Nat.pow 2 n - 1)) (seq 1 (Nat.pow 2 n - 1)))).
 
 Theorem noncommuting_counts :
-  noncommuting (seq 1 3) = 6
-  /\ noncommuting (seq 1 7) = 42
-  /\ noncommuting imaginary = 210.
+  noncommuting 2 = 6
+  /\ noncommuting 3 = 42
+  /\ noncommuting 4 = 210.
 Proof. repeat apply conj; vm_compute; reflexivity. Qed.
 
 (** The number of the six orders of a triple in which it fails to
@@ -266,7 +273,7 @@ Proof. repeat apply conj; vm_compute; reflexivity. Qed.
 Definition key (b : nat * nat * bool) : nat :=
   match b with (i, j, _) => Nat.lxor i j end.
 
-Theorem kite_plane_incidence :
+Theorem key_plane_incidence :
   forallb (fun p =>
     (Nat.eqb (key (fst p)) (key (snd p))
      && Nat.leb 9 (key (fst p)) && Nat.leb (key (fst p)) 15)%bool)
