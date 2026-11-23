@@ -97,7 +97,7 @@ claim, sorted by `source` in byte order, sources unique.
 A claim that its source marks refuted, superseded, closed, rejected, stalled
 or open takes the clause `Outside the clauses: the source does not assert
 the claim` whenever it reads `no-proof-owed`, before the other two
-`Outside the clauses` rows are considered (190 rows).
+`Outside the clauses` rows are considered (194 rows).
 
 `Result already in a proof tree stays where it is` also covers the rows whose
 statement class puts them in the other prover: an every-level law that
@@ -145,15 +145,15 @@ calibrates on a known-bad copy for each of these first. `--write` writes the
 list again from the ledger sources, which is how a new row or a moved commit
 enters it.
 
-The registry of gororoba-open holds 1597 claims at the listed commit and the
-ledger holds the 500 that concern the Cayley-Dickson algebras, chosen by the
+The registry of gororoba-open holds 1607 claims at the listed commit and the
+ledger holds the 505 that concern the Cayley-Dickson algebras, chosen by the
 reading of the registry; the list fixes that choice and does not derive it.
 For the findings ledger of gororoba-quantum the list is the whole file.
 
 ## Provenance and limits
 
 - The rows come from a reading of the gororoba-open registry (gororoba-open
-  `f81aba2b`) and of the evidence documents of gororoba-quantum
+  `3c04c2eb`) and of the evidence documents of gororoba-quantum
   (`78c780bc6`), classified against `AGENTS.md`; the findings ledger, whose
   rows A5-565 to A5-571 the earlier commit lacks, and the topic notes
   `cd-star-lattice-tower.md` and `c5-zero-divisor-code-falsification.md` of
