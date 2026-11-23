@@ -8,6 +8,9 @@ The first block of the output recomputes each conjunct of the theorems of
 rocq/open/verified/C582_IndexPlaneIncidence.v; the level counts, the octet
 enumeration, the point-pair count, the basis alternativity check and the
 plane and key cells were added after the first run, to cover every conjunct.
+The last three fields test the convention: the recursive doubling formula
+against the sign recursion, the opposite doubling formula, and a reversal of
+the four index bits.
 
 Predictions recorded before the first run, each confirmed by it:
 ordered nonassociating basis triples 1848 of 4096; noncommuting ordered
@@ -142,6 +145,62 @@ def closed_octets() -> tuple[int, list[tuple[int, ...]]]:
     return len(octets), closed
 
 
+def doubled_product(x: Vector, y: Vector, opposite: bool) -> Vector:
+    """The Cayley-Dickson product by recursion on halves.
+
+    The formula of the Rocq source is (a, b)(c, d) = (a c - conj(d) b, d a + b conj(c)); with
+    opposite set it is (a c - d conj(b), conj(a) d + c b).
+    """
+    if len(x) == 1:
+        return [x[0] * y[0]]
+    half = len(x) // 2
+    a, b, c, e = x[:half], x[half:], y[:half], y[half:]
+
+    def conj(v: Vector) -> Vector:
+        return [v[0]] + [-t for t in v[1:]]
+
+    def times(p: Vector, q: Vector) -> Vector:
+        return doubled_product(p, q, opposite)
+
+    if opposite:
+        low = [s - t for s, t in zip(times(a, c), times(e, conj(b)), strict=True)]
+        high = [s + t for s, t in zip(times(conj(a), e), times(c, b), strict=True)]
+    else:
+        low = [s - t for s, t in zip(times(a, c), times(conj(e), b), strict=True)]
+        high = [s + t for s, t in zip(times(e, a), times(b, conj(c)), strict=True)]
+    return low + high
+
+
+def sign_table(opposite: bool) -> list[list[int]]:
+    return [[doubled_product(unit(p), unit(q), opposite)[p ^ q] for q in range(DIM)] for p in range(DIM)]
+
+
+def convention_report(table: list[list[int]]) -> dict[str, object]:
+    """The per-plane failure counts and the sorted-order equivalence under one sign table."""
+
+    def fails_in(a: int, b: int, c: int) -> bool:
+        return table[a][b] * table[a ^ b][c] != table[b][c] * table[a][b ^ c]
+
+    triples = list(itertools.combinations(range(1, DIM), 3))
+    return {
+        "failing_triples_by_u": {
+            u: sum(1 for t in triples if set(t) <= set(parity_plane(u)) and fails_in(*t)) for u in range(1, DIM)
+        },
+        "sorted_failure_iff_all_orders": all(
+            fails_in(*t) == all(fails_in(*p) for p in itertools.permutations(t)) for t in triples
+        ),
+    }
+
+
+def bit_reversed(table: list[list[int]]) -> list[list[int]]:
+    """The table after renaming index i to the reversal of its four bits."""
+
+    def reverse(i: int) -> int:
+        return int(f"{i:04b}"[::-1], 2)
+
+    return [[table[reverse(p)][reverse(q)] for q in range(DIM)] for p in range(DIM)]
+
+
 def parity_plane(u: int) -> tuple[int, ...]:
     """The index set {i | parity(u land i) = 0}, the plane of the Rocq source."""
     return tuple(i for i in range(DIM) if (u & i).bit_count() % 2 == 0)
@@ -269,6 +328,10 @@ def census() -> dict[str, object]:
         }
         for kite in components(adjacency)
     ]
+    standard = sign_table(opposite=False)
+    out["doubling_formula_matches_sign_recursion"] = standard == SIGN
+    out["opposite_doubling_formula"] = convention_report(sign_table(opposite=True))
+    out["bit_reversed_indices"] = convention_report(bit_reversed(SIGN))
     return out
 
 

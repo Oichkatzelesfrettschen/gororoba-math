@@ -31,3 +31,17 @@ The seat also reported, from a computation of its own that this record does not 
 ### Advisor, second pass
 
 The Advisor confirmed the first two resolutions and required the axiom sentence to be worded from a `Print Assumptions` run over every declaration, which found the third declaration above. It rejected the first reason given for the boundary (the file already requires the reals), so the row records accepted duplication. It asked that the convention computation be labelled as the seat's.
+
+## Boundaries resolved after the rounds (owner, 2026-11-23)
+
+The owner asked that the items the rounds left as boundaries be resolved before the hosted review.
+
+| Item | Resolution |
+|---|---|
+| The ordered associator counts are decided on `tz_mul` beside the cube-coordinate counts of `CDAssociatorCensus.v` | `nonassociating_matches_cube_census` equates `nonassociating n` with `numeric_associator_defect_count n` at levels 2, 3 and 4 |
+| The count 336 repeats `all_blade_zero_products_are_assessor_pairs` | The first conjunct of `zero_products_span_late_planes` is proved from that theorem and evaluates nothing |
+| Four list helpers repeat existing ones | `in_plane` is `negb (off_sub u i)` of C029, `mem` is `nat_mem` of FanoPlane, `xor_closed` is `check_closure` of C1466 and `key` is `xor_sig` of ZDGraph; the file defines no parity or membership function of its own |
+| The convention computation of the second round was the seat's alone | `census.py` now computes it: the recursive doubling formula reproduces the sign recursion; under the opposite doubling formula the counts by plane stay 28 and 4 and failure in sorted order stays equivalent to failure in all six orders; under a reversal of the four index bits the counts by plane become 4, 12, 14 and 28 and the equivalence fails (computed) |
+| The seat's reading of the test that C-581 cites was unchecked | Confirmed by reading `is_alternative_subalgebra` in `crates/algebra_analysis/src/subalgebra.rs` of gororoba-open: for each pair a, b it evaluates the associator of (a, b, a xor b) only, a triple on a line |
+
+The file compiles in 74 s with these imports (measured, Rocq 9.3.0).
