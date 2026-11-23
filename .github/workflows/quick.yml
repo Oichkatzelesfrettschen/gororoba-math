@@ -1,0 +1,38 @@
+name: quick
+
+# The checks of ci/check.sh that need no build, on every pull request and
+# every push to main: the lints of shell scripts, Python files and workflows,
+# the signal-trap check, the headline registry and the claims ledger. The
+# lean and rocq workflows build and kernel-check; they run nightly and on
+# manual dispatch.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: quick-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  quick:
+    name: quick
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install shellcheck, ruff and actionlint
+        run: |
+          command -v shellcheck || { sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck; }
+          pipx install ruff==0.14.11
+          curl -sSfL -o "$RUNNER_TEMP/actionlint.tar.gz" https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$HOME/.local/bin" actionlint
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Run the quick checks
+        run: sh ci/check.sh --quick

@@ -428,8 +428,17 @@ Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
 commit, run `sh ci/check.sh`, and `sh ci/check_rocq.sh` when the change
 touches `rocq/` or the Rocq scripts, and land by pull request, merged by
 merge commit so that an imported history stays, with the review chain of
-the workspace guide ("Reviews and merges"). The `lean` workflow runs the
-first script and the `rocq` workflow the second on every pull request.
+the workspace guide ("Reviews and merges"). The `quick` workflow runs
+`sh ci/check.sh --quick` (the lints, the headline registry and the claims
+ledger, no build) on every pull request and every push to `main`. The
+`lean` workflow runs the first script and the `rocq` workflow the second
+nightly on `main` and on manual dispatch
+(`gh workflow run rocq.yml --ref BRANCH`): per-push checks stay near ten
+seconds each and long checks run nightly or by hand. A pull request that
+touches `lean/`, `rocq/` or a gate script is dispatched once on its final
+head before the merge and merges with that run green;
+`gh run list --workflow rocq.yml --commit SHA` names the run (owner,
+2026-11-23, both rules).
 
 ## Text
 
