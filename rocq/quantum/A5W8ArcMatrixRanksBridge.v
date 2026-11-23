@@ -9,7 +9,7 @@
 
     Substituted values: S := D, m := the 24 rows, n := the 6 columns, M := the image of
     w8_nm_linear_point1_matrix, L := the image of the sparse table w8_nm_linear_point1_left,
-    d := h(w8_nm_linear_point1_d). The hypothesis h : L * M = d • 1 of the Lean theorem is the lemma
+    d := h(w8_nm_linear_point1_d). The hypothesis h, L M = d times the identity, of the Lean theorem is the lemma
     w8_nm_linear_point1_left_inverse, decided by evaluation over the Gaussian integers, and hd, that d is left
     regular, is the first hypothesis below.
 

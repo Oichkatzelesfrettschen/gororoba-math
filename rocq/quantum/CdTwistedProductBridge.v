@@ -6,13 +6,14 @@
     the coordinate k of the 32 coordinates, the twisted coordinates are z_k = X k + i X (16 + k) and
     z'_k = X k - i X (16 + k), and an ideal is a predicate closed under sums and multiples (is_ideal).
 
-    Substituted values: S := D, i := D.i with hi := D.i_squared, h2 := the unit 2 with inverse D.inv2, and the
-    theorem applied to four pairs (re, im): (X 0, X 16), (X 8, X 24), (eq_uv_re, eq_uv_im) and
+    Substituted values: S := D, I := the predicate I, i := D.i with hi := D.i_squared, h2 := the unit 2 with
+    inverse D.inv2 (D.two_inverse), and the theorem applied to four pairs (re, im): (X 0, X 16), (X 8, X 24), (eq_uv_re, eq_uv_im) and
     (eq_w_re, eq_w_im), whose sums re + i im and differences re - i im are the eight forms of the left side by
     eq_uv_twisted, eq_uv_twisted_conjugate, eq_w_twisted and eq_w_twisted_conjugate of the functor Twisted.
 
-    The Rocq statement is narrower than the Lean one: the ideal is a predicate with the two closure laws, where
-    Lean takes an Ideal of the ring. *)
+    The Rocq statement fixes the four pairs, where the Lean theorem takes every pair. In the ideal it is wider:
+    is_ideal asks for the two closure laws and no membership of zero, so the theorem holds at every Lean Ideal
+    of D, read as its membership predicate, and at the empty predicate as well. *)
 
 Require Import CdTwistedProduct.
 
