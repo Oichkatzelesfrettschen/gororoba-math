@@ -1,7 +1,7 @@
 /- SPDX-License-Identifier: Apache-2.0 -/
 module
 
-public import GororobaMath.CayleyDickson.NormMultiplicative
+public import GororobaMath.CayleyDickson.AlternativeIdentities
 
 /-!
 # The commutator of two elements of a double with pure first halves
@@ -25,13 +25,16 @@ the instance `A := Tower R 3`.
   two elements commute exactly when `[a, c] = star d b - star b d` and `d a = b c`.
 * `CayleyDickson.mul_sub_mul_im_of_add_self_eq_zero`: where `x + x = 0` for every `x`
   (characteristic 2), the second half of the commutator is zero for every such pair.
-* `Tower.dot_mul_dot_eq_of_mul_eq_mul`, `Tower.dot_mul_dot_eq_of_mul_eq_mul_polar`: at levels
-  up to 3 the trace form is multiplicative (`Tower.dot_mul_self_of_le_three`), so `d a = b c`
-  gives `|d|^2 |a|^2 = |b|^2 |c|^2`, and for two solutions `(c, d)` and `(c', d')` of the linear
-  equation the polarized identity `dot d d' * |a|^2 = |b|^2 * dot c c'` holds where `2` is left
-  regular. In the coordinates of the row, with `z` and `k` in the double of the octonions, these
-  read `N1(z) (N2 + N3)(k) = (N2 + N3)(z) N1(k)` and its polarization on the solutions of
-  `d a = b c`.
+* `Tower.dot_mul_mul_right_of_le_three`, `Tower.dot_mul_mul_left_of_le_three`: at levels up to
+  3, `dot (x * a) (y * a) = dot x y * dot a a` and `dot (b * x) (b * y) = dot b b * dot x y`, from
+  the adjoint identities and the inverse properties `Tower.mul_mul_star_of_le_three` and
+  `Tower.star_mul_mul_of_le_three`, over every commutative ring with the identity as star.
+* `Tower.dot_mul_dot_eq_of_mul_eq_mul_polar`, `Tower.dot_mul_dot_eq_of_mul_eq_mul`: for two
+  solutions `(c, d)` and `(c', d')` of `d a = b c` at levels up to 3,
+  `dot d d' * |a|^2 = |b|^2 * dot c c'`, and `|d|^2 |a|^2 = |b|^2 |c|^2` for one. With `z = (a, b)`
+  and `k = (c, d)` in the double of the octonions and `a`, `c` pure, `dot a a` is the form
+  `N1(z)` of the row and `dot b b` is `(N2 + N3)(z)`, so these read
+  `N1(z) (N2 + N3)(k) = (N2 + N3)(z) N1(k)` and its polarization on the solutions of `d a = b c`.
 -/
 
 @[expose] public section
@@ -86,26 +89,28 @@ universe u
 
 variable {R : Type u} [CommRing R] [StarRing R] [TrivialStar R]
 
-/-- At levels up to 3, `d * a = b * c` gives `|d|^2 |a|^2 = |b|^2 |c|^2`. -/
-theorem dot_mul_dot_eq_of_mul_eq_mul {k : ℕ} (hk : k ≤ 3) {a b c d : Tower R k}
-    (h : d * a = b * c) : dot k d d * dot k a a = dot k b b * dot k c c := by
-  rw [← dot_mul_self_of_le_three hk, ← dot_mul_self_of_le_three hk, h]
+/-- At levels up to 3, right multiplication by `a` scales the trace form by `dot a a`. -/
+theorem dot_mul_mul_right_of_le_three {k : ℕ} (hk : k ≤ 3) (x y a : Tower R k) :
+    dot k (x * a) (y * a) = dot k x y * dot k a a := by
+  rw [(dot_mul_adjoint k x a (y * a)).2, mul_mul_star_of_le_three hk a y, dot_smul_right,
+    mul_comm]
 
-/-- The polarization of `Tower.dot_mul_dot_eq_of_mul_eq_mul` on two solutions `(c, d)` and
-`(c', d')` of `d * a = b * c`, over a ring in which `2` is left regular. -/
-theorem dot_mul_dot_eq_of_mul_eq_mul_polar (h2 : IsLeftRegular (2 : R)) {k : ℕ} (hk : k ≤ 3)
+/-- At levels up to 3, left multiplication by `b` scales the trace form by `dot b b`. -/
+theorem dot_mul_mul_left_of_le_three {k : ℕ} (hk : k ≤ 3) (b x y : Tower R k) :
+    dot k (b * x) (b * y) = dot k b b * dot k x y := by
+  rw [(dot_mul_adjoint k b x (b * y)).1, star_mul_mul_of_le_three hk b y, dot_smul_right]
+
+/-- At levels up to 3, two solutions `(c, d)` and `(c', d')` of `d * a = b * c` satisfy
+`dot d d' * |a|^2 = |b|^2 * dot c c'`. -/
+theorem dot_mul_dot_eq_of_mul_eq_mul_polar {k : ℕ} (hk : k ≤ 3)
     {a b c d c' d' : Tower R k} (h : d * a = b * c) (h' : d' * a = b * c') :
     dot k d d' * dot k a a = dot k b b * dot k c c' := by
-  have hs : (d + d') * a = b * (c + c') := by rw [add_mul, mul_add, h, h']
-  have e1 := dot_mul_dot_eq_of_mul_eq_mul hk h
-  have e2 := dot_mul_dot_eq_of_mul_eq_mul hk h'
-  have e3 := dot_mul_dot_eq_of_mul_eq_mul hk hs
-  simp only [dot_add_left, dot_add_right] at e3
-  have c1 := dot_comm k d' d
-  have c2 := dot_comm k c' c
-  refine h2 ?_
-  dsimp only
-  linear_combination e3 - e1 - e2 - dot k a a * c1 + dot k b b * c2
+  rw [← dot_mul_mul_right_of_le_three hk, ← dot_mul_mul_left_of_le_three hk, h, h']
+
+/-- At levels up to 3, `d * a = b * c` gives `|d|^2 |a|^2 = |b|^2 |c|^2`. -/
+theorem dot_mul_dot_eq_of_mul_eq_mul {k : ℕ} (hk : k ≤ 3) {a b c d : Tower R k}
+    (h : d * a = b * c) : dot k d d * dot k a a = dot k b b * dot k c c :=
+  dot_mul_dot_eq_of_mul_eq_mul_polar hk h h
 
 end Tower
 

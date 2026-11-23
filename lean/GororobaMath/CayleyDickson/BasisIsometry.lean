@@ -15,8 +15,8 @@ commutative ring with the identity as star; `Tower.e R k j` is the basis unit of
 The product of two basis units is a signed basis unit whose index is the exclusive or of the two
 indices (`Tower.e_mul_e`), so multiplication by `e j` on either side permutes the basis up to
 sign and its Gram matrix is the identity. Both sides of each identity are bilinear, so the basis
-pairs decide it. No step uses associativity or alternativity: the trace form is not multiplicative
-from level 4 on, and the identities hold there because one factor is a basis unit.
+pairs decide it. No step uses associativity or alternativity: the trace form need not be
+multiplicative from level 4 on, and the identities hold there because one factor is a basis unit.
 
 ## Main results
 
@@ -26,7 +26,7 @@ from level 4 on, and the identities hold there because one factor is a basis uni
   coordinates of `y`, whatever `j` is. This is the identity `||L_y e_j||^2 = sum_i c_i^2` for
   `y = sum_i c_i e_i` of row A5-371 of the findings ledger of gororoba-quantum
   (`docs/evidence/a5-exceptional-fibers/ledger.tsv`), whose instance is `k = 5`; the success
-  probability that the row reads from it is a statement about a device model and stays outside.
+  probability of the ideal herald that the row reads from it is not restated.
 -/
 
 @[expose] public section
@@ -112,6 +112,11 @@ theorem dot_e_mul_e_mul (j : BitVec k) (x y : Tower R k) :
 theorem dot_mul_e_self (j : BitVec k) (y : Tower R k) :
     dot k (y * e R k j) (y * e R k j) = dot k y y :=
   dot_mul_e_mul_e j y y
+
+/-- The image of `y` under left multiplication by a basis unit has the squared norm of `y`. -/
+theorem dot_e_mul_self (j : BitVec k) (y : Tower R k) :
+    dot k (e R k j * y) (e R k j * y) = dot k y y :=
+  dot_e_mul_e_mul j y y
 
 /-- For `y` with coordinates `c i`, every basis unit `e j` has
 `dot (y * e j) (y * e j) = ∑ i, c i * c i`: the squared norm of `L_y (e j)` is the same sum for
