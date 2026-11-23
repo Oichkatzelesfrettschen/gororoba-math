@@ -24,3 +24,18 @@ Survived both seats:
   determinant identity left open.
 
 Neither seat found a defect in the mathematics.
+
+## Advisor round
+
+The Advisor (the last seat) read the statements at 437121445 and asked for four checks before the hosted round; each
+was made against the sources.
+
+| Check | Reading | Result |
+|---|---|---|
+| The Stiefel hypothesis constrains coordinates 1 to 15 only; is coordinate 0 of each half free? | `StiefelTransport.pureA` and `ry5` set coordinate 0 of each half to zero, and `RT` is `RingTower RBase` of `CdTowerRing.v` with `RBase.t := R` | the theorems state the claim for pure halves; no change |
+| Does `a5-stiefel-universal` carry the nullity bound of the README? | The claim sentence of the source reads "every nonzero A_5 Stiefel element is a zero divisor"; the bound is an item of its proof | `proved` stands, with the bound named in the note |
+| Are the two recorded fixes present? | `pf_expand_at` has no occurrence under `rocq/`; the header of `StiefelA5ZeroDivisor.v` names decidable equality | present |
+| Which commit does the build evidence cover? | The seats read d97e68dd0 and the gate result in the pull-request body is of that commit; 90bbc0c11 changed sources | the gate of the head that merges is the evidence; the body cites it |
+
+The branch then took `main` by a merge (the claims ledger and the Lean library moved under pull requests 95 and 96);
+`python3 ci/check_claims_ledger.py` passes on the merge (1282 rows).
