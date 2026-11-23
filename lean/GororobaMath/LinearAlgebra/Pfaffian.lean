@@ -5,6 +5,7 @@ public import Mathlib.Algebra.BigOperators.Fin
 public import Mathlib.Data.Matrix.Basic
 public import Mathlib.Algebra.Ring.Hom.Defs
 public import Mathlib.Tactic.Ring
+public import Mathlib.Tactic.LinearCombination
 
 /-!
 # The Pfaffian of a matrix over a commutative ring
@@ -28,6 +29,10 @@ list, so the definition is structural and reduces in the kernel on small literal
 * `Matrix.pfaffianAux_eq_zero_of_odd`: a list of odd length has Pfaffian `0`.
 * `Matrix.pfaffianAux_smul_of_even`: scaling the entries by `c` scales a list of even length
   `2 m` by `c ^ m`.
+* `Matrix.pfaffianAux_swap`, `Matrix.pfaffianAux_swap_of_skew`: swapping the first two indices
+  negates the Pfaffian when `A j i = -A i j`, in particular for skew `A`.
+* `Matrix.pfaffianAux_eq_zero_of_repeat`: a list that starts with the same index twice has
+  Pfaffian `0` when `2` is left-regular and `A i i = -A i i`.
 -/
 
 @[expose] public section
@@ -197,5 +202,127 @@ private theorem pfaffianFuel_smul_of_even (c : R) (A : ι → ι → R) :
 theorem pfaffianAux_smul_of_even (c : R) (A : ι → ι → R) (l : List ι) (h : l.length % 2 = 0) :
     pfaffianAux (fun a b => c * A a b) l = c ^ (l.length / 2) * pfaffianAux A l :=
   pfaffianFuel_smul_of_even c A l.length l h
+
+private def evalAt (A : ι → ι → R) (i : ι) : Option ι → R
+  | none => 0
+  | some x => A i x
+
+private theorem pfaffianAux_cons_range (A : ι → ι → R) (i : ι) (rest : List ι) :
+    pfaffianAux A (i :: rest) = ∑ k ∈ Finset.range rest.length,
+      (-1) ^ k * evalAt A i rest[k]? * pfaffianAux A (rest.eraseIdx k) := by
+  rw [pfaffianAux_cons]
+  refine Eq.trans ?_ (Fin.sum_univ_eq_sum_range (fun k => (-1) ^ k * evalAt A i rest[k]? *
+    pfaffianAux A (rest.eraseIdx k)) rest.length)
+  refine Finset.sum_congr rfl fun k _ => ?_
+  simp [evalAt]
+
+private def pfTerm (A : ι → ι → R) (i j : ι) (r : List ι) (m p : ℕ) : R :=
+  (-1) ^ (m + 1) * evalAt A i r[m]? *
+    ((-1) ^ p * evalAt A j (r.eraseIdx m)[p]? * pfaffianAux A ((r.eraseIdx m).eraseIdx p))
+
+private theorem pfaffianAux_double (A : ι → ι → R) (i j : ι) (r : List ι) :
+    pfaffianAux A (i :: j :: r) = A i j * pfaffianAux A r +
+      ∑ m ∈ Finset.range r.length, ∑ p ∈ Finset.range (r.length - 1), pfTerm A i j r m p := by
+  unfold pfTerm
+  rw [pfaffianAux_cons_range, List.length_cons, Finset.sum_range_succ', add_comm]
+  congr 1
+  · simp [evalAt]
+  · refine Finset.sum_congr rfl fun m hm => ?_
+    have hm' := Finset.mem_range.mp hm
+    simp only [List.getElem?_cons_succ, List.eraseIdx_cons_succ]
+    rw [pfaffianAux_cons_range, List.length_eraseIdx_of_lt hm', Finset.mul_sum]
+
+private theorem eraseIdx_eraseIdx_succ (l : List ι) {p m : ℕ} (h : p ≤ m) :
+    (l.eraseIdx (m + 1)).eraseIdx p = (l.eraseIdx p).eraseIdx m := by
+  apply List.ext_getElem?
+  intro q
+  simp only [List.getElem?_eraseIdx]
+  split_ifs <;> first | rfl | (exfalso; omega)
+
+private theorem pfTerm_lt (A : ι → ι → R) (i j : ι) (r : List ι) {p m : ℕ} (h : p ≤ m) :
+    pfTerm A j i r (m + 1) p = -pfTerm A i j r p m := by
+  unfold pfTerm
+  rw [List.getElem?_eraseIdx_of_lt (by omega : p < m + 1), eraseIdx_eraseIdx_succ r h,
+    List.getElem?_eraseIdx_of_ge h]
+  ring
+
+private theorem pfTerm_ge (A : ι → ι → R) (i j : ι) (r : List ι) {m p : ℕ} (h : m ≤ p) :
+    pfTerm A j i r m p = -pfTerm A i j r (p + 1) m := by
+  unfold pfTerm
+  rw [List.getElem?_eraseIdx_of_ge h, List.getElem?_eraseIdx_of_lt (by omega : m < p + 1),
+    eraseIdx_eraseIdx_succ r h]
+  ring
+
+private def swapIdx (x : ℕ × ℕ) : ℕ × ℕ :=
+  if x.2 < x.1 then (x.2, x.1 - 1) else (x.2 + 1, x.1)
+
+private theorem swapIdx_lt {m p : ℕ} (h : p < m) : swapIdx (m, p) = (p, m - 1) := by
+  simp [swapIdx, h]
+
+private theorem swapIdx_ge {m p : ℕ} (h : m ≤ p) : swapIdx (m, p) = (p + 1, m) := by
+  simp [swapIdx, not_lt.mpr h]
+
+private theorem sum_pfTerm_swap (A : ι → ι → R) (i j : ι) (r : List ι) :
+    ∑ m ∈ Finset.range r.length, ∑ p ∈ Finset.range (r.length - 1), pfTerm A j i r m p =
+      -∑ m ∈ Finset.range r.length, ∑ p ∈ Finset.range (r.length - 1), pfTerm A i j r m p := by
+  rw [← Finset.sum_product' (f := fun m p => pfTerm A j i r m p),
+    ← Finset.sum_product' (f := fun m p => pfTerm A i j r m p), ← Finset.sum_neg_distrib]
+  refine Finset.sum_nbij' swapIdx swapIdx ?_ ?_ ?_ ?_ ?_
+  · rintro ⟨m, p⟩ hx
+    simp only [Finset.mem_product, Finset.mem_range] at hx ⊢
+    rcases lt_or_ge p m with h | h
+    · rw [swapIdx_lt h]; dsimp only; omega
+    · rw [swapIdx_ge h]; dsimp only; omega
+  · rintro ⟨m, p⟩ hx
+    simp only [Finset.mem_product, Finset.mem_range] at hx ⊢
+    rcases lt_or_ge p m with h | h
+    · rw [swapIdx_lt h]; dsimp only; omega
+    · rw [swapIdx_ge h]; dsimp only; omega
+  · rintro ⟨m, p⟩ _
+    rcases lt_or_ge p m with h | h
+    · rw [swapIdx_lt h, swapIdx_ge (by omega : p ≤ m - 1)]
+      refine Prod.ext ?_ rfl
+      dsimp only; omega
+    · rw [swapIdx_ge h, swapIdx_lt (by omega : m < p + 1)]
+      refine Prod.ext rfl ?_
+      dsimp only; omega
+  · rintro ⟨m, p⟩ _
+    rcases lt_or_ge p m with h | h
+    · rw [swapIdx_lt h, swapIdx_ge (by omega : p ≤ m - 1)]
+      refine Prod.ext ?_ rfl
+      dsimp only; omega
+    · rw [swapIdx_ge h, swapIdx_lt (by omega : m < p + 1)]
+      refine Prod.ext rfl ?_
+      dsimp only; omega
+  · rintro ⟨m, p⟩ _
+    rcases lt_or_ge p m with h | h
+    · obtain ⟨m', rfl⟩ : ∃ m', m = m' + 1 := ⟨m - 1, by omega⟩
+      rw [swapIdx_lt h]
+      simp only [Nat.add_sub_cancel]
+      exact pfTerm_lt A i j r (by omega)
+    · rw [swapIdx_ge h]
+      exact pfTerm_ge A i j r h
+
+/-- Swapping the first two indices of a list negates the Pfaffian when the entry between them
+changes sign under the swap. -/
+theorem pfaffianAux_swap (A : ι → ι → R) (i j : ι) (rest : List ι) (h : A j i = -A i j) :
+    pfaffianAux A (j :: i :: rest) = -pfaffianAux A (i :: j :: rest) := by
+  rw [pfaffianAux_double A j i rest, pfaffianAux_double A i j rest, sum_pfTerm_swap A i j rest, h]
+  ring
+
+/-- For a skew matrix, swapping the first two indices of a list negates the Pfaffian. -/
+theorem pfaffianAux_swap_of_skew (A : ι → ι → R) (hA : ∀ a b, A a b = -A b a) (i j : ι)
+    (rest : List ι) :
+    pfaffianAux A (j :: i :: rest) = -pfaffianAux A (i :: j :: rest) :=
+  pfaffianAux_swap A i j rest (hA j i)
+
+/-- A list that starts with the same index twice has Pfaffian `0` when `2` is left-regular and
+`A i i = -A i i`. -/
+theorem pfaffianAux_eq_zero_of_repeat (A : ι → ι → R) (hreg : IsLeftRegular (2 : R)) (i : ι)
+    (rest : List ι) (h : A i i = -A i i) : pfaffianAux A (i :: i :: rest) = 0 := by
+  have hs := pfaffianAux_swap A i i rest h
+  refine hreg ?_
+  change 2 * _ = 2 * 0
+  linear_combination hs
 
 end Matrix
