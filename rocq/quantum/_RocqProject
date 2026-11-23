@@ -5,6 +5,7 @@
 -arg -w
 -arg all,+default
 A5W8ArcMatrixRanks.v
+A5W8ArcMatrixRanksBridge.v
 CdAnnihilatorSymmetry.v
 CdAnnihilatorSymmetryReal.v
 CdAssociatorAnf.v
@@ -22,6 +23,7 @@ CdTowerAssociatorSpace.v
 CdTowerBasisBridge.v
 CdTowerBasisSign.v
 CdTowerCanonicalKernels.v
+CdTowerCanonicalKernelsBridge.v
 CdTowerE1E18Kernel.v
 CdTowerRealKernels.v
 CdTowerDomain.v
@@ -55,6 +57,7 @@ CdTowerTwoTermBridge.v
 CdTowerTwoTermNullity.v
 CdTowerTwoTermRecursion.v
 CdTwistedProduct.v
+CdTwistedProductBridge.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
 KernelMapEstimator.v
