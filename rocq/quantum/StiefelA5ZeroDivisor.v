@@ -1,6 +1,7 @@
 (** Every A_5 Stiefel element is a zero divisor (Moreno, math/0512517, Section 5, Question 1, at n + 1 = 5).
 
-    Statement: over a field K of characteristic other than 2 that contains i with i i = -1, let
+    Statement: over a field K with decidable equality, of characteristic other than 2, that contains i with
+    i i = -1, let
     y = (p, q) in A_5 (the tower of CdTowerRing.v) with p, q pure in A_4, coordinates a_k and b_k
     (k = 1..15), and a.a = b.b, a.b = 0 (bilinear sums). Then some nonzero x has y x = 0.
 

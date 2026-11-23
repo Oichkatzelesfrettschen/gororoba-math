@@ -383,15 +383,6 @@ Proof.
     rewrite pf_swap_at by lia. rewrite sgn_S. ring.
 Qed.
 
-Lemma pf_expand_at k l : k < length l ->
-  pf l = (sgn k * sumk (pred (length l)) (fun m =>
-    sgn m * M (nth k l O) (nth m (rem_at k l) O) * pf (rem_at m (rem_at k l))))%pf.
-Proof.
-  intros Hk. rewrite <- (length_rem_at k l) by lia. rewrite <- pf_cons.
-  rewrite pf_move_front by lia.
-  transitivity ((sgn k * sgn k) * pf l)%pf; [rewrite sgn_sq; ring|ring].
-Qed.
-
 
 End WithM.
 
