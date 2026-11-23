@@ -63,8 +63,14 @@ GaussianIntegerHom.v
 KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
+Pfaffian.v
 QuantumChannelFromOpen.v
 SignBridge.v
+StiefelA5Certificate.v
+StiefelA5Pfaffian.v
+StiefelA5Real.v
+StiefelA5Transport.v
+StiefelA5ZeroDivisor.v
 StiefelWitnessInvertible.v
 TargetFlipN21.v
 TerminalChannelSeparation.v
