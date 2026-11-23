@@ -6,8 +6,9 @@
     (a, b)(c, d) = (a c - conj(d) b, d a + b conj(c)).  e_i is the unit
     vector [tz_basis 4 i] of index [i < 16], and e_i e_j = +- e_(i xor j).
     An index plane is the set [plane u] = {i < 16 | parity(u land i) = 0}
-    for [u] in 1..15, eight indices closed under xor; it is the index set
-    [in_sub u] of [C029_SedenionOctonionSubalgebras], which proves over the
+    for [u] in 1..15, eight indices closed under xor, decided by [off_sub]
+    of [C029_SedenionOctonionSubalgebras]; it is the index set of
+    [in_sub u] there, and that file proves over the
     reals that the span is an octonion subalgebra for [u <= 8] and fails
     left alternativity for [9 <= u].  A line is a triple {a, b, a xor b} of
     nonzero indices, the imaginary units of a quaternion subalgebra.  A
@@ -41,8 +42,9 @@
       its own level.  [CDAssociatorCensus] holds the same three counts on
       the sign exponent of cube coordinates
       ([census_numeric_dimension_sixteen]) and their closed form at every
-      level ([associator_census_formula]); they are decided again here on
-      [tz_mul], the product the plane statements use.
+      level ([associator_census_formula]);
+      [nonassociating_matches_cube_census] equates the counts on
+      [tz_mul] with those at levels 2, 3 and 4.
       [basis_units_alternate]: (e_a e_a) e_b = e_a (e_a e_b) and
       (e_a e_b) e_b = e_a (e_b e_b) for all 256 pairs of indices, so a
       failure of alternativity in a plane needs an element with two
@@ -57,8 +59,9 @@
       plane; a plane holds 28 of the 252 triples when [u <= 8] and 4 when
       [9 <= u], so 252 = 8 * 28 + 7 * 4.
     - [zero_products_span_late_planes]: the four indices of each of the
-      336 ordered zero products of 2-blades (the count of
-      [all_blade_zero_products_are_assessor_pairs]) lie in exactly one
+      336 ordered zero products of 2-blades (the count is that of
+      [all_blade_zero_products_are_assessor_pairs], used as proved) lie
+      in exactly one
       plane, and
       that plane has [9 <= u]; each of those 7 planes carries 48 of them.
     - [late_planes_are_fano_lines]: for [9 <= u] the indices 1..7 of
@@ -68,9 +71,10 @@
     - [key_plane_incidence]: both blades of a zero product have the same
       xor key i xor j, one of 9..15; plane [u] carries zero products of key
       [x] exactly when [x] lies in [plane u], and then 12 of them, so each
-      plane meets 4 keys and each key 4 planes.  The key is the xor
-      signature of [ZDGraph], which [all_boxkites_uniform_xor] proves
-      constant on each of the seven box-kites.
+      plane meets 4 keys and each key 4 planes.  The key is [xor_sig] of
+      [ZDGraph], which [all_boxkites_uniform_xor] proves constant on each
+      of the seven box-kites.  Membership and xor closure are [nat_mem]
+      of [FanoPlane] and [check_closure] of [C1466_SubalgebraClosure].
 
     Scope.  The statements concern basis units, 2-blades and index sets of
     level 4.  Alternativity of a span over a ring is the subject of C029;
@@ -79,7 +83,10 @@
 From Stdlib Require Import Arith PeanoNat Bool List ZArith Reals.
 From OpenGororoba Require Import RecursiveCDTower SchreierSignCode
   CDSignNumericCorrespondence CDTowerSignCorrespondence.
+From OpenGororoba Require FanoPlane ZDGraph CDAssociatorCensus.
 From OpenGororobaVerified Require Import C1468_SlotEmbeddingAllPairs.
+From OpenGororobaVerified Require C029_SedenionOctonionSubalgebras
+  C1466_SubalgebraClosure.
 Import ListNotations.
 
 (** * Decisions as equalities. *)
@@ -111,17 +118,15 @@ Definition indices : list nat := seq 0 16.
 Definition imaginary : list nat := seq 1 15.
 Definition late : list nat := seq 9 7.
 
-Definition parity4 (n : nat) : bool :=
-  xorb (xorb (Nat.testbit n 0) (Nat.testbit n 1))
-       (xorb (Nat.testbit n 2) (Nat.testbit n 3)).
-
-Definition in_plane (u i : nat) : bool := negb (parity4 (Nat.land u i)).
+(** Index [i] lies in the plane of [u]: the index set of [in_sub u]. *)
+Definition in_plane (u i : nat) : bool :=
+  negb (C029_SedenionOctonionSubalgebras.off_sub u i).
 
 Definition plane (u : nat) : list nat := filter (in_plane u) indices.
 
 Definition planes : list (list nat) := map plane imaginary.
 
-Definition mem (x : nat) (l : list nat) : bool := existsb (Nat.eqb x) l.
+Definition mem : nat -> list nat -> bool := FanoPlane.nat_mem.
 
 Definition subset (s p : list nat) : bool := forallb (fun x => mem x p) s.
 
@@ -143,8 +148,8 @@ Fixpoint choose (k : nat) (l : list nat) {struct l} : list (list nat) :=
       end
   end.
 
-Definition xor_closed (s : list nat) : bool :=
-  forallb (fun x => forallb (fun y => mem (Nat.lxor x y) s) s) s.
+Definition xor_closed : list nat -> bool :=
+  C1466_SubalgebraClosure.check_closure.
 
 Definition octets : list (list nat) := map (cons 0) (choose 7 imaginary).
 
@@ -254,6 +259,17 @@ Theorem ordered_nonassociating_counts :
   /\ nonassociating 4 = 1848.
 Proof. repeat apply conj; vm_compute; reflexivity. Qed.
 
+(** The counts equal those of [CDAssociatorCensus] on the sign exponent
+    of cube coordinates, level by level. *)
+Theorem nonassociating_matches_cube_census :
+  Z.of_nat (nonassociating 2)
+  = CDAssociatorCensus.numeric_associator_defect_count 2
+  /\ Z.of_nat (nonassociating 3)
+     = CDAssociatorCensus.numeric_associator_defect_count 3
+  /\ Z.of_nat (nonassociating 4)
+     = CDAssociatorCensus.numeric_associator_defect_count 4.
+Proof. repeat apply conj; vm_compute; reflexivity. Qed.
+
 Theorem basis_units_alternate :
   forallb (fun a => forallb (fun b =>
     (associates_at 4 a a b && associates_at 4 a b b)%bool) indices) indices
@@ -351,7 +367,12 @@ Theorem zero_products_span_late_planes :
        end) zero_pairs = true
   /\ forallb (fun u =>
        Nat.eqb (length (filter (carried_by u) zero_pairs)) 48) late = true.
-Proof. repeat apply conj; vm_compute; reflexivity. Qed.
+Proof.
+  split.
+  - unfold zero_pairs.
+    exact (proj1 all_blade_zero_products_are_assessor_pairs).
+  - repeat apply conj; vm_compute; reflexivity.
+Qed.
 
 Definition low_part (u : nat) : list nat :=
   filter (fun i => (Nat.leb 1 i && Nat.leb i 7)%bool) (plane u).
@@ -369,8 +390,7 @@ Theorem late_planes_are_fano_lines :
        (filter is_line (choose 3 (seq 1 7))) = true.
 Proof. repeat apply conj; vm_compute; reflexivity. Qed.
 
-Definition key (b : nat * nat * bool) : nat :=
-  match b with (i, j, _) => Nat.lxor i j end.
+Definition key (b : nat * nat * bool) : nat := ZDGraph.xor_sig (fst b).
 
 Theorem key_plane_incidence :
   forallb (fun p =>
