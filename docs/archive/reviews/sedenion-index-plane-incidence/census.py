@@ -15,8 +15,8 @@ imaginary pairs 210; 35 lines; 15 planes; every pair of planes shares 4
 indices and one line; 252 sorted triples fail to associate; 8 planes hold 28
 of them and 7 planes hold 4; left alternativity on two-term elements fails in
 exactly those 7 planes; 336 ordered signed zero products of 2-blades on 84
-unordered assessor pairs; every such pair spans one of the 7 planes, 12 per
-plane.
+unordered assessor pairs; every such pair spans one of the 7 planes, 12
+unordered pairs (48 ordered signed products) per plane.
 """
 
 import itertools
