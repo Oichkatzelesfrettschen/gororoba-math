@@ -32,7 +32,8 @@ abstract family, so no Fourier library is needed.
 * `KernelMap.nHat_eq_card_mul_div`: `nHat = n * γ a₀ / (2 * vHat)`, with no
   hypothesis on `n`, `vHat` or the channel.
 * `KernelMap.nHat_eq_spectral`: under a diagonal channel,
-  `nHat = nullity * lam a₀ / ∑ a, σ a ^ 2 * lam a`.
+  `nHat = nullity * lam a₀ / ∑ a, σ a ^ 2 * lam a`; where the sum is `0` both sides are `0` by
+  the convention `x / 0 = 0`, so the reading needs `vHat ≠ 0`.
 * `KernelMap.nHat_eq_nullity_of_support_eq_single` and
   `KernelMap.nHat_eq_zero_of_coeff_zero`: an ideal on the single character
   `a₀` is read exactly, and an ideal with no `a₀` component reads `0`.
@@ -80,8 +81,7 @@ theorem sum_sgn_eq_two_mul_nullity : ∑ y ∈ B, sgn pos y = 2 * nullity B pos 
   ring
 
 omit [CharZero K] in
-/-- The mean of the squared observed contrast against itself: the ideal has
-unit mean square. -/
+/-- The ideal contrast read as its own observation has `vHat = 1`. -/
 theorem vHat_sgn (hn : (B.card : K) ≠ 0) : vHat B (sgn pos) pos = (1 : K) := by
   rw [vHat_eq_sum_div, Finset.sum_congr rfl fun y _ => sgn_mul_self pos y, Finset.sum_const,
     nsmul_eq_mul, mul_one, div_self hn]
