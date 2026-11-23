@@ -68,7 +68,7 @@ def consPairEquiv (k : ℕ) :
 
 /-- A count over the ordered pairs of level `k + 1` is the sum of the counts
 over the four choices of top bits. -/
-theorem card_filter_prod_cons {k : ℕ} (Q : BitVec (k + 1) × BitVec (k + 1) → Prop)
+private theorem card_filter_prod_cons {k : ℕ} (Q : BitVec (k + 1) × BitVec (k + 1) → Prop)
     [DecidablePred Q] :
     (Finset.univ.filter Q).card =
       ((Finset.univ.filter fun p : BitVec k × BitVec k =>
@@ -85,7 +85,7 @@ theorem card_filter_prod_cons {k : ℕ} (Q : BitVec (k + 1) × BitVec (k + 1) �
   rfl
 
 /-- `2 ^ k` is twice `2 ^ (k - 1)` from `k = 1` on. -/
-theorem two_pow_eq_two_mul_pred {k : ℕ} (hk : 1 ≤ k) : 2 ^ k = 2 * 2 ^ (k - 1) := by
+private theorem two_pow_eq_two_mul_pred {k : ℕ} (hk : 1 ≤ k) : 2 ^ k = 2 * 2 ^ (k - 1) := by
   rw [← pow_succ']
   congr 1
   omega
@@ -150,28 +150,28 @@ theorem alignedPairCount_cons_mixed_eq_top_iff {k : ℕ} (hk : 3 ≤ k) {I J : B
     omega
 
 /-- Indices with a clear top bit are nonzero exactly when the low part is. -/
-theorem cons_false_ne_zero_iff {k : ℕ} (a : BitVec k) :
+private theorem cons_false_ne_zero_iff {k : ℕ} (a : BitVec k) :
     BitVec.cons false a ≠ 0#(k + 1) ↔ a ≠ 0#k :=
   ⟨fun h ha => h (by rw [ha]; exact (cons_eq_zero_iff false 0#k).2 ⟨rfl, rfl⟩),
     cons_ne_zero_of_ne_zero false⟩
 
 /-- Indices with equal top bits are equal exactly when the low parts are. -/
-theorem cons_same_eq_iff {k : ℕ} (I : Bool) (a b : BitVec k) :
+private theorem cons_same_eq_iff {k : ℕ} (I : Bool) (a b : BitVec k) :
     BitVec.cons I a = BitVec.cons I b ↔ a = b :=
   ⟨fun h => by simpa using congrArg (BitVec.setWidth k) h, fun h => by rw [h]⟩
 
 /-- Indices in different halves are distinct. -/
-theorem cons_ne_cons_of_ne {k : ℕ} {I J : Bool} (hIJ : I ≠ J) (a b : BitVec k) :
+private theorem cons_ne_cons_of_ne {k : ℕ} {I J : Bool} (hIJ : I ≠ J) (a b : BitVec k) :
     BitVec.cons I a ≠ BitVec.cons J b := fun h => hIJ (by simpa using congrArg BitVec.msb h)
 
 /-- The nonzero indices of level `k` number `2 ^ k - 1`. -/
-theorem card_ne_zero_bitVec (k : ℕ) :
+private theorem card_ne_zero_bitVec (k : ℕ) :
     (Finset.univ.filter fun x : BitVec k => x ≠ 0#k).card = 2 ^ k - 1 := by
   rw [Finset.filter_ne', Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ,
     card_bitVec]
 
 /-- Pairs with a nonzero first term and a zero second term or equal terms. -/
-theorem card_left_ne_zero_right_zero_or_eq (k : ℕ) :
+private theorem card_left_ne_zero_right_zero_or_eq (k : ℕ) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       p.1 ≠ 0#k ∧ (p.2 = 0#k ∨ p.1 = p.2)).card = 2 * (2 ^ k - 1) := by
   have h : (Finset.univ.filter fun p : BitVec k × BitVec k =>
@@ -201,7 +201,7 @@ theorem card_left_ne_zero_right_zero_or_eq (k : ℕ) :
   ring
 
 /-- Pairs with a nonzero second term and a zero first term or equal terms. -/
-theorem card_right_ne_zero_left_zero_or_eq (k : ℕ) :
+private theorem card_right_ne_zero_left_zero_or_eq (k : ℕ) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       p.2 ≠ 0#k ∧ (p.1 = 0#k ∨ p.1 = p.2)).card = 2 * (2 ^ k - 1) := by
   rw [← card_left_ne_zero_right_zero_or_eq k]
@@ -222,7 +222,7 @@ theorem card_right_ne_zero_left_zero_or_eq (k : ℕ) :
     rfl
 
 /-- Distinct pairs with a zero term. -/
-theorem card_ne_and_zero (k : ℕ) :
+private theorem card_ne_and_zero (k : ℕ) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       p.1 ≠ p.2 ∧ (p.1 = 0#k ∨ p.2 = 0#k)).card = 2 * (2 ^ k - 1) := by
   have h : (Finset.univ.filter fun p : BitVec k × BitVec k =>
@@ -258,7 +258,7 @@ theorem card_ne_and_zero (k : ℕ) :
 
 /-- Distinct pairs of count `0`: the pairs of `zeroCount` and the distinct pairs with a
 zero term. -/
-theorem card_ne_and_count_zero (k : ℕ) :
+private theorem card_ne_and_count_zero (k : ℕ) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       p.1 ≠ p.2 ∧ alignedPairCount k p.1 p.2 = 0).card = zeroCount k + 2 * (2 ^ k - 1) := by
   rw [← card_ne_and_zero k]
@@ -275,7 +275,7 @@ theorem card_ne_and_count_zero (k : ℕ) :
 
 /-- The pairs of level `k + 1` with count `2 ^ k - 4`, for two indices in different
 halves, are the pairs of `zeroCount` of the low parts. -/
-theorem card_mixed_top (k : ℕ) (hk : 3 ≤ k) {I J : Bool} (hIJ : I ≠ J) :
+private theorem card_mixed_top (k : ℕ) (hk : 3 ≤ k) {I J : Bool} (hIJ : I ≠ J) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       alignedPairCount (k + 1) (BitVec.cons I p.1) (BitVec.cons J p.2) = 2 ^ k - 4).card =
       zeroCount k := by
@@ -286,7 +286,7 @@ theorem card_mixed_top (k : ℕ) (hk : 3 ≤ k) {I J : Bool} (hIJ : I ≠ J) :
   rfl
 
 /-- The pairs of level `k + 1` in the same half have count at most `2 ^ k - 8`. -/
-theorem card_same_top (k : ℕ) (hk : 3 ≤ k) (I : Bool) :
+private theorem card_same_top (k : ℕ) (hk : 3 ≤ k) (I : Bool) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       alignedPairCount (k + 1) (BitVec.cons I p.1) (BitVec.cons I p.2) = 2 ^ k - 4).card = 0 := by
   rw [Finset.card_eq_zero, Finset.filter_eq_empty_iff]
@@ -310,12 +310,12 @@ theorem alignedPairCountMultiplicity_succ_top {k : ℕ} (hk : 3 ≤ k) :
   omega
 
 /-- Indices with equal top bits are distinct exactly when the low parts are. -/
-theorem cons_same_ne_iff {k : ℕ} (I : Bool) (a b : BitVec k) :
+private theorem cons_same_ne_iff {k : ℕ} (I : Bool) (a b : BitVec k) :
     BitVec.cons I a ≠ BitVec.cons I b ↔ a ≠ b :=
   (cons_same_eq_iff I a b).not
 
 /-- Same half, top bit set: the pairs of `zeroCount` and the distinct pairs with a zero term. -/
-theorem card_zero_true (k : ℕ) :
+private theorem card_zero_true (k : ℕ) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       zeroPred (k + 1) (BitVec.cons true p.1, BitVec.cons true p.2)).card =
       zeroCount k + 2 * (2 ^ k - 1) := by
@@ -330,7 +330,7 @@ theorem card_zero_true (k : ℕ) :
     exact ⟨cons_true_ne_zero _, cons_true_ne_zero _, h3, by omega⟩
 
 /-- Same half, top bit clear: the pairs of `zeroCount` of the low parts. -/
-theorem card_zero_false (k : ℕ) :
+private theorem card_zero_false (k : ℕ) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       zeroPred (k + 1) (BitVec.cons false p.1, BitVec.cons false p.2)).card =
       zeroCount k := by
@@ -345,7 +345,7 @@ theorem card_zero_false (k : ℕ) :
     exact ⟨h1, h2, h3, by omega⟩
 
 /-- First index in the first half, second in the second: the degenerate low parts. -/
-theorem card_zero_false_true {k : ℕ} (hk : 3 ≤ k) :
+private theorem card_zero_false_true {k : ℕ} (hk : 3 ≤ k) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       zeroPred (k + 1) (BitVec.cons false p.1, BitVec.cons true p.2)).card =
       2 * (2 ^ k - 1) := by
@@ -363,7 +363,7 @@ theorem card_zero_false_true {k : ℕ} (hk : 3 ≤ k) :
     exact ⟨h1, cons_true_ne_zero _, hne, Or.inr h2⟩
 
 /-- First index in the second half, second in the first: the degenerate low parts. -/
-theorem card_zero_true_false {k : ℕ} (hk : 3 ≤ k) :
+private theorem card_zero_true_false {k : ℕ} (hk : 3 ≤ k) :
     (Finset.univ.filter fun p : BitVec k × BitVec k =>
       zeroPred (k + 1) (BitVec.cons true p.1, BitVec.cons false p.2)).card =
       2 * (2 ^ k - 1) := by
