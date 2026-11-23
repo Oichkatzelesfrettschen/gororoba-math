@@ -119,4 +119,83 @@ theorem pfaffianAux_four (A : ι → ι → R) (i j k l : ι) :
 example : pfaffianAux (fun a b : Fin 4 => ((a : ℕ) : ℤ) + 2 * ((b : ℕ) : ℤ)) [0, 1, 2, 3] = 18 := by
   decide
 
+private theorem map_pfaffianFuel (f : R →+* S) (A : ι → ι → R) :
+    ∀ (n : ℕ) (l : List ι),
+      f (pfaffianFuel A n l) = pfaffianFuel (fun a b => f (A a b)) n l := by
+  intro n
+  induction n with
+  | zero =>
+    intro l
+    cases l with
+    | nil => simp only [pfaffianFuel, map_one]
+    | cons i rest => simp only [pfaffianFuel, map_zero]
+  | succ n ih =>
+    intro l
+    cases l with
+    | nil => simp only [pfaffianFuel, map_one]
+    | cons i rest =>
+      simp only [pfaffianFuel, map_sum, map_mul, map_pow, map_neg, map_one, ih]
+
+/-- A ring homomorphism carries the Pfaffian of a list to the Pfaffian of the mapped entries. -/
+theorem map_pfaffianAux (f : R →+* S) (A : ι → ι → R) (l : List ι) :
+    f (pfaffianAux A l) = pfaffianAux (fun a b => f (A a b)) l :=
+  map_pfaffianFuel f A l.length l
+
+private theorem pfaffianFuel_eq_zero_of_odd (A : ι → ι → R) :
+    ∀ (n : ℕ) (l : List ι), l.length % 2 = 1 → pfaffianFuel A n l = 0 := by
+  intro n
+  induction n with
+  | zero =>
+    intro l h
+    cases l with
+    | nil => simp at h
+    | cons i rest => simp only [pfaffianFuel]
+  | succ n ih =>
+    intro l h
+    cases l with
+    | nil => simp at h
+    | cons i rest =>
+      simp only [pfaffianFuel]
+      refine Finset.sum_eq_zero fun k _ => ?_
+      have hk := length_eraseIdx_fin rest k
+      have hk' := k.isLt
+      simp only [List.length_cons] at h
+      rw [ih _ (by omega), mul_zero]
+
+/-- A list of odd length has Pfaffian `0`: every term of the expansion removes one index from an
+even-length remainder and leaves an odd-length list. -/
+theorem pfaffianAux_eq_zero_of_odd (A : ι → ι → R) (l : List ι) (h : l.length % 2 = 1) :
+    pfaffianAux A l = 0 :=
+  pfaffianFuel_eq_zero_of_odd A l.length l h
+
+private theorem pfaffianFuel_smul_of_even (c : R) (A : ι → ι → R) :
+    ∀ (n : ℕ) (l : List ι), l.length % 2 = 0 →
+      pfaffianFuel (fun a b => c * A a b) n l = c ^ (l.length / 2) * pfaffianFuel A n l := by
+  intro n
+  induction n with
+  | zero =>
+    intro l h
+    cases l with
+    | nil => simp only [pfaffianFuel, List.length_nil, Nat.zero_div, pow_zero, mul_one]
+    | cons i rest => simp only [pfaffianFuel, mul_zero]
+  | succ n ih =>
+    intro l h
+    cases l with
+    | nil => simp only [pfaffianFuel, List.length_nil, Nat.zero_div, pow_zero, mul_one]
+    | cons i rest =>
+      simp only [pfaffianFuel]
+      rw [Finset.mul_sum]
+      refine Finset.sum_congr rfl fun k _ => ?_
+      have hk := length_eraseIdx_fin rest k
+      have hk' := k.isLt
+      simp only [List.length_cons] at h ⊢
+      have e : (rest.eraseIdx k).length / 2 + 1 = (rest.length + 1) / 2 := by omega
+      rw [ih _ (by omega), ← e]
+      ring
+
+/-- Scaling every entry by `c` scales the Pfaffian of a list of even length `2 m` by `c ^ m`. -/
+theorem pfaffianAux_smul_of_even (c : R) (A : ι → ι → R) (l : List ι) (h : l.length % 2 = 0) :
+    pfaffianAux (fun a b => c * A a b) l = c ^ (l.length / 2) * pfaffianAux A l :=
+  pfaffianFuel_smul_of_even c A l.length l h
+
 end Matrix
