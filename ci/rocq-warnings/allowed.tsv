@@ -504,6 +504,8 @@ open	verified/C1637_R300SedenionZeroDivisor.v	deprecated-transitive-library-file
 open	verified/C1637_R300SedenionZeroDivisor.v	disj-pattern-notation
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	disj-pattern-notation
+open	verified/C582_IndexPlaneIncidence.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C582_IndexPlaneIncidence.v	disj-pattern-notation
 open	verified/C868_PainleveGullstrand.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C868_PainleveGullstrand.v	disj-pattern-notation
 open	verified/C869_InteriorFlat.v	deprecated-transitive-library-file-since-Stdlib-9.0
