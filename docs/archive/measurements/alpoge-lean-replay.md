@@ -1,6 +1,6 @@
 # Kernel replay of the alpo.ge Lean archive
 
-Measured 2026-11-20 to 2026-11-23 on the Windows compute workstation (WSL, 32 threads, 54 GB) and four Google Cloud
+Measured 2026-11-20 to 2026-11-23 on the Windows compute workstation (WSL, 16 cores, 32 threads, 54 GB) and four Google Cloud
 VMs (n2d-highmem-16, two c2d-highmem-16, c2d-highmem-8), with one c2d-highmem-32 (251 GiB) for the closure export.
 The full record, each host's result files, the replay driver and the calibrated verifier are public in
 [gororoba-alpoge-replay](https://github.com/Oichkatzelesfrettschen/gororoba-alpoge-replay), commit a7c327c, file
@@ -31,14 +31,17 @@ on lean4export, and on Mathlib's definitions meaning what the statements say. It
 
 - **`leanchecker` per module walks the whole search path.** Each call resolves its argument as a module-name prefix by
   listing every .olean on the search path before it replays anything: 117 of 123 s per module on the archive's
-  185,000 files. `ci/check.sh` makes one `leanchecker` call per module over about 8,000 Mathlib files, so the same
+  search path of about 184,000 files (175,187 archive .olean files plus Mathlib's and its dependencies'; timing from
+  the replay's running record, `CERTIFICATION.md` of the evidence repository). `ci/check.sh` makes one `leanchecker` call per module over about 8,600 Mathlib .olean files (8,643 at
+  Mathlib v4.35.0), so the same
   walk repeats per module there; a driver that calls `replayFromImports` on the named module removes it.
 - **`con-leche` has a fixed normalization budget.** It exits 3 ("internal error: fuel exhausted: whnf loop") on a
   theorem proved by `decide +kernel` over a 131,070-step evaluation, in 2.6 s on that theorem's 15,000-line closure,
   in both `--verified` and `--trusted` mode; `nanoda_bin` accepts the same closure in 42 s. Its `--help` offers no
-  option to raise the budget. `ci/check_external_kernels.sh` maps any checker status other than accept or reject to
-  its exit 2 ("a checker failed to run"), so a headline theorem whose closure holds a large `decide +kernel` proof
-  would stop that script there rather than fail it; two library files use `decide +kernel`
+  option to raise the budget. `ci/check_external_kernels.sh` maps a `con-leche` or `con-ron` status other than accept
+  or reject to its exit 2 ("a checker failed to run"), so a headline theorem whose closure holds a large
+  `decide +kernel` proof would stop that script there rather than fail it; it folds every nonzero `nanoda_bin` status,
+  a crash included, into a rejection (exit 1); two library files use `decide +kernel`
   (`CayleyDickson/AlignedPairEndpoints.lean`, `Clifford/ZeroEight.lean`).
 - **`con-ron` addresses terms with 32-bit handles.** On a 13.3 GB export (867,348 declarations) it declines with exit 2,
   "arena: expr constructor at capacity", where `con-leche` accepts in 599 s at 14.6 GB.
@@ -48,5 +51,6 @@ on lean4export, and on Mathlib's definitions meaning what the statements say. It
 - **Both `nanoda_bin` and `con-leche` exit 0 on an empty export.** An export gate (exporter exit 0, a final line that
   parses as JSON, the requested theorems declared, as `ci/external_kernel_export.py` checks) has to precede a verdict.
 - **Memory.** lean4export of the closure peaked at 162.5 GB resident (69.7 GB private plus the mapped .olean files);
-  the checkers needed about 1.3 GB per GB of export. A cold page cache on a standard persistent disk held the export at
-  one faulting thread (0.7 MB/s) until 64 parallel readers prewarmed every file the import maps.
+  `nanoda_bin` needed 1.3 GB per GB of export (80.4 GB on 61.6 GB) and `con-leche` 1.1 (14.6 GB on 13.3 GB). A cold page cache on a standard persistent disk held the export at
+  one faulting thread (about 0.7 MB/s, running record) until 64 parallel readers prewarmed every file the import maps
+  (94 GB in 589 s).
