@@ -448,7 +448,13 @@ near ten seconds each and long checks run nightly, on `main` or by hand).
 - The `lean` workflow runs `sh ci/check.sh` and the `rocq` workflow
   `sh ci/check_rocq.sh`, the full gate: nightly on `main`, on every push
   to `main`, and on manual dispatch (`gh workflow run lean.yml --ref
-  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A red run on `main`
+  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). The `rocq` runs of a
+  push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`
+  converts with the bytecode machine the compiler used; the nightly run,
+  and a dispatch with `-f kernel=pure`, re-check with the checker's own
+  reduction (owner, 2026-11-23: one certificate re-checks in 73 s against
+  1,902 s). A source whose proof holds a new `vm_compute` certificate is
+  fully gated after a green nightly or pure dispatch. A red run on `main`
   opens the issue "The lean gate is red on main" or "The rocq gate is red
   on main", or adds a comment to it.
 - A pull request that touches `lean/`, `rocq/`, `ci/` or a workflow

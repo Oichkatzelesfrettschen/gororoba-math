@@ -52,7 +52,8 @@
 # every source that fails to compile.
 # The switch is named rocq-9.3, the name the mutation harnesses of
 # check-schur-geometry pass to their own subprocesses.
-# Environment: ROCQ_JOBS (default the online
+# Environment: ROCQ_CHECK_VM (0, the default, or 1: the checker converts
+# with the bytecode machine), ROCQ_JOBS (default the online
 # processor count), ROCQ_BUILD_DIR (parent of the scratch directory, default
 # $TMPDIR or /tmp; the two trees need about 600 MB). At six jobs the whole
 # script peaked at 11.9 GB of memory (systemd scope accounting, 12-thread
@@ -72,6 +73,22 @@ for tool in git opam tar make rustc getconf "$PYTHON"; do
   }
 done
 switch=rocq-9.3
+# ROCQ_CHECK_VM=1 lets the kernel checker convert with the bytecode machine
+# (rocq check -bytecode-compiler yes), which the compiler already used for
+# each vm_compute step. Without it the checker reduces those steps with its
+# own lazy machine: 1,902 s against 73 s on StiefelA5Certificate (measured
+# 2026-11-23, Rocq 9.3.0, one core). With it the re-check rests on the
+# bytecode machine for those conversions, so the nightly run leaves it unset.
+check_machine=
+case ${ROCQ_CHECK_VM:-0} in
+0) ;;
+1) check_machine='-bytecode-compiler yes' ;;
+*)
+  echo "check_rocq: ROCQ_CHECK_VM is ${ROCQ_CHECK_VM}; it takes 0 or 1" >&2
+  exit 2
+  ;;
+esac
+echo "check_rocq: kernel checker options: -silent -o ${check_machine:-(default conversion)}"
 jobs=${ROCQ_JOBS:-$(getconf _NPROCESSORS_ONLN)}
 opam switch list --short | grep -q -x -F "$switch" || {
   echo "check_rocq: opam switch $switch does not exist; run sh ci/install_rocq.sh" >&2
@@ -320,7 +337,7 @@ warnings_match open "$work"/open-*.log
 # collected at the end of the script.
 sed -n 's|^theories/\(.*\)\.v$|OpenGororoba.\1|p; s|^verified/\(.*\)\.v$|OpenGororobaVerified.\1|p' _RocqProject | tr / . >"$work/open-modules.txt"
 # shellcheck disable=SC2046
-opam exec --switch="$switch" -- rocq check -silent -o -R theories OpenGororoba -R verified OpenGororobaVerified \
+opam exec --switch="$switch" -- rocq check -silent -o $check_machine -R theories OpenGororoba -R verified OpenGororobaVerified \
   $(cat "$work/open-modules.txt") >"$work/open-kernel.log" 2>&1 &
 open_kernel=$!
 
@@ -397,7 +414,7 @@ echo "check_rocq: rocq/quantum compiled all $(grep -c '\.v$' _RocqProject) liste
 # that report against the quantum ledger.
 (
   cd "$work/rocq/warning-calibration"
-  run_logged "$work/calibration-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
+  run_logged "$work/calibration-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o $check_machine \
     -Q . "" -R ../open/verified OpenGororobaVerified -Q ../open/theories OpenGororoba DeclaredAxiom
 )
 checked_axioms "$work/calibration-kernel.log" | grep -q -x -F DeclaredAxiom.calibration_axiom || {
@@ -410,7 +427,7 @@ if kernel_context_matches "$work/calibration-kernel.log" kernel-assumptions.txt 
 fi
 sed -n 's|\.v$||p' _RocqProject | tr / . >"$work/quantum-modules.txt"
 # shellcheck disable=SC2046
-run_logged "$work/quantum-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
+run_logged "$work/quantum-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o $check_machine \
   -Q . "" -R ../open/verified OpenGororobaVerified -Q ../open/theories OpenGororoba $(cat "$work/quantum-modules.txt")
 kernel_context_matches "$work/quantum-kernel.log" kernel-assumptions.txt >"$work/quantum-kernel.diff" || {
   echo "check_rocq: the kernel check of rocq/quantum differs from rocq/quantum/kernel-assumptions.txt (< ledger, > checked):" >&2
@@ -482,7 +499,7 @@ run_logged "$work/delegation-admissions.log" "$work/rocq/.cache/proof-admission-
 echo "check_rocq: rocq/delegation compiled all $(grep -c '\.v$' _RocqProject) listed sources with no admission"
 sed -n 's|^\(.*\)\.v$|GororobaDelegation.\1|p' _RocqProject | tr / . >"$work/delegation-modules.txt"
 # shellcheck disable=SC2046
-run_logged "$work/delegation-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o \
+run_logged "$work/delegation-kernel.log" opam exec --switch="$switch" -- rocq check -silent -o $check_machine \
   -Q . GororobaDelegation $(cat "$work/delegation-modules.txt")
 kernel_context_matches "$work/delegation-kernel.log" kernel-assumptions.txt >"$work/delegation-kernel.diff" || {
   echo "check_rocq: the kernel check of rocq/delegation differs from rocq/delegation/kernel-assumptions.txt (< ledger, > checked):" >&2

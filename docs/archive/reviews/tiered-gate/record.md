@@ -19,6 +19,22 @@ shellcheck and actionlint. The Advisor read both reports and the fixes last.
 | Advisor: `head-gate` asked a Lean-only change for the Rocq run | Advisor | Confirmed | Fixed: required workflows follow the changed paths |
 | Advisor: `main` has no branch protection and no ruleset | Advisor | Confirmed: the API returns "Branch not protected" and an empty ruleset list | Boundary: the red check and the rule of `AGENTS.md` stop a merge; a required check is the owner's setting |
 
+## The kernel checker's conversion (after the review round)
+
+A second red-team run (`opencode` on opencode-go/glm-5.3) read the Rocq gate for the cause of its length. Checked
+against measurements:
+
+| Claim | Check | Result |
+|---|---|---|
+| The runs of 105 minutes were opam cache misses | Step times of two runs on the same sources: both restored the switch (install 0 to 1 s); the gate step took 3,967 s and 6,280 s | Refuted: the hosted runner varies |
+| One module, `StiefelA5Certificate`, holds most of the 3,008 s kernel check, because the checker reduces its `vm_compute` steps with its own lazy machine | Measured (Rocq 9.3.0, one core of a 32-thread workstation): `rocq check -silent -o -norec` 1,902 s at 0.73 GB, recursive 1,946 s at 1.11 GB | Confirmed |
+| The checker has no bytecode conversion | `rocq check --help` lists `-bytecode-compiler (yes|no)`, default no; with `yes` the same module re-checks in 73 s (`-norec`) and 95 s (recursive), exit 0, context summary clean | Refuted, and the lever |
+
+Owner ruling (2026-11-23): runs of a push and of a dispatch use the bytecode machine in the checker; the nightly run
+keeps the checker's own reduction. `ci/check_rocq.sh` reads `ROCQ_CHECK_VM`, and its declared-axiom calibration runs
+under the same option. The other proposals of that report (a split check with `-norec`, a verdict cache by closure
+digest, reuse of objects by content digest, a smaller certificate) are not part of this pull request.
+
 Survived both seats: without an option `ci/check.sh` runs the steps of `main` in the same order (a comment-stripped
 diff shows three guarded additions); `--quick` and `--build` exit nonzero on every failed check and 2 on an unknown
 argument; `ci/check_signal_traps.sh` still interrupts the script before either early exit; only a green run on

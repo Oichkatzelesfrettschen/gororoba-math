@@ -13,6 +13,12 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      kernel:
+        description: "Conversion of the kernel checker: vm (bytecode machine) or pure (the checker's own reduction)"
+        type: choice
+        options: [vm, pure]
+        default: vm
 
 concurrency:
   group: rocq-${{ github.ref }}
@@ -32,6 +38,10 @@ jobs:
     timeout-minutes: 210
     env:
       OPAMROOT: ${{ github.workspace }}/.opam
+      # The nightly run and a dispatch with kernel=pure re-check with the
+      # checker's own reduction; a push to main and a default dispatch let
+      # the checker use the bytecode machine (ci/check_rocq.sh).
+      ROCQ_CHECK_VM: ${{ (github.event_name == 'schedule' || inputs.kernel == 'pure') && '0' || '1' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install system packages
