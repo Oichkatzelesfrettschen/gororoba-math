@@ -23,6 +23,10 @@ bivector `u ∧ v` is `P = vecMulVec u v - vecMulVec v u` (entry `(i, j)` is
   `trace (C * (P * D * P)) = 2 * c u v * d u v - c u u * d v v - c v v * d u u`.
 * `Matrix.trace_mul_skew_mul_skew_of_rank_one`: when `d` factors through a function `l` on
   `u` and `v`, the trace is `-c w w` with `w = l v • u - l u • v`.
+* `Matrix.trace_mul_skew_mul_skew_eq_zero_iff`: over a field with `2 ≠ 0`, with `d = l * l` on a
+  subspace `K` and `l` nonzero on `K`, the trace vanishes on all of `K` exactly when `c` vanishes
+  on the kernel of `l` in `K`. Rows A5-467 and A5-470 of the findings ledger of gororoba-quantum
+  (`docs/evidence/a5-exceptional-fibers/ledger.tsv`) state the expansion and the trace identity.
 -/
 
 @[expose] public section
