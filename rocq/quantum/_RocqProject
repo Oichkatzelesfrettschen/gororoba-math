@@ -63,6 +63,7 @@ GaussianIntegerHom.v
 KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
+Pfaffian.v
 QuantumChannelFromOpen.v
 SignBridge.v
 StiefelWitnessInvertible.v
