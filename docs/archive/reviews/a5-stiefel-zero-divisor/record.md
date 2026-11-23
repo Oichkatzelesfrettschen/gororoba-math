@@ -39,3 +39,11 @@ was made against the sources.
 
 The branch then took `main` by a merge (the claims ledger and the Lean library moved under pull requests 95 and 96);
 `python3 ci/check_claims_ledger.py` passes on the merge (1282 rows).
+
+## Hosted round
+
+The hosted Codex review read 4ecf38a04 and posted one finding.
+
+| Finding | Check | Resolution |
+|---|---|---|
+| P1: `stiefel_zero_divisor` is stated over a class of fields, which the placement rule puts in Lean with an instance bridge | The ledger claim `a5-stiefel-universal` is the real fixed-dimension statement, proved by `real_stiefel_zero_divisor`; the module over `PfFieldI` is the form of the proof, as the tower functor of `CdTowerRing.v` is | Boundary (owner, 2026-11-23): the Lean theorem over fields and its bridge are issue 99 |
