@@ -1,7 +1,7 @@
 name: rocq
 
 # The Rocq half of the admission gate, ci/check_rocq.sh. It runs nightly on
-# main and on manual dispatch on a named ref (gh workflow run rocq.yml --ref
+# main, on every push to main and on manual dispatch on a named ref (gh workflow run rocq.yml --ref
 # BRANCH), which a pull request that touches rocq/ or a Rocq gate script gets
 # once on its final head before the merge (AGENTS.md, "Landing"); a run takes
 # about 43 minutes with a restored switch (measured 2026-11-23). No trigger
@@ -10,6 +10,8 @@ name: rocq
 on:
   schedule:
     - cron: "47 9 * * *"
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -18,6 +20,7 @@ concurrency:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   check:
@@ -53,3 +56,19 @@ jobs:
           key: ${{ steps.opam.outputs.cache-primary-key }}
       - name: Run the Rocq gate
         run: ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh
+      # One issue holds the red runs of main; a later red run adds a comment.
+      - name: Report a red gate on main
+        if: failure() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="The full gate is red on main"
+          body="The rocq workflow failed on main at $GITHUB_SHA: $RUN_URL"
+          number=$(gh issue list --repo "$REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$REPOSITORY" --title "$title" --body "$body"
+          fi

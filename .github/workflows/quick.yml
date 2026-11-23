@@ -1,10 +1,16 @@
 name: quick
 
-# The checks of ci/check.sh that need no build, on every pull request and
-# every push to main: the lints of shell scripts, Python files and workflows,
-# the signal-trap check, the headline registry and the claims ledger. The
-# lean and rocq workflows build and kernel-check; they run nightly and on
-# manual dispatch.
+# The pull-request tier of the gate, on every pull request and every push to
+# main. The job quick runs the checks of ci/check.sh that need no build: the
+# lints of shell scripts, Python files and workflows, the signal-trap check,
+# the headline registry and the claims ledger. The job build restores the
+# Lean build tree that the last full gate on main saved and runs
+# ci/check.sh --build, which compiles the changed modules and those that
+# import them, audits the axioms and stops before the kernel replay. The job
+# main-gate fails a pull request while the latest completed lean or rocq run
+# on main is not a success, so a red main stops merges. The lean and rocq
+# workflows hold the full gate; they run nightly, on every push to main and
+# on manual dispatch (AGENTS.md, "Landing").
 on:
   pull_request:
   push:
@@ -36,3 +42,62 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Run the quick checks
         run: sh ci/check.sh --quick
+
+  build:
+    name: build
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: leanprover/lean-action@ba3fdfe5c4476c925da13bf11a005ddb47e47aee # v1.7.1
+        with:
+          lake-package-directory: lean
+          auto-config: "false"
+          build: "false"
+          use-mathlib-cache: "true"
+      # The lean workflow saves this tree after a green gate on main. Without
+      # a restored tree the build compiles every module (about 5 minutes).
+      - name: Restore the library build tree of main
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: lean/.lake/build
+          key: lean-build-${{ hashFiles('lean/lean-toolchain', 'lean/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: lean-build-${{ hashFiles('lean/lean-toolchain', 'lean/lake-manifest.json') }}-
+      - name: Install shellcheck, ruff and actionlint
+        run: |
+          command -v shellcheck || { sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck; }
+          pipx install ruff==0.14.11
+          curl -sSfL -o "$RUNNER_TEMP/actionlint.tar.gz" https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$HOME/.local/bin" actionlint
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Build the changed modules and audit the axioms
+        run: sh ci/check.sh --build
+
+  main-gate:
+    name: main-gate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    steps:
+      - name: Require the latest full gate on main to be green
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          status=0
+          for workflow in lean.yml rocq.yml; do
+            conclusion=$(gh run list --repo "$REPOSITORY" --workflow "$workflow" --branch main --status completed --limit 1 --json conclusion,url --jq '.[0] | "\(.conclusion) \(.url)"')
+            echo "$workflow on main: $conclusion"
+            case $conclusion in
+            "success "*) ;;
+            *) status=1 ;;
+            esac
+          done
+          [ "$status" -eq 0 ] || {
+            echo "main-gate: the latest completed full gate on main is not a success; main is repaired before another merge" >&2
+            exit 1
+          }

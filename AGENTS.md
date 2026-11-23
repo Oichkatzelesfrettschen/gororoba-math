@@ -428,17 +428,31 @@ Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
 commit, run `sh ci/check.sh`, and `sh ci/check_rocq.sh` when the change
 touches `rocq/` or the Rocq scripts, and land by pull request, merged by
 merge commit so that an imported history stays, with the review chain of
-the workspace guide ("Reviews and merges"). The `quick` workflow runs
-`sh ci/check.sh --quick` (the lints, the headline registry and the claims
-ledger, no build) on every pull request and every push to `main`. The
-`lean` workflow runs the first script and the `rocq` workflow the second
-nightly on `main` and on manual dispatch
-(`gh workflow run rocq.yml --ref BRANCH`): per-push checks stay near ten
-seconds each and long checks run nightly or by hand. A pull request that
-touches `lean/`, `rocq/` or a gate script is dispatched once on its final
-head before the merge and merges with that run green;
-`gh run list --workflow rocq.yml --commit SHA` names the run (owner,
-2026-11-23, both rules).
+the workspace guide ("Reviews and merges"). The gate runs in two tiers (owner, 2026-11-23: per-push checks stay near
+ten seconds each and long checks run nightly, on `main` or by hand).
+
+- The `quick` workflow runs on every pull request and every push to
+  `main`. Its job `quick` runs `sh ci/check.sh --quick` (the lints, the
+  headline registry and the claims ledger, no build). Its job `build`
+  restores the Lean build tree that the last green gate on `main` saved
+  and runs `sh ci/check.sh --build`: the changed modules and the modules
+  that import them compile with warnings as errors, the axiom audit runs,
+  and the kernel replay does not. Its job `main-gate` fails a pull request
+  while the latest completed `lean` or `rocq` run on `main` is not a
+  success, so `main` is repaired before another merge.
+- The `lean` workflow runs `sh ci/check.sh` and the `rocq` workflow
+  `sh ci/check_rocq.sh`, the full gate: nightly on `main`, on every push
+  to `main`, and on manual dispatch (`gh workflow run rocq.yml --ref
+  BRANCH`). A red run on `main` opens the issue "The full gate is red on
+  main" or adds a comment to it.
+- A pull request that touches `lean/`, `rocq/` or a gate script is
+  dispatched once on its final head before the merge and merges with that
+  run green; `gh run list --workflow rocq.yml --commit SHA` names the run.
+  A Rocq source has no pull-request compile: its first compile is that
+  dispatch.
+- A commit of `main` is fully gated when its `lean` and `rocq` runs are
+  green; a record that cites a proof by commit and digest names such a
+  commit.
 
 ## Text
 

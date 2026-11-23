@@ -1,9 +1,13 @@
 #!/bin/sh
-# Usage: sh ci/check.sh [--quick]
-# The Lean half of the admission gate of gororoba-math. With --quick it runs
-# the checks that need no Lean toolchain and no build (step 1 and steps 8
-# and 9, in the order the script reaches them) and stops; the quick workflow
-# runs that mode on every pull request. From any directory of the checkout:
+# Usage: sh ci/check.sh [--quick | --build]
+# The Lean half of the admission gate of gororoba-math. Without an option it
+# is the full gate. With --quick it runs the checks that need no Lean
+# toolchain and no build (step 1 and steps 8 and 9, in the order the script
+# reaches them) and stops. With --build it runs every step but the kernel
+# replay of step 7: Lake compares content hashes, so over a restored build
+# tree the build of step 2 compiles the changed modules and the modules that
+# import them. The quick workflow runs both modes on every pull request.
+# From any directory of the checkout:
 #   1. every tracked shell script passes the lint at severity error, every
 #      tracked Python file passes ruff check and ruff format --check under
 #      ruff.toml, every tracked workflow passes actionlint, and each line of
@@ -58,17 +62,21 @@
 set -eu
 
 quick=
+build_only=
 case $# in
 0) ;;
 1)
-  [ "$1" = --quick ] || {
-    echo "usage: check.sh [--quick]" >&2
+  case $1 in
+  --quick) quick=1 ;;
+  --build) build_only=1 ;;
+  *)
+    echo "usage: check.sh [--quick | --build]" >&2
     exit 2
-  }
-  quick=1
+    ;;
+  esac
   ;;
 *)
-  echo "usage: check.sh [--quick]" >&2
+  echo "usage: check.sh [--quick | --build]" >&2
   exit 2
   ;;
 esac
@@ -344,6 +352,11 @@ if root_extra GororobaMath.lean >"$work/root-extra.txt"; then
   echo "check: lean/GororobaMath.lean holds a line other than module and its imports of the library; the replay leaves the root module out" >&2
   exit 1
 fi
+[ -z "$build_only" ] || {
+  echo "check: the build, the audit and the import rules passed; the kernel replay did not run"
+  exit 0
+}
+
 for module in $(cat "$work/modules.txt"); do
   lake env leanchecker "$module" >"$work/replay.out" 2>&1 || {
     cat "$work/replay.out" >&2

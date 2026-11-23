@@ -48,6 +48,8 @@
 #      script fails on it, so one run reports all of them.
 #      ROCQ_WARNINGS_OUT, when set, names a directory that receives the
 #      observed pairs of each tree.
+# Each make of the three trees runs with --keep-going, so one run reports
+# every source that fails to compile.
 # The switch is named rocq-9.3, the name the mutation harnesses of
 # check-schur-geometry pass to their own subprocesses.
 # Environment: ROCQ_JOBS (default the online
@@ -288,7 +290,7 @@ warning_options_set _RocqProject || {
 # --output-sync=target keeps the lines of each compilation together, so a
 # warning block of one source never interleaves with another's.
 for target in all check-schur-geometry check-admissions check-plugins extract-check; do
-  run_logged "$work/open-$target.log" opam exec --switch="$switch" -- make --output-sync=target --jobs="$jobs" "$target"
+  run_logged "$work/open-$target.log" opam exec --switch="$switch" -- make --keep-going --output-sync=target --jobs="$jobs" "$target"
   echo "check_rocq: rocq/open $target passed"
 done
 uncompiled_sources _RocqProject || {
@@ -341,7 +343,7 @@ warning_options_set _RocqProject || {
 # rocq makefile asks for --no-rocq-package-warning; any other line it prints
 # that names a warning still fails the check below.
 run_logged "$work/quantum-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
-run_logged "$work/quantum-all.log" opam exec --switch="$switch" -- make --output-sync=target -f Makefile.rocq --jobs="$jobs"
+run_logged "$work/quantum-all.log" opam exec --switch="$switch" -- make --keep-going --output-sync=target -f Makefile.rocq --jobs="$jobs"
 # Calibration through the option lines of this project file and the
 # makefile rocq generates from them: a source whose import is deprecated in
 # the default set must fail to compile, and a source whose import prints a
@@ -466,7 +468,7 @@ while IFS= read -r source; do
   fi
 done <"$work/delegation-rendered.txt"
 run_logged "$work/delegation-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
-run_logged "$work/delegation-all.log" opam exec --switch="$switch" -- make --output-sync=target -f Makefile.rocq --jobs="$jobs"
+run_logged "$work/delegation-all.log" opam exec --switch="$switch" -- make --keep-going --output-sync=target -f Makefile.rocq --jobs="$jobs"
 if log_holds_warning "$work/delegation-makefile.log" >&2; then
   echo "check_rocq: rocq makefile printed a warning for rocq/delegation" >&2
   exit 1

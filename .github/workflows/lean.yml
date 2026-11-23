@@ -2,7 +2,7 @@ name: lean
 
 # The Lean half of the admission gate, ci/check.sh: the library builds with
 # warnings as errors, the axiom audit accepts it and rejects its known-bad
-# fixture, and leanchecker replays every module. It runs nightly on main and
+# fixture, and leanchecker replays every module. It runs nightly on main, on every push to main and
 # on manual dispatch on a named ref (gh workflow run lean.yml --ref BRANCH),
 # which a pull request that touches lean/ or a gate script gets once on its
 # final head before the merge (AGENTS.md, "Landing"). The quick workflow runs
@@ -10,6 +10,8 @@ name: lean
 on:
   schedule:
     - cron: "17 9 * * *"
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
@@ -18,6 +20,7 @@ concurrency:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   check:
@@ -45,3 +48,25 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Run the gate
         run: sh ci/check.sh
+      - name: Save the library build tree
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: lean/.lake/build
+          key: lean-build-${{ hashFiles('lean/lean-toolchain', 'lean/lake-manifest.json') }}-${{ github.sha }}
+      # One issue holds the red runs of main; a later red run adds a comment.
+      - name: Report a red gate on main
+        if: failure() && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="The full gate is red on main"
+          body="The lean workflow failed on main at $GITHUB_SHA: $RUN_URL"
+          number=$(gh issue list --repo "$REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$REPOSITORY" --title "$title" --body "$body"
+          fi
