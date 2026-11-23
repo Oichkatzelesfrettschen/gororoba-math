@@ -460,8 +460,10 @@ near ten seconds each and long checks run nightly, on `main` or by hand).
 - A pull request that touches `lean/`, `rocq/`, `ci/` or a workflow
   stays a draft while it changes. On its final head `lean.yml` is
   dispatched for a change under `lean/`, `rocq.yml` for one under
-  `rocq/`, and both for one under `ci/` or a workflow, and it merges with
-  those runs green. The job `head-gate` of the `quick` workflow holds the
+  `rocq/` or of a `.gitattributes` file, and both for one under `ci/` or
+  a workflow, and it merges with those runs green. The head of a pull
+  request from a fork is pushed by a maintainer to a branch of this
+  repository and dispatched there. The job `head-gate` of the `quick` workflow holds the
   rule: on a pull request that is not a draft it fails until
   `gh run list --workflow lean.yml --commit SHA` (or `rocq.yml`) shows a
   green run of each required workflow; re-run it when they finish. The kernel replay of Lean and every Rocq compile and re-check

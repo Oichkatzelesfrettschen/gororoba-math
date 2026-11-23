@@ -35,6 +35,15 @@ keeps the checker's own reduction. `ci/check_rocq.sh` reads `ROCQ_CHECK_VM`, and
 under the same option. The other proposals of that report (a split check with `-norec`, a verdict cache by closure
 digest, reuse of objects by content digest, a smaller certificate) are not part of this pull request.
 
+## Hosted round
+
+The hosted Codex review read c91079e4f and posted two findings.
+
+| Finding | Check | Resolution |
+|---|---|---|
+| P2: a change of a `.gitattributes` file alone needs no Rocq run under `head-gate`, though it alters the export the Rocq gate builds from | Confirmed: the path filter named `rocq/`, `ci/` and workflows only | Fixed: a `.gitattributes` file at any depth requires `rocq.yml` |
+| P2: a pull request from a fork cannot satisfy `head-gate`, since a dispatch targets a branch of this repository | Confirmed | Boundary: a maintainer pushes the head to a branch here and dispatches on it, which keeps unread fork code away from this repository's caches; `AGENTS.md` and the workflow comment state it |
+
 Survived both seats: without an option `ci/check.sh` runs the steps of `main` in the same order (a comment-stripped
 diff shows three guarded additions); `--quick` and `--build` exit nonzero on every failed check and 2 on an unknown
 argument; `ci/check_signal_traps.sh` still interrupts the script before either early exit; only a green run on

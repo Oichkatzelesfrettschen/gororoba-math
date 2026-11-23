@@ -13,7 +13,10 @@ name: quick
 # on manual dispatch (AGENTS.md, "Landing"). The job head-gate holds the
 # merge rule: once a pull request that touches lean/, rocq/, ci/ or a
 # workflow leaves the draft state, it fails until the dispatched lean and
-# rocq runs of the head commit are green; re-run it after they finish. A
+# rocq runs of the head commit are green; re-run it after they finish. The
+# runs are those of this repository: a maintainer pushes the head of a pull
+# request from a fork to a branch here and dispatches on it, so code from a
+# fork runs with this repository's caches only after a maintainer read it. A
 # manual dispatch of this workflow runs the jobs quick and build on a ref.
 on:
   pull_request:
@@ -146,11 +149,13 @@ jobs:
           if grep -q -E '^(lean/|ci/|\.github/workflows/)' "$RUNNER_TEMP/files.txt"; then
             required="$required lean.yml"
           fi
-          if grep -q -E '^(rocq/|ci/|\.github/workflows/)' "$RUNNER_TEMP/files.txt"; then
+          # A .gitattributes file can remove a path from the export that
+          # ci/check_rocq.sh builds from.
+          if grep -q -E '^(rocq/|ci/|\.github/workflows/)|(^|/)\.gitattributes$' "$RUNNER_TEMP/files.txt"; then
             required="$required rocq.yml"
           fi
           [ -n "$required" ] || {
-            echo "head-gate: no file under lean/, rocq/, ci/ or .github/workflows/ changed; the full gate is not required"
+            echo "head-gate: no file under lean/, rocq/, ci/ or .github/workflows/ and no .gitattributes changed; the full gate is not required"
             exit 0
           }
           status=0
