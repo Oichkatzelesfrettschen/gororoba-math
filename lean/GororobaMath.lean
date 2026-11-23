@@ -53,3 +53,5 @@ public import GororobaMath.CayleyDickson.SignCode
 public import GororobaMath.CayleyDickson.OrderThree
 public import GororobaMath.KernelMap.Estimator
 public import GororobaMath.KernelMap.TwoTermBins
+public import GororobaMath.CayleyDickson.BasisIsometry
+public import GororobaMath.CayleyDickson.DoublingCommutator
