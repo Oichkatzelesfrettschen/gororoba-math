@@ -232,6 +232,7 @@ verified/C1466_SubalgebraClosure.v
 verified/C1467_XORSignCocycle.v
 verified/C1468_SlotShiftEquivariance.v
 verified/C1468_SlotEmbeddingAllPairs.v
+verified/C582_IndexPlaneIncidence.v
 verified/C1469_TowerTrilinearity.v
 verified/C1470_PathionTrilinearity.v
 theories/HigherCD.v

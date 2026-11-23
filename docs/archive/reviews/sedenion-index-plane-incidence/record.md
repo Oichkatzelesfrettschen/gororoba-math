@@ -1,0 +1,47 @@
+# Review record: index-plane incidence and associator census of the sedenions (pull request 98)
+
+Briefs: `brief.md` (review) and `brief-redteam.md` (red team) beside this file; `census.py` is the independent computation the briefs cite. The first round read commit d949aba7a. Reviewer: the `codex` command-line agent on gpt-daybreak-blue-latest at high effort, read-only. Red team: `opencode` on opencode-go/beam-free (the first model of the attempts list; exit 0, verdict ok, a report of 2864 characters). `agy` on gemini-4-neon-high, chosen as a second red team, is not run: the service answered "Individual quota reached", with a reset about 118 hours away. The owner chose `agy` on gemini-4-argon-low as its replacement; it read commit 9bbf4d957, which holds the fixes of the first round, on the red-team brief with the commit and the list of added declarations updated. The Advisor reviewed after each round with the findings and their resolutions below. The fixes of the first round are in commit 56915e12d; those of the second are in the commit that files this section.
+
+| Finding | Seat | Check | Resolution |
+|---|---|---|---|
+| `census.py` does not recompute every count the theorems state: the level-2 and level-3 counts, the enumeration of the 6435 octets and the plane and key cells are absent, and the body of commit 3a7fbb84d says it recomputes every count | codex (P2), opencode (P3) | Confirmed | Fixed: the script computes each conjunct of each theorem (levels 2 to 4, the octet enumeration, the planes by parity of u, one plane per non-line triple, the counts 28 and 4 by u, the form of the planes with 9 <= u, the plane and key cells); every value equals the Rocq one. The body of 3a7fbb84d overstated the coverage at that commit |
+| The counts are counts of `negb (tz_eqb ...)`, while the imported file proves only that `tz_eqb` true gives equality, so a counted failure is not yet an inequality, and nothing carries a decision to the real tower | codex (P2) | Confirmed: `tz_eqb_true` is one direction, and no injectivity of `tz_to_R` exists | Fixed: `tz_eqb_iff`, `tz_to_R_injective`, `associates_at_tower`, `commutes_at_tower` and `blade_product_zero_iff`. The two tower theorems rest on `sig_forall_dec` and `functional_extensionality_dep`, both in `rocq/open/kernel-assumptions.txt`; every other theorem of the file is closed under the global context |
+| The note of row C-581 says the claim holds on basis triples, and no listed declaration states that | codex (P2), opencode (P3) | Confirmed | Fixed: `basis_units_alternate` decides both alternative laws on the 256 pairs of basis units and the row cites it; the note is worded in the terms of `C029_octonion_subalgebra_iff` and cites `not_left_alt_9` to `not_left_alt_15` |
+| The header of `key_plane_incidence` says each key lies in 4 planes; the theorem counts keys per plane only | codex (P2), opencode (P3) | Confirmed | Fixed: the dual conjunct is added |
+| The header identifies the structure with PG(3,2); `plane_line_incidence` lacks the statement that two points lie on one line | codex (P2) | Confirmed | Fixed: the conjunct over the 105 pairs of nonzero indices is added, and the header derives the identification from the subspaces of F_2^4 under xor |
+| `ordered_nonassociating_counts` repeats the three counts of `CDAssociatorCensus.v`, whose closed form covers every level, and the count 336 repeats `C1468_SlotEmbeddingAllPairs.v` | codex (P3) | True | Boundary: the header names the existing theorems; the counts are decided again on `tz_mul` and `blades16`, the definitions the plane statements quantify over, and no bridge between the cube sign exponent and `tz_mul` at the level of these lists is added here |
+| The notes of rows C-119 and C-1468 understate what stays open or blur which triples the 252 are | codex (P3) | Confirmed | Fixed: C-119 names the symmetry and growth clauses as measurements; C-1468 and C-1470 say sorted triples failing in sorted order, equivalently in all six orders |
+
+Survived: the reading of C-581 (seven index planes are not alternative); the status `proved` of C-124 and of the wheel_zero_divisors row; `partial` for C-582, C-1469 and C-1470; the commit subjects and the comment voice; no name of the new file collides with a declaration of `rocq/open`.
+
+## Advisor
+
+The Advisor confirmed the resolutions of the reflection, key, PG(3,2), duplication and ledger-note findings. It returned two: the census docstring claimed every conjunct while three were still uncomputed (the form of the planes with 9 <= u, one plane per non-line triple, the labelling by u), and the C-581 note spoke of alternativity where the cited theorem speaks of an isomorphism with the octonions. Both are applied in the same commit as the other fixes. It also required that the prior-art sentences of the pull-request body be checked against the passages they cite, which was done before the body was rewritten: Proposition 2 and the subloop list of Cawagas 2004, the paragraph on GoTo numbers of de Marrais (arXiv:math/0403113), and the abstract of Saniga, Holweck and Pracna 2015.
+
+## Second round: replacement red team on commit 9bbf4d957
+
+| Finding | Seat | Check | Resolution |
+|---|---|---|---|
+| The header leaves `associates_at_tower` and `commutes_at_tower` out of its list of results and names no axiom, while both rest on the axioms of the Stdlib reals | agy Argon (P3) | Confirmed, and wider: `Print Assumptions` on all 15 lemmas and theorems of the file reports `sig_forall_dec` and `functional_extensionality_dep` for `tz_to_R_injective`, `associates_at_tower` and `commutes_at_tower`, and `Closed under the global context` for the other 12 | Fixed: the header paragraph "Decisions and equalities" names the three declarations and the two axioms |
+| The docstring of `census.py` says "12 per plane" directly after "336 ordered signed zero products" | agy Argon (P3) | Confirmed: 12 counts unordered pairs; the ordered signed products are 48 per plane | Fixed: the docstring says 12 unordered pairs (48 ordered signed products) per plane |
+| `mem`, `xor_closed`, `parity4` with `in_plane`, and `key` compute what `nat_mem` (FanoPlane, ZDGraph), `check_closure` (C1466), `par4` with `off_sub` (C029) and `xor_sig` (ZDGraph) compute | agy Argon (P3) | True; no name collides | Boundary: accepted duplication of four list helpers of at most three lines; a shared module of index-set helpers for the files of `verified/` is a separate change |
+
+The seat also reported, from a computation of its own that this record does not reproduce, that the split 28 and 4 by plane and the equivalence of failure in sorted order with failure in all six orders hold under the opposite doubling formula and fail under a bit-reversed index order. Its attacks on list ranges, duplicate elements, the bijections of `closed_octets_are_planes` and `late_planes_are_fano_lines`, and the ledger statuses found no defect. It read the test that C-581 of gororoba-open cites and reports that the test evaluates only triples (a, b, a xor b), which lie on a line and associate in every plane; that reading is the seat's and is not checked here.
+
+### Advisor, second pass
+
+The Advisor confirmed the first two resolutions and required the axiom sentence to be worded from a `Print Assumptions` run over every declaration, which found the third declaration above. It rejected the first reason given for the boundary (the file already requires the reals), so the row records accepted duplication. It asked that the convention computation be labelled as the seat's.
+
+## Boundaries resolved after the rounds (owner, 2026-11-23)
+
+The owner asked that the items the rounds left as boundaries be resolved before the hosted review.
+
+| Item | Resolution |
+|---|---|
+| The ordered associator counts are decided on `tz_mul` beside the cube-coordinate counts of `CDAssociatorCensus.v` | `nonassociating_matches_cube_census` equates `nonassociating n` with `numeric_associator_defect_count n` at levels 2, 3 and 4 |
+| The count 336 repeats `all_blade_zero_products_are_assessor_pairs` | The first conjunct of `zero_products_span_late_planes` is proved from that theorem and evaluates nothing |
+| Four list helpers repeat existing ones | `in_plane` is `negb (off_sub u i)` of C029, `mem` is `nat_mem` of FanoPlane, `xor_closed` is `check_closure` of C1466 and `key` is `xor_sig` of ZDGraph; the file defines no parity or membership function of its own |
+| The convention computation of the second round was the seat's alone | `census.py` now computes it: the recursive doubling formula reproduces the sign recursion; under the opposite doubling formula the counts by plane stay 28 and 4 and failure in sorted order stays equivalent to failure in all six orders; under a reversal of the four index bits the counts by plane become 4, 12, 14 and 28 and the equivalence fails (computed) |
+| The seat's reading of the test that C-581 cites was unchecked | Confirmed by reading `is_alternative_subalgebra` in `crates/algebra_analysis/src/subalgebra.rs` of gororoba-open: for each pair a, b it evaluates the associator of (a, b, a xor b) only, a triple on a line |
+
+The file compiles in 74 s with these imports (measured, Rocq 9.3.0).
