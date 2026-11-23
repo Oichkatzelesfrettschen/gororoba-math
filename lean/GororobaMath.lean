@@ -56,3 +56,4 @@ public import GororobaMath.KernelMap.TwoTermBins
 public import GororobaMath.CayleyDickson.BasisIsometry
 public import GororobaMath.CayleyDickson.DoublingCommutator
 public import GororobaMath.KernelMap.EstimatorReadings
+public import GororobaMath.KernelMap.EstimatorWalsh
