@@ -10,9 +10,14 @@ name: quick
 # main-gate fails a pull request while the latest completed lean or rocq run
 # on main is not a success, so a red main stops merges. The lean and rocq
 # workflows hold the full gate; they run nightly, on every push to main and
-# on manual dispatch (AGENTS.md, "Landing").
+# on manual dispatch (AGENTS.md, "Landing"). The job head-gate holds the
+# merge rule: once a pull request that touches lean/, rocq/, ci/ or a
+# workflow leaves the draft state, it fails until the dispatched lean and
+# rocq runs of the head commit are green; re-run it after they finish. A
+# manual dispatch of this workflow runs the jobs quick and build on a ref.
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
@@ -83,21 +88,80 @@ jobs:
     permissions:
       actions: read
     steps:
+      # A run that a newer run replaced while it waited reads cancelled; it
+      # is no verdict, so the latest run with one decides. A pull request
+      # whose own head is green in both workflows passes, so the repair of
+      # a red main can merge.
       - name: Require the latest full gate on main to be green
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          green_on_head() {
+            count=$(gh run list --repo "$REPOSITORY" --workflow "$1" --commit "$HEAD_SHA" --status completed --json conclusion --jq 'map(select(.conclusion == "success")) | length')
+            case $count in
+            "" | 0) return 1 ;;
+            esac
+          }
           status=0
           for workflow in lean.yml rocq.yml; do
-            conclusion=$(gh run list --repo "$REPOSITORY" --workflow "$workflow" --branch main --status completed --limit 1 --json conclusion,url --jq '.[0] | "\(.conclusion) \(.url)"')
+            conclusion=$(gh run list --repo "$REPOSITORY" --workflow "$workflow" --branch main --status completed --limit 30 --json conclusion,url --jq 'map(select(.conclusion != "cancelled" and .conclusion != "skipped")) | .[0] | "\(.conclusion) \(.url)"')
             echo "$workflow on main: $conclusion"
             case $conclusion in
             "success "*) ;;
             *) status=1 ;;
             esac
           done
+          [ "$status" -ne 0 ] || exit 0
+          if green_on_head lean.yml && green_on_head rocq.yml; then
+            echo "main-gate: main is red and both full workflows are green on this head; the pull request may repair it"
+            exit 0
+          fi
+          echo "main-gate: the latest full gate on main with a verdict is not a success; main is repaired before another merge" >&2
+          exit 1
+
+  head-gate:
+    name: head-gate
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      pull-requests: read
+    steps:
+      - name: Require the full gate on the head of a proof or gate change
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api --paginate "repos/$REPOSITORY/pulls/$NUMBER/files" --jq '.[].filename' >"$RUNNER_TEMP/files.txt"
+          [ -s "$RUNNER_TEMP/files.txt" ] || {
+            echo "head-gate: the file list of the pull request is empty" >&2
+            exit 1
+          }
+          required=
+          if grep -q -E '^(lean/|ci/|\.github/workflows/)' "$RUNNER_TEMP/files.txt"; then
+            required="$required lean.yml"
+          fi
+          if grep -q -E '^(rocq/|ci/|\.github/workflows/)' "$RUNNER_TEMP/files.txt"; then
+            required="$required rocq.yml"
+          fi
+          [ -n "$required" ] || {
+            echo "head-gate: no file under lean/, rocq/, ci/ or .github/workflows/ changed; the full gate is not required"
+            exit 0
+          }
+          status=0
+          for workflow in $required; do
+            green=$(gh run list --repo "$REPOSITORY" --workflow "$workflow" --commit "$HEAD_SHA" --status completed --json conclusion --jq 'map(select(.conclusion == "success")) | length')
+            echo "$workflow at $HEAD_SHA: $green green run(s)"
+            case $green in
+            "" | 0) status=1 ;;
+            esac
+          done
           [ "$status" -eq 0 ] || {
-            echo "main-gate: the latest completed full gate on main is not a success; main is repaired before another merge" >&2
+            echo "head-gate: dispatch$required on the head (gh workflow run WORKFLOW --ref BRANCH) and re-run this job when green" >&2
             exit 1
           }

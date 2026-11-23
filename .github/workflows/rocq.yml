@@ -27,8 +27,9 @@ jobs:
     name: check
     runs-on: ubuntu-26.04
     # A run without a restored switch compiles OCaml, Rocq and MathComp
-    # before the proofs.
-    timeout-minutes: 150
+    # before the proofs, and the gate itself took 66 to 105 minutes on
+    # 2026-11-23.
+    timeout-minutes: 210
     env:
       OPAMROOT: ${{ github.workspace }}/.opam
     steps:
@@ -38,14 +39,17 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
           command -v rustc
-      # The key follows the ports, the installer and this file, which names
-      # the runner image and the system packages the switch is built with.
+      # The key follows the ports and the installer. The token v2 stands for
+      # the runner image and the system packages of the step above and is
+      # raised by hand when either changes: a key that hashed this file
+      # rebuilt the switch from source (about 40 minutes) on every edit of a
+      # trigger or a comment.
       - name: Restore the opam switch
         id: opam
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .opam
-          key: opam-rocq-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh', '.github/workflows/rocq.yml') }}
+          key: opam-rocq-v2-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}
       - name: Install the Rocq toolchain
         run: sh ci/install_rocq.sh
       - name: Save the opam switch
@@ -56,19 +60,21 @@ jobs:
           key: ${{ steps.opam.outputs.cache-primary-key }}
       - name: Run the Rocq gate
         run: ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh
-      # One issue holds the red runs of main; a later red run adds a comment.
+      # One issue per workflow holds its red runs of main; a later red run
+      # adds a comment. The step follows the gate and precedes every later
+      # step, so it reports a failed gate and nothing else.
       - name: Report a red gate on main
         if: failure() && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: The rocq gate is red on main
         run: |
-          title="The full gate is red on main"
           body="The rocq workflow failed on main at $GITHUB_SHA: $RUN_URL"
-          number=$(gh issue list --repo "$REPOSITORY" --state open --search "in:title \"$title\"" --json number --jq '.[0].number // empty')
+          number=$(gh issue list --repo "$REPOSITORY" --state open --limit 200 --json number,title --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')
           if [ -n "$number" ]; then
             gh issue comment "$number" --repo "$REPOSITORY" --body "$body"
           else
-            gh issue create --repo "$REPOSITORY" --title "$title" --body "$body"
+            gh issue create --repo "$REPOSITORY" --title "$TITLE" --body "$body"
           fi
