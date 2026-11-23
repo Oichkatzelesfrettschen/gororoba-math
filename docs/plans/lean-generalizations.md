@@ -290,9 +290,10 @@ theorem in a new file whose comment names the Lean theorem by path and name
 and the values substituted for its parameters, and whose statement is the
 substituted proposition. The `narrowing` cell of each row names the Lean
 partner and the substitution, and the bridge lands with the partner row.
-The bridge of row 119 has landed; rows 118, 120 and 121 still owe theirs
-(https://github.com/Oichkatzelesfrettschen/gororoba-math/issues/90).
-That bridge, `CdTowerG2DerivationBridge.v`, also states the
+The four bridges have landed: `CdTowerCanonicalKernelsBridge.v` (row 118),
+`CdTowerG2DerivationBridge.v` (row 119), `A5W8ArcMatrixRanksBridge.v`
+(row 120) and `CdTwistedProductBridge.v` (row 121).
+The bridge of row 119 also states the
 hypotheses of row 101 at `k := 4`, `n := 14`, `d := 6`; the dimension 14
 follows from them by the Lean theorem over a field with a square root of
 `-1` in which `6` is nonzero, since Rocq holds no module dimension.

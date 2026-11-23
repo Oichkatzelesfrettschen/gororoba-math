@@ -676,6 +676,7 @@ open	verified/C_WarpEnergyNonpositive.v	deprecated-transitive-library-file-since
 open	verified/C_WarpEnergyNonpositive.v	disj-pattern-notation
 quantum	A5W8ArcMatrixRanks.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	A5W8ArcMatrixRanks.v	disj-pattern-notation
+quantum	A5W8ArcMatrixRanksBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdAnnihilatorSymmetry.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdAnnihilatorSymmetry.v	disj-pattern-notation
 quantum	CdAnnihilatorSymmetryReal.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -711,6 +712,9 @@ quantum	CdTowerBasisSign.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerBasisSign.v	disj-pattern-notation
 quantum	CdTowerCanonicalKernels.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerCanonicalKernels.v	disj-pattern-notation
+quantum	CdTowerCanonicalKernelsBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	CdTowerCanonicalKernelsBridge.v	disj-pattern-notation
+quantum	CdTowerCanonicalKernelsBridge.v	using-fallback-loc
 quantum	CdTowerDomain.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTowerDomain.v	disj-pattern-notation
 quantum	CdTowerDomain.v	using-fallback-loc
@@ -779,6 +783,7 @@ quantum	CdTowerTwoTermRecursion.v	deprecated-transitive-library-file-since-Stdli
 quantum	CdTwistedProduct.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTwistedProduct.v	disj-pattern-notation
 quantum	CdTwistedProduct.v	using-fallback-loc
+quantum	CdTwistedProductBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	GaussianIntegerHom.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	GaussianIntegerHom.v	disj-pattern-notation
 quantum	GaussianIntegerHom.v	using-fallback-loc
