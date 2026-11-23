@@ -57,3 +57,5 @@ public import GororobaMath.CayleyDickson.BasisIsometry
 public import GororobaMath.CayleyDickson.DoublingCommutator
 public import GororobaMath.KernelMap.EstimatorReadings
 public import GororobaMath.CayleyDickson.SandwichTrace
+||||||| 8eabd380a
+public import GororobaMath.KernelMap.EstimatorWalsh
