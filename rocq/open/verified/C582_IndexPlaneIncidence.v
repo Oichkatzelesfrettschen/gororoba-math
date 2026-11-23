@@ -19,7 +19,11 @@
     vectors; [associates_at_tower] and [commutes_at_tower] carry the two
     basis decisions to equalities of [tower_mul] over the reals through the
     injective embedding [tz_to_R], and [blade_product_zero_iff] reads a
-    zero product as an equality with [tz_zero 4].
+    zero product as an equality with [tz_zero 4].  [tz_to_R_injective]
+    and the two tower theorems rest on the axioms of the Stdlib reals that
+    the kernel assumptions of this tree list ([sig_forall_dec],
+    [functional_extensionality_dep]); every other lemma and theorem of the
+    file is closed under the global context.
 
     Results, each a decision by evaluation on [tz_mul].
     - [closed_octets_are_planes]: of the 6435 eight-element index sets
