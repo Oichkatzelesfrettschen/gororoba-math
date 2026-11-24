@@ -60,3 +60,4 @@ public import GororobaMath.CayleyDickson.SandwichTrace
 public import GororobaMath.KernelMap.EstimatorWalsh
 public import GororobaMath.CayleyDickson.TwoTermScalar
 public import GororobaMath.CayleyDickson.AlignedPairEndpoints
+public import GororobaMath.FiberCone.SeparatingOrder
