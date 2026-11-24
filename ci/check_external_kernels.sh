@@ -22,17 +22,22 @@
 # exits 1 under its hard-error rule; measured on AuditFixture.declaredAxiom).
 # nanoda reports a verdict only through its exit status and log, and one status
 # covers several outcomes, so nanoda_verdict reads both: 0 is an accept; 1 with
-# "Error: export file declares unpermitted axiom" and 101 whose first panic
-# lies in the type checker (src/tc.rs, src/inductive.rs, src/quot.rs) with a
-# message other than a missing declaration are rejections; every other status
-# is an error, among them 1 on an unreadable export ("Failed to open export
-# file"), 101 from the parser on a malformed export (src/parser.rs) or on an
-# unreadable configuration (src/util.rs), and a signal (measured with the
-# nanoda_bin of Lean 4.35.0, 2026-11-24).
+# "Error: export file declares unpermitted axiom" is a rejection, and so is 101
+# with a panic in the type checker (src/tc.rs, src/inductive.rs, src/quot.rs)
+# carrying one of its verdict messages (a failed definitional-equality
+# assertion, a term that is not a sort or a function type, a non-positive
+# occurrence); every other outcome is an error, among them 1 on an unreadable
+# export ("Failed to open export file"), 101 on a missing declaration
+# ("declaration not found in infer_const"), from the parser on a malformed
+# export (src/parser.rs) or on an unreadable configuration (src/util.rs), and a
+# signal (measured with the nanoda_bin of Lean 4.35.0, 2026-11-24).
 # Calibration comes first: every checker must reject ReplayFixture.bogus of
 # lean/ReplayFixture.lean (type False, added with the kernel switched off),
 # and con-leche and con-ron must name it; nanoda_verdict must read a missing
-# export and an unreadable configuration as errors; the export check must refuse
+# export and an unreadable configuration as errors, the export of
+# AuditFixture.usesDeclaredAxiom as a rejection under the strict configuration
+# and as an error once the axiom rule is relaxed (nanoda then panics on the
+# missing axiom); the export check must refuse
 # AuditFixture.usesDeclaredAxiom of lean/AuditFixture.lean; and every checker
 # must accept CayleyDickson.Tower.e_mul_e.
 # Runs on demand, outside ci/check.sh. The largest closure, that of
@@ -77,7 +82,11 @@ lake build GororobaMath ReplayFixture AuditFixture >"$work/build.log" 2>&1 || {
 }
 
 # nanoda_verdict STATUS LOG: prints accept, reject or error for one nanoda_bin
-# run that exited with STATUS and wrote LOG.
+# run that exited with STATUS and wrote LOG. A rejection needs a verdict
+# message the type checker prints (the strings below occur in the bundled
+# binary) and no message of a failure outside the type check; the log is read
+# line by line, not by position, since the checking threads write to it
+# concurrently.
 nanoda_verdict() {
   case $1 in
     0) echo accept ;;
@@ -89,19 +98,21 @@ nanoda_verdict() {
       fi
       ;;
     101)
-      # The first panic is the cause; a panic while joining the checking
-      # threads follows it.
-      first=$(awk '/ panicked at src\// { print; getline; print; exit }' "$2")
-      case $first in
-        *' panicked at src/tc.rs:'* | *' panicked at src/inductive.rs:'* | *' panicked at src/quot.rs:'*)
-          case $first in
-            *'was not found in the environment'* | *'declaration not found'* | *'failed to spawn'* | *'stack_size_bytes'* | *'panicked while being joined'*)
-              echo error ;;
-            *) echo reject ;;
-          esac
-          ;;
-        *) echo error ;;
-      esac
+      if grep -q -F -e 'declaration not found' -e 'was not found in the environment' \
+        -e 'failed to spawn' -e 'stack_size_bytes' -e 'memory allocation of' \
+        -e 'has overflowed its stack' -e 'failed to open' \
+        -e 'panicked at src/parser.rs' -e 'panicked at src/util.rs' "$2"; then
+        echo error
+      elif grep -q -E 'src/(tc|inductive|quot)[.]rs:' "$2" \
+        && grep -q -F -e 'assertion failed: self.def_eq(' \
+          -e 'could not produce a sort' -e 'could not produce a pi' \
+          -e 'could not infer a sort' -e 'expected a sort' \
+          -e 'non-positive occurrence' \
+          -e 'Constructor argument was too large for the corresponding inductive type' "$2"; then
+        echo reject
+      else
+        echo error
+      fi
       ;;
     *) echo error ;;
   esac
@@ -182,8 +193,8 @@ if [ "$verdict" != rejected ] || [ "$rejects" != 3 ] || [ "$named" != 2 ]; then
 fi
 # The error arm: an export path that does not exist (status 1) and a
 # configuration that is not JSON (status 101 from src/util.rs).
-for case in missing-export bad-config; do
-  if [ "$case" = missing-export ]; then
+for fixture in missing-export bad-config; do
+  if [ "$fixture" = missing-export ]; then
     printf '{"export_file_path": "%s", "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"], "unpermitted_axiom_hard_error": true, "num_threads": 1}\n' "$work/missing.ndjson" >"$work/nanoda-cal.json"
   else
     printf 'not json\n' >"$work/nanoda-cal.json"
@@ -192,7 +203,7 @@ for case in missing-export bad-config; do
   "$bin/nanoda_bin" "$work/nanoda-cal.json" >"$work/nanoda-cal.log" 2>&1 || status=$?
   reading=$(nanoda_verdict "$status" "$work/nanoda-cal.log")
   [ "$reading" = error ] || {
-    echo "check_external_kernels: calibration: nanoda on $case exited $status and read as $reading; expected error" >&2
+    echo "check_external_kernels: calibration: nanoda on $fixture exited $status and read as $reading; expected error" >&2
     tail -5 "$work/nanoda-cal.log" >&2
     exit 2
   }
@@ -203,6 +214,21 @@ grep -q 'axioms outside the allow list: AuditFixture.declaredAxiom' "$work/expor
   show_logs
   exit 2
 }
+# The same export, given to nanoda directly: its strict axiom rule must reject
+# it (status 1), and with the rule relaxed its missing-declaration panic in
+# src/tc.rs must read as an error, not as a rejection.
+for hard in true false; do
+  printf '{"export_file_path": "%s", "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"], "unpermitted_axiom_hard_error": %s, "nat_extension": true, "string_extension": true, "num_threads": 8}\n' "$work/export.ndjson" "$hard" >"$work/nanoda-cal.json"
+  status=0
+  "$bin/nanoda_bin" "$work/nanoda-cal.json" >"$work/nanoda-cal.log" 2>&1 || status=$?
+  reading=$(nanoda_verdict "$status" "$work/nanoda-cal.log")
+  if [ "$hard" = true ]; then expected=reject; else expected=error; fi
+  [ "$reading" = "$expected" ] || {
+    echo "check_external_kernels: calibration: nanoda on AuditFixture.usesDeclaredAxiom with unpermitted_axiom_hard_error $hard exited $status and read as $reading; expected $expected" >&2
+    tail -5 "$work/nanoda-cal.log" >&2
+    exit 2
+  }
+done
 verdict=$(check GororobaMath.CayleyDickson.Tower CayleyDickson.Tower.e_mul_e) || :
 accepts=$(grep -c ' accept$' "$work/verdicts.txt") || :
 [ "$verdict" = accepted ] && [ "$accepts" = 3 ] || {

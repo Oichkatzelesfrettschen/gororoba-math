@@ -43,7 +43,7 @@ on lean4export, and on Mathlib's definitions meaning what the statements say. It
   option to raise the budget. In `ci/check_external_kernels.sh`, a `con-leche` or `con-ron` status other than accept
   or reject leads to its exit 2 ("a checker failed to run"), so a headline theorem whose closure holds a large
   `decide +kernel` proof would stop that script there rather than fail it; it read every nonzero `nanoda_bin` status,
-  a crash included, as a rejection (exit 1) until issue #103 gave `nanoda_bin` the same three classes; two library files use `decide +kernel`
+  a crash included, as a rejection (exit 1) until the script read `nanoda_bin` statuses in the same three classes (issue #103); two library files use `decide +kernel`
   (`CayleyDickson/AlignedPairEndpoints.lean`, `Clifford/ZeroEight.lean`).
 - **`con-ron` addresses terms with 32-bit handles.** On a 13.3 GB export (867,348 declarations) it declines with exit 2,
   "arena: expr constructor at capacity", where `con-leche` accepts in 599 s at 14.6 GB.
