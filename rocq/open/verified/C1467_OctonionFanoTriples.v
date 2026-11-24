@@ -28,10 +28,15 @@
       units lies on exactly one associative triple, so the 7 triples cover
       all 21 edges of the 6-simplex.
     - [fano_lines_close]: each associative triple {i, j, k} satisfies
-      i XOR j = k, so {0, i, j, k} is closed under the product index and
-      spans a quaternion subalgebra.
+      i XOR j = k, so {0, i, j, k} is closed under the product index; that
+      the span is a subalgebra isomorphic to the quaternions is not stated
+      here.
     - [oct_ordered_nonassoc_count]: 168 ordered triples of labels below 8
-      fail to associate (the octonion count of the sedenion census). *)
+      fail to associate (the octonion count of the sedenion census).  The
+      domain [triples_below 8] holds all 512 ordered triples, repeats and
+      label 0 included; those associate in an alternative algebra, so the
+      count equals the count over ordered triples of distinct imaginary
+      labels. *)
 
 From Stdlib Require Import Arith PeanoNat Bool List ZArith.
 From OpenGororobaVerified Require Import C1467_XORSignCocycle

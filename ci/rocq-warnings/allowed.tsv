@@ -689,6 +689,8 @@ open	verified/C_WECImpliesNEC.v	deprecated-transitive-library-file-since-Stdlib-
 open	verified/C_WECImpliesNEC.v	disj-pattern-notation
 open	verified/C_WarpEnergyNonpositive.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C_WarpEnergyNonpositive.v	disj-pattern-notation
+open	verified/SedenionSignConventionBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/SedenionSignConventionBridge.v	disj-pattern-notation
 quantum	A5W8ArcMatrixRanks.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	A5W8ArcMatrixRanks.v	disj-pattern-notation
 quantum	A5W8ArcMatrixRanksBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0

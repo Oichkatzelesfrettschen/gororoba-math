@@ -387,3 +387,4 @@ verified/C1630_BasisAssociatorTensor.v
 verified/C468_EmanationTable.v
 verified/C946_ZDParticipationGraph.v
 verified/C014_AnnihilatorCensus.v
+verified/SedenionSignConventionBridge.v

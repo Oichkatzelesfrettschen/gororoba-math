@@ -555,3 +555,7 @@ Theorem cert_ok_rejects_mutants :
       /\ cert_ok M (bump P) C G d = false
   end.
 Proof. vm_compute. repeat split; reflexivity. Qed.
+
+Print Assumptions C014_annihilator_dimension_four.
+Print Assumptions C015_four_diagonal_partners.
+Print Assumptions boxkite_annihilator_census.

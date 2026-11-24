@@ -30,9 +30,10 @@
       component (the reflexive symmetric transitive closure of the edge
       relation) exactly when [cls] agrees; [cls] has three values, with
       class sizes [14; 1; 1] for the giant component, {0} and {8}.
-    The status note of C-946 names the singletons e_0 and e_1; the
-    enumeration decides {e_0} and {e_8} (index 8 is the unit of the last
-    doubling), and the edges at index 1 are present.
+    The registry status note of C-946 in gororoba-open names the
+    singletons e_0 and e_1; the enumeration decides {e_0} and {e_8}
+    (index 8 is the generator the last doubling adjoins), and the edges at
+    index 1 are present.
 
     Scope.  The statements concern the basis-index graph of the 2-blade
     zero products at level 4.  They prove nothing about zero divisors with
@@ -236,3 +237,5 @@ Proof.
       by (vm_compute; reflexivity).
     apply negb_true_iff. exact (forall_idx _ Hd q Hq).
 Qed.
+
+Print Assumptions C946_sedenion_zd_participation_graph.
