@@ -19,8 +19,10 @@ Pfaffian on `List.finRange n`.
 * `Matrix.pfaffianAux_append_of_zero`: if `A x y = 0` for every `x` in `l₁` and `y` in
   `l₂`, then `pfaffianAux A (l₁ ++ l₂) = pfaffianAux A l₁ * pfaffianAux A l₂`; no skewness and no
   parity hypothesis enters.
-* `Matrix.det_eq_pfaffian_sq_fin_two`, `Matrix.det_eq_pfaffian_sq_fin_four`:
-  `det A = pfaffian A ^ 2` for an alternating `2 × 2` and `4 × 4` matrix over a commutative ring.
+* `Matrix.pfaffianAux_six`: the fifteen-term expansion of the Pfaffian on six indices.
+* `Matrix.det_eq_pfaffian_sq_fin_two`, `Matrix.det_eq_pfaffian_sq_fin_four`,
+  `Matrix.det_eq_pfaffian_sq_fin_six`: `det A = pfaffian A ^ 2` for an alternating `2 × 2`,
+  `4 × 4` and `6 × 6` matrix over a commutative ring.
 -/
 
 @[expose] public section
@@ -96,6 +98,27 @@ theorem det_eq_pfaffian_sq_fin_four (A : Matrix (Fin 4) (Fin 4) R) (hA : ∀ i j
   rw [e, Matrix.det_succ_row_zero]
   simp +decide [Fin.sum_univ_succ, Matrix.det_fin_three, Fin.succAbove, hd, hA 1 0, hA 2 0, hA 3 0,
     hA 2 1, hA 3 1, hA 3 2]
+  ring
+
+/-- The Pfaffian on six indices expands into its fifteen products of three entries. -/
+theorem pfaffianAux_six (A : Fin 6 → Fin 6 → R) :
+    pfaffianAux A [0, 1, 2, 3, 4, 5] = A 0 1 * (A 2 3 * A 4 5 - A 2 4 * A 3 5 + A 2 5 * A 3 4) -
+      A 0 2 * (A 1 3 * A 4 5 - A 1 4 * A 3 5 + A 1 5 * A 3 4) +
+      A 0 3 * (A 1 2 * A 4 5 - A 1 4 * A 2 5 + A 1 5 * A 2 4) -
+      A 0 4 * (A 1 2 * A 3 5 - A 1 3 * A 2 5 + A 1 5 * A 2 3) +
+      A 0 5 * (A 1 2 * A 3 4 - A 1 3 * A 2 4 + A 1 4 * A 2 3) := by
+  rw [pfaffianAux_cons_dite]
+  simp [Finset.sum_range_succ, pfaffianAux_four]
+  ring
+
+/-- The determinant of an alternating `6 × 6` matrix is the square of its Pfaffian. -/
+theorem det_eq_pfaffian_sq_fin_six (A : Matrix (Fin 6) (Fin 6) R) (hA : ∀ i j, A i j = -A j i)
+    (hd : ∀ i, A i i = 0) : A.det = pfaffian A ^ 2 := by
+  have e : pfaffian A = _ := pfaffianAux_six A
+  rw [e, Matrix.det_succ_row_zero]
+  simp +decide [Fin.sum_univ_succ, Matrix.det_succ_row_zero, Fin.succAbove, hd,
+    hA 1 0, hA 2 0, hA 3 0, hA 4 0, hA 5 0, hA 2 1, hA 3 1, hA 4 1, hA 5 1, hA 3 2, hA 4 2,
+    hA 5 2, hA 4 3, hA 5 3, hA 5 4]
   ring
 
 end Matrix
