@@ -1,7 +1,13 @@
 #!/bin/sh
-# Usage: sh ci/check.sh
-# The Lean half of the admission gate of gororoba-math. From any directory of
-# the checkout:
+# Usage: sh ci/check.sh [--quick | --build]
+# The Lean half of the admission gate of gororoba-math. Without an option it
+# is the full gate. With --quick it runs the checks that need no Lean
+# toolchain and no build (step 1 and steps 8 and 9, in the order the script
+# reaches them) and stops. With --build it runs every step but the kernel
+# replay of step 7: Lake compares content hashes, so over a restored build
+# tree the build of step 2 compiles the changed modules and the modules that
+# import them. The quick workflow runs both modes on every pull request.
+# From any directory of the checkout:
 #   1. every tracked shell script passes the lint at severity error, every
 #      tracked Python file passes ruff check and ruff format --check under
 #      ruff.toml, every tracked workflow passes actionlint, and each line of
@@ -49,13 +55,37 @@
 #      Rocq source, and the ledger sources to equal those of
 #      ci/claims/expected-sources.tsv.
 # Needs git, shellcheck, ruff, actionlint, lake (elan, with the toolchain
-# of lean/lean-toolchain) and Python 3 (PYTHON, default python3) on PATH. Exit status: 0 every check passed, 1 a check failed,
-# 2 a tool is missing. Writes only under a temporary directory it removes.
+# of lean/lean-toolchain; not needed with --quick) and Python 3 (PYTHON,
+# default python3) on PATH. Exit status: 0 every check passed, 1 a check
+# failed, 2 a tool is missing or the arguments are not understood. Writes
+# only under a temporary directory it removes.
 set -eu
+
+quick=
+build_only=
+case $# in
+0) ;;
+1)
+  case $1 in
+  --quick) quick=1 ;;
+  --build) build_only=1 ;;
+  *)
+    echo "usage: check.sh [--quick | --build]" >&2
+    exit 2
+    ;;
+  esac
+  ;;
+*)
+  echo "usage: check.sh [--quick | --build]" >&2
+  exit 2
+  ;;
+esac
 
 PYTHON=${PYTHON:-python3}
 export PYTHON
-for tool in git lake shellcheck ruff actionlint "$PYTHON"; do
+build_tool=lake
+[ -z "$quick" ] || build_tool=git
+for tool in git "$build_tool" shellcheck ruff actionlint "$PYTHON"; do
   command -v "$tool" >/dev/null || {
     echo "check: $tool is not on PATH (README.md, Toolchain)" >&2
     exit 2
@@ -156,6 +186,11 @@ if [ -s "$work/workflows.txt" ]; then
   done <"$work/workflows.txt"
   echo "check: actionlint passed on $(wc -l <"$work/workflows.txt") workflow(s)"
 fi
+
+[ -z "$quick" ] || {
+  echo "check: the quick checks passed; the build, the audit and the replay did not run"
+  exit 0
+}
 
 git ls-files -- ':(glob)lean/GororobaMath/**/*.lean' |
   sed -e 's|^lean/||' -e 's|\.lean$||' -e 's|/|.|g' | LC_ALL=C sort >"$work/modules.txt"
@@ -317,6 +352,11 @@ if root_extra GororobaMath.lean >"$work/root-extra.txt"; then
   echo "check: lean/GororobaMath.lean holds a line other than module and its imports of the library; the replay leaves the root module out" >&2
   exit 1
 fi
+[ -z "$build_only" ] || {
+  echo "check: the build, the audit and the import rules passed; the kernel replay did not run"
+  exit 0
+}
+
 for module in $(cat "$work/modules.txt"); do
   lake env leanchecker "$module" >"$work/replay.out" 2>&1 || {
     cat "$work/replay.out" >&2

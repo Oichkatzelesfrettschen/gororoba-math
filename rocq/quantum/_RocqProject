@@ -58,8 +58,13 @@ CdTowerTwoTermNullity.v
 CdTowerTwoTermRecursion.v
 CdTwistedProduct.v
 CdTwistedProductBridge.v
+E8ConjugationIdeal.v
+E8ConjugationMap.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
+HilbertCellA5_108.v
+HilbertCellA5_111.v
+HilbertCellCertificate.v
 KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
