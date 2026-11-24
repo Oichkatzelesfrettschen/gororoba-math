@@ -380,3 +380,11 @@ verified/C1463_MatrixColumnIdeal.v
 verified/C1463_CliffordMatrixBasis.v
 verified/C1636_ScheduleProductCount.v
 verified/C1636_ScheduleProgramCount.v
+verified/BoxKiteSignCensus.v
+verified/BoxKiteTwoBladeCensus.v
+verified/C1467_OctonionFanoTriples.v
+verified/C1630_BasisAssociatorTensor.v
+verified/C468_EmanationTable.v
+verified/C946_ZDParticipationGraph.v
+verified/C014_AnnihilatorCensus.v
+verified/SedenionSignConventionBridge.v

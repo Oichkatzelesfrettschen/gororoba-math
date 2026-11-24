@@ -355,6 +355,10 @@ open	theories/WorldlineInteraction.v	deprecated-transitive-library-file-since-St
 open	theories/WorldlineInteraction.v	disj-pattern-notation
 open	theories/ZD_Criterion.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	theories/ZD_Criterion.v	disj-pattern-notation
+open	verified/BoxKiteSignCensus.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/BoxKiteSignCensus.v	disj-pattern-notation
+open	verified/BoxKiteTwoBladeCensus.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/BoxKiteTwoBladeCensus.v	disj-pattern-notation
 open	verified/C001_CDNonAssociative.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C001_CDNonAssociative.v	disj-pattern-notation
 open	verified/C002_SedenionZDAndNormFail.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -376,6 +380,8 @@ open	verified/C011_AssociatorObstruction.v	deprecated-transitive-library-file-si
 open	verified/C011_AssociatorObstruction.v	disj-pattern-notation
 open	verified/C012_NegDimRefuted.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C012_NegDimRefuted.v	disj-pattern-notation
+open	verified/C014_AnnihilatorCensus.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C014_AnnihilatorCensus.v	disj-pattern-notation
 open	verified/C014_AnnihilatorDim4.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C014_AnnihilatorDim4.v	disj-pattern-notation
 open	verified/C015_FourPartners.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -473,6 +479,8 @@ open	verified/C1464_SedenionAnticommutation.v	deprecated-transitive-library-file
 open	verified/C1464_SedenionAnticommutation.v	disj-pattern-notation
 open	verified/C1465_KoebisuEqualNorm.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1465_KoebisuEqualNorm.v	disj-pattern-notation
+open	verified/C1467_OctonionFanoTriples.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1467_OctonionFanoTriples.v	disj-pattern-notation
 open	verified/C1467_XORSignCocycle.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1467_XORSignCocycle.v	disj-pattern-notation
 open	verified/C1468_SlotEmbeddingAllPairs.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -490,6 +498,8 @@ open	verified/C1474_FuelAdequacy.v	disj-pattern-notation
 open	verified/C1628_IDCT8ButterflyCompaction.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1628_IDCT8ButterflyCompaction.v	disj-pattern-notation
 open	verified/C1629_IDCT8DP4ExactBound.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1630_BasisAssociatorTensor.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1630_BasisAssociatorTensor.v	disj-pattern-notation
 open	verified/C1630_SedenionOctonionDowncast.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1630_SedenionOctonionDowncast.v	disj-pattern-notation
 open	verified/C1635_SedenionDriverSemantics.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -504,6 +514,8 @@ open	verified/C1637_R300SedenionZeroDivisor.v	deprecated-transitive-library-file
 open	verified/C1637_R300SedenionZeroDivisor.v	disj-pattern-notation
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	disj-pattern-notation
+open	verified/C468_EmanationTable.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C468_EmanationTable.v	disj-pattern-notation
 open	verified/C582_IndexPlaneIncidence.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C582_IndexPlaneIncidence.v	disj-pattern-notation
 open	verified/C868_PainleveGullstrand.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -636,6 +648,7 @@ open	verified/C931_OrthoplexHeatKernel.v	deprecated-transitive-library-file-sinc
 open	verified/C931_OrthoplexHeatKernel.v	disj-pattern-notation
 open	verified/C932_OrthoplexThawing.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C932_OrthoplexThawing.v	disj-pattern-notation
+open	verified/C946_ZDParticipationGraph.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C954_ThreeBodyBlocks.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C954_ThreeBodyBlocks.v	disj-pattern-notation
 open	verified/C955_CrossBlockCoupling.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -676,6 +689,8 @@ open	verified/C_WECImpliesNEC.v	deprecated-transitive-library-file-since-Stdlib-
 open	verified/C_WECImpliesNEC.v	disj-pattern-notation
 open	verified/C_WarpEnergyNonpositive.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C_WarpEnergyNonpositive.v	disj-pattern-notation
+open	verified/SedenionSignConventionBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/SedenionSignConventionBridge.v	disj-pattern-notation
 quantum	A5W8ArcMatrixRanks.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	A5W8ArcMatrixRanks.v	disj-pattern-notation
 quantum	A5W8ArcMatrixRanksBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
