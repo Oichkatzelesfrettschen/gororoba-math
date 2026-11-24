@@ -61,7 +61,7 @@ def write_cases(lean_file: Path) -> None:
         "",
         "def printCz (k : Nat) (z : List Int) : IO Unit := do",
         "  for r in List.range (2 ^ k - 1) do",
-        "    IO.println (String.intercalate \" \" ((List.range (2 ^ k - 1)).map fun c =>",
+        '    IO.println (String.intercalate " " ((List.range (2 ^ k - 1)).map fun c =>',
         "      toString (czEntry k z (BitVec.ofNat k (r + 1)) (BitVec.ofNat k (c + 1)))))",
         "",
         "def main : IO Unit := do",
