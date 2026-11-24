@@ -439,6 +439,85 @@ theorem range_assocMap_eq_hperp {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) 
     ((finrank_range_assocMap h2 ha hb hab haν hbν hν).trans
       (finrank_hperp ha hb hab haν hbν hν).symm)
 
+/-- The linear map `x ↦ mk (ν • x) (-((b * x) * a))`. -/
+def kappa (a b : Tower F 3) (ν : F) : Tower F 3 →ₗ[F] Tower F 4 where
+  toFun x := mk (ν • x) (-(b * x * a))
+  map_add' x y := by simp only [smul_add, mul_add, add_mul, neg_add, add_mk]
+  map_smul' r x := by
+    simp only [smul_comm ν r x, mul_smul_comm', smul_mul_assoc', smul_neg, RingHom.id_apply,
+      smul_mk]
+
+/-- `kvec a b ν` as a linear map of `y`. -/
+def kvecMap (a b : Tower F 3) (ν : F) : Tower F 3 →ₗ[F] Tower F 4 :=
+  kappa a b ν ∘ₗ assocMap a b
+
+theorem kappa_apply (a b : Tower F 3) (ν : F) (x : Tower F 3) :
+    kappa a b ν x = mk (ν • x) (-(b * x * a)) := rfl
+
+theorem kvecMap_apply (a b : Tower F 3) (ν : F) (y : Tower F 3) :
+    kvecMap a b ν y = kvec a b ν y := by
+  rw [kvecMap, LinearMap.comp_apply, kappa_apply, assocMap_apply]
+  rfl
+
+/-- `kappa` is injective when `ν ≠ 0`: its first half is `ν • x`. -/
+theorem kappa_injective (a b : Tower F 3) {ν : F} (hν : ν ≠ 0) :
+    Function.Injective (kappa a b ν) := by
+  rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+  intro x hx
+  rw [kappa_apply, zero_eq_mk] at hx
+  exact (smul_eq_zero.1 (mk_inj.1 hx).1).resolve_left hν
+
+/-- The range of `kvec` has dimension 4. -/
+theorem finrank_range_kvecMap {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : re 3 a = 0)
+    (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν)
+    (hν : ν ≠ 0) : Module.finrank F (LinearMap.range (kvecMap a b ν)) = 4 := by
+  rw [kvecMap, LinearMap.range_comp,
+    ← (Submodule.equivMapOfInjective (kappa a b ν) (kappa_injective a b hν)
+      (LinearMap.range (assocMap a b))).finrank_eq]
+  exact finrank_range_assocMap h2 ha hb hab haν hbν hν
+
+/-- `mk a b` is not in the range of `kvec`: the first halves in the range are orthogonal
+to `a`, and `dot a a = ν ≠ 0`. -/
+theorem mk_not_mem_range_kvecMap {a b : Tower F 3} {ν : F} (haν : dot 3 a a = ν) (hν : ν ≠ 0) :
+    (mk a b : Tower F 4) ∉ LinearMap.range (kvecMap a b ν) := by
+  rintro ⟨y, hy⟩
+  rw [kvecMap_apply, kvec] at hy
+  have h1 : ν • associator a b y = a := (mk_inj.1 hy).1
+  have e : dot 3 (ν • associator a b y) a = 0 := by
+    rw [dot_smul_left, dot_associator_left, mul_zero]
+  rw [h1] at e
+  exact hν (haν ▸ e)
+
+/-- The span of `mk a b` and the vectors `kvec a b ν y` has dimension 5. -/
+theorem finrank_span_kvec {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : re 3 a = 0)
+    (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν)
+    (hν : ν ≠ 0) :
+    Module.finrank F (Submodule.span F (insert (mk a b : Tower F 4) (Set.range (kvec a b ν)))) =
+      5 := by
+  have hr : Set.range (kvec a b ν) = ↑(LinearMap.range (kvecMap a b ν)) := by
+    rw [LinearMap.coe_range]
+    exact congrArg Set.range (funext fun y => (kvecMap_apply a b ν y).symm)
+  rw [hr, Submodule.span_insert, Submodule.span_eq]
+  have hz : (mk a b : Tower F 4) ≠ 0 := by
+    intro h
+    have : a = 0 := (mk_inj.1 (h.trans (zero_eq_mk 3))).1
+    exact hν (haν ▸ (by rw [this, dot_zero_left]))
+  have hdis : Submodule.span F {(mk a b : Tower F 4)} ⊓ LinearMap.range (kvecMap a b ν) = ⊥ := by
+    rw [eq_bot_iff]
+    rintro w ⟨hw1, hw2⟩
+    obtain ⟨c, rfl⟩ := Submodule.mem_span_singleton.1 hw1
+    by_cases hc : c = 0
+    · simp [hc]
+    · exfalso
+      apply mk_not_mem_range_kvecMap (b := b) haν hν
+      have := (LinearMap.range (kvecMap a b ν)).smul_mem c⁻¹ hw2
+      rwa [smul_smul, inv_mul_cancel₀ hc, one_smul] at this
+  have h := Submodule.finrank_sup_add_finrank_inf_eq (Submodule.span F {(mk a b : Tower F 4)})
+    (LinearMap.range (kvecMap a b ν))
+  rw [hdis, finrank_bot, finrank_span_singleton hz,
+    finrank_range_kvecMap h2 ha hb hab haν hbν hν] at h
+  omega
+
 end Dimension
 
 end Tower
