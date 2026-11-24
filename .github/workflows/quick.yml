@@ -1,0 +1,172 @@
+name: quick
+
+# The pull-request tier of the gate, on every pull request and every push to
+# main. The job quick runs the checks of ci/check.sh that need no build: the
+# lints of shell scripts, Python files and workflows, the signal-trap check,
+# the headline registry and the claims ledger. The job build restores the
+# Lean build tree that the last full gate on main saved and runs
+# ci/check.sh --build, which compiles the changed modules and those that
+# import them, audits the axioms and stops before the kernel replay. The job
+# main-gate fails a pull request while the latest completed lean or rocq run
+# on main is not a success, so a red main stops merges. The lean and rocq
+# workflows hold the full gate; they run nightly, on every push to main and
+# on manual dispatch (AGENTS.md, "Landing"). The job head-gate holds the
+# merge rule: once a pull request that touches lean/, rocq/, ci/ or a
+# workflow leaves the draft state, it fails until the dispatched lean and
+# rocq runs of the head commit are green; re-run it after they finish. The
+# runs are those of this repository: a maintainer pushes the head of a pull
+# request from a fork to a branch here and dispatches on it, so code from a
+# fork runs with this repository's caches only after a maintainer read it. A
+# manual dispatch of this workflow runs the jobs quick and build on a ref.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: quick-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  quick:
+    name: quick
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install shellcheck, ruff and actionlint
+        run: |
+          command -v shellcheck || { sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck; }
+          pipx install ruff==0.14.11
+          curl -sSfL -o "$RUNNER_TEMP/actionlint.tar.gz" https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$HOME/.local/bin" actionlint
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Run the quick checks
+        run: sh ci/check.sh --quick
+
+  build:
+    name: build
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: leanprover/lean-action@ba3fdfe5c4476c925da13bf11a005ddb47e47aee # v1.7.1
+        with:
+          lake-package-directory: lean
+          auto-config: "false"
+          build: "false"
+          use-mathlib-cache: "true"
+      # The lean workflow saves this tree after a green gate on main. Without
+      # a restored tree the build compiles every module (about 5 minutes).
+      - name: Restore the library build tree of main
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: lean/.lake/build
+          key: lean-build-${{ hashFiles('lean/lean-toolchain', 'lean/lake-manifest.json') }}-${{ github.sha }}
+          restore-keys: lean-build-${{ hashFiles('lean/lean-toolchain', 'lean/lake-manifest.json') }}-
+      - name: Install shellcheck, ruff and actionlint
+        run: |
+          command -v shellcheck || { sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck; }
+          pipx install ruff==0.14.11
+          curl -sSfL -o "$RUNNER_TEMP/actionlint.tar.gz" https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  $RUNNER_TEMP/actionlint.tar.gz" | sha256sum --check
+          mkdir -p "$HOME/.local/bin"
+          tar -xzf "$RUNNER_TEMP/actionlint.tar.gz" -C "$HOME/.local/bin" actionlint
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Build the changed modules and audit the axioms
+        run: sh ci/check.sh --build
+
+  main-gate:
+    name: main-gate
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    steps:
+      # A run that a newer run replaced while it waited reads cancelled; it
+      # is no verdict, so the latest run with one decides. A pull request
+      # whose own head is green in both workflows passes, so the repair of
+      # a red main can merge.
+      - name: Require the latest full gate on main to be green
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          green_on_head() {
+            count=$(gh run list --repo "$REPOSITORY" --workflow "$1" --commit "$HEAD_SHA" --status completed --json conclusion --jq 'map(select(.conclusion == "success")) | length')
+            case $count in
+            "" | 0) return 1 ;;
+            esac
+          }
+          status=0
+          for workflow in lean.yml rocq.yml; do
+            conclusion=$(gh run list --repo "$REPOSITORY" --workflow "$workflow" --branch main --status completed --limit 30 --json conclusion,url --jq 'map(select(.conclusion != "cancelled" and .conclusion != "skipped")) | .[0] | "\(.conclusion) \(.url)"')
+            echo "$workflow on main: $conclusion"
+            case $conclusion in
+            "success "*) ;;
+            *) status=1 ;;
+            esac
+          done
+          [ "$status" -ne 0 ] || exit 0
+          if green_on_head lean.yml && green_on_head rocq.yml; then
+            echo "main-gate: main is red and both full workflows are green on this head; the pull request may repair it"
+            exit 0
+          fi
+          echo "main-gate: the latest full gate on main with a verdict is not a success; main is repaired before another merge" >&2
+          exit 1
+
+  head-gate:
+    name: head-gate
+    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      pull-requests: read
+    steps:
+      - name: Require the full gate on the head of a proof or gate change
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          gh api --paginate "repos/$REPOSITORY/pulls/$NUMBER/files" --jq '.[].filename' >"$RUNNER_TEMP/files.txt"
+          [ -s "$RUNNER_TEMP/files.txt" ] || {
+            echo "head-gate: the file list of the pull request is empty" >&2
+            exit 1
+          }
+          required=
+          if grep -q -E '^(lean/|ci/|\.github/workflows/)' "$RUNNER_TEMP/files.txt"; then
+            required="$required lean.yml"
+          fi
+          # A .gitattributes file can remove a path from the export that
+          # ci/check_rocq.sh builds from.
+          if grep -q -E '^(rocq/|ci/|\.github/workflows/)|(^|/)\.gitattributes$' "$RUNNER_TEMP/files.txt"; then
+            required="$required rocq.yml"
+          fi
+          [ -n "$required" ] || {
+            echo "head-gate: no file under lean/, rocq/, ci/ or .github/workflows/ and no .gitattributes changed; the full gate is not required"
+            exit 0
+          }
+          status=0
+          for workflow in $required; do
+            green=$(gh run list --repo "$REPOSITORY" --workflow "$workflow" --commit "$HEAD_SHA" --status completed --json conclusion --jq 'map(select(.conclusion == "success")) | length')
+            echo "$workflow at $HEAD_SHA: $green green run(s)"
+            case $green in
+            "" | 0) status=1 ;;
+            esac
+          done
+          [ "$status" -eq 0 ] || {
+            echo "head-gate: dispatch$required on the head (gh workflow run WORKFLOW --ref BRANCH) and re-run this job when green" >&2
+            exit 1
+          }
