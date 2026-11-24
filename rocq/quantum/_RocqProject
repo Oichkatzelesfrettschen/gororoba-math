@@ -60,6 +60,9 @@ CdTwistedProduct.v
 CdTwistedProductBridge.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
+HilbertCellA5_108.v
+HilbertCellA5_111.v
+HilbertCellCertificate.v
 KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
