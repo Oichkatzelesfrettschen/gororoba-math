@@ -18,11 +18,18 @@ second returned one (`attempts.tsv` of each run, kept outside the repository).
 
 ## Validation at 312a63727
 
-- `nanoda_verdict` on 14 cases (ALIENWARE, 2026-11-24): retained logs of the bad-fixture closure (101, reject), the
+- `nanoda_verdict` on 14 cases (the Windows workstation's WSL, 2026-11-24): retained logs of the bad-fixture closure (101, reject), the
   unpermitted axiom (1, reject), the relaxed-rule missing axiom (101, error), a missing export (1, error), a truncated
   export (101 from src/parser.rs, error), a non-JSON configuration (101 from src/util.rs, error), an empty log at 0
   (accept), 137 and 2 (error); synthetic logs of an allocation failure and an unwrap panic in src/tc.rs (error),
   interleaved verdict panics (reject), a location line without its message (error), the one-line format (reject).
   14 of 14 as expected.
-- `sh ci/check_external_kernels.sh` on ALIENWARE: calibration passed with the new cases;
+- `sh ci/check_external_kernels.sh` on the same workstation: calibration passed with the new cases;
   "all 110 headline theorems accepted by con-leche, con-ron and nanoda" (34 modules), exit 0, 439.3 s.
+
+## Advisor (last)
+
+Confirmed on reading that no nonzero status reaches accept, that the 101 arm matches whole lines without positional
+pairing, and that the four red-team dispositions match the source. Required: no host name in the record or the
+pull-request body (fixed: the first record commit named the workstation's host; the name stays in that commit of
+this pull request's history), and one reading of the lean workflow on the final head before the hosted review.
