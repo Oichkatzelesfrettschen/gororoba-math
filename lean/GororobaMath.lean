@@ -63,3 +63,4 @@ public import GororobaMath.CayleyDickson.TwoTermScalar
 public import GororobaMath.CayleyDickson.AlignedPairEndpoints
 public import GororobaMath.CayleyDickson.Strata
 public import GororobaMath.CayleyDickson.ZeroDivisorPairs
+public import GororobaMath.CayleyDickson.CzMatrix
