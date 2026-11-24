@@ -64,3 +64,5 @@ public import GororobaMath.CayleyDickson.AlignedPairEndpoints
 public import GororobaMath.CayleyDickson.Strata
 public import GororobaMath.CayleyDickson.ZeroDivisorPairs
 public import GororobaMath.CayleyDickson.CzMatrix
+public import GororobaMath.FiberCone.SeparatingOrder
+public import GororobaMath.LinearAlgebra.BorderedKernel
