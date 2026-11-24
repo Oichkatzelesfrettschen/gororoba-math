@@ -70,3 +70,4 @@ public import GororobaMath.FiberCone.SeparatingOrder
 public import GororobaMath.LinearAlgebra.BorderedKernel
 public import GororobaMath.CayleyDickson.ScaledPairAnnihilator
 public import GororobaMath.LinearAlgebra.PfaffianBlock
+public import GororobaMath.CayleyDickson.LeftMulDeterminant
