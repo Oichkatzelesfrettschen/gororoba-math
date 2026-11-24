@@ -3,6 +3,8 @@ module
 
 public import GororobaMath.LinearAlgebra.Pfaffian
 public import Mathlib.Algebra.Module.Defs
+public import Mathlib.LinearAlgebra.Basis.VectorSpace
+public import Mathlib.Tactic.Module
 
 /-!
 # The Pfaffian of a list of vectors under a skew form
@@ -27,6 +29,15 @@ arguments: `hadd` and `hsmul` (linearity in the first argument) and `hskew` (`ω
   `2 ≠ 0` and `ω v w ≠ 0`, the tail map that makes every entry pair to zero with `v` and `w`.
 * `Matrix.pfaffianAux_cons_cons_eq_mul_map_decouple`: `pfaffianAux ω (v :: w :: rest)` is
   `ω v w` times the Pfaffian of the decoupled tail.
+* `Matrix.decoupleₗ`, `Matrix.ker_decoupleₗ`: the decoupling map is linear with kernel the plane of
+  `v` and `w`.
+* `Matrix.indep_map_decouple`: the decoupled tail of an independent list is independent and
+  repetition free.
+* `Matrix.orth_of_mem_span_map_decouple`: a combination of decoupled entries pairs to zero with
+  `v` and `w`.
+* `Matrix.exists_orth_of_pfaffianAux_eq_zero`: an independent list with zero Pfaffian has a nonzero
+  vector in its span that pairs to zero with every entry. Independence is stated as
+  `l.Nodup` with `LinearIndepOn K id {x | x ∈ l}`.
 -/
 
 @[expose] public section
@@ -191,6 +202,220 @@ theorem pfaffianAux_cons_cons_eq_mul_map_decouple (ω : V → V → K)
   exact pfaffianAux_pair_cons_of_zero ω v _ _ (fun x hx => by
     obtain ⟨u, _, rfl⟩ := List.mem_map.mp hx
     exact decouple_pair_left ω hadd hsmul hskew h2 v w u ha)
+
+/-- The decoupling map sends `v` to `0`. -/
+theorem decouple_left (ω : V → V → K) (hskew : ∀ x y, ω x y = -ω y x) (h2 : (2 : K) ≠ 0)
+    (v w : V) (ha : ω v w ≠ 0) : decouple ω v w v = 0 := by
+  unfold decouple
+  have h1 : (-ω v w) / ω v w = -1 := by rw [neg_div, div_self ha]
+  rw [hskew w v, self_eq_zero_of ω hskew h2 v, h1, zero_div, neg_zero]
+  module
+
+/-- The decoupling map sends `w` to `0`. -/
+theorem decouple_right (ω : V → V → K) (hskew : ∀ x y, ω x y = -ω y x) (h2 : (2 : K) ≠ 0)
+    (v w : V) (ha : ω v w ≠ 0) : decouple ω v w w = 0 := by
+  unfold decouple
+  rw [self_eq_zero_of ω hskew h2 w, zero_div, div_self ha]
+  module
+
+/-- The decoupling map as a linear map. -/
+def decoupleₗ (ω : V → V → K) (hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z)
+    (hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z) (hskew : ∀ x y, ω x y = -ω y x)
+    (v w : V) : V →ₗ[K] V where
+  toFun := decouple ω v w
+  map_add' x y := by
+    unfold decouple
+    rw [add_right_of ω hadd hskew, add_right_of ω hadd hskew]
+    module
+  map_smul' c x := by
+    simp only [RingHom.id_apply]
+    unfold decouple
+    rw [smul_right_of ω hsmul hskew, smul_right_of ω hsmul hskew]
+    module
+
+/-- The entry `u` differs from its decoupled image by a combination of `v` and `w`. -/
+theorem decouple_decomp (ω : V → V → K) (v w u : V) :
+    u = (decouple ω v w u + (-(ω w u / ω v w)) • v) + (ω v u / ω v w) • w := by
+  unfold decouple
+  module
+
+/-- The kernel of the decoupling map is the plane spanned by `v` and `w`. -/
+theorem ker_decoupleₗ (ω : V → V → K) (hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z)
+    (hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z) (hskew : ∀ x y, ω x y = -ω y x)
+    (h2 : (2 : K) ≠ 0) (v w : V) (ha : ω v w ≠ 0) :
+    LinearMap.ker (decoupleₗ ω hadd hsmul hskew v w) = Submodule.span K {v, w} := by
+  apply le_antisymm
+  · intro u hu
+    have h0 : decouple ω v w u = 0 := hu
+    have e := decouple_decomp ω v w u
+    rw [h0, zero_add] at e
+    rw [e]
+    exact Submodule.add_mem _ (Submodule.smul_mem _ _ (Submodule.subset_span (by simp)))
+      (Submodule.smul_mem _ _ (Submodule.subset_span (by simp)))
+  · refine Submodule.span_le.mpr ?_
+    rintro x (rfl | rfl)
+    · exact decouple_left ω hskew h2 x w ha
+    · exact decouple_right ω hskew h2 v x ha
+
+/-- A decoupled list of an independent list is independent and repetition free. -/
+theorem indep_map_decouple (ω : V → V → K) (hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z)
+    (hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z) (hskew : ∀ x y, ω x y = -ω y x)
+    (h2 : (2 : K) ≠ 0) (v w : V) (rest : List V) (ha : ω v w ≠ 0)
+    (hnd : (v :: w :: rest).Nodup) (hli : LinearIndepOn K id {x | x ∈ v :: w :: rest}) :
+    (rest.map (decouple ω v w)).Nodup ∧
+      LinearIndepOn K id {x | x ∈ rest.map (decouple ω v w)} := by
+  have hU : {x | x ∈ v :: w :: rest} = {x | x ∈ rest} ∪ ({v, w} : Set V) := by
+    ext x
+    simp only [List.mem_cons, Set.mem_ofPred_eq, Set.mem_union, Set.mem_insert_iff,
+      Set.mem_singleton_iff]
+    tauto
+  have hn1 := List.nodup_cons.mp hnd
+  have hn2 := List.nodup_cons.mp hn1.2
+  have hdisj : Disjoint {x | x ∈ rest} ({v, w} : Set V) := by
+    rw [Set.disjoint_left]
+    intro x hx hx'
+    rcases hx' with rfl | hx'
+    · exact hn1.1 (List.mem_cons_of_mem _ hx)
+    · rw [Set.mem_singleton_iff] at hx'
+      subst hx'
+      exact hn2.1 hx
+  rw [hU] at hli
+  obtain ⟨hT, _, hD⟩ := (linearIndepOn_union_iff (v := id) hdisj).mp hli
+  simp only [Set.image_id] at hD
+  have hker : Disjoint (Submodule.span K {x | x ∈ rest})
+      (LinearMap.ker (decoupleₗ ω hadd hsmul hskew v w)) := by
+    rw [ker_decoupleₗ ω hadd hsmul hskew h2 v w ha]
+    exact hD
+  refine ⟨?_, ?_⟩
+  · refine List.Nodup.map_on (fun x hx y hy hxy => ?_) hn2.2
+    have h1 : x - y ∈ Submodule.span K {x | x ∈ rest} :=
+      Submodule.sub_mem _ (Submodule.subset_span hx) (Submodule.subset_span hy)
+    have h2' : x - y ∈ LinearMap.ker (decoupleₗ ω hadd hsmul hskew v w) := by
+      rw [LinearMap.mem_ker, map_sub]
+      exact sub_eq_zero.mpr hxy
+    exact sub_eq_zero.mp ((Submodule.disjoint_def.mp hker) _ h1 h2')
+  · have himg := hT.image (f := decoupleₗ ω hadd hsmul hskew v w) hker
+    convert himg using 1
+    ext y
+    simp only [Set.mem_ofPred_eq, List.mem_map, Set.mem_image]
+    exact Iff.rfl
+
+/-- A combination of decoupled entries pairs to zero with `v` and `w`. -/
+theorem orth_of_mem_span_map_decouple (ω : V → V → K)
+    (hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z) (hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z)
+    (hskew : ∀ x y, ω x y = -ω y x) (h2 : (2 : K) ≠ 0) (v w : V) (rest : List V)
+    (ha : ω v w ≠ 0) (u : V) (hu : u ∈ Submodule.span K {x | x ∈ rest.map (decouple ω v w)}) :
+    ω u v = 0 ∧ ω u w = 0 := by
+  induction hu using Submodule.span_induction with
+  | mem x hx =>
+    obtain ⟨y, _, rfl⟩ := List.mem_map.mp hx
+    rw [hskew _ v, hskew _ w, decouple_pair_left ω hadd hsmul hskew h2 v w y ha,
+      decouple_pair_right ω hadd hsmul hskew h2 v w y ha]
+    simp
+  | zero =>
+    have h := hsmul 0 0
+    simp only [zero_smul, zero_mul] at h
+    exact ⟨h v, h w⟩
+  | add x y _ _ hx hy =>
+    rw [hadd, hadd, hx.1, hx.2, hy.1, hy.2]
+    simp
+  | smul a x _ hx =>
+    rw [hsmul, hsmul, hx.1, hx.2]
+    simp
+
+private theorem exists_orth_aux (ω : V → V → K)
+    (hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z) (hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z)
+    (hskew : ∀ x y, ω x y = -ω y x) (h2 : (2 : K) ≠ 0) :
+    ∀ (n : ℕ) (l : List V), l.length = n → l.Nodup → LinearIndepOn K id {x | x ∈ l} →
+      pfaffianAux ω l = 0 →
+        ∃ u ∈ Submodule.span K {x | x ∈ l}, u ≠ 0 ∧ ∀ x ∈ l, ω u x = 0 := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro l hn hnd hli hp
+  cases l with
+  | nil =>
+    rw [pfaffianAux_nil] at hp
+    exact absurd hp one_ne_zero
+  | cons v rest =>
+    by_cases h : ∀ x ∈ rest, ω v x = 0
+    · refine ⟨v, Submodule.subset_span (by simp), ?_, ?_⟩
+      · exact hli.ne_zero (i := v) (by simp)
+      · intro x hx
+        rcases List.mem_cons.mp hx with rfl | hx
+        · exact self_eq_zero_of ω hskew h2 x
+        · exact h x hx
+    · push Not at h
+      obtain ⟨w, hw, hvw⟩ := h
+      obtain ⟨r1, r2, rfl⟩ := List.append_of_mem hw
+      have hperm : (v :: (r1 ++ w :: r2)).Perm (v :: w :: (r1 ++ r2)) :=
+        List.Perm.cons v List.perm_middle
+      have hnd' := hperm.nodup_iff.mp hnd
+      have hli' : LinearIndepOn K id {x | x ∈ v :: w :: (r1 ++ r2)} := by
+        have e : {x | x ∈ v :: w :: (r1 ++ r2)} = {x | x ∈ v :: (r1 ++ w :: r2)} := by
+          ext x
+          exact hperm.mem_iff.symm
+        rw [e]
+        exact hli
+      have hreg : IsLeftRegular (2 : K) := mul_right_injective₀ h2
+      have hmv := pfaffianAux_move_left ω hskew [v] r1 w r2
+      have e1 : [v] ++ r1 ++ w :: r2 = v :: (r1 ++ w :: r2) := by simp
+      have e2 : [v] ++ w :: (r1 ++ r2) = v :: w :: (r1 ++ r2) := by simp
+      rw [e1, e2, hp] at hmv
+      have hX : pfaffianAux ω (v :: w :: (r1 ++ r2)) = 0 := by
+        rcases mul_eq_zero.mp hmv.symm with h | h
+        · exact absurd h (pow_ne_zero _ (neg_ne_zero.mpr one_ne_zero))
+        · exact h
+      have hL3 := pfaffianAux_cons_cons_eq_mul_map_decouple ω hadd hsmul hskew h2 v w (r1 ++ r2) hvw
+      rw [hX] at hL3
+      have hpf : pfaffianAux ω ((r1 ++ r2).map (decouple ω v w)) = 0 :=
+        (mul_eq_zero.mp hL3.symm).resolve_left hvw
+      obtain ⟨hnd2, hli2⟩ := indep_map_decouple ω hadd hsmul hskew h2 v w (r1 ++ r2) hvw hnd' hli'
+      have hlen : ((r1 ++ r2).map (decouple ω v w)).length < n := by
+        simp only [List.length_cons, List.length_append, List.length_map] at hn ⊢
+        omega
+      obtain ⟨u, hu, hu0, hu1⟩ := ih _ hlen _ rfl hnd2 hli2 hpf
+      obtain ⟨huv, huw⟩ := orth_of_mem_span_map_decouple ω hadd hsmul hskew h2 v w (r1 ++ r2) hvw
+        u hu
+      refine ⟨u, ?_, hu0, ?_⟩
+      · refine (Submodule.span_le.mpr ?_) hu
+        intro y hy
+        obtain ⟨x, hx, rfl⟩ := List.mem_map.mp hy
+        have hxl : x ∈ v :: (r1 ++ w :: r2) := by
+          simp only [List.mem_cons, List.mem_append] at hx ⊢
+          tauto
+        have hvl : v ∈ v :: (r1 ++ w :: r2) := by simp
+        have hwl : w ∈ v :: (r1 ++ w :: r2) := by simp
+        exact Submodule.add_mem _ (Submodule.add_mem _ (Submodule.subset_span hxl)
+          (Submodule.smul_mem _ _ (Submodule.subset_span hvl)))
+          (Submodule.smul_mem _ _ (Submodule.subset_span hwl))
+      · intro x hx
+        rcases List.mem_cons.mp hx with rfl | hx
+        · exact huv
+        · rcases List.mem_append.mp hx with hx | hx
+          · have hxr : x ∈ r1 ++ r2 := List.mem_append_left _ hx
+            have hd := congrArg (ω u) (decouple_decomp ω v w x)
+            rw [hd, add_right_of ω hadd hskew, add_right_of ω hadd hskew,
+              smul_right_of ω hsmul hskew, smul_right_of ω hsmul hskew, huv, huw,
+              hu1 _ (List.mem_map_of_mem hxr)]
+            simp
+          · rcases List.mem_cons.mp hx with rfl | hx
+            · exact huw
+            · have hxr : x ∈ r1 ++ r2 := List.mem_append_right _ hx
+              have hd := congrArg (ω u) (decouple_decomp ω v w x)
+              rw [hd, add_right_of ω hadd hskew, add_right_of ω hadd hskew,
+                smul_right_of ω hsmul hskew, smul_right_of ω hsmul hskew, huv, huw,
+                hu1 _ (List.mem_map_of_mem hxr)]
+              simp
+
+/-- A repetition-free list of linearly independent vectors with zero Pfaffian has a nonzero vector
+in its span that pairs to zero under `ω` with every entry. -/
+theorem exists_orth_of_pfaffianAux_eq_zero (ω : V → V → K)
+    (hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z) (hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z)
+    (hskew : ∀ x y, ω x y = -ω y x) (h2 : (2 : K) ≠ 0) (l : List V) (hnd : l.Nodup)
+    (hli : LinearIndepOn K id {x | x ∈ l}) (hp : pfaffianAux ω l = 0) :
+    ∃ u ∈ Submodule.span K {x | x ∈ l}, u ≠ 0 ∧ ∀ x ∈ l, ω u x = 0 :=
+  exists_orth_aux ω hadd hsmul hskew h2 l.length l rfl hnd hli hp
 
 end Field
 
