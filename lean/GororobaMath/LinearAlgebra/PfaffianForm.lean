@@ -5,6 +5,7 @@ public import GororobaMath.LinearAlgebra.Pfaffian
 public import Mathlib.Algebra.Module.Defs
 public import Mathlib.LinearAlgebra.Basis.VectorSpace
 public import Mathlib.Tactic.Module
+public import Mathlib.LinearAlgebra.StdBasis
 
 /-!
 # The Pfaffian of a list of vectors under a skew form
@@ -38,6 +39,11 @@ arguments: `hadd` and `hsmul` (linearity in the first argument) and `hskew` (`ω
 * `Matrix.exists_orth_of_pfaffianAux_eq_zero`: an independent list with zero Pfaffian has a nonzero
   vector in its span that pairs to zero with every entry. Independence is stated as
   `l.Nodup` with `LinearIndepOn K id {x | x ∈ l}`.
+* `Matrix.pfaffianAux_reindex`: the Pfaffian of pulled-back entries is the Pfaffian on the image
+  list.
+* `Matrix.exists_vecMul_eq_zero_of_pfaffian_eq_zero`,
+  `Matrix.exists_mulVec_eq_zero_of_pfaffian_eq_zero`: a skew matrix over a field with `2 ≠ 0`
+  and zero Pfaffian has a nonzero kernel vector.
 -/
 
 @[expose] public section
@@ -143,6 +149,29 @@ theorem pfaffianAux_cons_cons_map_transvect (ω : V → V → R)
     pfaffianAux ω (v :: w :: rest.map (fun u => (u + α u • v) + β u • w)) =
       pfaffianAux ω (v :: w :: rest) := by
   simpa using map_transvect_aux ω hadd hsmul hskew hreg v w α β rest []
+
+omit [AddCommGroup V] [Module R V] in
+/-- Reindexing: the Pfaffian of the pulled-back entries `A (g a) (g b)` on a list is the Pfaffian
+of `A` on the image list. -/
+theorem pfaffianAux_reindex {ι κ : Type*} (A : ι → ι → R) (g : κ → ι) :
+    ∀ (n : ℕ) (l : List κ), l.length = n →
+      pfaffianAux (fun a b => A (g a) (g b)) l = pfaffianAux A (l.map g) := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro l hn
+  cases l with
+  | nil => simp only [List.map_nil, pfaffianAux_nil]
+  | cons i rest =>
+    rw [pfaffianAux_cons, List.map_cons, pfaffianAux_cons]
+    refine Fintype.sum_equiv (finCongr (by simp)) _ _ (fun k => ?_)
+    have hlt : (rest.eraseIdx k).length < n := by
+      have := List.length_eraseIdx_of_lt k.isLt
+      simp only [List.length_cons] at hn
+      omega
+    simp only [finCongr_apply, Fin.val_cast]
+    rw [List.eraseIdx_map, ← ih _ hlt (rest.eraseIdx k) rfl]
+    simp [List.getElem_map]
 
 section Field
 
@@ -416,6 +445,72 @@ theorem exists_orth_of_pfaffianAux_eq_zero (ω : V → V → K)
     (hli : LinearIndepOn K id {x | x ∈ l}) (hp : pfaffianAux ω l = 0) :
     ∃ u ∈ Submodule.span K {x | x ∈ l}, u ≠ 0 ∧ ∀ x ∈ l, ω u x = 0 :=
   exists_orth_aux ω hadd hsmul hskew h2 l.length l rfl hnd hli hp
+
+omit [Module K V] in
+private theorem gram_skew {n : ℕ} (A : Matrix (Fin n) (Fin n) K) (hA : ∀ i j, A i j = -A j i)
+    (x y : Fin n → K) :
+    dotProduct x (A.mulVec y) = -dotProduct y (A.mulVec x) := by
+  simp only [dotProduct, Matrix.mulVec, Finset.mul_sum]
+  rw [Finset.sum_comm, ← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [← Finset.sum_neg_distrib]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [hA i j]
+  ring
+
+/-- A skew matrix over a field with `2 ≠ 0` and zero Pfaffian has a nonzero kernel vector. -/
+theorem exists_vecMul_eq_zero_of_pfaffian_eq_zero (h2 : (2 : K) ≠ 0) {n : ℕ}
+    (A : Matrix (Fin n) (Fin n) K) (hA : ∀ i j, A i j = -A j i) (h : pfaffian A = 0) :
+    ∃ v : Fin n → K, v ≠ 0 ∧ Matrix.vecMul v A = 0 := by
+  let b := Pi.basisFun K (Fin n)
+  let ω : (Fin n → K) → (Fin n → K) → K := fun x y => dotProduct x (A.mulVec y)
+  have hmb : ∀ j, A.mulVec (b j) = fun i => A i j := by
+    intro j
+    ext i
+    simp [b, Pi.basisFun_apply, Matrix.mulVec, dotProduct, Pi.single_apply]
+  have gram : ∀ i j, ω (b i) (b j) = A i j := by
+    intro i j
+    simp only [ω, hmb]
+    simp [b, Pi.basisFun_apply, dotProduct, Pi.single_apply]
+  have hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z := fun x y z => add_dotProduct _ _ _
+  have hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z := fun c x z => by
+    simp only [ω, smul_dotProduct, smul_eq_mul]
+  have hskew : ∀ x y, ω x y = -ω y x := gram_skew A hA
+  have hpf : pfaffianAux ω ((List.finRange n).map b) = 0 := by
+    rw [← pfaffianAux_reindex ω b n _ (List.length_finRange), ← h]
+    have e : (fun a c => ω (b a) (b c)) = A := funext fun a => funext fun c => gram a c
+    rw [e]
+    rfl
+  have hnd : ((List.finRange n).map b).Nodup := (List.nodup_finRange n).map b.injective
+  have hli : LinearIndepOn K id {x | x ∈ (List.finRange n).map b} := by
+    have e : {x | x ∈ (List.finRange n).map b} = Set.range b := by
+      ext x
+      simp [List.mem_map, Set.mem_range]
+    rw [e]
+    exact b.linearIndependent.linearIndepOn_id
+  obtain ⟨u, _, hu0, hu⟩ := exists_orth_of_pfaffianAux_eq_zero ω hadd hsmul hskew h2 _ hnd hli hpf
+  refine ⟨u, hu0, ?_⟩
+  funext j
+  have := hu (b j) (List.mem_map.mpr ⟨j, List.mem_finRange j, rfl⟩)
+  simp only [ω, hmb] at this
+  exact this
+
+/-- The same kernel vector annihilates the matrix from the other side. -/
+theorem exists_mulVec_eq_zero_of_pfaffian_eq_zero (h2 : (2 : K) ≠ 0) {n : ℕ}
+    (A : Matrix (Fin n) (Fin n) K) (hA : ∀ i j, A i j = -A j i) (h : pfaffian A = 0) :
+    ∃ v : Fin n → K, v ≠ 0 ∧ A.mulVec v = 0 := by
+  obtain ⟨v, hv0, hv⟩ := exists_vecMul_eq_zero_of_pfaffian_eq_zero h2 A hA h
+  refine ⟨v, hv0, ?_⟩
+  funext i
+  have hi := congrFun hv i
+  simp only [Matrix.vecMul, dotProduct, Pi.zero_apply] at hi
+  simp only [Matrix.mulVec, dotProduct, Pi.zero_apply]
+  calc ∑ j, A i j * v j = -∑ j, v j * A j i := by
+        rw [← Finset.sum_neg_distrib]
+        refine Finset.sum_congr rfl fun j _ => ?_
+        rw [hA i j]
+        ring
+    _ = 0 := by rw [hi, neg_zero]
 
 end Field
 
