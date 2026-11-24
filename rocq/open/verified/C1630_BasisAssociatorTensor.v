@@ -6,7 +6,7 @@
     [C1467_XORSignCocycle] is the literal 16 x 16 table whose rows
     [sed_sign_table_correct] binds to the bounded Cayley-Dickson recurrence
     [cd_sign_fuel 5 16], which reads as the sign recurrence of [cd_sign]
-    of gororoba_quantum/cd_core.py; no comparison under ci/ runs this
+    of gororoba_quantum/cd_core.py; ci/compare_box_kite_census.sh runs this
     table against cd_core.py.  Indices are natural numbers whose bits
     are the XOR labels.  For basis elements the two association orders land
     on the same component e_{i XOR j XOR k}:
@@ -16,7 +16,10 @@
     rsign i j k = s(j,k) s(i, j XOR k).  The associator coefficient is
     [acoef] = lsign - rsign, and [omega] = lsign * rsign is -1 exactly
     where the triple fails to associate (the [omega] of
-    scripts/box_kite_census.py in gororoba-quantum).
+    scripts/box_kite_census.py in gororoba-quantum, the product of
+    triple_sign of cd_core.py; ci/compare_box_kite_census.sh compares
+    [lsign] and [rsign] with triple_sign on the 4096 ordered triples and
+    rejects a mutated [rsign]).
 
     Rows answered.
     - gororoba-open C-1630: [acoef_values] (every coefficient in
