@@ -63,6 +63,7 @@ GaussianIntegerHom.v
 HilbertCellA5_108.v
 HilbertCellCertificate.v
 K2CofactorCertificate.v
+K2HilbertBound.v
 KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
