@@ -33,6 +33,15 @@ list, so the definition is structural and reduces in the kernel on small literal
   negates the Pfaffian when `A j i = -A i j`, in particular for skew `A`.
 * `Matrix.pfaffianAux_eq_zero_of_repeat`: a list that starts with the same index twice has
   Pfaffian `0` when `2` is left-regular and `A i i = -A i i`.
+* `Matrix.pfaffianAux_swap_append`, `Matrix.pfaffianAux_eq_zero_of_repeat_append`: for skew `A`,
+  swapping two adjacent indices at any position negates the Pfaffian, and two equal adjacent
+  indices give `0` when `2` is left-regular.
+* `Matrix.pfaffianAux_move_left`: moving one index left past a block of length `b` multiplies
+  the Pfaffian of a skew matrix by `(-1) ^ b`.
+* `Matrix.pfaffianAux_eq_zero_of_not_nodup`: a skew matrix with `2` left-regular has Pfaffian
+  `0` on a list with a repeated index.
+* `Matrix.pfaffianAux_pair_cons_of_zero`: `pfaffianAux A (i :: j :: rest) = A i j *
+  pfaffianAux A rest` when `A i x = 0` for every `x` in `rest`.
 -/
 
 @[expose] public section
@@ -324,5 +333,184 @@ theorem pfaffianAux_eq_zero_of_repeat (A : ι → ι → R) (hreg : IsLeftRegula
   refine hreg ?_
   change 2 * _ = 2 * 0
   linear_combination hs
+
+/-- A zero row segment decouples the first pair: if `A i x = 0` for every remaining index `x`,
+the Pfaffian of `i :: j :: rest` is `A i j` times that of `rest`. -/
+theorem pfaffianAux_pair_cons_of_zero (A : ι → ι → R) (i j : ι) (rest : List ι)
+    (h : ∀ x ∈ rest, A i x = 0) :
+    pfaffianAux A (i :: j :: rest) = A i j * pfaffianAux A rest := by
+  rw [pfaffianAux_double]
+  have hz : ∑ m ∈ Finset.range rest.length, ∑ p ∈ Finset.range (rest.length - 1),
+      pfTerm A i j rest m p = 0 := by
+    refine Finset.sum_eq_zero fun m hm => Finset.sum_eq_zero fun p _ => ?_
+    have hm' := Finset.mem_range.mp hm
+    unfold pfTerm
+    rw [List.getElem?_eq_getElem hm']
+    simp [evalAt, h _ (List.getElem_mem hm')]
+  rw [hz, add_zero]
+
+private def posTerm (A : ι → ι → R) (x : ι) (L : List ι) (k : ℕ) : R :=
+  (-1) ^ k * evalAt A x L[k]? * pfaffianAux A (L.eraseIdx k)
+
+private theorem pfaffianAux_cons_posTerm (A : ι → ι → R) (x : ι) (L : List ι) :
+    pfaffianAux A (x :: L) = ∑ k ∈ Finset.range L.length, posTerm A x L k :=
+  pfaffianAux_cons_range A x L
+
+private theorem posTerm_left (A : ι → ι → R) (x : ι) (pre s : List ι) {k : ℕ}
+    (hk : k < pre.length) :
+    posTerm A x (pre ++ s) k =
+      (-1) ^ k * evalAt A x pre[k]? * pfaffianAux A (pre.eraseIdx k ++ s) := by
+  unfold posTerm
+  rw [List.getElem?_append_left hk, List.eraseIdx_append_of_lt_length hk]
+
+private theorem posTerm_right (A : ι → ι → R) (x : ι) (pre s : List ι) (t : ℕ) :
+    posTerm A x (pre ++ s) (pre.length + t) =
+      (-1) ^ (pre.length + t) * evalAt A x s[t]? * pfaffianAux A (pre ++ s.eraseIdx t) := by
+  unfold posTerm
+  rw [List.getElem?_append_right (Nat.le_add_right pre.length t),
+    List.eraseIdx_append_of_length_le (Nat.le_add_right pre.length t)]
+  simp only [Nat.add_sub_cancel_left]
+
+private theorem sum_range_three (f : ℕ → R) (a r : ℕ) :
+    ∑ k ∈ Finset.range (a + 2 + r), f k =
+      ∑ k ∈ Finset.range a, f k + ∑ x ∈ Finset.range 2, f (a + x) +
+        ∑ t ∈ Finset.range r, f (a + 2 + t) := by
+  rw [Finset.sum_range_add f (a + 2) r, Finset.sum_range_add f a 2]
+
+private theorem sum_range_two (F : ℕ → R) : ∑ x ∈ Finset.range 2, F x = F 0 + F 1 := by
+  simp [Finset.sum_range_succ]
+
+private theorem cons_cons_getElem?_add (j i : ι) (rest : List ι) (t : ℕ) :
+    (j :: i :: rest)[2 + t]? = rest[t]? := by
+  rw [show 2 + t = t + 1 + 1 from by omega]
+  simp only [List.getElem?_cons_succ]
+
+private theorem cons_cons_eraseIdx_add (j i : ι) (rest : List ι) (t : ℕ) :
+    (j :: i :: rest).eraseIdx (2 + t) = j :: i :: rest.eraseIdx t := by
+  rw [show 2 + t = t + 1 + 1 from by omega]
+  simp only [List.eraseIdx_cons_succ]
+
+private theorem pfaffianAux_cons_append_swap (A : ι → ι → R) (x i j : ι) (pre rest : List ι)
+    (ih : ∀ pre' : List ι, pre'.length ≤ pre.length → ∀ rest' : List ι,
+      pfaffianAux A (pre' ++ j :: i :: rest') = -pfaffianAux A (pre' ++ i :: j :: rest')) :
+    pfaffianAux A (x :: (pre ++ j :: i :: rest)) =
+      -pfaffianAux A (x :: (pre ++ i :: j :: rest)) := by
+  have eL : (pre ++ j :: i :: rest).length = pre.length + 2 + rest.length := by simp; omega
+  have eL' : (pre ++ i :: j :: rest).length = pre.length + 2 + rest.length := by simp; omega
+  rw [pfaffianAux_cons_posTerm, pfaffianAux_cons_posTerm, eL, eL',
+    sum_range_three (posTerm A x (pre ++ j :: i :: rest)) pre.length rest.length,
+    sum_range_three (posTerm A x (pre ++ i :: j :: rest)) pre.length rest.length]
+  have h1 : ∑ k ∈ Finset.range pre.length, posTerm A x (pre ++ j :: i :: rest) k =
+      -∑ k ∈ Finset.range pre.length, posTerm A x (pre ++ i :: j :: rest) k := by
+    rw [← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl fun k hk => ?_
+    have hk' := Finset.mem_range.mp hk
+    rw [posTerm_left A x pre _ hk', posTerm_left A x pre _ hk',
+      ih (pre.eraseIdx k) (by have := List.length_eraseIdx_le pre k; omega) rest]
+    ring
+  have h2 : ∑ y ∈ Finset.range 2, posTerm A x (pre ++ j :: i :: rest) (pre.length + y) =
+      -∑ y ∈ Finset.range 2, posTerm A x (pre ++ i :: j :: rest) (pre.length + y) := by
+    rw [sum_range_two, sum_range_two, posTerm_right A x pre (j :: i :: rest) 0,
+      posTerm_right A x pre (j :: i :: rest) 1, posTerm_right A x pre (i :: j :: rest) 0,
+      posTerm_right A x pre (i :: j :: rest) 1]
+    simp only [List.getElem?_cons_zero, List.getElem?_cons_succ, List.eraseIdx_cons_zero,
+      List.eraseIdx_cons_succ, evalAt]
+    ring
+  have h3 : ∑ t ∈ Finset.range rest.length,
+        posTerm A x (pre ++ j :: i :: rest) (pre.length + 2 + t) =
+      -∑ t ∈ Finset.range rest.length,
+        posTerm A x (pre ++ i :: j :: rest) (pre.length + 2 + t) := by
+    rw [← Finset.sum_neg_distrib]
+    refine Finset.sum_congr rfl fun t _ => ?_
+    rw [Nat.add_assoc, posTerm_right A x pre (j :: i :: rest) (2 + t),
+      posTerm_right A x pre (i :: j :: rest) (2 + t), cons_cons_getElem?_add,
+      cons_cons_getElem?_add, cons_cons_eraseIdx_add, cons_cons_eraseIdx_add,
+      ih pre le_rfl (rest.eraseIdx t)]
+    ring
+  linear_combination h1 + h2 + h3
+
+/-- Swapping two adjacent indices at any position negates the Pfaffian of a skew matrix. -/
+theorem pfaffianAux_swap_append (A : ι → ι → R) (hA : ∀ a b, A a b = -A b a) (pre : List ι)
+    (i j : ι) (rest : List ι) :
+    pfaffianAux A (pre ++ j :: i :: rest) = -pfaffianAux A (pre ++ i :: j :: rest) := by
+  suffices H : ∀ n (pre : List ι), pre.length = n → ∀ (i j : ι) (rest : List ι),
+      pfaffianAux A (pre ++ j :: i :: rest) = -pfaffianAux A (pre ++ i :: j :: rest) from
+    H _ pre rfl i j rest
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+    intro pre hpre i j rest
+    cases pre with
+    | nil => exact pfaffianAux_swap_of_skew A hA i j rest
+    | cons x pre' =>
+      rw [List.cons_append, List.cons_append]
+      refine pfaffianAux_cons_append_swap A x i j pre' rest ?_
+      intro pre'' hlen rest'
+      have hn : pre'.length + 1 = n := by simpa using hpre
+      exact ih pre''.length (by omega) pre'' rfl i j rest'
+
+/-- Two equal adjacent indices at any position give Pfaffian `0` for a skew matrix when `2` is
+left-regular. -/
+theorem pfaffianAux_eq_zero_of_repeat_append (A : ι → ι → R) (hA : ∀ a b, A a b = -A b a)
+    (hreg : IsLeftRegular (2 : R)) (pre : List ι) (i : ι) (rest : List ι) :
+    pfaffianAux A (pre ++ i :: i :: rest) = 0 := by
+  have hs := pfaffianAux_swap_append A hA pre i i rest
+  refine hreg ?_
+  change 2 * _ = 2 * 0
+  linear_combination hs
+
+/-- Moving one index left past a block of length `b` multiplies the Pfaffian of a skew matrix
+by `(-1) ^ b`. -/
+theorem pfaffianAux_move_left (A : ι → ι → R) (hA : ∀ a b, A a b = -A b a) (pre blk : List ι)
+    (y : ι) (rest : List ι) :
+    pfaffianAux A (pre ++ blk ++ y :: rest) =
+      (-1) ^ blk.length * pfaffianAux A (pre ++ y :: (blk ++ rest)) := by
+  suffices H : ∀ n (blk : List ι), blk.length = n → ∀ rest : List ι,
+      pfaffianAux A (pre ++ blk ++ y :: rest) =
+        (-1) ^ blk.length * pfaffianAux A (pre ++ y :: (blk ++ rest)) from
+    H _ blk rfl rest
+  intro n
+  induction n with
+  | zero =>
+    intro blk hb rest
+    have hnil : blk = [] := List.length_eq_zero_iff.mp hb
+    subst hnil
+    simp
+  | succ n ih =>
+    intro blk hb rest
+    rcases List.eq_nil_or_concat blk with h | ⟨L, z, h⟩
+    · subst h
+      simp at hb
+    · subst h
+      simp only [List.concat_eq_append] at hb ⊢
+      have hL : L.length = n := by simpa using hb
+      have e1 : pre ++ (L ++ [z]) ++ y :: rest = (pre ++ L) ++ z :: y :: rest := by simp
+      have e3 : (L ++ [z]) ++ rest = L ++ z :: rest := by simp
+      have hm := ih L hL (z :: rest)
+      rw [e1, pfaffianAux_swap_append A hA (pre ++ L) y z rest]
+      have e4 : (pre ++ L) ++ y :: z :: rest = pre ++ L ++ y :: z :: rest := rfl
+      rw [e4, hm, e3]
+      simp only [List.length_append, List.length_singleton, hL]
+      ring
+
+private theorem exists_dup_decomp : ∀ l : List ι, ¬ l.Nodup →
+    ∃ pre u mid post, l = pre ++ u :: (mid ++ u :: post)
+  | [], h => absurd List.nodup_nil h
+  | a :: l, h => by
+    rw [List.nodup_cons, not_and_or, not_not] at h
+    rcases h with h | h
+    · obtain ⟨s, t, hst⟩ := List.append_of_mem h
+      exact ⟨[], a, s, t, by simp [hst]⟩
+    · obtain ⟨pre, u, mid, post, hl⟩ := exists_dup_decomp l h
+      exact ⟨a :: pre, u, mid, post, by simp [hl]⟩
+
+/-- A list with a repeated index has Pfaffian `0` for a skew matrix when `2` is left-regular. -/
+theorem pfaffianAux_eq_zero_of_not_nodup (A : ι → ι → R) (hA : ∀ a b, A a b = -A b a)
+    (hreg : IsLeftRegular (2 : R)) (l : List ι) (h : ¬ l.Nodup) : pfaffianAux A l = 0 := by
+  obtain ⟨pre, u, mid, post, rfl⟩ := exists_dup_decomp l h
+  have e : pre ++ u :: (mid ++ u :: post) = (pre ++ [u]) ++ mid ++ u :: post := by simp
+  have e2 : (pre ++ [u]) ++ u :: (mid ++ post) = pre ++ u :: u :: (mid ++ post) := by simp
+  rw [e, pfaffianAux_move_left A hA (pre ++ [u]) mid u post, e2,
+    pfaffianAux_eq_zero_of_repeat_append A hA hreg pre u (mid ++ post), mul_zero]
 
 end Matrix
