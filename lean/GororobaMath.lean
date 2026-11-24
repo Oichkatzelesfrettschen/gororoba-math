@@ -64,13 +64,13 @@ public import GororobaMath.CayleyDickson.AlignedPairEndpoints
 public import GororobaMath.LinearAlgebra.Pfaffian
 public import GororobaMath.LinearAlgebra.PfaffianForm
 public import GororobaMath.LinearAlgebra.PfaffianBlock
+public import GororobaMath.LinearAlgebra.BorderedKernel
 public import GororobaMath.FiberCone.Basic
 public import GororobaMath.FiberCone.SeparatingOrder
-public import GororobaMath.LinearAlgebra.BorderedKernel
 public import GororobaMath.CayleyDickson.ImaginarySquare
 public import GororobaMath.CayleyDickson.AlignedPairTotal
-public import GororobaMath.CayleyDickson.LeftMulDeterminant
 public import GororobaMath.CayleyDickson.AssociatorClasses
+public import GororobaMath.CayleyDickson.LeftMulDeterminant
 public import GororobaMath.CayleyDickson.SingularKernel
 public import GororobaMath.CayleyDickson.ScaledPairAnnihilator
 public import GororobaMath.CayleyDickson.AnnihilatorBound
