@@ -1,9 +1,11 @@
-"""Render rocq/quantum/HilbertCellA5_108.v from the A5-108 cell certificate export.
+"""Render a Hilbert-cell source of rocq/quantum from a cell certificate export.
 
 The input is the a5-hilbert-cell-certificate-v1 file of ledger row A5-108 (E8-bar to VB, p = 32029,
-d = 1). Only the file with the pinned sha256 is accepted. The output holds the J and G tables of the
+d = 1; output HilbertCellA5_108.v) or of row A5-111 (p = 32029, d = 4; output HilbertCellA5_111.v). Only a
+file with the pinned sha256 of one of the two rows is accepted. The output holds the J and G tables of the
 canonical header, the sparse operators, levels, vector e and left inverse as a `cert` of
-HilbertCellCertificate.v, and the proof that check_cert accepts it and that the cell statement holds.
+HilbertCellCertificate.v, the proof that check_cert accepts it, and the cell statement (A5-108) or its
+independence half (A5-111).
 
 Usage: hilbert_cell_certificate.py INPUT.json --write
        hilbert_cell_certificate.py INPUT.json --check
@@ -17,11 +19,30 @@ import json
 import sys
 from pathlib import Path
 
-EXPECTED_SHA256 = "bd2755fe13df2465ac97852b0ad15fc99e8bc754f96b122adb450dac0ed97af5"
+CELLS = {
+    "A5-108": {
+        "sha256": "bd2755fe13df2465ac97852b0ad15fc99e8bc754f96b122adb450dac0ed97af5",
+        "prime": 32029,
+        "d": 1,
+        "h": 10,
+        "name": "a5_108",
+        "output": "HilbertCellA5_108.v",
+        "spans": True,
+    },
+    "A5-111": {
+        "sha256": "ccbf15218b63059d8bd55bf9dabfdbbdbaabd4d960df01ce6c3ef6c228d21705",
+        "prime": 32029,
+        "d": 4,
+        "h": 155,
+        "name": "a5_111",
+        "output": "HilbertCellA5_111.v",
+        "spans": False,
+    },
+}
 SCHEMA = "a5-hilbert-cell-certificate-v1"
 GENERATOR = "ci/quantum-sources/hilbert_cell_certificate.py"
 ROOT = Path(__file__).resolve().parents[2]
-OUTPUT = ROOT / "rocq" / "quantum" / "HilbertCellA5_108.v"
+QUANTUM = ROOT / "rocq" / "quantum"
 TERMS_PER_LINE = 2
 
 
@@ -29,12 +50,17 @@ def fail(message: str) -> None:
     sys.exit(f"hilbert_cell_certificate: {message}")
 
 
-def load(path: Path) -> dict:
+def load(path: Path) -> tuple[str, dict]:
     data = path.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
-    if digest != EXPECTED_SHA256:
-        fail(f"input sha256 {digest} is not the pinned {EXPECTED_SHA256}")
-    return json.loads(data)
+    for ledger_id, cell in CELLS.items():
+        if cell["sha256"] == digest:
+            cert = json.loads(data)
+            if cert.get("ledger_id") != ledger_id:
+                fail(f"the pinned file of {ledger_id} names another ledger id")
+            return ledger_id, cert
+    fail(f"input sha256 {digest} is not the pinned digest of any cell")
+    raise AssertionError("unreachable")
 
 
 def msets_order(count: int, degree: int) -> list[tuple[int, ...]]:
@@ -62,10 +88,11 @@ def selected_positions(cert: dict) -> list[int]:
     return [position[tuples[j]] for j in products["selected"]]
 
 
-def validate(cert: dict) -> None:
-    if cert.get("schema") != SCHEMA or cert.get("ledger_id") != "A5-108":
+def validate(ledger_id: str, cert: dict) -> None:
+    cell = CELLS[ledger_id]
+    if cert.get("schema") != SCHEMA or cert.get("ledger_id") != ledger_id:
         fail("unexpected schema or ledger id")
-    if cert["prime"] != 32029 or cert["d"] != 1 or cert["h_claimed"] != 10:
+    if cert["prime"] != cell["prime"] or cert["d"] != cell["d"] or cert["h_claimed"] != cell["h"]:
         fail("unexpected prime, degree or claimed value")
     if not cert["J_in_W"] or cert["products"]["mode"] != "all":
         fail("the export does not certify J in W or all products")
@@ -108,42 +135,60 @@ def poly_list(name: str, polys: list) -> str:
 
 
 def sparse_row(entries: list[tuple[int, int]]) -> str:
-    return "[" + "; ".join(f"sp {c} {v}" for c, v in entries) + "]"
+    """One row; the key of column c is c + 1, the positive number HilbertCellCertificate.v reads."""
+    return "[" + "; ".join(f"sp {c + 1} {v}" for c, v in entries) + "]"
 
 
-def operator(entries: list) -> str:
-    q = 32
+def operator(entries: list, q: int) -> str:
     rows: list[list[tuple[int, int]]] = [[] for _ in range(q)]
     for row, col, value in sorted(entries):
         rows[row].append((col, value))
     return "  [ " + ";\n    ".join(sparse_row(r) for r in rows) + " ]"
 
 
-def render(cert: dict) -> str:
-    validate(cert)
+def render(ledger_id: str, cert: dict) -> str:
+    validate(ledger_id, cert)
+    cell = CELLS[ledger_id]
+    name = cell["name"]
     module = cert["module"]
     q = module["q"]
     r = cert["products"]["r"]
     n = len(cert["header"]["vars"])
     positions = selected_positions(cert)
-    ops = ";\n".join(operator(m) for m in module["M"])
+    ops = ";\n".join(operator(m, q) for m in module["M"])
     left_rows = [sparse_row([(c, v) for c, v in enumerate(row) if v != 0]) for row in cert["products"]["left_inverse"]]
     e_vector = [1 if i == module["e"] else 0 for i in range(q)]
     pieces = [
-        HEADER.format(generator=GENERATOR, digest=EXPECTED_SHA256, prime=cert["prime"], n=n, r=r),
-        poly_list("a5_108_J", cert["header"]["J"]),
-        poly_list("a5_108_G", cert["header"]["G"]),
-        "Definition a5_108_ops : list spmat :=\n[\n" + ops + " ].\n",
-        "Definition a5_108_lev : list nat := [" + "; ".join(f"{x}%nat" for x in module["lev"]) + "].\n",
-        "Definition a5_108_e : vec := [" + "; ".join(str(x) for x in e_vector) + "].\n",
-        "Definition a5_108_left : spmat :=\n  [ " + ";\n    ".join(left_rows) + " ].\n",
-        "Definition a5_108_sel : list nat := [" + "; ".join(f"{x}%nat" for x in positions) + "].\n",
-        TAIL,
+        HEADER.format(
+            generator=GENERATOR,
+            digest=cell["sha256"],
+            prime=cert["prime"],
+            n=n,
+            r=r,
+            name=name.upper().replace("_", "-"),
+            d=cert["d"],
+        ),
+        poly_list(f"{name}_J", cert["header"]["J"]),
+        poly_list(f"{name}_G", cert["header"]["G"]),
+        f"Definition {name}_ops : list spmat :=\n[\n" + ops + " ].\n",
+        f"Definition {name}_lev : list nat := [" + "; ".join(f"{x}%nat" for x in module["lev"]) + "].\n",
+        f"Definition {name}_e : vec := [" + "; ".join(str(x) for x in e_vector) + "].\n",
+        f"Definition {name}_left : spmat :=\n  [ " + ";\n    ".join(left_rows) + " ].\n",
+        f"Definition {name}_sel : list nat := [" + "; ".join(f"{x}%nat" for x in positions) + "].\n",
+        fill(TAIL_COMMON, name=name, prime=cert["prime"], n=n, d=cert["d"]),
+        fill(
+            TAIL_SPANS if cell["spans"] else TAIL_INDEPENDENT,
+            name=name,
+            prime=cert["prime"],
+            n=n,
+            d=cert["d"],
+            h=cert["h_claimed"],
+        ),
     ]
     return "\n".join(pieces)
 
 
-HEADER = r"""(** * The cell A5-108: h_1 = {r} for E8-bar to VB over F_{prime}.
+HEADER = r"""(** * The cell {name}: h_{d} = {r} for E8-bar to VB over F_{prime}.
 
     Generated by {generator} from the cell certificate export with sha256 {digest}.
     Run the generator with --check to bind this source to that file.
@@ -152,8 +197,8 @@ HEADER = r"""(** * The cell A5-108: h_1 = {r} for E8-bar to VB over F_{prime}.
     The tables below are the J and G polynomials of the canonical header in {n} variables, each term a
     (monomial, coefficient) pair with the exponent vector written by [m8]; the operators are the {n}
     sparse matrices of multiplication by the variables on the quotient basis, row b listing the pairs
-    (column, value) by [sp]. The selected products are positions in the order of [products], and the
-    generators of G are the products themselves because the degree is 1. *)
+    (key, value) by [sp], the key of column c being c + 1. The selected products are positions in the order of
+    [products]; the checker enumerates the products as vectors, so no product polynomial is expanded. *)
 
 From Stdlib Require Import ZArith Lia List Znumtheory.
 Require Import HilbertCellCertificate.
@@ -162,14 +207,16 @@ Open Scope Z_scope.
 
 Definition m8 (a b c d e f g h : nat) : mono := [a; b; c; d; e; f; g; h].
 
-Definition sp (c : nat) (v : Z) : nat * Z := (c, v).
+Definition sp (c : positive) (v : Z) : positive * Z := (c, v).
+
+Arguments sp c%_positive v%_Z.
 """
 
-TAIL = r"""
-Definition a5_108_cert : cert :=
-  mk_cert a5_108_ops a5_108_lev a5_108_e a5_108_left a5_108_sel.
+TAIL_COMMON = r"""
+Definition @NAME@_cert : cert :=
+  mk_cert @NAME@_ops @NAME@_lev @NAME@_e @NAME@_left @NAME@_sel.
 
-Lemma a5_108_cert_accepted : check_cert 32029 8 a5_108_J a5_108_G 1 a5_108_cert = true.
+Lemma @NAME@_cert_accepted : check_cert @PRIME@ @N@ @NAME@_J @NAME@_G @D@ @NAME@_cert = true.
 Proof. vm_compute. reflexivity. Qed.
 
 Lemma in_trial (B : nat) (d : Z) :
@@ -199,14 +246,16 @@ Proof.
     apply (Hbad k Hk2 Hkb). exists m. lia.
 Qed.
 
-Lemma prime_32029 : prime 32029.
+Lemma prime_@PRIME@ : prime @PRIME@.
 Proof.
   apply prime_alt.
-  apply (prime_by_trial 32029 179);
+  apply (prime_by_trial @PRIME@ 179);
     [lia | first [lia | (vm_compute; intros H; discriminate H)] | vm_compute; reflexivity].
 Qed.
 
-Definition unit_cs (r i : nat) : list Z :=
+"""
+
+TAIL_SPANS = r"""Definition unit_cs (r i : nat) : list Z :=
   map (fun j => if Nat.eqb j i then 1 else 0) (seq 0 r).
 
 Lemma length_unit_cs r i : length (unit_cs r i) = r.
@@ -254,15 +303,15 @@ Proof. induction k as [|k IH]; simpl; constructor; [constructor | exact IH]. Qed
 Lemma not_cg_one : ~ cg 32029 1 0.
 Proof. unfold cg. intros [k Hk]. destruct (Z_le_gt_dec k 0); lia. Qed.
 
-Theorem a5_108_hilbert_cell : hilbert_cell 32029 8 a5_108_J a5_108_G 1 10.
+Theorem @NAME@_hilbert_cell : hilbert_cell 32029 8 @NAME@_J @NAME@_G 1 10.
 Proof.
-  exists (c_sel a5_108_cert).
+  exists (c_sel @NAME@_cert).
   refine (conj _ (conj _ (conj _ _))).
   - vm_compute. reflexivity.
-  - exact (check_cert_sel_range _ _ _ _ _ _ a5_108_cert_accepted).
-  - exact (cert_independent 32029 8 _ _ 1 a5_108_cert prime_32029 a5_108_cert_accepted).
+  - exact (check_cert_sel_range _ _ _ _ _ _ @NAME@_cert_accepted).
+  - exact (cert_independent 32029 8 _ _ 1 @NAME@_cert prime_32029 @NAME@_cert_accepted).
   - apply (spans_of_check 32029 8 _ _ _ (one_poly 8)
-             (repeat ([] : poly) (length (a5_108_J ++ m_products 8 a5_108_G 1)))).
+             (repeat ([] : poly) (length (@NAME@_J ++ m_products 8 @NAME@_G 1)))).
     + unfold wf_poly, one_poly. constructor; [reflexivity | constructor].
     + apply wf_repeat_nil.
     + apply repeat_length.
@@ -270,6 +319,28 @@ Proof.
     + vm_compute. reflexivity.
 Qed.
 """
+
+TAIL_INDEPENDENT = r"""
+Theorem @NAME@_independent :
+  exists sel : list nat, length sel = @H@%nat /\
+    (forall i, In i sel -> (i < length (products @N@ @NAME@_G @D@))%nat) /\
+    independent_mod @PRIME@ @N@ (@NAME@_J ++ m_products @N@ @NAME@_G @D@)
+      (select_products @N@ @NAME@_G @D@ sel).
+Proof.
+  exists (c_sel @NAME@_cert).
+  refine (conj _ (conj _ _)).
+  - vm_compute. reflexivity.
+  - exact (check_cert_sel_range _ _ _ _ _ _ @NAME@_cert_accepted).
+  - exact (cert_independent @PRIME@ @N@ _ _ @D@ @NAME@_cert prime_@PRIME@ @NAME@_cert_accepted).
+Qed.
+"""
+
+
+def fill(text: str, **values: object) -> str:
+    """Replace each @KEY@ placeholder of a template by its value."""
+    for key, value in values.items():
+        text = text.replace(f"@{key.upper()}@", str(value))
+    return text
 
 
 def main() -> None:
@@ -279,13 +350,15 @@ def main() -> None:
     actions.add_argument("--write", action="store_true", help="write the Rocq source")
     actions.add_argument("--check", action="store_true", help="require the tracked source to equal the rendering")
     args = parser.parse_args()
-    text = render(load(args.input))
+    ledger_id, cert = load(args.input)
+    text = render(ledger_id, cert)
+    output = QUANTUM / CELLS[ledger_id]["output"]
     if args.write:
-        OUTPUT.write_text(text, encoding="utf-8")
-        print(f"wrote {OUTPUT.relative_to(ROOT)}")
+        output.write_text(text, encoding="utf-8")
+        print(f"wrote {output.relative_to(ROOT)}")
         return
-    if not OUTPUT.is_file() or OUTPUT.read_text(encoding="utf-8") != text:
-        fail(f"{OUTPUT.relative_to(ROOT)} differs from the rendering")
+    if not output.is_file() or output.read_text(encoding="utf-8") != text:
+        fail(f"{output.relative_to(ROOT)} differs from the rendering")
     print("ok")
 
 

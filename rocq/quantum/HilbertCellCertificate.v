@@ -10,9 +10,10 @@
     Convention: [cg p a b] means p divides a - b, so every statement reads modulo p and no hypothesis on p
     enters until the final cancellation of a nonzero constant term, which uses [prime p]. A vector is a list
     of integers; an entry past the end of the list reads as 0 and two vectors are equal ([veq]) when every
-    entry is congruent. A sparse matrix is a list of rows, row b a list of pairs (column c, value v) with
-    repeated columns allowed; it sends x to the vector whose entry b is the sum of v x_c over row b, reduced
-    modulo p ([mv]). A monomial is an exponent vector of length n and a polynomial a list of pairs
+    entry is congruent. A sparse matrix is a list of rows, row b a list of pairs (key k, value v) with
+    repeated keys allowed, where the positive key k names column k - 1 ([ridx]); it sends x to the vector whose
+    entry b is the sum of v x_(k-1) over row b, reduced modulo p ([mv]). [mv] reads x through a binary trie
+    keyed by positive numbers ([vtree]), so one read costs O(log q) in the length q of x. A monomial is an exponent vector of length n and a polynomial a list of pairs
     (monomial, coefficient) with repeated monomials allowed; [pcoef] sums the coefficients of one monomial and
     [pzero p f] says every such sum is congruent to 0. A monomial acts on a vector through the list [ops] of
     n operators by iterating operator k exactly e_k times ([mono_apply]); [ev] adds the coefficient
@@ -265,7 +266,7 @@ End Keyed.
 (** * Vectors and sparse matrices *)
 
 Definition vec := list Z.
-Definition row := list (nat * Z).
+Definition row := list (positive * Z).
 Definition spmat := list row.
 
 Fixpoint vadd (p : Z) (x y : vec) : vec :=
@@ -281,11 +282,92 @@ Fixpoint vscale (p c : Z) (x : vec) : vec :=
   | a :: x' => ((c * a) mod p) :: vscale p c x'
   end.
 
-Fixpoint mv (p : Z) (M : spmat) (x : vec) : vec :=
-  match M with
-  | [] => []
-  | r :: M' => (ksum r (fun c => nth c x 0) mod p) :: mv p M' x
+Definition ridx (c : positive) : nat := Nat.pred (Pos.to_nat c).
+
+Definition xnth (x : vec) (c : positive) : Z := nth (ridx c) x 0.
+
+(** A trie of integers keyed by positive numbers: the key's binary digits, least significant first after the
+    leading 1, choose the left (0) or right (1) child; a missing node reads as 0. *)
+Inductive ztrie : Set := TL | TN (l : ztrie) (v : Z) (r : ztrie).
+
+Fixpoint tins (k : positive) (a : Z) (t : ztrie) : ztrie :=
+  match k with
+  | xH => match t with TL => TN TL a TL | TN l _ r => TN l a r end
+  | xO k' => match t with TL => TN (tins k' a TL) 0 TL | TN l v r => TN (tins k' a l) v r end
+  | xI k' => match t with TL => TN TL 0 (tins k' a TL) | TN l v r => TN l v (tins k' a r) end
   end.
+
+Fixpoint tget (t : ztrie) (c : positive) : Z :=
+  match t with
+  | TL => 0
+  | TN l v r => match c with xH => v | xO c' => tget l c' | xI c' => tget r c' end
+  end.
+
+Fixpoint vtree (x : list Z) (k : positive) (t : ztrie) : ztrie :=
+  match x with
+  | [] => t
+  | a :: x' => vtree x' (Pos.succ k) (tins k a t)
+  end.
+
+Definition mvt (p : Z) (M : spmat) (t : ztrie) : vec :=
+  map (fun r => ksum r (tget t) mod p) M.
+
+Definition mv (p : Z) (M : spmat) (x : vec) : vec := mvt p M (vtree x 1%positive TL).
+
+Lemma tget_tins k : forall a t c,
+  tget (tins k a t) c = if Pos.eqb k c then a else tget t c.
+Proof.
+  induction k as [k IH|k IH|]; intros a t c;
+    destruct t as [|l v r]; destruct c as [c|c|]; simpl; try reflexivity; apply IH.
+Qed.
+
+Lemma tget_add_same t k a : tget (tins k a t) k = a.
+Proof. rewrite tget_tins, Pos.eqb_refl. reflexivity. Qed.
+
+Lemma tget_add_other t k c a : k <> c -> tget (tins k a t) c = tget t c.
+Proof.
+  intros H. rewrite tget_tins. rewrite (proj2 (Pos.eqb_neq k c) H). reflexivity.
+Qed.
+
+Lemma tget_vtree_out (x : list Z) : forall (k : positive) (t : ztrie) (c : positive),
+  (Pos.to_nat c < Pos.to_nat k \/ Pos.to_nat k + length x <= Pos.to_nat c)%nat ->
+  tget (vtree x k t) c = tget t c.
+Proof.
+  induction x as [|a x IH]; intros k t c H; [reflexivity|].
+  simpl vtree. rewrite IH by (rewrite Pos2Nat.inj_succ; simpl in H; lia).
+  apply tget_add_other. intro E. subst c. simpl in H. lia.
+Qed.
+
+Lemma tget_vtree_in (x : list Z) : forall (k : positive) (t : ztrie) (c : positive),
+  (Pos.to_nat k <= Pos.to_nat c)%nat -> (Pos.to_nat c < Pos.to_nat k + length x)%nat ->
+  tget (vtree x k t) c = nth (Pos.to_nat c - Pos.to_nat k) x 0.
+Proof.
+  induction x as [|a x IH]; intros k t c H1 H2; [simpl in H2; lia|].
+  simpl vtree. destruct (Pos.eq_dec k c) as [E|NE].
+  - subst c.
+    rewrite (tget_vtree_out x (Pos.succ k) (tins k a t) k)
+      by (left; rewrite Pos2Nat.inj_succ; lia).
+    rewrite tget_add_same, Nat.sub_diag. reflexivity.
+  - assert (Hne : Pos.to_nat k <> Pos.to_nat c) by (intro E; apply NE; apply Pos2Nat.inj; exact E).
+    rewrite IH by (rewrite Pos2Nat.inj_succ; simpl in H2; lia).
+    rewrite Pos2Nat.inj_succ.
+    replace (Pos.to_nat c - Pos.to_nat k)%nat with (S (Pos.to_nat c - S (Pos.to_nat k))) by lia.
+    reflexivity.
+Qed.
+
+Lemma tget_xnth x c : tget (vtree x 1%positive TL) c = xnth x c.
+Proof.
+  unfold xnth, ridx. pose proof (Pos2Nat.is_pos c) as Hpos.
+  destruct (Nat.lt_ge_cases (Pos.to_nat c) (1 + length x)) as [H|H].
+  - rewrite tget_vtree_in by (rewrite Pos2Nat.inj_1; lia).
+    rewrite Pos2Nat.inj_1. f_equal. lia.
+  - rewrite tget_vtree_out by (right; rewrite Pos2Nat.inj_1; lia).
+    simpl. symmetry. apply nth_overflow. lia.
+Qed.
+
+Lemma ksum_ext {K : Type} (l : list (K * Z)) (F G : K -> Z) :
+  (forall c, F c = G c) -> ksum l F = ksum l G.
+Proof. intros H. induction l as [|t l IH]; simpl; [reflexivity | rewrite IH, H; reflexivity]. Qed.
 
 Definition veq (p : Z) (x y : vec) : Prop := forall b, cg p (nth b x 0) (nth b y 0).
 
@@ -325,11 +407,13 @@ Proof.
 Qed.
 
 Lemma nth_mv p M x b :
-  nth b (mv p M x) 0 = ksum (nth b M []) (fun c => nth c x 0) mod p.
+  nth b (mv p M x) 0 = ksum (nth b M []) (xnth x) mod p.
 Proof.
-  revert b. induction M as [|r M IH]; intros b.
+  unfold mv, mvt. revert b. induction M as [|r M IH]; intros b.
   - destruct b; reflexivity.
-  - destruct b as [|b]; simpl; [reflexivity | apply IH].
+  - destruct b as [|b]; simpl.
+    + f_equal. apply ksum_ext. intros c. apply tget_xnth.
+    + apply IH.
 Qed.
 
 #[export] Instance vadd_Proper (p : Z) : Proper (veq p ==> veq p ==> veq p) (vadd p).
@@ -378,7 +462,7 @@ Proof.
 Qed.
 
 Lemma mv_nth_cg p M x b :
-  cg p (nth b (mv p M x) 0) (ksum (nth b M []) (fun c => nth c x 0)).
+  cg p (nth b (mv p M x) 0) (ksum (nth b M []) (xnth x)).
 Proof. rewrite nth_mv. apply cg_mod. Qed.
 
 Lemma mv_lin p M : lin p (mv p M).
@@ -387,22 +471,24 @@ Proof.
   - intros x y H b.
     eapply cg_trans; [apply mv_nth_cg|].
     eapply cg_trans; [|apply cg_sym; apply mv_nth_cg].
-    apply ksum_cg. intros c. apply H.
+    apply ksum_cg. intros c. exact (H (ridx c)).
   - intros x y b.
     eapply cg_trans; [apply mv_nth_cg|].
     eapply cg_trans; [|apply cg_sym; apply nth_vadd].
     eapply cg_trans.
-    + apply ksum_cg with (G := fun c => nth c x 0 + nth c y 0). intros c. apply nth_vadd.
+    + apply ksum_cg with (G := fun c => xnth x c + xnth y c).
+      intros c. exact (nth_vadd p x y (ridx c)).
     + eapply cg_trans;
-        [apply cg_eq; exact (ksum_add_fun (nth b M []) (fun c => nth c x 0) (fun c => nth c y 0))|].
+        [apply cg_eq; exact (ksum_add_fun (nth b M []) (xnth x) (xnth y))|].
       apply cg_add; apply cg_sym; apply mv_nth_cg.
   - intros c x b.
     eapply cg_trans; [apply mv_nth_cg|].
     eapply cg_trans; [|apply cg_sym; apply nth_vscale].
     eapply cg_trans.
-    + apply ksum_cg with (G := fun c' => c * nth c' x 0). intros c'. apply nth_vscale.
+    + apply ksum_cg with (G := fun c' => c * xnth x c').
+      intros c'. exact (nth_vscale p c x (ridx c')).
     + eapply cg_trans;
-        [apply cg_eq; exact (ksum_scale_fun (nth b M []) c (fun c' => nth c' x 0))|].
+        [apply cg_eq; exact (ksum_scale_fun (nth b M []) c (xnth x))|].
       apply cg_mul; [apply cg_refl | apply cg_sym; apply mv_nth_cg].
 Qed.
 
@@ -769,11 +855,11 @@ Definition hilbert_cell (p : Z) (n : nat) (J G : list poly) (d r : nat) : Prop :
 Definition vzero_b (p : Z) (x : vec) : bool := forallb (fun a => Z.eqb (a mod p) 0) x.
 
 Definition rowprod (M N : spmat) (b : nat) : row :=
-  flat_map (fun cv => map (fun t => (fst t, snd cv * snd t)) (nth (fst cv) N [])) (nth b M []).
+  flat_map (fun cv => map (fun t => (fst t, snd cv * snd t)) (nth (ridx (fst cv)) N [])) (nth b M []).
 
 Definition rowdiff_b (p : Z) (R1 R2 : row) : bool :=
   let L := R1 ++ map (fun t => (fst t, - snd t)) R2 in
-  forallb (fun c => Z.eqb (kcoef Nat.eq_dec L c mod p) 0) (map fst L).
+  forallb (fun c => Z.eqb (kcoef Pos.eq_dec L c mod p) 0) (map fst L).
 
 Definition comm_b (p : Z) (M N : spmat) : bool :=
   forallb (fun b => rowdiff_b p (rowprod M N b) (rowprod N M b))
@@ -781,7 +867,7 @@ Definition comm_b (p : Z) (M N : spmat) : bool :=
 
 Definition strict_b (p : Z) (lev : list nat) (M : spmat) : bool :=
   forallb (fun b => forallb (fun cv => Z.eqb (snd cv mod p) 0 ||
-                                 Nat.ltb (nth (fst cv) lev 0%nat) (nth b lev 0%nat))
+                                 Nat.ltb (nth (ridx (fst cv)) lev 0%nat) (nth b lev 0%nat))
                       (nth b M []))
     (seq 0 (length M)).
 
@@ -836,10 +922,10 @@ Definition toy_G : list poly := [ [([1%nat; 0%nat], 1)]; [([0%nat; 1%nat], 3)] ]
 
 Definition toy_cert : cert :=
   mk_cert
-    [ [ []; [(0%nat, 1)]; [] ]; [ []; []; [(0%nat, 1)] ] ]
+    [ [ []; [(1%positive, 1)]; [] ]; [ []; []; [(1%positive, 1)] ] ]
     [0%nat; 1%nat; 1%nat]
     [1; 0; 0]
-    [ [(1%nat, 1)]; [(2%nat, 5)] ]
+    [ [(2%positive, 1)]; [(3%positive, 5)] ]
     [0%nat; 1%nat].
 
 Lemma toy_cert_accepted : check_cert 7 2 toy_J toy_G 1 toy_cert = true.
@@ -847,13 +933,13 @@ Proof. vm_compute. reflexivity. Qed.
 
 Definition toy_left_mutant : cert :=
   mk_cert (c_ops toy_cert) (c_lev toy_cert) (c_e toy_cert)
-    [ [(1%nat, 1)]; [(2%nat, 4)] ] (c_sel toy_cert).
+    [ [(2%positive, 1)]; [(3%positive, 4)] ] (c_sel toy_cert).
 
 Lemma toy_left_mutant_rejected : check_cert 7 2 toy_J toy_G 1 toy_left_mutant = false.
 Proof. vm_compute. reflexivity. Qed.
 
 Definition toy_comm_mutant : cert :=
-  mk_cert [ [ []; [(0%nat, 1)]; [] ]; [ []; [(0%nat, 1)]; [(0%nat, 1)] ] ]
+  mk_cert [ [ []; [(1%positive, 1)]; [] ]; [ []; [(1%positive, 1)]; [(1%positive, 1)] ] ]
     (c_lev toy_cert) (c_e toy_cert) (c_left toy_cert) (c_sel toy_cert).
 
 Lemma toy_comm_mutant_rejected : check_cert 7 2 toy_J toy_G 1 toy_comm_mutant = false.
@@ -911,7 +997,7 @@ Lemma rowdiff_sound p R1 R2 : rowdiff_b p R1 R2 = true ->
 Proof.
   intros H F. unfold rowdiff_b in H. rewrite forallb_forall in H.
   assert (H0 : cg p (ksum (R1 ++ map (fun t => (fst t, - snd t)) R2) F) 0).
-  { apply (ksum_zero_keys Nat.eq_dec). intros k Hk. apply cg_zero_of_mod.
+  { apply (ksum_zero_keys Pos.eq_dec). intros k Hk. apply cg_zero_of_mod.
     apply Z.eqb_eq. apply H. exact Hk. }
   rewrite ksum_app, ksum_neg_list in H0. unfold cg in *.
   replace (ksum R1 F - ksum R2 F) with (ksum R1 F + - ksum R2 F - 0) by ring.
@@ -919,15 +1005,15 @@ Proof.
 Qed.
 
 Lemma ksum_rowprod (rA : row) (N : spmat) F :
-  ksum (flat_map (fun cv => map (fun t => (fst t, snd cv * snd t)) (nth (fst cv) N [])) rA) F
-  = ksum rA (fun c => ksum (nth c N []) F).
+  ksum (flat_map (fun cv => map (fun t => (fst t, snd cv * snd t)) (nth (ridx (fst cv)) N [])) rA) F
+  = ksum rA (fun c => ksum (nth (ridx c) N []) F).
 Proof.
   induction rA as [|cv rA IH]; simpl; [reflexivity|].
   rewrite ksum_app, ksum_scale_list, IH. reflexivity.
 Qed.
 
 Lemma mv_mv_nth p M N x b :
-  cg p (nth b (mv p M (mv p N x)) 0) (ksum (rowprod M N b) (fun c => nth c x 0)).
+  cg p (nth b (mv p M (mv p N x)) 0) (ksum (rowprod M N b) (xnth x)).
 Proof.
   eapply cg_trans; [apply mv_nth_cg|].
   unfold rowprod. rewrite ksum_rowprod.
@@ -952,7 +1038,7 @@ Definition Vanish (p : Z) (lev : list nat) (L : nat) (y : vec) : Prop :=
 
 Definition strict_mat (p : Z) (lev : list nat) (M : spmat) : Prop :=
   forall b cv, In cv (nth b M []) ->
-    (nth (fst cv) lev 0%nat < nth b lev 0%nat)%nat \/ cg p (snd cv) 0.
+    (nth (ridx (fst cv)) lev 0%nat < nth b lev 0%nat)%nat \/ cg p (snd cv) 0.
 
 Lemma strict_b_sound p lev M : strict_b p lev M = true -> strict_mat p lev M.
 Proof.
