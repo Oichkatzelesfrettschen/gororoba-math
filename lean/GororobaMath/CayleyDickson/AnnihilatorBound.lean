@@ -21,7 +21,7 @@ bound.
 
 ## Main results
 
-* `Tower.finrank_ker_mulLeft_mk_le`: Lemma 9.9 of the paper, before its parity step: for a
+* `Tower.finrank_ker_mulLeft_mk_le_add_inf`: Lemma 9.9 of the paper, before its parity step: for a
   nonzero pair, the kernel of `(a, b)` has dimension at most `2 ^ k - 1` plus the dimension of
   the common kernel of `a` and `b`.
 * `Tower.four_dvd_finrank_ker_mulLeft_of_ne_zero`: for nonzero `x` at level `k + 1 ≥ 2` over the
@@ -115,7 +115,7 @@ theorem re_snd_eq_zero_of_mk_mul_mk (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ} {a 
 `(c, d)` of the kernel of a nonzero pair `(a, b)` to `d` has image among the imaginary vectors,
 a hyperplane of dimension `2 ^ k - 1`, and kernel `{(c, 0)}`, which maps into the common kernel of
 `a` and `b` through `(c, 0) ↦ c`. -/
-theorem finrank_ker_mulLeft_mk_le (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ} {a b : Tower K k}
+theorem finrank_ker_mulLeft_mk_le_add_inf (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ} {a b : Tower K k}
     (h : mk a b ≠ 0) :
     finrank K (LinearMap.ker (mulLeft K (k + 1) (mk a b))) ≤
       2 ^ k - 1 + finrank K (↥(LinearMap.ker (mulLeft K k a) ⊓ LinearMap.ker (mulLeft K k b) :
@@ -335,7 +335,7 @@ theorem finrank_ker_mulLeft_add_le {n : ℕ} (hn : 2 ≤ n) (x : Tower ℝ n) (h
       subst h5
       omega
     obtain ⟨a, b, rfl⟩ : ∃ a b : Tower ℝ n, x = mk a b := ⟨_, _, rfl⟩
-    have h4 := finrank_ker_mulLeft_mk_le hsq hx
+    have h4 := finrank_ker_mulLeft_mk_le_add_inf hsq hx
     have h5 := four_dvd_finrank_ker_mulLeft_of_ne_zero (by omega : 1 ≤ n) hx
     have h6 : 4 ∣ 2 ^ n := by
       have := pow_dvd_pow 2 hn
