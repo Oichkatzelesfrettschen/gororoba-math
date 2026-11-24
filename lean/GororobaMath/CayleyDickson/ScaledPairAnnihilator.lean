@@ -31,6 +31,12 @@ identity, with a partial order compatible with addition, no zero divisors and no
   `a y = 0`, for every `a`.
 * `Tower.finrank_ker_mulLeft_mk_smul`: the kernel of left multiplication by `(α a, β a)` has
   twice the dimension of the kernel of left multiplication by `a`.
+* `Tower.mk_cs_mul_eq_zero_of_mul_eq_zero`, `Tower.two_mul_finrank_ker_le_mk_cs`: the inclusion
+  `Ann a × Ann a ⊆ Ann (α a, β a)` of Theorem 10.1 for scalars `α = r + s i`, `β = u + v i`
+  of the complex line `C` of `Tower K (j + 1)` (`Tower.cs`), with no condition on the scalars,
+  and the dimension bound `2 dim Ann a ≤ dim Ann (α a, β a)`. Its supporting lemmas are
+  `Tower.mk_mul_iota_mul` (left multiplication by an element with imaginary halves anticommutes
+  with `i`), `Tower.mul_cs_mul_eq_zero` (Lemma 9.6) and `Tower.cs_mul_mul_eq_zero`.
 -/
 
 @[expose] public section
@@ -166,6 +172,98 @@ theorem finrank_ker_mulLeft_mk_smul (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ} (a 
     mk_smul_mul_eq_zero_iff hsq a c d hs
 
 end Field
+
+section ComplexScalars
+
+variable {K : Type u} [Field K] [StarRing K] [TrivialStar K] [PartialOrder K]
+  [IsOrderedAddMonoid K]
+
+/-- The element `r + s i` of the complex line of `Tower K (j + 1)`, where `i = (0, 1)` is the
+new unit of the last doubling. -/
+def cs {j : ℕ} (r s : K) : Tower K (j + 1) := r • (1 : Tower K (j + 1)) + s • mk (0 : Tower K j) 1
+
+omit [TrivialStar K] [PartialOrder K] [IsOrderedAddMonoid K] in
+/-- Left multiplication by an element with imaginary halves anticommutes with left multiplication
+by `i = (0, 1)`: the conjugate-linearity of `L_a` on the complex line (Lemma 6.4 of Biss, Dugger
+and Isaksen). The computation uses `star (u v) = star v star u` on the halves and no
+associativity. -/
+theorem mk_mul_iota_mul {k : ℕ} {p q : Tower K k} (hp : star p = -p) (hq : star q = -q)
+    (y1 y2 : Tower K k) :
+    mk p q * (mk (0 : Tower K k) 1 * mk y1 y2) = -(mk (0 : Tower K k) 1 * (mk p q * mk y1 y2)) := by
+  simp only [mk_mul_mk, neg_mk, mk_inj, star_add, star_sub, star_mul, star_neg, star_star,
+    hp, hq, zero_mul, mul_zero, one_mul, mul_one, zero_sub, zero_add, mul_neg, neg_mul,
+    sub_neg_eq_add, neg_neg]
+  constructor <;> abel
+
+omit [PartialOrder K] [IsOrderedAddMonoid K] in
+/-- A complex scalar carries the kernel of left multiplication by an element with imaginary
+halves into itself (Lemma 9.6 of Biss, Dugger and Isaksen). -/
+theorem mul_cs_mul_eq_zero {j : ℕ} {p q : Tower K j} {y : Tower K (j + 1)} (hp : star p = -p)
+    (hq : star q = -q) (hy : mk p q * y = 0) (r s : K) : mk p q * (cs r s * y) = 0 := by
+  have h1 : mk p q * (mk (0 : Tower K j) 1 * y) = 0 := by
+    have e : y = mk (CayleyDickson.re (A := Tower K j) y) (CayleyDickson.im (A := Tower K j) y) :=
+      rfl
+    have := mk_mul_iota_mul hp hq (CayleyDickson.re (A := Tower K j) y)
+      (CayleyDickson.im (A := Tower K j) y)
+    rw [← e, hy, mul_zero, neg_zero] at this
+    exact this
+  simp only [cs, add_mul, smul_mul_assoc', one_mul, mul_add, mul_smul_comm', hy, h1, smul_zero,
+    add_zero]
+
+/-- If `a x = 0`, then `((r + s i) a) x = 0`: the factor `x` has imaginary halves when it
+and `a` are nonzero (Lemma 9.5), so `x` carries the complex scalar through `a`. -/
+theorem cs_mul_mul_eq_zero (hsq : ∀ x : K, 0 ≤ x * x) {j : ℕ} {a x : Tower K (j + 1)}
+    (h : a * x = 0) (r s : K) : (cs r s * a) * x = 0 := by
+  by_cases ha : a = 0
+  · rw [ha, mul_zero, zero_mul]
+  by_cases hx : x = 0
+  · rw [hx, mul_zero]
+  obtain ⟨-, -, rc, rd⟩ := re_halves_eq_zero_of_mk_mul_eq_zero hsq
+    (a := CayleyDickson.re (A := Tower K j) a) (b := CayleyDickson.im (A := Tower K j) a)
+    (c := CayleyDickson.re (A := Tower K j) x) (d := CayleyDickson.im (A := Tower K j) x) h ha hx
+  exact mul_eq_zero_rev hsq (mul_cs_mul_eq_zero (star_eq_neg_of_re_eq_zero rc)
+    (star_eq_neg_of_re_eq_zero rd) (mul_eq_zero_rev hsq h) r s)
+
+/-- The inclusion of Theorem 10.1 of Biss, Dugger and Isaksen with scalars of the complex line: a
+pair of elements annihilated by `a` is annihilated by `((r + s i) a, (u + v i) a)`, with no
+condition on the scalars. -/
+theorem mk_cs_mul_eq_zero_of_mul_eq_zero (hsq : ∀ x : K, 0 ≤ x * x) {j : ℕ}
+    {a x y : Tower K (j + 1)} (hx : a * x = 0) (hy : a * y = 0) (r s u v : K) :
+    mk (cs r s * a) (cs u v * a) * mk x y = 0 := by
+  have hsx : a * star x = 0 := (mul_eq_zero_iff_star_mul_eq_zero hsq a x).2.1 hx
+  have hsy : a * star y = 0 := (mul_eq_zero_iff_star_mul_eq_zero hsq a y).2.1 hy
+  have t1 := cs_mul_mul_eq_zero hsq hx r s
+  have t2 := mul_eq_zero_rev hsq (cs_mul_mul_eq_zero hsq hsy u v)
+  have t3 := mul_eq_zero_rev hsq (cs_mul_mul_eq_zero hsq hy r s)
+  have t4 := cs_mul_mul_eq_zero hsq hsx u v
+  rw [mk_mul_mk, zero_eq_mk, mk_inj]
+  exact ⟨by rw [t1, t2, sub_zero], by rw [t3, t4, add_zero]⟩
+
+/-- The kernel of left multiplication by `((r + s i) a, (u + v i) a)` has at least twice the
+dimension of the kernel of left multiplication by `a`. -/
+theorem two_mul_finrank_ker_le_mk_cs (hsq : ∀ x : K, 0 ≤ x * x) {j : ℕ} (a : Tower K (j + 1))
+    (r s u v : K) :
+    2 * finrank K (LinearMap.ker (mulLeft K (j + 1) a)) ≤
+      finrank K (LinearMap.ker (mulLeft K (j + 1 + 1) (mk (cs r s * a) (cs u v * a)))) := by
+  let f : (LinearMap.ker (mulLeft K (j + 1) a)) × (LinearMap.ker (mulLeft K (j + 1) a)) →ₗ[K]
+      Tower K (j + 1 + 1) :=
+    (CayleyDickson.linearEquivProd (Tower K (j + 1)) K).symm.toLinearMap ∘ₗ
+      LinearMap.prodMap (Submodule.subtype _) (Submodule.subtype _)
+  have hinj : Function.Injective f := by
+    rintro ⟨x, y⟩ ⟨x', y'⟩ h
+    exact Prod.ext (Subtype.ext (congrArg CayleyDickson.re h))
+      (Subtype.ext (congrArg CayleyDickson.im h))
+  have hle : LinearMap.range f ≤
+      LinearMap.ker (mulLeft K (j + 1 + 1) (mk (cs r s * a) (cs u v * a))) := by
+    rintro _ ⟨⟨x, y⟩, rfl⟩
+    exact mk_cs_mul_eq_zero_of_mul_eq_zero hsq x.2 y.2 r s u v
+  calc 2 * finrank K (LinearMap.ker (mulLeft K (j + 1) a))
+      = finrank K (LinearMap.ker (mulLeft K (j + 1) a) × LinearMap.ker (mulLeft K (j + 1) a)) := by
+        rw [Module.finrank_prod, two_mul]
+    _ = finrank K (LinearMap.range f) := (LinearMap.finrank_range_of_inj hinj).symm
+    _ ≤ _ := Submodule.finrank_mono hle
+
+end ComplexScalars
 
 end Tower
 
