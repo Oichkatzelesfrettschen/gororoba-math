@@ -792,9 +792,24 @@ Fixpoint left_ok (p : Z) (L : spmat) (vs : list vec) (i : nat) : bool :=
                 left_ok p L vs' (S i)
   end.
 
-Definition pv_list (p : Z) (n : nat) (ops : list spmat) (e : vec) (G : list poly) (d : nat)
-  : list (poly * vec) :=
-  msets (fun g pv => (pmul g (fst pv), ev p ops g (snd pv))) (one_poly n, e) d G.
+Fixpoint vstep (p : Z) (ops : list spmat) (G : list poly) (prev : list (list vec))
+  : list (list vec) :=
+  match G, prev with
+  | g :: G', pg :: prev' =>
+      let rest := vstep p ops G' prev' in
+      (map (fun v => ev p ops g v) pg ++ nth 0 rest []) :: rest
+  | _, _ => [[]]
+  end.
+
+Fixpoint vlevels (p : Z) (ops : list spmat) (e : vec) (G : list poly) (d : nat)
+  : list (list vec) :=
+  match d with
+  | O => repeat [e] (S (length G))
+  | S d' => vstep p ops G (vlevels p ops e G d')
+  end.
+
+Definition pvecs (p : Z) (ops : list spmat) (e : vec) (G : list poly) (d : nat) : list vec :=
+  nth 0 (vlevels p ops e G d) [].
 
 Record cert := mk_cert {
   c_ops : list spmat;
@@ -805,14 +820,14 @@ Record cert := mk_cert {
 
 Definition check_cert (p : Z) (n : nat) (J G : list poly) (d : nat) (c : cert) : bool :=
   let ops := c_ops c in
-  let PV := pv_list p n ops (c_e c) G d in
+  let PV := pvecs p ops (c_e c) G d in
   Nat.eqb (length ops) n
   && forallb (fun M => forallb (fun N => comm_b p M N) ops) ops
   && forallb (strict_b p (c_lev c)) ops
   && forallb (fun g => vzero_b p (ev p ops g (c_e c))) J
-  && forallb (fun pv => forallb (fun M => vzero_b p (mv p M (snd pv))) ops) PV
+  && forallb (fun v => forallb (fun M => vzero_b p (mv p M v)) ops) PV
   && forallb (fun i => Nat.ltb i (length PV)) (c_sel c)
-  && left_ok p (c_left c) (map (fun i => snd (nth i PV (one_poly n, c_e c))) (c_sel c)) 0.
+  && left_ok p (c_left c) (map (fun i => nth i PV (c_e c)) (c_sel c)) 0.
 
 (** * Calibration: a two-variable cell over F_7 *)
 
@@ -1183,38 +1198,96 @@ Proof.
     apply IH; [exact H2|]. simpl in Hj. lia.
 Qed.
 
-Lemma msets_map {A B : Type} (phi : A -> B) (mulA : poly -> A -> A) (mulB : poly -> B -> B)
-  (oneA : A) (d : nat) :
-  (forall g a, phi (mulA g a) = mulB g (phi a)) ->
-  forall G, map phi (msets mulA oneA d G) = msets mulB (phi oneA) d G.
+Lemma nth_repeat_lt {A : Type} (a d : A) m k : (k < m)%nat -> nth k (repeat a m) d = a.
 Proof.
-  intros Hm. induction d as [|d IH]; intros G.
-  - reflexivity.
-  - induction G as [|g G' IHG].
-    + reflexivity.
-    + assert (IHG' : map phi (mset_aux mulA (msets mulA oneA d) G')
-                     = mset_aux mulB (msets mulB (phi oneA) d) G') by exact IHG.
-      change (map phi (map (mulA g) (msets mulA oneA d (g :: G'))
-                       ++ mset_aux mulA (msets mulA oneA d) G')
-              = map (mulB g) (msets mulB (phi oneA) d (g :: G'))
-                ++ mset_aux mulB (msets mulB (phi oneA) d) G').
-      rewrite map_app, map_map, IHG', <- (IH (g :: G')), map_map.
-      f_equal. apply map_ext. intros a. apply Hm.
+  revert k. induction m as [|m IH]; intros k Hk; [lia|].
+  destruct k as [|k]; [reflexivity|]. simpl. apply IH. lia.
 Qed.
 
-Lemma msets_inv {A : Type} (Q : A -> Prop) (mulg : poly -> A -> A) (one : A) :
-  Q one -> (forall g a, Q a -> Q (mulg g a)) ->
-  forall d G, Forall Q (msets mulg one d G).
+Lemma vstep_length p ops G : forall prev,
+  length prev = S (length G) -> length (vstep p ops G prev) = S (length G).
+Proof.
+  induction G as [|g G IH]; intros prev H; [reflexivity|].
+  destruct prev as [|pg prev]; [discriminate|].
+  simpl in H. injection H as H. simpl. rewrite (IH prev H). reflexivity.
+Qed.
+
+Lemma vlevels_length p ops e G : forall d, length (vlevels p ops e G d) = S (length G).
+Proof.
+  induction d as [|d IH]; [apply repeat_length|].
+  simpl. apply vstep_length. exact IH.
+Qed.
+
+Lemma vstep_correct p ops (F : list poly -> list vec) : forall G prev,
+  length prev = S (length G) ->
+  (forall k, (k <= length G)%nat -> nth k prev [] = F (skipn k G)) ->
+  forall k, (k <= length G)%nat ->
+    nth k (vstep p ops G prev) [] = mset_aux (fun g v => ev p ops g v) F (skipn k G).
+Proof.
+  induction G as [|g G IH]; intros prev Hl Hp k Hk.
+  - destruct k as [|k]; [reflexivity | simpl in Hk; lia].
+  - destruct prev as [|pg prev]; [discriminate|].
+    simpl in Hl. injection Hl as Hl.
+    assert (Hp' : forall k, (k <= length G)%nat -> nth k prev [] = F (skipn k G)).
+    { intros k' Hk'. exact (Hp (S k') (le_n_S _ _ Hk')). }
+    destruct k as [|k].
+    + assert (Hpg : pg = F (g :: G)) by exact (Hp 0%nat (Nat.le_0_l _)).
+      assert (Hr : nth 0 (vstep p ops G prev) [] = mset_aux (fun g v => ev p ops g v) F G)
+        by exact (IH prev Hl Hp' 0%nat (Nat.le_0_l _)).
+      simpl. rewrite Hpg, Hr. reflexivity.
+    + simpl in Hk. simpl. exact (IH prev Hl Hp' k (le_S_n _ _ Hk)).
+Qed.
+
+Lemma vlevels_correct p ops e G : forall d k, (k <= length G)%nat ->
+  nth k (vlevels p ops e G d) [] = msets (fun g v => ev p ops g v) e d (skipn k G).
+Proof.
+  induction d as [|d IH]; intros k Hk.
+  - change (nth k (repeat [e] (S (length G))) []
+            = msets (fun g v => ev p ops g v) e 0 (skipn k G)).
+    rewrite (nth_repeat_lt [e] [] (S (length G)) k (le_n_S _ _ Hk)). reflexivity.
+  - simpl. apply (vstep_correct p ops (msets (fun g v => ev p ops g v) e d));
+      [apply vlevels_length | exact IH | exact Hk].
+Qed.
+
+Lemma pvecs_msets p ops e G d :
+  pvecs p ops e G d = msets (fun g v => ev p ops g v) e d G.
+Proof. exact (vlevels_correct p ops e G d 0%nat (Nat.le_0_l _)). Qed.
+
+Lemma Forall2_map_rel {A B : Type} (R : A -> B -> Prop) (f : A -> A) (f' : B -> B) l l' :
+  Forall2 R l l' -> (forall a b, R a b -> R (f a) (f' b)) ->
+  Forall2 R (map f l) (map f' l').
+Proof. intros H Hf. induction H; simpl; constructor; [apply Hf; assumption | assumption]. Qed.
+
+Lemma msets_rel {A B : Type} (R : A -> B -> Prop) (mulA : poly -> A -> A) (mulB : poly -> B -> B)
+  (oneA : A) (oneB : B) :
+  R oneA oneB -> (forall g a b, R a b -> R (mulA g a) (mulB g b)) ->
+  forall d G, Forall2 R (msets mulA oneA d G) (msets mulB oneB d G).
 Proof.
   intros H1 H2. induction d as [|d IH]; intros G.
-  - constructor; [exact H1|constructor].
-  - induction G as [|g G' IHG].
-    + constructor.
-    + change (Forall Q (map (mulg g) (msets mulg one d (g :: G'))
-                        ++ mset_aux mulg (msets mulg one d) G')).
-      apply Forall_app. split; [|exact IHG].
-      rewrite Forall_forall. intros x Hx. apply in_map_iff in Hx as [a [Hxa Ha]].
-      subst x. apply H2. exact (proj1 (Forall_forall _ _) (IH (g :: G')) a Ha).
+  - simpl. constructor; [exact H1|constructor].
+  - induction G as [|g G' IHG]; [constructor|].
+    change (Forall2 R (map (mulA g) (msets mulA oneA d (g :: G'))
+                       ++ mset_aux mulA (msets mulA oneA d) G')
+                      (map (mulB g) (msets mulB oneB d (g :: G'))
+                       ++ mset_aux mulB (msets mulB oneB d) G')).
+    apply Forall2_app; [|exact IHG].
+    apply Forall2_map_rel; [exact (IH (g :: G'))|]. intros a b Hab. apply H2. exact Hab.
+Qed.
+
+Lemma Forall2_nth_R {A B : Type} (R : A -> B -> Prop) l l' d d' :
+  Forall2 R l l' -> R d d' -> forall i, R (nth i l d) (nth i l' d').
+Proof.
+  intros H Hd. induction H as [|a b l1 l2 Hab Hl IH]; intros i; [destruct i; exact Hd|].
+  destruct i as [|i]; [exact Hab | apply IH].
+Qed.
+
+Lemma Forall2_In_l {A B : Type} (R : A -> B -> Prop) l l' x :
+  Forall2 R l l' -> In x l -> exists y, In y l' /\ R x y.
+Proof.
+  intros H. induction H as [|a b l1 l2 Hab Hl IH]; intros Hin; [destruct Hin|].
+  destruct Hin as [E|Hin].
+  - subst a. exists b. split; [left; reflexivity | exact Hab].
+  - destruct (IH Hin) as [y [Hy Hr]]. exists y. split; [right; exact Hy | exact Hr].
 Qed.
 
 Lemma nth_map_in {A B : Type} (f : A -> B) (l : list A) j d d' :
@@ -1255,38 +1328,33 @@ Proof.
   assert (Hst : Forall (strict_mat p lev) ops).
   { rewrite Forall_forall. intros M HM. apply strict_b_sound.
     rewrite forallb_forall in Hstr. exact (Hstr M HM). }
-  assert (Hinv : Forall (fun pv : poly * vec => veq p (snd pv) (ev p ops (fst pv) e))
-                   (pv_list p (length ops) ops e G d)).
-  { apply msets_inv.
+  assert (Hrel : Forall2 (fun (P : poly) (v : vec) => veq p v (ev p ops P e))
+                   (products (length ops) G d) (pvecs p ops e G d)).
+  { unfold products. rewrite pvecs_msets. apply msets_rel.
     - exact (ev_one p ops (length ops) e).
-    - intros g pv Hpv. simpl.
-      etransitivity; [apply (lin_proper p _ (ev_lin p ops g) _ _ Hpv)|].
+    - intros g P v Hr. simpl.
+      etransitivity; [apply (lin_proper p _ (ev_lin p ops g) _ _ Hr)|].
       symmetry. apply ev_pmul. exact Hpc. }
-  assert (Hprod : products (length ops) G d = map fst (pv_list p (length ops) ops e G d)).
-  { unfold products, pv_list. symmetry.
-    apply (msets_map fst (fun g pv => (pmul g (fst pv), ev p ops g (snd pv))) pmul
-             (one_poly (length ops), e)).
-    intros g a. reflexivity. }
   assert (HJ' : forall g, In g J -> veq p (ev p ops g e) []).
   { intros g Hg. rewrite forallb_forall in HJ. apply vzero_b_sound. exact (HJ g Hg). }
-  assert (HPV : forall pv, In pv (pv_list p (length ops) ops e G d) ->
-                forall M, In M ops -> veq p (mv p M (snd pv)) []).
-  { intros pv Hpv M HM. rewrite forallb_forall in Hd. specialize (Hd pv Hpv).
+  assert (HPV : forall v, In v (pvecs p ops e G d) ->
+                forall M, In M ops -> veq p (mv p M v) []).
+  { intros v Hv M HM. rewrite forallb_forall in Hd. specialize (Hd v Hv).
     rewrite forallb_forall in Hd. apply vzero_b_sound. exact (Hd M HM). }
   assert (G1 : Forall (fun g => veq p (ev p ops g e) []) (J ++ m_products (length ops) G d)).
   { rewrite Forall_forall. intros g Hg. apply in_app_iff in Hg as [Hg|Hg].
     - exact (HJ' g Hg).
     - unfold m_products in Hg. apply in_flat_map in Hg as [k [Hk Hg]].
       apply in_map_iff in Hg as [P [HgP HP]]. subst g.
-      rewrite Hprod in HP. apply in_map_iff in HP as [pv [HPv Hpv]]. subst P.
+      destruct (Forall2_In_l _ _ _ _ Hrel HP) as [v [Hv Hr]].
       pose proof (proj1 (in_seq _ _ _) Hk) as Hk'.
       etransitivity; [apply ev_pmul; exact Hpc|].
       etransitivity;
         [apply (lin_proper p _ (ev_lin p ops (var (length ops) k)));
-         symmetry; exact (proj1 (Forall_forall _ _) Hinv pv Hpv)|].
+         symmetry; exact Hr|].
       etransitivity; [apply ev_var|].
       etransitivity; [apply mono_unit; lia|].
-      apply (HPV pv Hpv). apply nth_In. lia. }
+      apply (HPV v Hv). apply nth_In. lia. }
   intros cs Hlen [u [cofs [Hwu [Hwc [Hlc [Hnz Hz]]]]]].
   set (f := lincomb cs (select_products (length ops) G d sel)) in *.
   assert (H1 : veq p (ev p ops (pmul u f) e) []).
@@ -1301,21 +1369,12 @@ Proof.
     intros j Hj. unfold select_products in Hj. rewrite length_map in Hj.
     unfold select_products.
     rewrite (nth_map_in _ sel j _ 0%nat Hj).
-    rewrite Hprod.
-    change (nth (nth j sel 0%nat) (map fst (pv_list p (length ops) ops e G d))
-              (one_poly (length ops)))
-      with (nth (nth j sel 0%nat) (map fst (pv_list p (length ops) ops e G d))
-              (fst (one_poly (length ops), e))).
-    rewrite map_nth.
-    assert (Hq : veq p (snd (nth (nth j sel 0%nat) (pv_list p (length ops) ops e G d)
-                              (one_poly (length ops), e)))
-                       (ev p ops (fst (nth (nth j sel 0%nat) (pv_list p (length ops) ops e G d)
-                              (one_poly (length ops), e))) e)).
-    { apply (Forall_nth_default (fun pv : poly * vec => veq p (snd pv) (ev p ops (fst pv) e))
-               _ _ Hinv). exact (ev_one p ops (length ops) e). }
+    assert (Hq : veq p (nth (nth j sel 0%nat) (pvecs p ops e G d) e)
+                       (ev p ops (nth (nth j sel 0%nat) (products (length ops) G d)
+                                    (one_poly (length ops))) e)).
+    { exact (Forall2_nth_R _ _ _ _ _ Hrel (ev_one p ops (length ops) e) (nth j sel 0%nat)). }
     etransitivity; [apply (lin_proper p _ (mv_lin p L)); symmetry; exact Hq|].
-    assert (Hj' : (j < length (map (fun i => snd (nth i (pv_list p (length ops) ops e G d)
-                               (one_poly (length ops), e))) sel))%nat)
+    assert (Hj' : (j < length (map (fun i => nth i (pvecs p ops e G d) e) sel))%nat)
       by (rewrite length_map; exact Hj).
     pose proof (left_ok_sound p L _ 0 Hleft j Hj') as H0.
     rewrite (nth_map_in _ sel j _ 0%nat Hj) in H0.
@@ -1327,12 +1386,12 @@ Proof.
   specialize (H4 i). rewrite Hi, nth_nil_Z in H4. exact H4.
 Qed.
 
-Lemma products_pv p n ops e G d :
-  products n G d = map fst (pv_list p n ops e G d).
+Lemma products_pvecs_length p n ops e G d :
+  length (products n G d) = length (pvecs p ops e G d).
 Proof.
-  unfold products, pv_list. symmetry.
-  apply (msets_map fst (fun g pv => (pmul g (fst pv), ev p ops g (snd pv))) pmul (one_poly n, e)).
-  intros g a. reflexivity.
+  unfold products. rewrite pvecs_msets.
+  exact (Forall2_length (msets_rel (fun (_ : poly) (_ : vec) => True) pmul
+           (fun g v => ev p ops g v) (one_poly n) e I (fun _ _ _ _ => I) d G)).
 Qed.
 
 Lemma check_cert_sel_range p n J G d c :
@@ -1343,7 +1402,7 @@ Proof.
   apply andb_true_iff in H as [H _]. apply andb_true_iff in H as [_ Hsel].
   rewrite forallb_forall in Hsel. specialize (Hsel i Hi).
   apply Nat.ltb_lt in Hsel.
-  rewrite (products_pv p n (c_ops c) (c_e c) G d), length_map. exact Hsel.
+  rewrite (products_pvecs_length p n (c_ops c) (c_e c) G d). exact Hsel.
 Qed.
 
 Lemma prime_7 : prime 7.
