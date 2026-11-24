@@ -793,6 +793,8 @@ quantum	HilbertCellA5_108.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	HilbertCellA5_108.v	disj-pattern-notation
 quantum	HilbertCellCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	HilbertCellCertificate.v	disj-pattern-notation
+quantum	K2CofactorCertificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	K2CofactorCertificate.v	disj-pattern-notation
 quantum	KernelMapEstimator.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	KernelMapEstimator.v	disj-pattern-notation
 quantum	KernelMapEstimator.v	using-fallback-loc

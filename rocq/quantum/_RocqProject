@@ -62,6 +62,7 @@ FoldAverageDescent.v
 GaussianIntegerHom.v
 HilbertCellA5_108.v
 HilbertCellCertificate.v
+K2CofactorCertificate.v
 KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v
