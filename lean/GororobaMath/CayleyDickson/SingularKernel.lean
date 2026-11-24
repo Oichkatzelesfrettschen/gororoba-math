@@ -14,8 +14,9 @@ Convention: the product of `Tower R k` is the Cayley-Dickson product
 `(a, b) (c, d) = (a c - star d b, d a + b star c)` of `GororobaMath.CayleyDickson.Basic`
 (`Tower.mk_mul_mk`), the associator is `associator a b c = (a * b) * c - a * (b * c)`, and
 `Tower.dot`, `Tower.re` are the trace form and the coordinate of `1`. An element is pure
-when `re k x = 0`, which gives `star x = -x`. The level results read over a commutative
-ring `R` with the identity as star and use no division and no hypothesis on `2`.
+when `re k x = 0`, which gives `star x = -x`. The annihilation results read over a
+commutative ring `R` with the identity as star and use no division and no hypothesis on `2`; the
+dimension results read over a field `F` with `2 ≠ 0` and `ν ≠ 0`.
 
 For pure octonions `a`, `b` with `dot a b = 0` and `dot a a = ν = dot b b`, the sedenion
 `z = mk a b` is annihilated on the left by `kvec a b ν y`, whose halves are `ν • x` and
@@ -35,6 +36,17 @@ the two components of `z * kvec` into `ν • (a * x) - ((b * x) * a) * b` and
 * `Tower.mul_comm_neg_of_dot_eq_zero`: orthogonal pure elements anticommute.
 * `Tower.mul_mul_mul_eq_smul`: `((b * x) * a) * b = ν • (a * x)` for `x` pure and orthogonal
   to `a`, `b`, `a * b`.
+* `Tower.finrank_hspan`, `Tower.finrank_hperp`: `span(1, a, b, a * b)` and its orthogonal
+  complement have dimension 4.
+* `Tower.associator_eq_two_smul_of_orth`: `associator a b y = 2 • ((a * b) * y)` on the
+  orthogonal complement; `Tower.range_assocMap_eq_hperp`: the associator map has that
+  complement as range.
+* `Tower.finrank_span_kvec`: `mk a b` and the vectors `kvec a b ν y` span a space of
+  dimension 5.
+* `Tower.ker_mulLeft_mk_eq_range_kvecMap`, `Tower.finrank_ker_mulLeft_mk`: the left
+  annihilator of `mk a b` is the range of `kvec` and has dimension 4.
+* `Tower.kernelSpace_eq_span`, `Tower.finrank_kernelSpace`: the imaginary `k` with
+  `mk a b * k` a scalar form the span of `mk a b` and the `kvec`, of dimension 5.
 -/
 
 @[expose] public section
@@ -243,6 +255,15 @@ def dotLin (k : ℕ) (v : Tower R k) : Tower R k →ₗ[R] R where
 omit [TrivialStar R] in
 theorem dotLin_apply (k : ℕ) (v y : Tower R k) : dotLin k v y = dot k y v := rfl
 
+/-- For pure orthogonal `a`, `b` with `dot b b = ν`: `b * (a * b) = ν • a`. -/
+theorem mul_mul_self_eq_smul {a b : Tower R 3} {ν : R} (ha : re 3 a = 0) (hb : re 3 b = 0)
+    (hab : dot 3 a b = 0) (hbν : dot 3 b b = ν) : b * (a * b) = ν • a := by
+  have hba : b * a = -(a * b) :=
+    mul_comm_neg_of_dot_eq_zero hb ha (by rw [dot_comm]; exact hab)
+  have e : a * b = -(b * a) := by rw [hba, neg_neg]
+  rw [e, mul_neg, left_alternative_of_le_three (le_refl 3), mul_self_eq_neg_smul_of_re_eq_zero hb,
+    hbν, neg_mul, smul_mul_assoc', one_mul, neg_neg]
+
 /-- The associator of `a`, `b` and `a * b` vanishes when `a`, `b` are pure and orthogonal. -/
 theorem associator_mul_self {a b : Tower R 3} {ν : R} (ha : re 3 a = 0) (hb : re 3 b = 0)
     (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν) :
@@ -252,10 +273,7 @@ theorem associator_mul_self {a b : Tower R 3} {ν : R} (ha : re 3 a = 0) (hb : r
   have hab0 : re 3 (a * b) = 0 := by rw [re_mul_of_re_eq_zero ha, hab, neg_zero]
   have hnn : dot 3 (a * b) (a * b) = ν ^ 2 := by
     rw [dot_mul_mul_left_of_le_three (le_refl 3), haν, hbν]; ring
-  have h1 : b * (a * b) = ν • a := by
-    have e : a * b = -(b * a) := by rw [hba, neg_neg]
-    rw [e, mul_neg, left_alternative_of_le_three (le_refl 3), mul_self_eq_neg_smul_of_re_eq_zero hb,
-      hbν, neg_mul, smul_mul_assoc', one_mul, neg_neg]
+  have h1 := mul_mul_self_eq_smul ha hb hab hbν
   unfold associator
   rw [h1, mul_smul_comm', mul_self_eq_neg_smul_of_re_eq_zero ha, haν,
     mul_self_eq_neg_smul_of_re_eq_zero hab0, hnn, smul_neg, smul_smul, sub_eq_zero, pow_two]
@@ -517,6 +535,232 @@ theorem finrank_span_kvec {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : 
   rw [hdis, finrank_bot, finrank_span_singleton hz,
     finrank_range_kvecMap h2 ha hb hab haν hbν hν] at h
   omega
+
+/-- A sedenion `mk c d` annihilated by `mk a b` satisfies `ν • (d * a) = b * ((b * d) * a)`:
+the first component gives `ν • c = star a * (star d * b)`, whence `ν • star c = -((b * d) * a)`,
+and the second component is `d * a + b * star c = 0`. -/
+theorem smul_mul_eq_of_mk_mul_mk_eq_zero {a b c d : Tower F 3} {ν : F} (hb : re 3 b = 0)
+    (haν : dot 3 a a = ν) (h : mk a b * mk c d = 0) : ν • (d * a) = b * (b * d * a) := by
+  rw [mk_mul_mk, zero_eq_mk, mk_inj] at h
+  obtain ⟨h1, h2⟩ := h
+  have e1 : a * c = star d * b := sub_eq_zero.1 h1
+  have hc : ν • c = star a * (star d * b) := by
+    rw [← haν, ← star_mul_mul_of_le_three (le_refl 3) a c, e1]
+  have hs : ν • star c = -(b * d * a) := by
+    rw [← star_smul', hc, star_mul, star_mul, star_star, star_star,
+      star_eq_neg_of_re_eq_zero hb, neg_mul, neg_mul]
+  have h3 : ν • (d * a) + b * (ν • star c) = 0 := by
+    rw [mul_smul_comm', ← smul_add, h2, smul_zero]
+  rw [hs, mul_neg] at h3
+  exact add_neg_eq_zero.1 h3
+
+/-- A sedenion `mk c 0` annihilated by `mk a b` vanishes when `dot a a = ν ≠ 0`. -/
+theorem eq_zero_of_mk_mul_mk_zero {a b c : Tower F 3} {ν : F} (haν : dot 3 a a = ν) (hν : ν ≠ 0)
+    (h : mk a b * mk c 0 = 0) : c = 0 := by
+  rw [mk_mul_mk, zero_eq_mk 3, mk_inj] at h
+  have e1 : a * c = 0 := by simpa using h.1
+  have h3 : ν • c = 0 := by
+    rw [← haν, ← star_mul_mul_of_le_three (le_refl 3) a c, e1, mul_zero]
+  exact (smul_eq_zero.1 h3).resolve_left hν
+
+/-- The map `d ↦ b * ((b * d) * a) + ν • (d * a)`. -/
+def rhoMap (a b : Tower F 3) (ν : F) : Tower F 3 →ₗ[F] Tower F 3 :=
+  mulLeft F 3 b ∘ₗ mulRight F 3 a ∘ₗ mulLeft F 3 b + ν • mulRight F 3 a
+
+theorem rhoMap_apply (a b : Tower F 3) (ν : F) (d : Tower F 3) :
+    rhoMap a b ν d = b * (b * d * a) + ν • (d * a) := by
+  simp [rhoMap]
+
+/-- The pure-orthogonal relations among `a` and `b` that the four cases of `rhoMap` use. -/
+theorem rhoMap_one {a b : Tower F 3} {ν : F} (hb : re 3 b = 0) (hbν : dot 3 b b = ν) :
+    rhoMap a b ν 1 = 0 := by
+  have hbb : b * b = -(ν • (1 : Tower F 3)) := by
+    rw [mul_self_eq_neg_smul_of_re_eq_zero hb, hbν]
+  rw [rhoMap_apply]
+  simp only [mul_one, one_mul, left_alternative_of_le_three (le_refl 3), hbb, neg_mul,
+    smul_mul_assoc', neg_add_cancel]
+
+theorem rhoMap_left {a b : Tower F 3} {ν : F} (ha : re 3 a = 0) (hb : re 3 b = 0)
+    (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν) : rhoMap a b ν a = 0 := by
+  have haa : a * a = -(ν • (1 : Tower F 3)) := by
+    rw [mul_self_eq_neg_smul_of_re_eq_zero ha, haν]
+  have hbb : b * b = -(ν • (1 : Tower F 3)) := by
+    rw [mul_self_eq_neg_smul_of_re_eq_zero hb, hbν]
+  rw [rhoMap_apply]
+  simp only [right_alternative_of_le_three (le_refl 3), haa, mul_neg, mul_smul_comm', mul_one,
+    hbb, smul_neg, smul_smul, neg_neg]
+  abel
+
+theorem rhoMap_right {a b : Tower F 3} {ν : F} (hb : re 3 b = 0) (hbν : dot 3 b b = ν) :
+    rhoMap a b ν b = 0 := by
+  have hbb : b * b = -(ν • (1 : Tower F 3)) := by
+    rw [mul_self_eq_neg_smul_of_re_eq_zero hb, hbν]
+  rw [rhoMap_apply]
+  simp only [hbb, neg_mul, smul_mul_assoc', one_mul, mul_neg, mul_smul_comm', neg_add_cancel]
+
+theorem rhoMap_mul {a b : Tower F 3} {ν : F} (ha : re 3 a = 0) (hb : re 3 b = 0)
+    (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν) :
+    rhoMap a b ν (a * b) = 0 := by
+  have haa : a * a = -(ν • (1 : Tower F 3)) := by
+    rw [mul_self_eq_neg_smul_of_re_eq_zero ha, haν]
+  have hbb : b * b = -(ν • (1 : Tower F 3)) := by
+    rw [mul_self_eq_neg_smul_of_re_eq_zero hb, hbν]
+  have hba : b * a = -(a * b) :=
+    mul_comm_neg_of_dot_eq_zero hb ha (by rw [dot_comm]; exact hab)
+  have h1 := mul_mul_self_eq_smul ha hb hab hbν
+  have hfl : a * b * a = a * (b * a) := flexible_of_le_three (le_refl 3) a b
+  rw [rhoMap_apply, h1, hfl, hba, mul_neg, left_alternative_of_le_three (le_refl 3)]
+  simp only [haa, smul_mul_assoc', mul_smul_comm', mul_neg, neg_mul, smul_neg, mul_one, one_mul,
+    smul_smul, neg_neg]
+  abel
+
+/-- `rhoMap` vanishes on the four generators `1, a, b, a * b`: the quaternion subalgebra is
+associative, so `b * ((b * d) * a) = -(ν • (d * a))` there. -/
+theorem rhoMap_hbasis {a b : Tower F 3} {ν : F} (ha : re 3 a = 0) (hb : re 3 b = 0)
+    (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν) (i : Fin 4) :
+    rhoMap a b ν (hbasis a b i) = 0 := by
+  have k0 := rhoMap_one (a := a) hb hbν
+  have k1 := rhoMap_left ha hb haν hbν
+  have k2 := rhoMap_right (a := a) hb hbν
+  have k3 := rhoMap_mul ha hb hab haν hbν
+  fin_cases i <;> simp [hbasis, k0, k1, k2, k3]
+
+/-- `rhoMap` vanishes on the span of `1, a, b, a * b`. -/
+theorem hspan_le_ker_rhoMap {a b : Tower F 3} {ν : F} (ha : re 3 a = 0) (hb : re 3 b = 0)
+    (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν) :
+    hspan a b ≤ LinearMap.ker (rhoMap a b ν) := by
+  refine Submodule.span_le.2 ?_
+  rintro _ ⟨i, rfl⟩
+  exact rhoMap_hbasis ha hb hab haν hbν i
+
+/-- An element of the span of `1, a, b, a * b` that is the second half of an annihilated
+sedenion vanishes, when `2 ≠ 0` and `ν ≠ 0`. -/
+theorem eq_zero_of_mem_hspan_of_mk_mul_mk_eq_zero {a b c d : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0)
+    (ha : re 3 a = 0) (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν)
+    (hbν : dot 3 b b = ν) (hν : ν ≠ 0) (hd : d ∈ hspan a b) (h : mk a b * mk c d = 0) :
+    d = 0 := by
+  have hA := smul_mul_eq_of_mk_mul_mk_eq_zero hb haν h
+  have hρ := LinearMap.mem_ker.1 (hspan_le_ker_rhoMap ha hb hab haν hbν hd)
+  rw [rhoMap_apply, ← hA, ← two_smul F, smul_smul] at hρ
+  have hda : d * a = 0 := (smul_eq_zero.1 hρ).resolve_left (mul_ne_zero h2 hν)
+  have h3 : ν • d = 0 := by
+    rw [← haν, ← mul_mul_star_of_le_three (le_refl 3) a d, hda, zero_mul]
+  exact (smul_eq_zero.1 h3).resolve_left hν
+
+/-- The second half of a sedenion as a linear map. -/
+def sndLin : Tower F 4 →ₗ[F] Tower F 3 where
+  toFun k := CayleyDickson.im (A := Tower F 3) k
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+
+/-- The second half of the annihilator of `mk a b`. -/
+def annSnd (a b : Tower F 3) : LinearMap.ker (mulLeft F 4 (mk a b)) →ₗ[F] Tower F 3 :=
+  sndLin ∘ₗ (LinearMap.ker (mulLeft F 4 (mk a b))).subtype
+
+theorem annSnd_injective {a b : Tower F 3} {ν : F} (haν : dot 3 a a = ν) (hν : ν ≠ 0) :
+    Function.Injective (annSnd a b) := by
+  rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+  rintro ⟨k, hk⟩ hx
+  obtain ⟨c, d⟩ := k
+  have hz : mk a b * mk c d = 0 := LinearMap.mem_ker.1 hk
+  have hd : d = 0 := hx
+  subst hd
+  have hc := eq_zero_of_mk_mul_mk_zero haν hν hz
+  subst hc
+  exact Subtype.ext (zero_eq_mk 3).symm
+
+theorem range_annSnd_inf_hspan {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : re 3 a = 0)
+    (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν)
+    (hν : ν ≠ 0) : LinearMap.range (annSnd a b) ⊓ hspan a b = ⊥ := by
+  rw [eq_bot_iff]
+  rintro w ⟨⟨⟨k, hk⟩, rfl⟩, hw⟩
+  obtain ⟨c, d⟩ := k
+  have hz : mk a b * mk c d = 0 := LinearMap.mem_ker.1 hk
+  exact eq_zero_of_mem_hspan_of_mk_mul_mk_eq_zero h2 ha hb hab haν hbν hν hw hz
+
+/-- The left annihilator of `mk a b` has dimension at most 4. -/
+theorem finrank_ker_mulLeft_mk_le {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : re 3 a = 0)
+    (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν)
+    (hν : ν ≠ 0) : Module.finrank F (LinearMap.ker (mulLeft F 4 (mk a b))) ≤ 4 := by
+  have h := Submodule.finrank_sup_add_finrank_inf_eq (LinearMap.range (annSnd a b)) (hspan a b)
+  rw [range_annSnd_inf_hspan h2 ha hb hab haν hbν hν, finrank_bot,
+    finrank_hspan ha hb hab haν hbν hν,
+    LinearMap.finrank_range_of_inj (annSnd_injective haν hν)] at h
+  have h8 := Submodule.finrank_le (LinearMap.range (annSnd a b) ⊔ hspan a b)
+  rw [finrank_eq F 3] at h8
+  have : Module.finrank F (LinearMap.ker (mulLeft F 4 (mk a b))) =
+      Module.finrank F (LinearMap.ker (mulLeft F 4 (mk a b))) := rfl
+  omega
+
+/-- The left annihilator of `mk a b` is the range of `kvec a b ν`. -/
+theorem ker_mulLeft_mk_eq_range_kvecMap {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0)
+    (ha : re 3 a = 0) (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν)
+    (hbν : dot 3 b b = ν) (hν : ν ≠ 0) :
+    LinearMap.ker (mulLeft F 4 (mk a b)) = LinearMap.range (kvecMap a b ν) := by
+  have hle : LinearMap.range (kvecMap a b ν) ≤ LinearMap.ker (mulLeft F 4 (mk a b)) := by
+    rintro _ ⟨y, rfl⟩
+    rw [LinearMap.mem_ker, mulLeft_apply, kvecMap_apply]
+    exact mk_mul_kvec ha hb hab haν hbν y
+  symm
+  exact Submodule.eq_of_le_of_finrank_le hle
+    ((finrank_ker_mulLeft_mk_le h2 ha hb hab haν hbν hν).trans
+      (finrank_range_kvecMap h2 ha hb hab haν hbν hν).ge)
+
+/-- The left annihilator of `mk a b` has dimension 4. -/
+theorem finrank_ker_mulLeft_mk {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : re 3 a = 0)
+    (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν)
+    (hν : ν ≠ 0) : Module.finrank F (LinearMap.ker (mulLeft F 4 (mk a b))) = 4 := by
+  rw [ker_mulLeft_mk_eq_range_kvecMap h2 ha hb hab haν hbν hν]
+  exact finrank_range_kvecMap h2 ha hb hab haν hbν hν
+
+/-- The space `K(z)` of imaginary `k` with `z * k` a scalar, for `z = mk a b`. -/
+def kernelSpace (a b : Tower F 3) : Submodule F (Tower F 4) :=
+  LinearMap.ker (dotLin 4 1) ⊓
+    Submodule.comap (mulLeft F 4 (mk a b)) (Submodule.span F {(1 : Tower F 4)})
+
+theorem mem_kernelSpace {a b : Tower F 3} {k : Tower F 4} :
+    k ∈ kernelSpace a b ↔ re 4 k = 0 ∧ ∃ l : F, mk a b * k = l • 1 := by
+  simp only [kernelSpace, Submodule.mem_inf, LinearMap.mem_ker, dotLin_apply, dot_one_right,
+    Submodule.mem_comap, mulLeft_apply, Submodule.mem_span_singleton]
+  constructor <;> rintro ⟨h1, l, h2⟩ <;> exact ⟨h1, l, h2.symm⟩
+
+/-- `K(z)` is spanned by `z` and the vectors `kvec a b ν y`. -/
+theorem kernelSpace_eq_span {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : re 3 a = 0)
+    (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν)
+    (hν : ν ≠ 0) :
+    kernelSpace a b = Submodule.span F (insert (mk a b : Tower F 4) (Set.range (kvec a b ν))) := by
+  have hz0 : re 4 (mk a b : Tower F 4) = 0 := by rw [re_mk]; exact ha
+  have hzz : (mk a b : Tower F 4) * mk a b = (-(2 * ν)) • 1 := by
+    rw [mul_self_eq_neg_smul_of_re_eq_zero hz0, dot_mk, haν, hbν, ← two_mul, neg_smul]
+  have h2ν : 2 * ν ≠ 0 := mul_ne_zero h2 hν
+  apply le_antisymm
+  · intro k hk
+    obtain ⟨hre, l, hl⟩ := mem_kernelSpace.1 hk
+    have hz : mk a b * (k + (l * (2 * ν)⁻¹) • mk a b) = 0 := by
+      rw [mul_add, mul_smul_comm', hl, hzz, smul_smul, ← add_smul, mul_neg,
+        inv_mul_cancel_right₀ h2ν, add_neg_cancel, zero_smul]
+    have hmem : k + (l * (2 * ν)⁻¹) • mk a b ∈ LinearMap.ker (mulLeft F 4 (mk a b)) :=
+      LinearMap.mem_ker.2 hz
+    rw [ker_mulLeft_mk_eq_range_kvecMap h2 ha hb hab haν hbν hν] at hmem
+    obtain ⟨y, hy⟩ := hmem
+    have hk' : k = kvec a b ν y - (l * (2 * ν)⁻¹) • mk a b := by
+      rw [← kvecMap_apply]
+      exact eq_sub_of_add_eq hy.symm
+    rw [hk']
+    exact Submodule.sub_mem _ (Submodule.subset_span (Or.inr ⟨y, rfl⟩))
+      (Submodule.smul_mem _ _ (Submodule.subset_span (Or.inl rfl)))
+  · refine Submodule.span_le.2 ?_
+    rintro k (rfl | ⟨y, rfl⟩)
+    · exact mem_kernelSpace.2 ⟨hz0, -(2 * ν), hzz⟩
+    · refine mem_kernelSpace.2 ⟨(re_kvec ha hb hab ν y).1, 0, ?_⟩
+      rw [mk_mul_kvec ha hb hab haν hbν y, zero_smul]
+
+/-- `K(z)` has dimension 5. -/
+theorem finrank_kernelSpace {a b : Tower F 3} {ν : F} (h2 : (2 : F) ≠ 0) (ha : re 3 a = 0)
+    (hb : re 3 b = 0) (hab : dot 3 a b = 0) (haν : dot 3 a a = ν) (hbν : dot 3 b b = ν)
+    (hν : ν ≠ 0) : Module.finrank F (kernelSpace a b) = 5 := by
+  rw [kernelSpace_eq_span h2 ha hb hab haν hbν hν]
+  exact finrank_span_kvec h2 ha hb hab haν hbν hν
 
 end Dimension
 
