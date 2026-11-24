@@ -70,3 +70,4 @@ public import GororobaMath.LinearAlgebra.BorderedKernel
 public import GororobaMath.CayleyDickson.ImaginarySquare
 public import GororobaMath.CayleyDickson.AlignedPairTotal
 public import GororobaMath.CayleyDickson.LeftMulDeterminant
+public import GororobaMath.CayleyDickson.AssociatorClasses
