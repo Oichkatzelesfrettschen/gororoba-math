@@ -44,6 +44,11 @@ gororoba repository shares; this file governs where the two differ.
   confine_theorems_N.v`); a rendered source changes through the generator,
   and `ci/check_delegation_sources.sh` renders them again from the checkout
   `GOROROBA_OPEN` names, on demand.
+- `cuda/` is a Lake package of device kernels on a toolchain of its own
+  (`cuda/lean-toolchain`, an experimental Lean with a CUDA backend). No
+  library module imports it and the admission gate builds none of it;
+  `cuda/README.md` holds the pinned release and the measured limits of the
+  backend.
 - `ci/check.sh` is the Lean half of the admission gate and
   `ci/check_rocq.sh` the Rocq half; `ci/check_signal_traps.sh`, which
   `ci/check.sh` runs, requires each `trap` of a tracked shell script to
@@ -227,6 +232,13 @@ gororoba repository shares; this file governs where the two differ.
     Lean theorem by path and name and the values substituted for its
     parameters, and whose statement is the substituted proposition. Neither
     artifact replaces the other.
+- A device kernel is a runtime probe. Its output is runtime evidence for
+  the inputs it enumerates on a named device, and no record cites it as a
+  certificate; a certificate that a proof evaluates stays a Rocq artifact
+  under the evidence axis above. A kernel that mirrors a library definition
+  names it in its docstring and has a comparison under `ci/`, as
+  `ci/compare_cuda_signs.sh` compares `cuda/SignTable.lean` with
+  `Tower.sign`, on demand on a host with an NVIDIA device.
 - A headline result is a row of `ci/headline-results.tsv` (prover, path,
   theorem, partner, tracking issue). Its rows are the theorems the "Lean
   library" table of `README.md` names, and further rows by pull request;
