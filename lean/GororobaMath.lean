@@ -73,3 +73,4 @@ public import GororobaMath.LinearAlgebra.PfaffianBlock
 public import GororobaMath.CayleyDickson.LeftMulDeterminant
 public import GororobaMath.CayleyDickson.AnnihilatorBound
 public import GororobaMath.CayleyDickson.SedenionCriterion
+public import GororobaMath.CayleyDickson.AssociatorClasses
