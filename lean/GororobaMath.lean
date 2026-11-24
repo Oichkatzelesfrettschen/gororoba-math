@@ -74,3 +74,4 @@ public import GororobaMath.CayleyDickson.AssociatorClasses
 public import GororobaMath.CayleyDickson.SingularKernel
 public import GororobaMath.CayleyDickson.ScaledPairAnnihilator
 public import GororobaMath.CayleyDickson.AnnihilatorBound
+public import GororobaMath.CayleyDickson.SedenionCriterion
