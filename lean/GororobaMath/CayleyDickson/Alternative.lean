@@ -22,12 +22,13 @@ with a star in which `2 ≠ 0`.
   at every level `k ≤ 3`.
 * `Tower.moufang_left_three`, `Tower.moufang_middle_three`, `Tower.moufang_right_three`,
   `Tower.flexible_three` and their versions at every level `k ≤ 3`
-  (`Tower.moufang_left_of_le_three`, `Tower.bol_left_of_le_three`, ...).
+  (`Tower.moufang_left_of_le_three`, `Tower.bol_left_of_le_three`,
+  `Tower.bol_right_of_le_three`, ...).
 * `Tower.associator_add_swap_left_of_le_three`, `Tower.associator_add_swap_right_of_le_three`,
   `Tower.associator_cyclic_of_le_three`: the associator is alternating at levels up to 3.
 * `Tower.exists_left_alternative_ne`, `Tower.exists_right_alternative_ne`,
   `Tower.exists_moufang_left_ne`, `Tower.exists_moufang_middle_ne`,
-  `Tower.exists_moufang_right_ne`, `Tower.exists_bol_left_ne`,
+  `Tower.exists_moufang_right_ne`, `Tower.exists_bol_left_ne`, `Tower.exists_bol_right_ne`,
   `Tower.exists_associator_swap_left_ne`, `Tower.exists_associator_swap_right_ne`,
   `Tower.exists_associator_cyclic_ne`: at every level `k ≥ 4`, over a ring with a star in which
   `2 ≠ 0`, each law fails. The sedenion witnesses are `associator x x y = 2 e 15` for
@@ -387,6 +388,12 @@ theorem bol_left_of_le_three (hk : k ≤ 3) (x y z : Tower R k) :
   rw [← flexible_of_le_three hk]
   exact moufang_left_of_le_three hk x y z
 
+/-- The right Bol identity at every level `k ≤ 3`. -/
+theorem bol_right_of_le_three (hk : k ≤ 3) (x y z : Tower R k) :
+    z * x * y * x = z * (x * y * x) := by
+  rw [flexible_of_le_three hk x y]
+  exact moufang_right_of_le_three hk z x y
+
 end LevelThreeAssociator
 
 section LiftFailure
@@ -500,6 +507,15 @@ theorem exists_bol_left_ne (h2 : (2 : R) ≠ 0) (k : ℕ) (hk : 4 ≤ k) :
   intro hm
   simp only [one_mul] at hm
   exact h hm.symm
+
+/-- At every level `k ≥ 4`, over a ring with `2 ≠ 0`, the right Bol identity fails. -/
+theorem exists_bol_right_ne (h2 : (2 : R) ≠ 0) (k : ℕ) (hk : 4 ≤ k) :
+    ∃ x y z : Tower R k, z * x * y * x ≠ z * (x * y * x) := by
+  obtain ⟨z, x, h⟩ := exists_right_alternative_ne h2 k hk
+  refine ⟨x, 1, z, ?_⟩
+  intro hm
+  simp only [mul_one] at hm
+  exact h hm
 
 /-- At every level `k ≥ 4`, over a ring with `2 ≠ 0`, the associator is not invariant under a
 cyclic permutation: `A(e 1, e 10, e 4) = 2 e 15` while `A(e 10, e 4, e 1) = 0`. -/
