@@ -60,7 +60,7 @@ ROOT = Path(__file__).resolve().parent.parent.parent
 LEDGER = ROOT / "ci" / "claims" / "ledger.tsv"
 EXPECTED = ROOT / "ci" / "claims" / "expected-sources.tsv"
 HEADER = ["source", "commit", "sha256"]
-OPEN_COMMIT = "f81aba2b4e9f18fef4ac751422972bf1d8f3a764"
+OPEN_COMMIT = "3c04c2eb0cb0580cd0eaab26992e092e7d6fa283"
 QUANTUM_COMMIT = "78c780bc6993dcb1f14e72c3d9dd1e4e23da4ba3"
 QUANTUM_LATER = "b7c2b373ca05be1f7096694d50f0c4638231b778"
 # Files of gororoba-quantum read at the later commit: the findings ledger, whose rows A5-565 to
