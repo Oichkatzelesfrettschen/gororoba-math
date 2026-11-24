@@ -801,6 +801,12 @@ quantum	CdTwistedProduct.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	CdTwistedProduct.v	disj-pattern-notation
 quantum	CdTwistedProduct.v	using-fallback-loc
 quantum	CdTwistedProductBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	E8ConjugationIdeal.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	E8ConjugationIdeal.v	disj-pattern-notation
+quantum	E8ConjugationIdeal.v	using-fallback-loc
+quantum	E8ConjugationMap.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	E8ConjugationMap.v	disj-pattern-notation
+quantum	E8ConjugationMap.v	using-fallback-loc
 quantum	GaussianIntegerHom.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	GaussianIntegerHom.v	disj-pattern-notation
 quantum	GaussianIntegerHom.v	using-fallback-loc
