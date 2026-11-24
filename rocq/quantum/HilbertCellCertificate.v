@@ -4,8 +4,8 @@
     ambient variety), a list G of polynomials (the generators of the ideal whose fiber cone is measured) and
     a degree d. The local ring is R = F_p[t_1 .. t_n]_(t) / (J), P_d is the span of the degree-d products of
     the entries of G, and the cell claims that the quotient (P_d + J) / (m P_d + J) of R has a basis of r
-    products, where m = (t_1 .. t_n). This file states the claim ([hilbert_cell]) and defines a checkable
-    sufficient condition for its independence half ([check_cert]), calibrated on a two-variable cell.
+    products, where m = (t_1 .. t_n). This file states the claim ([hilbert_cell]) and proves a checkable
+    sufficient condition for its independence half ([check_cert], [cert_independent]).
 
     Convention: [cg p a b] means p divides a - b, so every statement reads modulo p and no hypothesis on p
     enters until the final cancellation of a nonzero constant term, which uses [prime p]. A vector is a list
@@ -28,7 +28,13 @@
     (b) every nonzero entry of every operator goes from a lower level to a higher one; (c) every generator
     of J sends e to 0; (d) every operator sends the vector of every product to 0, the vector of a product
     being computed along the order of [msets]; (e) the left-inverse sends the vector of the i-th selected
-    product to the i-th unit vector. *)
+    product to the i-th unit vector.
+
+    Main results: [cert_independent] (a certificate accepted by [check_cert] makes the selected products
+    independent modulo the local ideal (J, m P_d) for prime p); [check_cert_sel_range] (the selected indices
+    lie in [products]); [toy_cert_accepted] and the six [_rejected] lemmas (a two-variable cell over F_7 and
+    six single-entry mutants, by vm_compute); [toy_independent] (the first instantiated). The spanning half of
+    [hilbert_cell] ([spans_mod]) is stated and not certified here. *)
 
 From Stdlib Require Import ZArith Lia List Znumtheory Setoid Morphisms Bool PeanoNat.
 Import ListNotations.
@@ -852,3 +858,503 @@ Proof. vm_compute. reflexivity. Qed.
 Lemma toy_product_mutant_rejected :
   check_cert 7 2 toy_J ([([1%nat; 0%nat], 1)] :: toy_G) 1 toy_cert = false.
 Proof. vm_compute. reflexivity. Qed.
+
+(** * Soundness of the checker *)
+
+Lemma vadd_nil_r p x : vadd p x [] = x.
+Proof. destruct x; reflexivity. Qed.
+
+Lemma nth_vadd_scale p c x y b :
+  cg p (nth b (vadd p (vscale p c x) y) 0) (c * nth b x 0 + nth b y 0).
+Proof.
+  eapply cg_trans; [apply nth_vadd|].
+  apply cg_add; [apply nth_vscale | apply cg_refl].
+Qed.
+
+Lemma veq_of_vsub p x y : veq p (vadd p x (vscale p (-1) y)) [] -> veq p x y.
+Proof.
+  intros H b. pose proof (H b) as Hb. rewrite nth_nil_Z in Hb.
+  assert (H2 : cg p (nth b x 0 + (-1) * nth b y 0) 0).
+  { eapply cg_trans; [|exact Hb]. apply cg_sym.
+    eapply cg_trans; [apply nth_vadd|].
+    apply cg_add; [apply cg_refl | apply nth_vscale]. }
+  unfold cg in *.
+  replace (nth b x 0 - nth b y 0) with (nth b x 0 + (-1) * nth b y 0 - 0) by ring.
+  exact H2.
+Qed.
+
+Lemma vzero_b_sound p x : vzero_b p x = true -> veq p x [].
+Proof.
+  intros H b. rewrite nth_nil_Z. unfold vzero_b in H. rewrite forallb_forall in H.
+  destruct (Nat.lt_ge_cases b (length x)) as [Hl|Hl].
+  - apply cg_zero_of_mod. apply Z.eqb_eq. apply H. apply nth_In. exact Hl.
+  - rewrite nth_overflow by exact Hl. apply cg_refl.
+Qed.
+
+Lemma rowdiff_sound p R1 R2 : rowdiff_b p R1 R2 = true ->
+  forall F, cg p (ksum R1 F) (ksum R2 F).
+Proof.
+  intros H F. unfold rowdiff_b in H. rewrite forallb_forall in H.
+  assert (H0 : cg p (ksum (R1 ++ map (fun t => (fst t, - snd t)) R2) F) 0).
+  { apply (ksum_zero_keys Nat.eq_dec). intros k Hk. apply cg_zero_of_mod.
+    apply Z.eqb_eq. apply H. exact Hk. }
+  rewrite ksum_app, ksum_neg_list in H0. unfold cg in *.
+  replace (ksum R1 F - ksum R2 F) with (ksum R1 F + - ksum R2 F - 0) by ring.
+  exact H0.
+Qed.
+
+Lemma ksum_rowprod (rA : row) (N : spmat) F :
+  ksum (flat_map (fun cv => map (fun t => (fst t, snd cv * snd t)) (nth (fst cv) N [])) rA) F
+  = ksum rA (fun c => ksum (nth c N []) F).
+Proof.
+  induction rA as [|cv rA IH]; simpl; [reflexivity|].
+  rewrite ksum_app, ksum_scale_list, IH. reflexivity.
+Qed.
+
+Lemma mv_mv_nth p M N x b :
+  cg p (nth b (mv p M (mv p N x)) 0) (ksum (rowprod M N b) (fun c => nth c x 0)).
+Proof.
+  eapply cg_trans; [apply mv_nth_cg|].
+  unfold rowprod. rewrite ksum_rowprod.
+  apply ksum_cg. intros c. apply mv_nth_cg.
+Qed.
+
+Lemma comm_b_sound p M N : comm_b p M N = true -> commutes p (mv p M) (mv p N).
+Proof.
+  intros H x b.
+  eapply cg_trans; [apply mv_mv_nth|].
+  eapply cg_trans; [|apply cg_sym; apply mv_mv_nth].
+  destruct (Nat.lt_ge_cases b (Nat.max (length M) (length N))) as [Hl|Hl].
+  - unfold comm_b in H. rewrite forallb_forall in H.
+    apply rowdiff_sound. apply H. apply (proj2 (in_seq _ _ _)). lia.
+  - assert (HM : nth b M [] = []) by (apply nth_overflow; lia).
+    assert (HN : nth b N [] = []) by (apply nth_overflow; lia).
+    unfold rowprod. rewrite HM, HN. simpl. apply cg_refl.
+Qed.
+
+Definition Vanish (p : Z) (lev : list nat) (L : nat) (y : vec) : Prop :=
+  forall c, (nth c lev 0%nat < L)%nat -> cg p (nth c y 0) 0.
+
+Definition strict_mat (p : Z) (lev : list nat) (M : spmat) : Prop :=
+  forall b cv, In cv (nth b M []) ->
+    (nth (fst cv) lev 0%nat < nth b lev 0%nat)%nat \/ cg p (snd cv) 0.
+
+Lemma strict_b_sound p lev M : strict_b p lev M = true -> strict_mat p lev M.
+Proof.
+  intros H b cv Hin. unfold strict_b in H. rewrite forallb_forall in H.
+  destruct (Nat.lt_ge_cases b (length M)) as [Hl|Hl].
+  - specialize (H b (proj2 (in_seq (length M) 0 b) (conj (Nat.le_0_l b) Hl))).
+    rewrite forallb_forall in H. specialize (H cv Hin).
+    apply orb_true_iff in H as [H|H].
+    + right. apply cg_zero_of_mod. apply Z.eqb_eq. exact H.
+    + left. apply Nat.ltb_lt. exact H.
+  - rewrite (nth_overflow M [] Hl) in Hin. destruct Hin.
+Qed.
+
+Lemma Vanish_le p lev L L' y : (L <= L')%nat -> Vanish p lev L' y -> Vanish p lev L y.
+Proof. intros H Hy c Hc. apply Hy. lia. Qed.
+
+Lemma mv_strict p lev M : strict_mat p lev M ->
+  forall L y, Vanish p lev L y -> Vanish p lev (S L) (mv p M y).
+Proof.
+  intros Hs L y Hy b Hb.
+  eapply cg_trans; [apply mv_nth_cg|].
+  apply ksum_zero_terms. intros cv Hcv.
+  destruct (Hs b cv Hcv) as [Hl|Hz].
+  - apply cg_zero_mul_r. apply Hy. lia.
+  - apply cg_zero_mul_l. exact Hz.
+Qed.
+
+Lemma iter_preserve p lev M : strict_mat p lev M ->
+  forall k L y, Vanish p lev L y -> Vanish p lev L (iter (mv p M) k y).
+Proof.
+  intros Hs k. induction k as [|k IH]; intros L y Hy; [exact Hy|].
+  simpl. apply (Vanish_le p lev L (S L)); [lia|].
+  apply mv_strict; [exact Hs|]. apply IH. exact Hy.
+Qed.
+
+Lemma mono_preserve p lev ops : Forall (strict_mat p lev) ops ->
+  forall m L y, Vanish p lev L y -> Vanish p lev L (mono_apply p ops m y).
+Proof.
+  induction ops as [|M os IH]; intros Hs m L y Hy; [destruct m; exact Hy|].
+  inversion Hs as [|? ? HM Hos]; subst.
+  destruct m as [|k m']; [exact Hy|].
+  simpl. apply iter_preserve; [exact HM|]. apply IH; assumption.
+Qed.
+
+Lemma mono_strict p lev ops : Forall (strict_mat p lev) ops ->
+  forall m, length m = length ops -> forallb (Nat.eqb 0%nat) m = false ->
+  forall L y, Vanish p lev L y -> Vanish p lev (S L) (mono_apply p ops m y).
+Proof.
+  induction ops as [|M os IH]; intros Hs m Hlen Hf L y Hy.
+  - destruct m; [|discriminate]. simpl in Hf. discriminate.
+  - inversion Hs as [|? ? HM Hos]; subst.
+    destruct m as [|k m']; [discriminate|].
+    simpl in Hlen. injection Hlen as Hlen.
+    simpl in Hf. apply andb_false_iff in Hf as [Hk|Hm'].
+    + destruct k as [|k]; [discriminate|].
+      simpl. apply mv_strict; [exact HM|].
+      apply iter_preserve; [exact HM|]. apply mono_preserve; assumption.
+    + simpl. apply iter_preserve; [exact HM|]. apply IH; assumption.
+Qed.
+
+Lemma mono_one p ops : forall m y,
+  forallb (Nat.eqb 0%nat) m = true -> mono_apply p ops m y = y.
+Proof.
+  induction ops as [|M os IH]; intros m y H; [destruct m; reflexivity|].
+  destruct m as [|k m']; [reflexivity|].
+  simpl in H. apply andb_true_iff in H as [Hk Hm'].
+  destruct k as [|k]; [|discriminate].
+  simpl. rewrite (IH m' y Hm'). reflexivity.
+Qed.
+
+Lemma ev_const p lev ops (Hs : Forall (strict_mat p lev) ops) u :
+  Forall (fun t => length (fst t) = length ops) u ->
+  forall L y c, Vanish p lev L y -> nth c lev 0%nat = L ->
+  cg p (nth c (ev p ops u y) 0) (const_coef u * nth c y 0).
+Proof.
+  induction u as [|t u IH]; intros Hwf L y c Hy Hc.
+  - simpl ev. simpl const_coef. rewrite nth_nil_Z, Z.mul_0_l. apply cg_refl.
+  - pose proof (Forall_inv Hwf) as Ht. pose proof (Forall_inv_tail Hwf) as Hwf'.
+    simpl in Ht.
+    change (ev p ops (t :: u) y)
+      with (vadd p (vscale p (snd t) (mono_apply p ops (fst t) y)) (ev p ops u y)).
+    change (const_coef (t :: u))
+      with ((if forallb (Nat.eqb 0%nat) (fst t) then snd t else 0) + const_coef u).
+    eapply cg_trans; [apply nth_vadd|].
+    destruct (forallb (Nat.eqb 0%nat) (fst t)) eqn:Hf.
+    + assert (Hm : mono_apply p ops (fst t) y = y) by (apply mono_one; exact Hf).
+      eapply cg_trans;
+        [apply cg_add;
+         [eapply cg_trans; [apply nth_vscale | apply cg_mul; [apply cg_refl | rewrite Hm; apply cg_refl]]
+         | apply (IH Hwf' L y c Hy Hc)]|].
+      cbv iota. apply cg_eq. ring.
+    + assert (Hv : Vanish p lev (S L) (mono_apply p ops (fst t) y))
+        by (apply mono_strict; assumption).
+      assert (Hz : cg p (snd t * nth c (mono_apply p ops (fst t) y) 0) 0).
+      { apply cg_zero_mul_r. apply Hv. lia. }
+      eapply cg_trans;
+        [apply cg_add;
+         [eapply cg_trans; [apply nth_vscale | exact Hz]
+         | apply (IH Hwf' L y c Hy Hc)]|].
+      cbv iota. apply cg_eq. ring.
+Qed.
+
+Lemma ev_inj p lev ops (Hprime : prime p) (Hs : Forall (strict_mat p lev) ops) u :
+  wf_poly (length ops) u -> ~ cg p (const_coef u) 0 ->
+  forall y, veq p (ev p ops u y) [] -> veq p y [].
+Proof.
+  intros Hwf Hnz y Hy.
+  assert (HV : forall L, Vanish p lev L y).
+  { induction L as [|L IH].
+    - intros c Hc. exfalso. lia.
+    - intros c Hc.
+      destruct (Nat.lt_ge_cases (nth c lev 0%nat) L) as [Hlt|Hge].
+      + apply IH. exact Hlt.
+      + assert (Hc' : nth c lev 0%nat = L) by lia.
+        pose proof (ev_const p lev ops Hs u Hwf L y c IH Hc') as H1.
+        pose proof (veq_nil_nth p _ Hy c) as H2.
+        assert (H3 : cg p (const_coef u * nth c y 0) 0)
+          by (eapply cg_trans; [apply cg_sym; exact H1 | exact H2]).
+        unfold cg in H3. rewrite Z.sub_0_r in H3.
+        apply (proj1 (Z.divide_prime_mul _ _ _ (proj2 (prime_alt p) Hprime))) in H3.
+        destruct H3 as [H3|H3].
+        * exfalso. apply Hnz. unfold cg. rewrite Z.sub_0_r. exact H3.
+        * unfold cg. rewrite Z.sub_0_r. exact H3. }
+  intros b. rewrite nth_nil_Z.
+  exact (HV (S (nth b lev 0%nat)) b (Nat.lt_succ_diag_r _)).
+Qed.
+
+Lemma mono_zero p ops n y : mono_apply p ops (repeat 0%nat n) y = y.
+Proof.
+  revert n. induction ops as [|M os IH]; intros n; [destruct n; reflexivity|].
+  destruct n as [|n]; [reflexivity|].
+  simpl. rewrite IH. reflexivity.
+Qed.
+
+Lemma mono_unit p ops : forall k, (k < length ops)%nat -> forall y,
+  veq p (mono_apply p ops (unit_mono (length ops) k) y) (mv p (nth k ops []) y).
+Proof.
+  induction ops as [|M os IH]; intros k Hk y; [simpl in Hk; lia|].
+  destruct k as [|k].
+  - simpl. rewrite mono_zero. apply veq_refl.
+  - simpl. apply IH. simpl in Hk. lia.
+Qed.
+
+Lemma ev_one p ops n e : veq p e (ev p ops (one_poly n) e).
+Proof.
+  unfold one_poly. simpl ev. rewrite mono_zero, vadd_nil_r.
+  intros b. apply cg_sym. eapply cg_trans; [apply nth_vscale|].
+  rewrite Z.mul_1_l. apply cg_refl.
+Qed.
+
+Lemma ev_var p ops n k v :
+  veq p (ev p ops (var n k) v) (mono_apply p ops (unit_mono n k) v).
+Proof.
+  unfold var. simpl ev. rewrite vadd_nil_r.
+  intros b. eapply cg_trans; [apply nth_vscale|].
+  rewrite Z.mul_1_l. apply cg_refl.
+Qed.
+
+Lemma nth_shift_lt o l b : (b < o)%nat -> nth b (shift o l) 0 = 0.
+Proof.
+  revert b. induction o as [|o IH]; intros b Hb; [lia|].
+  destruct b as [|b]; [reflexivity|]. simpl. apply IH. lia.
+Qed.
+
+Lemma nth_shift_ge o l b : (o <= b)%nat -> nth b (shift o l) 0 = nth (b - o) l 0.
+Proof.
+  revert b. induction o as [|o IH]; intros b Hb;
+    [rewrite Nat.sub_0_r; reflexivity|].
+  destruct b as [|b]; [lia|]. simpl. apply IH. lia.
+Qed.
+
+Lemma shift_cons p c o cs :
+  veq p (vadd p (vscale p c (shift o [1])) (shift (S o) cs)) (shift o (c :: cs)).
+Proof.
+  intros b.
+  eapply cg_trans; [apply nth_vadd_scale|].
+  destruct (Nat.lt_trichotomy b o) as [H|[H|H]].
+  - rewrite (nth_shift_lt o [1] b H), (nth_shift_lt (S o) cs b (Nat.lt_lt_succ_r _ _ H)),
+      (nth_shift_lt o (c :: cs) b H).
+    apply cg_eq. ring.
+  - subst b.
+    rewrite (nth_shift_ge o [1] o (Nat.le_refl o)),
+      (nth_shift_lt (S o) cs o (Nat.lt_succ_diag_r o)),
+      (nth_shift_ge o (c :: cs) o (Nat.le_refl o)).
+    rewrite Nat.sub_diag.
+    change (nth 0 [1] 0) with 1. change (nth 0 (c :: cs) 0) with c.
+    apply cg_eq. ring.
+  - rewrite (nth_shift_ge o [1] b (Nat.lt_le_incl _ _ H)), (nth_shift_ge (S o) cs b H),
+      (nth_shift_ge o (c :: cs) b (Nat.lt_le_incl _ _ H)).
+    replace (b - o)%nat with (S (b - S o)) by lia.
+    change (nth (S (b - S o)) [1] 0) with (nth (b - S o) ([] : list Z) 0).
+    change (nth (S (b - S o)) (c :: cs) 0) with (nth (b - S o) cs 0).
+    rewrite nth_nil_Z. apply cg_eq. ring.
+Qed.
+
+Lemma lincomb_left p ops (Hc : pcomm p ops) e L : forall cs Ps o,
+  length cs = length Ps ->
+  (forall j, (j < length Ps)%nat ->
+     veq p (mv p L (ev p ops (nth j Ps []) e)) (shift (o + j) [1])) ->
+  veq p (mv p L (ev p ops (lincomb cs Ps) e)) (shift o cs).
+Proof.
+  induction cs as [|c cs IH]; intros Ps o Hlen Hj.
+  - destruct Ps as [|P Ps]; [|discriminate].
+    simpl lincomb. simpl ev.
+    intros b.
+    pose proof (lin_zero p _ (mv_lin p L) [] (veq_refl p [])) as H0.
+    specialize (H0 b). rewrite nth_nil_Z in H0.
+    eapply cg_trans; [exact H0|].
+    destruct (Nat.lt_ge_cases b o) as [Hb|Hb].
+    + rewrite (nth_shift_lt o [] b Hb). apply cg_refl.
+    + rewrite (nth_shift_ge o [] b Hb), nth_nil_Z. apply cg_refl.
+  - destruct Ps as [|P Ps]; [discriminate|].
+    simpl in Hlen. injection Hlen as Hlen.
+    simpl lincomb.
+    assert (E1 : veq p (ev p ops (map (fun t => (fst t, c * snd t)) P ++ lincomb cs Ps) e)
+                       (vadd p (vscale p c (ev p ops P e)) (ev p ops (lincomb cs Ps) e))).
+    { etransitivity; [apply ev_app|].
+      exact (vadd_Proper p _ _ (ev_scale p ops c P e) _ _ (veq_refl p _)). }
+    destruct (mv_lin p L) as [Hp [Ha Hs]].
+    etransitivity; [apply Hp; exact E1|].
+    etransitivity; [apply Ha|].
+    assert (E2 : veq p (mv p L (ev p ops P e)) (shift o [1])).
+    { pose proof (Hj 0%nat (Nat.lt_0_succ _)) as H0. simpl in H0.
+      rewrite Nat.add_0_r in H0. exact H0. }
+    assert (E3 : veq p (mv p L (ev p ops (lincomb cs Ps) e)) (shift (S o) cs)).
+    { apply IH; [exact Hlen|]. intros j Hjl.
+      assert (Hj1 : (S j < length (P :: Ps))%nat) by (simpl; lia).
+      pose proof (Hj (S j) Hj1) as H0. simpl in H0.
+      replace (S o + j)%nat with (o + S j)%nat by lia. exact H0. }
+    etransitivity;
+      [exact (vadd_Proper p _ _ (veq_trans p _ _ _ (Hs c _) (vscale_Proper p c c (cg_refl p c) _ _ E2)) _ _ E3)|].
+    apply shift_cons.
+Qed.
+
+Lemma left_ok_sound p L : forall vs i, left_ok p L vs i = true ->
+  forall j, (j < length vs)%nat -> veq p (mv p L (nth j vs [])) (shift (i + j) [1]).
+Proof.
+  induction vs as [|v vs IH]; intros i H j Hj; [simpl in Hj; lia|].
+  simpl in H. apply andb_true_iff in H as [H1 H2].
+  destruct j as [|j].
+  - simpl. rewrite Nat.add_0_r. apply veq_of_vsub. apply vzero_b_sound. exact H1.
+  - simpl. replace (i + S j)%nat with (S i + j)%nat by lia.
+    apply IH; [exact H2|]. simpl in Hj. lia.
+Qed.
+
+Lemma msets_map {A B : Type} (phi : A -> B) (mulA : poly -> A -> A) (mulB : poly -> B -> B)
+  (oneA : A) (d : nat) :
+  (forall g a, phi (mulA g a) = mulB g (phi a)) ->
+  forall G, map phi (msets mulA oneA d G) = msets mulB (phi oneA) d G.
+Proof.
+  intros Hm. induction d as [|d IH]; intros G.
+  - reflexivity.
+  - induction G as [|g G' IHG].
+    + reflexivity.
+    + assert (IHG' : map phi (mset_aux mulA (msets mulA oneA d) G')
+                     = mset_aux mulB (msets mulB (phi oneA) d) G') by exact IHG.
+      change (map phi (map (mulA g) (msets mulA oneA d (g :: G'))
+                       ++ mset_aux mulA (msets mulA oneA d) G')
+              = map (mulB g) (msets mulB (phi oneA) d (g :: G'))
+                ++ mset_aux mulB (msets mulB (phi oneA) d) G').
+      rewrite map_app, map_map, IHG', <- (IH (g :: G')), map_map.
+      f_equal. apply map_ext. intros a. apply Hm.
+Qed.
+
+Lemma msets_inv {A : Type} (Q : A -> Prop) (mulg : poly -> A -> A) (one : A) :
+  Q one -> (forall g a, Q a -> Q (mulg g a)) ->
+  forall d G, Forall Q (msets mulg one d G).
+Proof.
+  intros H1 H2. induction d as [|d IH]; intros G.
+  - constructor; [exact H1|constructor].
+  - induction G as [|g G' IHG].
+    + constructor.
+    + change (Forall Q (map (mulg g) (msets mulg one d (g :: G'))
+                        ++ mset_aux mulg (msets mulg one d) G')).
+      apply Forall_app. split; [|exact IHG].
+      rewrite Forall_forall. intros x Hx. apply in_map_iff in Hx as [a [Hxa Ha]].
+      subst x. apply H2. exact (proj1 (Forall_forall _ _) (IH (g :: G')) a Ha).
+Qed.
+
+Lemma nth_map_in {A B : Type} (f : A -> B) (l : list A) j d d' :
+  (j < length l)%nat -> nth j (map f l) d = f (nth j l d').
+Proof.
+  revert j. induction l as [|a l IH]; intros j Hj; [simpl in Hj; lia|].
+  destruct j as [|j]; [reflexivity|]. simpl. apply IH. simpl in Hj. lia.
+Qed.
+
+Lemma Forall_nth_default {A : Type} (Q : A -> Prop) l d :
+  Forall Q l -> Q d -> forall i, Q (nth i l d).
+Proof.
+  intros Hf Hd i. destruct (Nat.lt_ge_cases i (length l)) as [H|H].
+  - apply (proj1 (Forall_forall _ _) Hf). apply nth_In. exact H.
+  - rewrite nth_overflow by exact H. exact Hd.
+Qed.
+
+Theorem cert_independent p n J G d c :
+  prime p -> check_cert p n J G d c = true ->
+  independent_mod p n (J ++ m_products n G d) (select_products n G d (c_sel c)).
+Proof.
+  intros Hprime Hchk.
+  unfold check_cert in Hchk. cbv zeta in Hchk.
+  set (ops := c_ops c) in *. set (lev := c_lev c) in *. set (e := c_e c) in *.
+  set (L := c_left c) in *. set (sel := c_sel c) in *.
+  clearbody ops lev e L sel.
+  apply andb_true_iff in Hchk as [Hchk Hleft].
+  apply andb_true_iff in Hchk as [Hchk Hsel].
+  apply andb_true_iff in Hchk as [Hchk Hd].
+  apply andb_true_iff in Hchk as [Hchk HJ].
+  apply andb_true_iff in Hchk as [Hchk Hstr].
+  apply andb_true_iff in Hchk as [Hn Hcomm].
+  apply Nat.eqb_eq in Hn. subst n.
+  assert (Hpc : pcomm p ops).
+  { intros M N HM HN. apply comm_b_sound.
+    rewrite forallb_forall in Hcomm. specialize (Hcomm M HM).
+    rewrite forallb_forall in Hcomm. exact (Hcomm N HN). }
+  assert (Hst : Forall (strict_mat p lev) ops).
+  { rewrite Forall_forall. intros M HM. apply strict_b_sound.
+    rewrite forallb_forall in Hstr. exact (Hstr M HM). }
+  assert (Hinv : Forall (fun pv : poly * vec => veq p (snd pv) (ev p ops (fst pv) e))
+                   (pv_list p (length ops) ops e G d)).
+  { apply msets_inv.
+    - exact (ev_one p ops (length ops) e).
+    - intros g pv Hpv. simpl.
+      etransitivity; [apply (lin_proper p _ (ev_lin p ops g) _ _ Hpv)|].
+      symmetry. apply ev_pmul. exact Hpc. }
+  assert (Hprod : products (length ops) G d = map fst (pv_list p (length ops) ops e G d)).
+  { unfold products, pv_list. symmetry.
+    apply (msets_map fst (fun g pv => (pmul g (fst pv), ev p ops g (snd pv))) pmul
+             (one_poly (length ops), e)).
+    intros g a. reflexivity. }
+  assert (HJ' : forall g, In g J -> veq p (ev p ops g e) []).
+  { intros g Hg. rewrite forallb_forall in HJ. apply vzero_b_sound. exact (HJ g Hg). }
+  assert (HPV : forall pv, In pv (pv_list p (length ops) ops e G d) ->
+                forall M, In M ops -> veq p (mv p M (snd pv)) []).
+  { intros pv Hpv M HM. rewrite forallb_forall in Hd. specialize (Hd pv Hpv).
+    rewrite forallb_forall in Hd. apply vzero_b_sound. exact (Hd M HM). }
+  assert (G1 : Forall (fun g => veq p (ev p ops g e) []) (J ++ m_products (length ops) G d)).
+  { rewrite Forall_forall. intros g Hg. apply in_app_iff in Hg as [Hg|Hg].
+    - exact (HJ' g Hg).
+    - unfold m_products in Hg. apply in_flat_map in Hg as [k [Hk Hg]].
+      apply in_map_iff in Hg as [P [HgP HP]]. subst g.
+      rewrite Hprod in HP. apply in_map_iff in HP as [pv [HPv Hpv]]. subst P.
+      pose proof (proj1 (in_seq _ _ _) Hk) as Hk'.
+      etransitivity; [apply ev_pmul; exact Hpc|].
+      etransitivity;
+        [apply (lin_proper p _ (ev_lin p ops (var (length ops) k)));
+         symmetry; exact (proj1 (Forall_forall _ _) Hinv pv Hpv)|].
+      etransitivity; [apply ev_var|].
+      etransitivity; [apply mono_unit; lia|].
+      apply (HPV pv Hpv). apply nth_In. lia. }
+  intros cs Hlen [u [cofs [Hwu [Hwc [Hlc [Hnz Hz]]]]]].
+  set (f := lincomb cs (select_products (length ops) G d sel)) in *.
+  assert (H1 : veq p (ev p ops (pmul u f) e) []).
+  { etransitivity; [apply pzero_diff; exact Hz|].
+    apply ev_combo_zero; [exact Hpc | exact G1]. }
+  assert (H2 : veq p (ev p ops f e) []).
+  { apply (ev_inj p lev ops Hprime Hst u Hwu Hnz).
+    etransitivity; [symmetry; apply ev_pmul; exact Hpc|]. exact H1. }
+  assert (H3 : veq p (mv p L (ev p ops f e)) (shift 0 cs)).
+  { apply (lincomb_left p ops Hpc e L cs (select_products (length ops) G d sel) 0);
+      [exact Hlen|].
+    intros j Hj. unfold select_products in Hj. rewrite length_map in Hj.
+    unfold select_products.
+    rewrite (nth_map_in _ sel j _ 0%nat Hj).
+    rewrite Hprod.
+    change (nth (nth j sel 0%nat) (map fst (pv_list p (length ops) ops e G d))
+              (one_poly (length ops)))
+      with (nth (nth j sel 0%nat) (map fst (pv_list p (length ops) ops e G d))
+              (fst (one_poly (length ops), e))).
+    rewrite map_nth.
+    assert (Hq : veq p (snd (nth (nth j sel 0%nat) (pv_list p (length ops) ops e G d)
+                              (one_poly (length ops), e)))
+                       (ev p ops (fst (nth (nth j sel 0%nat) (pv_list p (length ops) ops e G d)
+                              (one_poly (length ops), e))) e)).
+    { apply (Forall_nth_default (fun pv : poly * vec => veq p (snd pv) (ev p ops (fst pv) e))
+               _ _ Hinv). exact (ev_one p ops (length ops) e). }
+    etransitivity; [apply (lin_proper p _ (mv_lin p L)); symmetry; exact Hq|].
+    assert (Hj' : (j < length (map (fun i => snd (nth i (pv_list p (length ops) ops e G d)
+                               (one_poly (length ops), e))) sel))%nat)
+      by (rewrite length_map; exact Hj).
+    pose proof (left_ok_sound p L _ 0 Hleft j Hj') as H0.
+    rewrite (nth_map_in _ sel j _ 0%nat Hj) in H0.
+    exact H0. }
+  assert (H4 : veq p cs []).
+  { etransitivity; [symmetry; exact H3|]. apply (lin_zero p _ (mv_lin p L)). exact H2. }
+  rewrite Forall_forall. intros c0 Hc.
+  destruct (In_nth cs c0 0 Hc) as [i [_ Hi]].
+  specialize (H4 i). rewrite Hi, nth_nil_Z in H4. exact H4.
+Qed.
+
+Lemma products_pv p n ops e G d :
+  products n G d = map fst (pv_list p n ops e G d).
+Proof.
+  unfold products, pv_list. symmetry.
+  apply (msets_map fst (fun g pv => (pmul g (fst pv), ev p ops g (snd pv))) pmul (one_poly n, e)).
+  intros g a. reflexivity.
+Qed.
+
+Lemma check_cert_sel_range p n J G d c :
+  check_cert p n J G d c = true ->
+  forall i, In i (c_sel c) -> (i < length (products n G d))%nat.
+Proof.
+  intros H i Hi. unfold check_cert in H. cbv zeta in H.
+  apply andb_true_iff in H as [H _]. apply andb_true_iff in H as [_ Hsel].
+  rewrite forallb_forall in Hsel. specialize (Hsel i Hi).
+  apply Nat.ltb_lt in Hsel.
+  rewrite (products_pv p n (c_ops c) (c_e c) G d), length_map. exact Hsel.
+Qed.
+
+Lemma prime_7 : prime 7.
+Proof.
+  apply prime_alt. split; [lia|].
+  intros n Hn H. destruct H as [k Hk].
+  assert (n = 2 \/ n = 3 \/ n = 4 \/ n = 5 \/ n = 6) as Hc by lia.
+  destruct Hc as [E | [E | [E | [E | E]]]]; subst n; lia.
+Qed.
+
+Theorem toy_independent :
+  independent_mod 7 2 (toy_J ++ m_products 2 toy_G 1)
+    (select_products 2 toy_G 1 (c_sel toy_cert)).
+Proof. exact (cert_independent 7 2 toy_J toy_G 1 toy_cert prime_7 toy_cert_accepted). Qed.
