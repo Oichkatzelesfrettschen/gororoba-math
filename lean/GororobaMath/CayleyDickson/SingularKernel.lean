@@ -89,7 +89,7 @@ theorem mul_comm_neg_of_dot_eq_zero {k : ℕ} {u v : Tower R k} (hu : re k u = 0
   exact eq_neg_of_add_eq_zero_left h1
 
 /-- The coordinate of `1` of a product with a pure left factor is minus the trace form. -/
-theorem re_mul_of_re_eq_zero {k : ℕ} {u : Tower R k} (hu : re k u = 0) (v : Tower R k) :
+theorem re_mul_of_re_eq_zero_left {k : ℕ} {u : Tower R k} (hu : re k u = 0) (v : Tower R k) :
     re k (u * v) = -dot k u v := by
   rw [← dot_one_right, (dot_mul_adjoint k u v 1).1, mul_one, star_eq_neg_of_re_eq_zero hu,
     dot_neg_right, dot_comm k v u]
@@ -134,7 +134,7 @@ theorem mul_mul_eq_neg_mul_mul {a b x : Tower R 3} (ha : re 3 a = 0) (hb : re 3 
     mul_comm_neg_of_dot_eq_zero ha hx (by rw [dot_comm]; exact hxa)
   have hbx : b * x = -(x * b) :=
     mul_comm_neg_of_dot_eq_zero hb hx (by rw [dot_comm]; exact hxb)
-  have hab0 : re 3 (a * b) = 0 := by rw [re_mul_of_re_eq_zero ha, hab, neg_zero]
+  have hab0 : re 3 (a * b) = 0 := by rw [re_mul_of_re_eq_zero_left ha, hab, neg_zero]
   have hcx : a * b * x = -(x * (a * b)) :=
     mul_comm_neg_of_dot_eq_zero hab0 hx (by rw [dot_comm]; exact hxab)
   have hxb' : x * b = -(b * x) := by rw [hbx, neg_neg]
@@ -159,7 +159,7 @@ theorem mul_mul_mul_eq_smul {a b x : Tower R 3} {ν : R} (ha : re 3 a = 0) (hb :
   have hba : b * a = -(a * b) :=
     mul_comm_neg_of_dot_eq_zero hb ha (by rw [dot_comm]; exact hab)
   have hw0 : re 3 (b * x) = 0 := by
-    rw [re_mul_of_re_eq_zero hb, dot_comm, hxb, neg_zero]
+    rw [re_mul_of_re_eq_zero_left hb, dot_comm, hxb, neg_zero]
   have hwa : dot 3 (b * x) a = 0 := by
     rw [(dot_mul_adjoint 3 b x a).1, star_eq_neg_of_re_eq_zero hb, neg_mul, hba, neg_neg, hxab]
   have hwa' : b * x * a = -(a * (b * x)) := mul_comm_neg_of_dot_eq_zero hw0 ha hwa
@@ -198,10 +198,10 @@ theorem re_kvec_snd {a b : Tower R 3} (ha : re 3 a = 0) (hb : re 3 b = 0) (hab :
   have hba : b * a = -(a * b) :=
     mul_comm_neg_of_dot_eq_zero hb ha (by rw [dot_comm]; exact hab)
   have hw0 : re 3 (b * associator a b y) = 0 := by
-    rw [re_mul_of_re_eq_zero hb, dot_comm, hxb, neg_zero]
+    rw [re_mul_of_re_eq_zero_left hb, dot_comm, hxb, neg_zero]
   have hwa : dot 3 (b * associator a b y) a = 0 := by
     rw [(dot_mul_adjoint 3 b _ a).1, star_eq_neg_of_re_eq_zero hb, neg_mul, hba, neg_neg, hxab]
-  rw [← dot_one_right, dot_neg_left, dot_one_right, re_mul_of_re_eq_zero hw0, hwa, neg_zero,
+  rw [← dot_one_right, dot_neg_left, dot_one_right, re_mul_of_re_eq_zero_left hw0, hwa, neg_zero,
     neg_zero]
 
 /-- Both halves of `kvec` have real part zero, so `kvec` is pure. -/
@@ -223,7 +223,7 @@ theorem mk_mul_kvec {a b : Tower R 3} {ν : R} (ha : re 3 a = 0) (hb : re 3 b = 
   have hba : b * a = -(a * b) :=
     mul_comm_neg_of_dot_eq_zero hb ha (by rw [dot_comm]; exact hab)
   have hw0 : re 3 (b * associator a b y) = 0 := by
-    rw [re_mul_of_re_eq_zero hb, dot_comm, hxb, neg_zero]
+    rw [re_mul_of_re_eq_zero_left hb, dot_comm, hxb, neg_zero]
   have hwa : dot 3 (b * associator a b y) a = 0 := by
     rw [(dot_mul_adjoint 3 b _ a).1, star_eq_neg_of_re_eq_zero hb, neg_mul, hba, neg_neg, hxab]
   have hwa' : b * associator a b y * a = -(a * (b * associator a b y)) :=
@@ -270,7 +270,7 @@ theorem associator_mul_self {a b : Tower R 3} {ν : R} (ha : re 3 a = 0) (hb : r
     associator a b (a * b) = 0 := by
   have hba : b * a = -(a * b) :=
     mul_comm_neg_of_dot_eq_zero hb ha (by rw [dot_comm]; exact hab)
-  have hab0 : re 3 (a * b) = 0 := by rw [re_mul_of_re_eq_zero ha, hab, neg_zero]
+  have hab0 : re 3 (a * b) = 0 := by rw [re_mul_of_re_eq_zero_left ha, hab, neg_zero]
   have hnn : dot 3 (a * b) (a * b) = ν ^ 2 := by
     rw [dot_mul_mul_left_of_le_three (le_refl 3), haν, hbν]; ring
   have h1 := mul_mul_self_eq_smul ha hb hab hbν
@@ -305,7 +305,7 @@ theorem dot_hbasis {a b : Tower F 3} {ν : F} (ha : re 3 a = 0) (hb : re 3 b = 0
   have h1a : dot 3 (1 : Tower F 3) a = 0 := by rw [dot_comm, dot_one_right, ha]
   have h1b : dot 3 (1 : Tower F 3) b = 0 := by rw [dot_comm, dot_one_right, hb]
   have h1ab : dot 3 (1 : Tower F 3) (a * b) = 0 := by
-    rw [dot_comm, dot_one_right, re_mul_of_re_eq_zero ha, hab, neg_zero]
+    rw [dot_comm, dot_one_right, re_mul_of_re_eq_zero_left ha, hab, neg_zero]
   have hbab : dot 3 b (a * b) = 0 := by
     have h := dot_mul_mul_right_of_le_three (le_refl 3) 1 a b
     rw [one_mul, h1a, zero_mul] at h
