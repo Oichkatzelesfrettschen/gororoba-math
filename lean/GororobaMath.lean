@@ -64,3 +64,4 @@ public import GororobaMath.CayleyDickson.AlignedPairEndpoints
 public import GororobaMath.LinearAlgebra.Pfaffian
 public import GororobaMath.LinearAlgebra.PfaffianForm
 public import GororobaMath.LinearAlgebra.PfaffianBlock
+public import GororobaMath.FiberCone.Basic
