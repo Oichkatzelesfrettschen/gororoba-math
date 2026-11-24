@@ -3,6 +3,7 @@ module
 
 public import GororobaMath.CayleyDickson.TraceForm
 public import GororobaMath.CayleyDickson.NormMultiplicative
+public import GororobaMath.CayleyDickson.SedenionCriterion
 
 /-!
 # The identities of a sedenion pair with zero product
@@ -66,7 +67,7 @@ theorem re_mul_of_star_eq_neg {k : ℕ} (x : Tower K k) {y : Tower K k} (hy : st
   linear_combination -h
 
 /-- For orthogonal pure `x` and `y`, the product anticommutes. -/
-theorem mul_comm_neg_of_dot_eq_zero {k : ℕ} {x y : Tower K k} (hx : star x = -x)
+theorem mul_comm_neg_of_star_eq_neg {k : ℕ} {x y : Tower K k} (hx : star x = -x)
     (hy : star y = -y) (h : dot k x y = 0) : y * x = -(x * y) := by
   have h1 := star_add_self k (x * y)
   rw [star_mul, hx, hy, neg_mul_neg, re_mul_of_star_eq_neg x hy, h, neg_zero, mul_zero,
@@ -197,7 +198,7 @@ theorem pairKer_sq (h2 : (2 : K) ≠ 0) {p q c d : Tower K 3} (hp : star p = -p)
   obtain ⟨hi, hii⟩ := pairKer_dots hp hq hc h
   have e1 : p * c = -(d * q) := eq_neg_of_add_eq_zero_left h.1
   have e2 : d * p = q * c := sub_eq_zero.1 h.2
-  have hqp : q * p = -(p * q) := mul_comm_neg_of_dot_eq_zero hp hq hpq
+  have hqp : q * p = -(p * q) := mul_comm_neg_of_star_eq_neg hp hq hpq
   have A := dot_mul_polar h2 p d q c
   have B := dot_mul_polar h2 q d p c
   rw [e1, dot_neg_right, dot_mul_self_of_le_three le_rfl] at A
@@ -261,23 +262,6 @@ theorem pairKer_identities (h2 : (2 : K) ≠ 0) {p q c d : Tower K 3} (hp : star
   · rw [hs1, hs0.1]
 
 end Kernel
-
-section TwoNonzero
-
-variable {K : Type u} [Field K] [PartialOrder K] [IsOrderedAddMonoid K]
-
-/-- In an ordered field, `2` is nonzero. -/
-theorem two_ne_zero_of_sq_nonneg (hsq : ∀ x : K, 0 ≤ x * x) : (2 : K) ≠ 0 := by
-  intro h
-  have h1 : (0 : K) ≤ 1 := by simpa using hsq 1
-  have h3 : (1 : K) + 1 = 0 := by rw [one_add_one_eq_two]; exact h
-  have h4 : (1 : K) ≤ 0 := by
-    calc (1 : K) = 1 + 0 := (add_zero 1).symm
-      _ ≤ 1 + 1 := add_le_add le_rfl h1
-      _ = 0 := h3
-  exact one_ne_zero (le_antisymm h4 h1)
-
-end TwoNonzero
 
 section Pairs
 
