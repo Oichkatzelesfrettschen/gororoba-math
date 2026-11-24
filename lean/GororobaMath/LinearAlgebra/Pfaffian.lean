@@ -20,6 +20,12 @@ a skew matrix of even size it is the classical Pfaffian, and a list of odd lengt
 `n × n` matrix. The recursion runs on a natural-number fuel bounded below by the length of the
 list, so the definition is structural and reduces in the kernel on small literals.
 
+The Rocq partner is `pf` of the functor `PfaffianTheory` in `rocq/quantum/Pfaffian.v`: its matrix
+argument `M : nat -> nat -> D.t` is `A` with `ι = ℕ`, its index list `l : list nat` is `l`, and its
+expansion `sumk (length r) (fun k => sgn k * M x (nth k r O) * pfn n' (rem_at k r))` is the sum
+above with `rem_at k r = r.eraseIdx k`. `ci/compare_pfaffian.sh` evaluates both on the same
+integer cases.
+
 ## Main results
 
 * `Matrix.pfaffianAux_nil`, `Matrix.pfaffianAux_singleton`, `Matrix.pfaffianAux_cons`,
