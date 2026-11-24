@@ -67,3 +67,5 @@ public import GororobaMath.LinearAlgebra.PfaffianBlock
 public import GororobaMath.FiberCone.Basic
 public import GororobaMath.FiberCone.SeparatingOrder
 public import GororobaMath.LinearAlgebra.BorderedKernel
+public import GororobaMath.CayleyDickson.ImaginarySquare
+public import GororobaMath.CayleyDickson.AlignedPairTotal
