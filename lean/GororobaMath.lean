@@ -66,3 +66,4 @@ public import GororobaMath.CayleyDickson.ZeroDivisorPairs
 public import GororobaMath.CayleyDickson.CzMatrix
 public import GororobaMath.FiberCone.SeparatingOrder
 public import GororobaMath.LinearAlgebra.BorderedKernel
+public import GororobaMath.CayleyDickson.BorderedLeftMul
