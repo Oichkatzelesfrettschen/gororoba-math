@@ -18,8 +18,20 @@ axis of the guide ("Statements and proofs") and is a Rocq artifact.
 
 ## Building and running
 
-The toolchain is installed from its digest-pinned archive and linked into elan under the name in
-`cuda/lean-toolchain`; the build needs a CUDA 13 toolkit. The Lake tree goes outside the checkout:
+`cuda/lean-toolchain` names a toolchain linked into elan by hand, since `elan toolchain install` of this release
+channel downloads the archive without comparing it to the channel's checksum file (the project's install page
+says so):
+
+| Field | Value |
+|---|---|
+| Release | `nightly-2026-11-21` of `ranvier-labs/lean4-cuda-nightly`, version `4.33.0-cuda-nightly.20261121.ge8f10c9ff5fe` |
+| Archive (x86_64) | `https://github.com/ranvier-labs/lean4-cuda-nightly/releases/download/nightly-2026-11-21/lean-4.33.0-cuda-nightly.20261121.ge8f10c9ff5fe-linux.tar.zst` |
+| sha256 | `990269ab74d9620c5809b8c22146d2264778bbb18b0c18713bebaa80458dfb82` |
+
+Check the archive with `sha256sum`, extract it with `tar --zstd -xf`, and register the extracted root with
+`elan toolchain link lean4-cuda-nightly-2026-11-21 ROOT`; `lean --features` then prints `CUDA`. The build needs a
+CUDA 13 toolkit, and the final link names `libgmp`, `libssl`, `libcrypto` and `libuv`. The Lake tree goes outside
+the checkout:
 
 ```sh
 CUDA_HOME=/opt/cuda CUDA_BUILD_DIR="$HOME/build/gororoba-math-cuda" sh ci/compare_cuda_signs.sh 3 4 5 6

@@ -14,8 +14,8 @@ launch symbols carry the package prefix the module's C output links against.
 `-fno-exceptions` keeps the g++-compiled CUDA objects free of the
 `DW.ref.__gxx_personality_v0` COMDAT group. Lake localizes hidden symbols in
 those objects, and with that group present the native link fails on the
-reference from `libleancpp.a` (measured with nightly-2026-11-21 and GCC 15
-and 16). -/
+reference from `libleancpp.a` (measured with nightly-2026-11-21 and GCC
+16.2). -/
 def cudaCfg (pkg : Package) : CudaBuildConfig where
   architecture := cudaArch
   nvccArgs := #["-Xcompiler=-fno-exceptions"]
