@@ -72,3 +72,4 @@ public import GororobaMath.CayleyDickson.AlignedPairTotal
 public import GororobaMath.CayleyDickson.LeftMulDeterminant
 public import GororobaMath.CayleyDickson.AssociatorClasses
 public import GororobaMath.CayleyDickson.SingularKernel
+public import GororobaMath.CayleyDickson.ScaledPairAnnihilator
