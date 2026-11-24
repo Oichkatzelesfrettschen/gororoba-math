@@ -1,8 +1,8 @@
 #!/bin/sh
 # Usage: GOROROBA_QUANTUM=PATH sh ci/check_quantum_sources.sh
-# Renders the nine generated sources of rocq/quantum again from the
+# Renders the ten generated sources of rocq/quantum again from the
 # gororoba-quantum checkout at $GOROROBA_QUANTUM and requires each rendering
-# to equal the tracked file. Eight generators in ci/quantum-sources/ render
+# to equal the tracked file. Nine generators in ci/quantum-sources/ render
 # them (gaussian_certificates.py renders two); each runs with --check and
 # reads gororoba_quantum/cd_core.py, parallel.py and the evidence records of
 # that checkout (python-flint under $PYTHON). A --check writes nothing.
@@ -75,7 +75,8 @@ gaussian_certificates:CdTowerG2Derivations.v
 gaussian_certificates:A5W8ArcMatrixRanks.v
 render_span:CdTowerG2DerivationSpan.v
 stiefel_witness_certificate:StiefelWitnessInvertible.v
-conjugation_map_certificate:E8ConjugationMap.v'
+conjugation_map_certificate:E8ConjugationMap.v
+e8_conjugation_ideal:E8ConjugationIdeal.v'
 
 # Fails with status 2 when the log $1 shows a missing Python module or a refused argument (status $2 was 2).
 tool_failure() {
