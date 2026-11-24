@@ -107,7 +107,8 @@ def write_reference(checkout: Path, out_file: Path, mutate: bool) -> None:
             for r in range(1, size):
                 lines.append(
                     " ".join(
-                        str(0 if r ^ c == 0 else module.cd_sign(size, r ^ c, c) * z[(r ^ c) - 1]) for c in range(1, size)
+                        str(0 if r ^ c == 0 else module.cd_sign(size, r ^ c, c) * z[(r ^ c) - 1])
+                        for c in range(1, size)
                     )
                 )
     out_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -133,7 +134,10 @@ def main() -> int:
             return 2
         expected = PER_LEVEL * sum(2**k - 1 for k in LEVELS)
         if len(lean) != expected or len(ref) != expected:
-            print(f"compare_cz_matrix: expected {expected} rows, Lean printed {len(lean)}, reference {len(ref)}", file=sys.stderr)
+            print(
+                f"compare_cz_matrix: expected {expected} rows, Lean printed {len(lean)}, reference {len(ref)}",
+                file=sys.stderr,
+            )
             return 2
         for index, (a, b) in enumerate(zip(lean, ref, strict=True)):
             if a != b:
