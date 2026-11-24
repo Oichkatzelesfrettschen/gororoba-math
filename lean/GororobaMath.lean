@@ -68,3 +68,4 @@ public import GororobaMath.CayleyDickson.ImaginarySquare
 public import GororobaMath.CayleyDickson.AlignedPairTotal
 public import GororobaMath.FiberCone.SeparatingOrder
 public import GororobaMath.LinearAlgebra.BorderedKernel
+public import GororobaMath.CayleyDickson.ScaledPairAnnihilator
