@@ -58,6 +58,7 @@ CdTowerTwoTermNullity.v
 CdTowerTwoTermRecursion.v
 CdTwistedProduct.v
 CdTwistedProductBridge.v
+E8ConjugationMap.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
 KernelMapEstimator.v
