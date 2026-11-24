@@ -30,6 +30,7 @@ public import GororobaMath.CayleyDickson.HalfFold
 public import GororobaMath.CayleyDickson.Fold
 public import GororobaMath.CayleyDickson.ZeroDivisors
 public import GororobaMath.CayleyDickson.ZeroDivisorsZMod
+public import GororobaMath.CayleyDickson.WitnessProducts
 public import GororobaMath.CayleyDickson.AssociatorUnrestricted
 public import GororobaMath.CayleyDickson.TowerInverse
 public import GororobaMath.CayleyDickson.LeftMulMatrix
