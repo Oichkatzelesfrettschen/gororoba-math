@@ -21,7 +21,11 @@ Eq. 61 of Gresnigt (arXiv 2609.10569).
 
 ## Main results
 
-* `Tower.orderThree_mul`: `psi2 x * psi2 y = 2 psi2 (x * y)` on the sedenions when `r3 * r3 = 3`.
+* `Tower.orderThree_mul_succ`: `psi2 x * psi2 y = 2 psi2 (x * y)` at every level `k + 1` when
+  `r3 * r3 = 3`; `Tower.orderThree_mul` is its instance on the sedenions.
+* `Tower.orderThree_cube`: `psi2 (psi2 (psi2 x)) = 8 x`.
+* `Tower.orderThree_reflect`: `2 ε (psi2 x) = psi2 (psi2 (ε x))` for the reflection
+  `ε(A, B) = (A, -B)` (`Tower.reflectPair`).
 * `Tower.orderThree_star`: the map commutes with the star at every level, the Rocq
   `OrderThreeMap.psi2_conj` of `rocq/quantum/CdTowerOrderThreeMap.v`.
 -/
@@ -123,50 +127,123 @@ omit [CommRing R] [StarRing R] [TrivialStar R] in
 theorem exists_mk {k : ℕ} (x : Tower R (k + 1)) : ∃ a b : Tower R k, x = mk a b :=
   ⟨CayleyDickson.re x, CayleyDickson.im x, rfl⟩
 
-/-- The doubled order-three map is multiplicative up to the factor `2` on the sedenions over
-every commutative ring with a square root of `3`: `psi2 x * psi2 y = 2 psi2 (x * y)`. The
-proof splits both factors into their 16 coordinates and closes each of the 16 coordinate
-identities by `grind` from `r3 * r3 = 3`. The Rocq original is `OrderThreeMap.psi2_mul` of
+omit [TrivialStar R] in
+private theorem re_smul_one (k : ℕ) (a : R) : re k (a • (1 : Tower R k)) = a := by
+  rw [re_smul, re_one, mul_one]
+
+omit [TrivialStar R] in
+/-- Every element of a level is a scalar multiple of `1` plus an element with zero real part. -/
+theorem exists_imag {k : ℕ} (x : Tower R k) :
+    ∃ (a : R) (ξ : Tower R k), re k ξ = 0 ∧ x = a • (1 : Tower R k) + ξ :=
+  ⟨re k x, x - re k x • (1 : Tower R k), by rw [re_sub, re_smul_one, sub_self], by abel⟩
+
+/-- The real part of a product with a second factor of zero real part is minus the dot product
+of the factors. -/
+theorem re_mul_of_re_eq_zero {k : ℕ} {ξ η : Tower R k} (hη : re k η = 0) :
+    re k (ξ * η) = -dot k ξ η := by
+  have h := re_mul_star ξ η
+  rw [star_eq_neg_of_re_eq_zero hη, mul_neg, re_neg] at h
+  linear_combination -h
+
+/-- Two elements with zero real part anticommute up to the scalar `-2 dot`: the polarization of
+`x * star x = dot x x • 1` of `mul_star_eq_dot`, valid at every level. -/
+theorem mul_add_mul_comm_of_re_eq_zero {k : ℕ} {ξ η : Tower R k} (hξ : re k ξ = 0)
+    (hη : re k η = 0) :
+    ξ * η + η * ξ = (-(2 * dot k ξ η)) • (1 : Tower R k) := by
+  have hs : re k (ξ + η) = 0 := by rw [re_add, hξ, hη, add_zero]
+  have h1 := (mul_star_eq_dot k (ξ + η)).1
+  have h2 := (mul_star_eq_dot k ξ).1
+  have h3 := (mul_star_eq_dot k η).1
+  rw [star_eq_neg_of_re_eq_zero hs] at h1
+  rw [star_eq_neg_of_re_eq_zero hξ] at h2
+  rw [star_eq_neg_of_re_eq_zero hη] at h3
+  simp only [mul_add, add_mul, mul_neg, neg_add, dot_add_left, dot_add_right, add_smul] at h1 h2 h3
+  rw [dot_comm k η ξ] at h1
+  linear_combination (norm := module) -h1 + h2 + h3
+
+/-- The doubled order-three map is multiplicative up to the factor `2` at every level `k + 1`
+over every commutative ring with a square root of `3`: `psi2 x * psi2 y = 2 psi2 (x * y)`. Both
+factors split into a scalar part and a part with zero real part in each half. The product
+expands into products of the four imaginary parts, and the identity reduces to
+`ξ η + η ξ = -2 dot ξ η` for pairs of them and `r3 * r3 = 3`. The Rocq original at level 4 is
+`OrderThreeMap.psi2_mul` of `rocq/quantum/CdTowerOrderThreeMap.v`. -/
+theorem orderThree_mul_succ (r3 : R) (h3 : r3 * r3 = 3) {k : ℕ} (x y : Tower R (k + 1)) :
+    orderThree r3 x * orderThree r3 y = (2 : R) • orderThree r3 (x * y) := by
+  obtain ⟨A, B⟩ := x
+  obtain ⟨C, D⟩ := y
+  obtain ⟨a, α, hα, rfl⟩ := exists_imag A
+  obtain ⟨b, β, hβ, rfl⟩ := exists_imag B
+  obtain ⟨c, γ, hγ, rfl⟩ := exists_imag C
+  obtain ⟨d, δ, hδ, rfl⟩ := exists_imag D
+  have hγ' := star_eq_neg_of_re_eq_zero hγ
+  have hδ' := star_eq_neg_of_re_eq_zero hδ
+  have rAC := re_mul_of_re_eq_zero (ξ := α) hγ
+  have rDB := re_mul_of_re_eq_zero (ξ := δ) hβ
+  have rDA := re_mul_of_re_eq_zero (ξ := δ) hα
+  have rBC := re_mul_of_re_eq_zero (ξ := β) hγ
+  have cAC := mul_add_mul_comm_of_re_eq_zero hα hγ
+  have cDB := mul_add_mul_comm_of_re_eq_zero hδ hβ
+  have cDA := mul_add_mul_comm_of_re_eq_zero hδ hα
+  have cBC := mul_add_mul_comm_of_re_eq_zero hβ hγ
+  change orderThree r3 (mk (a • 1 + α) (b • 1 + β)) * orderThree r3 (mk (c • 1 + γ) (d • 1 + δ)) =
+    (2 : R) • orderThree r3 (mk (a • 1 + α) (b • 1 + β) * mk (c • 1 + γ) (d • 1 + δ))
+  simp only [orderThree_mk, mk_mul_mk, smul_mk, mk_inj]
+  simp only [re_add, re_sub, re_neg, re_smul, re_one, hα, hβ, hγ, hδ, rAC, rDB, rDA,
+    rBC, star_add, star_sub, star_smul', star_one, hγ', hδ', mul_add, add_mul,
+    mul_sub, sub_mul, mul_neg, neg_mul, smul_mul_assoc', mul_smul_comm', one_mul, mul_one,
+    smul_add, smul_sub, smul_neg, smul_smul]
+  refine ⟨?_, ?_⟩
+  · linear_combination (norm := module) h3 • (β * δ + γ * α) + (3 : R) • cAC + (3 : R) • cDB
+      - r3 • cDA + r3 • cBC
+  · linear_combination (norm := module) h3 • (α * δ - γ * β) + r3 • cAC + r3 • cDB
+      + (3 : R) • cDA - (3 : R) • cBC
+
+/-- The doubled order-three map is multiplicative up to the factor `2` on the sedenions: the
+level-4 instance of `orderThree_mul_succ`. The Rocq original is `OrderThreeMap.psi2_mul` of
 `rocq/quantum/CdTowerOrderThreeMap.v`, which transports the 256 basis checks over `ℤ[√3]`. -/
 theorem orderThree_mul (r3 : R) (h3 : r3 * r3 = 3) (x y : Tower R 4) :
-    orderThree r3 x * orderThree r3 y = (2 : R) • orderThree r3 (x * y) := by
-  obtain ⟨x_0_3, x_8_3, rfl⟩ := exists_mk x
-  obtain ⟨x_0_2, x_4_2, rfl⟩ := exists_mk x_0_3
-  obtain ⟨x_0_1, x_2_1, rfl⟩ := exists_mk x_0_2
-  obtain ⟨x0, x1, rfl⟩ := exists_mk x_0_1
-  obtain ⟨x2, x3, rfl⟩ := exists_mk x_2_1
-  obtain ⟨x_4_1, x_6_1, rfl⟩ := exists_mk x_4_2
-  obtain ⟨x4, x5, rfl⟩ := exists_mk x_4_1
-  obtain ⟨x6, x7, rfl⟩ := exists_mk x_6_1
-  obtain ⟨x_8_2, x_12_2, rfl⟩ := exists_mk x_8_3
-  obtain ⟨x_8_1, x_10_1, rfl⟩ := exists_mk x_8_2
-  obtain ⟨x8, x9, rfl⟩ := exists_mk x_8_1
-  obtain ⟨x10, x11, rfl⟩ := exists_mk x_10_1
-  obtain ⟨x_12_1, x_14_1, rfl⟩ := exists_mk x_12_2
-  obtain ⟨x12, x13, rfl⟩ := exists_mk x_12_1
-  obtain ⟨x14, x15, rfl⟩ := exists_mk x_14_1
-  obtain ⟨y_0_3, y_8_3, rfl⟩ := exists_mk y
-  obtain ⟨y_0_2, y_4_2, rfl⟩ := exists_mk y_0_3
-  obtain ⟨y_0_1, y_2_1, rfl⟩ := exists_mk y_0_2
-  obtain ⟨y0, y1, rfl⟩ := exists_mk y_0_1
-  obtain ⟨y2, y3, rfl⟩ := exists_mk y_2_1
-  obtain ⟨y_4_1, y_6_1, rfl⟩ := exists_mk y_4_2
-  obtain ⟨y4, y5, rfl⟩ := exists_mk y_4_1
-  obtain ⟨y6, y7, rfl⟩ := exists_mk y_6_1
-  obtain ⟨y_8_2, y_12_2, rfl⟩ := exists_mk y_8_3
-  obtain ⟨y_8_1, y_10_1, rfl⟩ := exists_mk y_8_2
-  obtain ⟨y8, y9, rfl⟩ := exists_mk y_8_1
-  obtain ⟨y10, y11, rfl⟩ := exists_mk y_10_1
-  obtain ⟨y_12_1, y_14_1, rfl⟩ := exists_mk y_12_2
-  obtain ⟨y12, y13, rfl⟩ := exists_mk y_12_1
-  obtain ⟨y14, y15, rfl⟩ := exists_mk y_14_1
-  simp only [orderThree_mk, mk_mul_mk, star_mk, re_mk, smul_mk, add_mk, sub_eq_add_neg, neg_mk,
-    one_eq_mk, zero_eq_mk, mk_inj, re_level_zero]
-  repeat' constructor
-  all_goals
-    refine base_ext ?_
-    simp only [base_add, base_mul, base_neg, base_smul, base_star, base_one, base_zero]
-    grind
+    orderThree r3 x * orderThree r3 y = (2 : R) • orderThree r3 (x * y) :=
+  orderThree_mul_succ r3 h3 x y
+
+omit [TrivialStar R] in
+/-- Three applications of the doubled order-three map scale by `8 = 2 ^ 3`: the map is `2` times
+an automorphism of order `3`. -/
+theorem orderThree_cube (r3 : R) (h3 : r3 * r3 = 3) {k : ℕ} (x : Tower R (k + 1)) :
+    orderThree r3 (orderThree r3 (orderThree r3 x)) = (8 : R) • x := by
+  obtain ⟨A, B⟩ := x
+  obtain ⟨a, α, hα, rfl⟩ := exists_imag A
+  obtain ⟨b, β, hβ, rfl⟩ := exists_imag B
+  change orderThree r3 (orderThree r3 (orderThree r3 (mk (a • 1 + α) (b • 1 + β)))) =
+    (8 : R) • mk (a • 1 + α) (b • 1 + β)
+  simp only [orderThree_mk, smul_mk, mk_inj]
+  simp only [re_add, re_sub, re_smul, re_one, hα, hβ, smul_add, smul_sub, smul_smul]
+  refine ⟨?_, ?_⟩
+  · linear_combination (norm := module) h3 • ((3 : R) • α - r3 • β)
+  · linear_combination (norm := module) h3 • (r3 • α + (3 : R) • β)
+
+/-- The reflection `(A, B) ↦ (A, -B)` of a double. -/
+def reflectPair {k : ℕ} : Tower R (k + 1) → Tower R (k + 1)
+  | ⟨A, B⟩ => mk A (-B)
+
+omit [TrivialStar R] in
+theorem reflectPair_mk {k : ℕ} (A B : Tower R k) : reflectPair (mk A B) = mk A (-B) := rfl
+
+omit [TrivialStar R] in
+/-- The reflection and the order-three map satisfy the relation `ε ψ = ψ² ε` of Brown's
+generators in the scaled form `2 * ε (psi2 x) = psi2 (psi2 (ε x))`, where `psi2 = 2 ψ`. -/
+theorem orderThree_reflect (r3 : R) (h3 : r3 * r3 = 3) {k : ℕ} (x : Tower R (k + 1)) :
+    (2 : R) • reflectPair (orderThree r3 x) = orderThree r3 (orderThree r3 (reflectPair x)) := by
+  obtain ⟨A, B⟩ := x
+  obtain ⟨a, α, hα, rfl⟩ := exists_imag A
+  obtain ⟨b, β, hβ, rfl⟩ := exists_imag B
+  change (2 : R) • reflectPair (orderThree r3 (mk (a • 1 + α) (b • 1 + β))) =
+    orderThree r3 (orderThree r3 (reflectPair (mk (a • 1 + α) (b • 1 + β))))
+  simp only [orderThree_mk, reflectPair_mk, smul_mk, mk_inj]
+  simp only [re_add, re_sub, re_neg, re_smul, re_one, hα, hβ, smul_add, smul_sub,
+    smul_smul, smul_neg]
+  refine ⟨?_, ?_⟩
+  · linear_combination (norm := module) h3 • α
+  · linear_combination (norm := module) (-1 : R) • h3 • β
 
 end Tower
 
