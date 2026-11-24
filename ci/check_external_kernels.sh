@@ -20,9 +20,19 @@
 # beyond those three, so the axiom rule does not rest on any one checker
 # (con-leche and con-ron decline a non-standard axiom with status 2, and nanoda
 # exits 1 under its hard-error rule; measured on AuditFixture.declaredAxiom).
+# nanoda reports a verdict only through its exit status and log, and one status
+# covers several outcomes, so nanoda_verdict reads both: 0 is an accept; 1 with
+# "Error: export file declares unpermitted axiom" and 101 whose first panic
+# lies in the type checker (src/tc.rs, src/inductive.rs, src/quot.rs) with a
+# message other than a missing declaration are rejections; every other status
+# is an error, among them 1 on an unreadable export ("Failed to open export
+# file"), 101 from the parser on a malformed export (src/parser.rs) or on an
+# unreadable configuration (src/util.rs), and a signal (measured with the
+# nanoda_bin of Lean 4.35.0, 2026-11-24).
 # Calibration comes first: every checker must reject ReplayFixture.bogus of
 # lean/ReplayFixture.lean (type False, added with the kernel switched off),
-# and con-leche and con-ron must name it; the export check must refuse
+# and con-leche and con-ron must name it; nanoda_verdict must read a missing
+# export and an unreadable configuration as errors; the export check must refuse
 # AuditFixture.usesDeclaredAxiom of lean/AuditFixture.lean; and every checker
 # must accept CayleyDickson.Tower.e_mul_e.
 # Runs on demand, outside ci/check.sh. The largest closure, that of
@@ -66,6 +76,37 @@ lake build GororobaMath ReplayFixture AuditFixture >"$work/build.log" 2>&1 || {
   exit 2
 }
 
+# nanoda_verdict STATUS LOG: prints accept, reject or error for one nanoda_bin
+# run that exited with STATUS and wrote LOG.
+nanoda_verdict() {
+  case $1 in
+    0) echo accept ;;
+    1)
+      if grep -q '^Error: export file declares unpermitted axiom ' "$2"; then
+        echo reject
+      else
+        echo error
+      fi
+      ;;
+    101)
+      # The first panic is the cause; a panic while joining the checking
+      # threads follows it.
+      first=$(awk '/ panicked at src\// { print; getline; print; exit }' "$2")
+      case $first in
+        *' panicked at src/tc.rs:'* | *' panicked at src/inductive.rs:'* | *' panicked at src/quot.rs:'*)
+          case $first in
+            *'was not found in the environment'* | *'declaration not found'* | *'failed to spawn'* | *'stack_size_bytes'* | *'panicked while being joined'*)
+              echo error ;;
+            *) echo reject ;;
+          esac
+          ;;
+        *) echo error ;;
+      esac
+      ;;
+    *) echo error ;;
+  esac
+}
+
 # check MODULE THEOREM...: prints accepted, rejected or error, and returns
 # 0, 1 or 2; the checkers' output stays in $work for the caller.
 check() {
@@ -103,12 +144,20 @@ check() {
     echo error
     return 2
   fi
-  if "$bin/nanoda_bin" "$work/nanoda.json" >"$work/nanoda.log" 2>&1; then
-    echo "nanoda accept" >>"$work/verdicts.txt"
-  else
-    rejected=1
-    echo "nanoda reject" >>"$work/verdicts.txt"
-  fi
+  status=0
+  "$bin/nanoda_bin" "$work/nanoda.json" >"$work/nanoda.log" 2>&1 || status=$?
+  case $(nanoda_verdict "$status" "$work/nanoda.log") in
+    accept) echo "nanoda accept" >>"$work/verdicts.txt" ;;
+    reject)
+      rejected=1
+      echo "nanoda reject" >>"$work/verdicts.txt"
+      ;;
+    *)
+      echo "nanoda error (status $status)" >>"$work/verdicts.txt"
+      echo error
+      return 2
+      ;;
+  esac
   if [ "$rejected" = 1 ]; then
     echo rejected
     return 1
@@ -131,6 +180,23 @@ if [ "$verdict" != rejected ] || [ "$rejects" != 3 ] || [ "$named" != 2 ]; then
   show_logs
   exit 2
 fi
+# The error arm: an export path that does not exist (status 1) and a
+# configuration that is not JSON (status 101 from src/util.rs).
+for case in missing-export bad-config; do
+  if [ "$case" = missing-export ]; then
+    printf '{"export_file_path": "%s", "permitted_axioms": ["propext", "Classical.choice", "Quot.sound"], "unpermitted_axiom_hard_error": true, "num_threads": 1}\n' "$work/missing.ndjson" >"$work/nanoda-cal.json"
+  else
+    printf 'not json\n' >"$work/nanoda-cal.json"
+  fi
+  status=0
+  "$bin/nanoda_bin" "$work/nanoda-cal.json" >"$work/nanoda-cal.log" 2>&1 || status=$?
+  reading=$(nanoda_verdict "$status" "$work/nanoda-cal.log")
+  [ "$reading" = error ] || {
+    echo "check_external_kernels: calibration: nanoda on $case exited $status and read as $reading; expected error" >&2
+    tail -5 "$work/nanoda-cal.log" >&2
+    exit 2
+  }
+done
 verdict=$(check AuditFixture AuditFixture.usesDeclaredAxiom) || :
 grep -q 'axioms outside the allow list: AuditFixture.declaredAxiom' "$work/export.err" || {
   echo "check_external_kernels: calibration: the export check did not refuse AuditFixture.declaredAxiom (verdict $verdict)" >&2
