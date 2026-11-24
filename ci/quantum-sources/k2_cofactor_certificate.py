@@ -9,6 +9,11 @@ and K2CofactorE8barVB.v (the statement for all 21 quadrics).
 
 Usage: k2_cofactor_certificate.py INPUT.json --write
        k2_cofactor_certificate.py INPUT.json --check
+       k2_cofactor_certificate.py INPUT.json --mutants DIR
+
+--mutants writes two known-bad sources of quadric 3 into DIR, outside rocq/: one nibble of the first cofactor
+coefficient changed and one nibble of the first cofactor exponent changed. Each states that check_data returns
+false, so compiling them shows that the checker rejects a changed cofactor.
 """
 
 from __future__ import annotations
@@ -16,6 +21,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -155,6 +161,35 @@ def render_quadric(cert: dict, i: int) -> str:
     )
 
 
+FIRST_COFACTOR = re.compile(r"(\n  \(\d+%nat, \[\n    \(\d+%nat, 0x)([0-9a-f]+)(%N\))")
+
+
+def mutate_nibble(text: str, nibble: int) -> str:
+    """Change the hexadecimal digit at position nibble from the low end of the first cofactor word."""
+
+    def change(match: re.Match) -> str:
+        word = match.group(2)
+        at = len(word) - 1 - nibble
+        digit = (int(word[at], 16) + 1) % 16
+        return match.group(1) + word[:at] + f"{digit:x}" + word[at + 1 :] + match.group(3)
+
+    mutated, count = FIRST_COFACTOR.subn(change, text, count=1)
+    if count != 1:
+        fail("no cofactor word found to mutate")
+    return mutated
+
+
+def render_mutant(cert: dict, kind: str, nibble: int) -> str:
+    text = render_quadric(cert, 2)
+    start = text.index("(** *")
+    stop = text.index("*)", start) + 3
+    text = text[:start] + f"(** Known-bad calibration: one nibble of a cofactor {kind} changed. *)\n" + text[stop:]
+    text = mutate_nibble(text, nibble)
+    text = text.replace("= true.\nProof. vm_compute. reflexivity. Qed.", "= false.\nProof. vm_compute. reflexivity. Qed.")
+    text = text[: text.index("Theorem k2_in_ideal_03")]
+    return text.replace("k2_check_03", "k2_check_mutant").replace("k2_data_03", "k2_data_mutant")
+
+
 def render_statement() -> str:
     imports = " ".join(f"K2CofactorE8barVBq{i + 1:02d}" for i in range(NQUADRICS))
     cases = "\n".join(
@@ -266,8 +301,18 @@ def main() -> None:
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument("--write", action="store_true", help="write the Rocq sources")
     actions.add_argument("--check", action="store_true", help="require the tracked sources to equal the rendering")
+    actions.add_argument("--mutants", type=Path, metavar="DIR", help="write the known-bad sources of quadric 3 into DIR")
     args = parser.parse_args()
-    files = render_all(load(args.input))
+    cert = load(args.input)
+    if args.mutants is not None:
+        validate(cert)
+        if not args.mutants.is_dir() or ROOT in args.mutants.resolve().parents or args.mutants.resolve() == ROOT:
+            fail("DIR must be an existing directory outside the checkout")
+        for name, kind, nibble in (("K2MutantCoefficient", "coefficient", 0), ("K2MutantExponent", "exponent", 4)):
+            (args.mutants / f"{name}.v").write_text(render_mutant(cert, kind, nibble), encoding="utf-8")
+        print(f"wrote 2 files under {args.mutants}")
+        return
+    files = render_all(cert)
     if args.write:
         for name, text in files.items():
             (OUTPUT_DIR / name).write_text(text, encoding="utf-8")
