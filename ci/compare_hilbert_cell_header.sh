@@ -1,11 +1,12 @@
 #!/bin/sh
 # Usage: GOROROBA_QUANTUM=CHECKOUT sh ci/compare_hilbert_cell_header.sh
-# Binds the J and G tables of rocq/quantum/HilbertCellA5_108.v to the canonical header of the cell A5-108,
+# Binds the J and G tables of rocq/quantum/HilbertCellA5_108.v and HilbertCellA5_111.v to the canonical header of the cells A5-108 and A5-111,
 # docs/evidence/a5-exceptional-fibers/working/build/inputs/p32029-r9115/e8-vb.sing of the gororoba-quantum
 # checkout GOROROBA_QUANTUM (its sha256 is pinned in ci/compare_hilbert_cell_header.py). The helper parses
-# the header with its own reader of the expanded signed-monomial format; Rocq prints a5_108_J and
-# a5_108_G with vm_compute after compiling copies of HilbertCellCertificate.v and HilbertCellA5_108.v;
-# the helper compares the two as lists of polynomials, term by term modulo 32029. Before the verdict counts,
+# the header with its own reader of the expanded signed-monomial format; Rocq prints a5_108_J, a5_108_G,
+# a5_111_J and a5_111_G with vm_compute after compiling copies of HilbertCellCertificate.v,
+# HilbertCellA5_108.v and HilbertCellA5_111.v;
+# the helper compares each cell with the header as lists of polynomials, term by term modulo 32029. Before the verdict counts,
 # a copy of the header with the first coefficient of J changed and a copy with the first coefficient of G
 # changed must each differ from the Rocq tables. Runs on demand, outside ci/check.sh, because it needs the
 # Rocq switch of ci/install_rocq.sh and a gororoba-quantum checkout.
@@ -42,7 +43,7 @@ trap 'exit 130' INT
 trap 'exit 143' TERM
 helper="$here/compare_hilbert_cell_header.py"
 
-for source in HilbertCellCertificate HilbertCellA5_108; do
+for source in HilbertCellCertificate HilbertCellA5_108 HilbertCellA5_111; do
   cp "$root/rocq/quantum/$source.v" "$work/$source.v"
 done
 cat >"$work/CompareHilbertHeader.v" <<'EOF'
@@ -55,9 +56,10 @@ Definition flat (t : list poly) : list (list (list Z * Z)) :=
 Eval vm_compute in (flat a5_108_J).
 Eval vm_compute in (flat a5_108_G).
 EOF
+sed -e 's/HilbertCellA5_108/HilbertCellA5_111/' -e 's/a5_108_/a5_111_/' "$work/CompareHilbertHeader.v" >"$work/CompareHilbertHeader111.v"
 (
   cd "$work"
-  for source in HilbertCellCertificate HilbertCellA5_108; do
+  for source in HilbertCellCertificate HilbertCellA5_108 HilbertCellA5_111; do
     opam exec --switch="$switch" -- rocq compile -q -Q . '' "$source.v" >>"$work/compile.log" 2>&1 || {
       echo "compare_hilbert_cell_header: $source.v does not compile" >&2
       tail -n 20 "$work/compile.log" >&2
@@ -67,6 +69,11 @@ EOF
   opam exec --switch="$switch" -- rocq compile -q -Q . '' CompareHilbertHeader.v >"$work/eval.txt" 2>&1 || {
     echo "compare_hilbert_cell_header: the Rocq evaluation fails:" >&2
     tail -n 20 "$work/eval.txt" >&2
+    exit 2
+  }
+  opam exec --switch="$switch" -- rocq compile -q -Q . '' CompareHilbertHeader111.v >"$work/eval111.txt" 2>&1 || {
+    echo "compare_hilbert_cell_header: the Rocq evaluation fails:" >&2
+    tail -n 20 "$work/eval111.txt" >&2
     exit 2
   }
 )
@@ -83,4 +90,6 @@ for table in J G; do
   }
 done
 echo "compare_hilbert_cell_header: the headers with a changed coefficient of J and of G are rejected"
-"$PYTHON" -I -B "$helper" compare "$work/reference.json" "$work/rocq.json"
+"$PYTHON" -I -B "$helper" compare "$work/reference.json" "$work/rocq.json" || exit $?
+"$PYTHON" -I -B "$helper" rocq "$work/eval111.txt" "$work/rocq111.json" || exit 2
+"$PYTHON" -I -B "$helper" compare "$work/reference.json" "$work/rocq111.json"
