@@ -28,7 +28,8 @@
     tests, by computation: (a) the operators commute (the rows of M N and N M agree after merging columns);
     (b) every nonzero entry of every operator goes from a lower level to a higher one; (c) every generator
     of J sends e to 0; (d) every operator sends the vector of every product to 0, the vector of a product
-    being computed along the order of [msets]; (e) the left-inverse sends the vector of the i-th selected
+    being computed along the order of [msets] on sparse vectors ([svec]), each operator acting through the
+    column trie of its transpose ([transp]), so a step costs in proportion to the nonzero entries of its argument; (e) the left-inverse sends the vector of the i-th selected
     product to the i-th unit vector.
 
     Main results: [cert_independent] (a certificate accepted by [check_cert] makes the selected products
@@ -286,66 +287,69 @@ Definition ridx (c : positive) : nat := Nat.pred (Pos.to_nat c).
 
 Definition xnth (x : vec) (c : positive) : Z := nth (ridx c) x 0.
 
-(** A trie of integers keyed by positive numbers: the key's binary digits, least significant first after the
-    leading 1, choose the left (0) or right (1) child; a missing node reads as 0. *)
-Inductive ztrie : Set := TL | TN (l : ztrie) (v : Z) (r : ztrie).
+(** A trie keyed by positive numbers: the key's binary digits, least significant first after the
+    leading 1, choose the left (0) or right (1) child; a missing node reads as the default d. *)
+#[universes(template=no)]
+Inductive gtrie (A : Type) : Type := TL | TN (l : gtrie A) (v : A) (r : gtrie A).
+Arguments TL {A}.
+Arguments TN {A} l v r.
 
-Fixpoint tins (k : positive) (a : Z) (t : ztrie) : ztrie :=
+Fixpoint tins {A : Type} (d : A) (k : positive) (a : A) (t : gtrie A) : gtrie A :=
   match k with
   | xH => match t with TL => TN TL a TL | TN l _ r => TN l a r end
-  | xO k' => match t with TL => TN (tins k' a TL) 0 TL | TN l v r => TN (tins k' a l) v r end
-  | xI k' => match t with TL => TN TL 0 (tins k' a TL) | TN l v r => TN l v (tins k' a r) end
+  | xO k' => match t with TL => TN (tins d k' a TL) d TL | TN l v r => TN (tins d k' a l) v r end
+  | xI k' => match t with TL => TN TL d (tins d k' a TL) | TN l v r => TN l v (tins d k' a r) end
   end.
 
-Fixpoint tget (t : ztrie) (c : positive) : Z :=
+Fixpoint tget {A : Type} (d : A) (t : gtrie A) (c : positive) : A :=
   match t with
-  | TL => 0
-  | TN l v r => match c with xH => v | xO c' => tget l c' | xI c' => tget r c' end
+  | TL => d
+  | TN l v r => match c with xH => v | xO c' => tget d l c' | xI c' => tget d r c' end
   end.
 
-Fixpoint vtree (x : list Z) (k : positive) (t : ztrie) : ztrie :=
+Fixpoint vtree {A : Type} (d : A) (x : list A) (k : positive) (t : gtrie A) : gtrie A :=
   match x with
   | [] => t
-  | a :: x' => vtree x' (Pos.succ k) (tins k a t)
+  | a :: x' => vtree d x' (Pos.succ k) (tins d k a t)
   end.
 
-Definition mvt (p : Z) (M : spmat) (t : ztrie) : vec :=
-  map (fun r => ksum r (tget t) mod p) M.
+Definition mvt (p : Z) (M : spmat) (t : gtrie Z) : vec :=
+  map (fun r => ksum r (tget 0 t) mod p) M.
 
-Definition mv (p : Z) (M : spmat) (x : vec) : vec := mvt p M (vtree x 1%positive TL).
+Definition mv (p : Z) (M : spmat) (x : vec) : vec := mvt p M (vtree 0 x 1%positive TL).
 
-Lemma tget_tins k : forall a t c,
-  tget (tins k a t) c = if Pos.eqb k c then a else tget t c.
+Lemma tget_tins {A : Type} (d : A) (k : positive) : forall a t c,
+  tget d (tins d k a t) c = if Pos.eqb k c then a else tget d t c.
 Proof.
   induction k as [k IH|k IH|]; intros a t c;
     destruct t as [|l v r]; destruct c as [c|c|]; simpl; try reflexivity; apply IH.
 Qed.
 
-Lemma tget_add_same t k a : tget (tins k a t) k = a.
+Lemma tget_add_same {A : Type} (d : A) t k a : tget d (tins d k a t) k = a.
 Proof. rewrite tget_tins, Pos.eqb_refl. reflexivity. Qed.
 
-Lemma tget_add_other t k c a : k <> c -> tget (tins k a t) c = tget t c.
+Lemma tget_add_other {A : Type} (d : A) t k c a : k <> c -> tget d (tins d k a t) c = tget d t c.
 Proof.
   intros H. rewrite tget_tins. rewrite (proj2 (Pos.eqb_neq k c) H). reflexivity.
 Qed.
 
-Lemma tget_vtree_out (x : list Z) : forall (k : positive) (t : ztrie) (c : positive),
+Lemma tget_vtree_out {A : Type} (d : A) (x : list A) : forall (k : positive) (t : gtrie A) (c : positive),
   (Pos.to_nat c < Pos.to_nat k \/ Pos.to_nat k + length x <= Pos.to_nat c)%nat ->
-  tget (vtree x k t) c = tget t c.
+  tget d (vtree d x k t) c = tget d t c.
 Proof.
   induction x as [|a x IH]; intros k t c H; [reflexivity|].
   simpl vtree. rewrite IH by (rewrite Pos2Nat.inj_succ; simpl in H; lia).
   apply tget_add_other. intro E. subst c. simpl in H. lia.
 Qed.
 
-Lemma tget_vtree_in (x : list Z) : forall (k : positive) (t : ztrie) (c : positive),
+Lemma tget_vtree_in {A : Type} (d : A) (x : list A) : forall (k : positive) (t : gtrie A) (c : positive),
   (Pos.to_nat k <= Pos.to_nat c)%nat -> (Pos.to_nat c < Pos.to_nat k + length x)%nat ->
-  tget (vtree x k t) c = nth (Pos.to_nat c - Pos.to_nat k) x 0.
+  tget d (vtree d x k t) c = nth (Pos.to_nat c - Pos.to_nat k) x d.
 Proof.
   induction x as [|a x IH]; intros k t c H1 H2; [simpl in H2; lia|].
   simpl vtree. destruct (Pos.eq_dec k c) as [E|NE].
   - subst c.
-    rewrite (tget_vtree_out x (Pos.succ k) (tins k a t) k)
+    rewrite (tget_vtree_out d x (Pos.succ k) (tins d k a t) k)
       by (left; rewrite Pos2Nat.inj_succ; lia).
     rewrite tget_add_same, Nat.sub_diag. reflexivity.
   - assert (Hne : Pos.to_nat k <> Pos.to_nat c) by (intro E; apply NE; apply Pos2Nat.inj; exact E).
@@ -355,14 +359,26 @@ Proof.
     reflexivity.
 Qed.
 
-Lemma tget_xnth x c : tget (vtree x 1%positive TL) c = xnth x c.
+Lemma tget_vtree1 {A : Type} (d : A) (x : list A) (c : positive) :
+  tget d (vtree d x 1%positive TL) c = nth (ridx c) x d.
 Proof.
-  unfold xnth, ridx. pose proof (Pos2Nat.is_pos c) as Hpos.
+  unfold ridx. pose proof (Pos2Nat.is_pos c) as Hpos.
   destruct (Nat.lt_ge_cases (Pos.to_nat c) (1 + length x)) as [H|H].
   - rewrite tget_vtree_in by (rewrite Pos2Nat.inj_1; lia).
     rewrite Pos2Nat.inj_1. f_equal. lia.
   - rewrite tget_vtree_out by (right; rewrite Pos2Nat.inj_1; lia).
     simpl. symmetry. apply nth_overflow. lia.
+Qed.
+
+Lemma tget_xnth x c : tget 0 (vtree 0 x 1%positive TL) c = xnth x c.
+Proof. exact (tget_vtree1 0 x c). Qed.
+
+Lemma tget_tins' {A : Type} (d : A) k a t c :
+  tget d (tins d k a t) c = if Pos.eq_dec k c then a else tget d t c.
+Proof.
+  rewrite tget_tins. destruct (Pos.eq_dec k c) as [E|E].
+  - rewrite (proj2 (Pos.eqb_eq k c) E). reflexivity.
+  - rewrite (proj2 (Pos.eqb_neq k c) E). reflexivity.
 Qed.
 
 Lemma ksum_ext {K : Type} (l : list (K * Z)) (F G : K -> Z) :
@@ -803,6 +819,366 @@ Proof.
   rewrite H1, (IH gs Hgs). simpl vadd. apply veq_refl.
 Qed.
 
+(** * Sparse vectors *)
+
+(** A sparse vector ([svec]) lists pairs (key, value) with repeated keys allowed; its entry at the key c is
+    the sum of the values paired with c ([sget]). [srel p s x] says that s represents the dense vector x
+    modulo p, the entry of x at index b having key b + 1. An operator M acts on a sparse vector through
+    [transp M], a trie from a column key to the pairs (row key, value) of that column; [smerge] adds the
+    entries of a key, reduces them modulo p and drops the zeros, so one application costs in proportion
+    to the entries of its argument. *)
+
+Definition svec := list (positive * Z).
+
+Lemma kcoef_cons {K : Type} (Keq : forall a b : K, {a = b} + {a <> b}) t (l : list (K * Z)) k :
+  kcoef Keq (t :: l) k = (if Keq (fst t) k then snd t else 0) + kcoef Keq l k.
+Proof. reflexivity. Qed.
+
+Lemma nth_nil_gen {A : Type} (d : A) (n : nat) : nth n ([] : list A) d = d.
+Proof. destruct n; reflexivity. Qed.
+
+Definition sget (s : svec) (c : positive) : Z := kcoef Pos.eq_dec s c.
+
+Definition srel (p : Z) (s : svec) (x : vec) : Prop :=
+  forall c, cg p (sget s c) (xnth x c).
+
+Lemma srel_veq p s x y : srel p s x -> veq p x y -> srel p s y.
+Proof. intros H Hv c. eapply cg_trans; [apply H|]. exact (Hv (ridx c)). Qed.
+
+Lemma ridx_of_nat b : ridx (Pos.of_nat (S b)) = b.
+Proof. unfold ridx. rewrite Nat2Pos.id by lia. reflexivity. Qed.
+
+Lemma srel_zero p s x : srel p s x -> (forall c, cg p (sget s c) 0) -> veq p x [].
+Proof.
+  intros H Hz b. rewrite nth_nil_Z.
+  pose proof (cg_trans p _ _ _ (cg_sym p _ _ (H (Pos.of_nat (S b)))) (Hz (Pos.of_nat (S b)))) as H1.
+  unfold xnth in H1. rewrite ridx_of_nat in H1. exact H1.
+Qed.
+
+Lemma kcoef_notin_keys (l : svec) k : ~ In k (map fst l) -> kcoef Pos.eq_dec l k = 0.
+Proof.
+  induction l as [|t l IH]; intros H; [reflexivity|].
+  rewrite kcoef_cons. simpl in H.
+  destruct (Pos.eq_dec (fst t) k) as [E|NE].
+  - exfalso. apply H. left. exact E.
+  - rewrite IH by (intro HI; apply H; right; exact HI). reflexivity.
+Qed.
+
+Lemma kcoef_nz (l : svec) k :
+  kcoef Pos.eq_dec (filter (fun t => negb (Z.eqb (snd t) 0)) l) k = kcoef Pos.eq_dec l k.
+Proof.
+  induction l as [|t l IH]; [reflexivity|].
+  rewrite kcoef_cons. cbn [filter].
+  destruct (Z.eqb (snd t) 0) eqn:Eb; cbn [negb].
+  - apply Z.eqb_eq in Eb. rewrite IH, Eb. destruct (Pos.eq_dec (fst t) k); reflexivity.
+  - rewrite kcoef_cons, IH. reflexivity.
+Qed.
+
+Lemma kcoef_scale (l : svec) a k :
+  kcoef Pos.eq_dec (map (fun kv => (fst kv, a * snd kv)) l) k = a * kcoef Pos.eq_dec l k.
+Proof.
+  induction l as [|t l IH]; [simpl; ring|].
+  cbn [map]. rewrite !kcoef_cons, IH. cbn [fst snd].
+  destruct (Pos.eq_dec (fst t) k); cbv iota; ring.
+Qed.
+
+Lemma kcoef_scale_r (l : svec) a k :
+  kcoef Pos.eq_dec (map (fun kv => (fst kv, snd kv * a)) l) k = kcoef Pos.eq_dec l k * a.
+Proof.
+  induction l as [|t l IH]; [simpl; ring|].
+  cbn [map]. rewrite !kcoef_cons, IH. cbn [fst snd].
+  destruct (Pos.eq_dec (fst t) k); cbv iota; ring.
+Qed.
+
+(** Transposition of a row-major operator into a column trie. *)
+
+Fixpoint tr_row (b : positive) (r : row) (C : gtrie row) : gtrie row :=
+  match r with
+  | [] => C
+  | kv :: r' => tr_row b r' (tins [] (fst kv) ((b, snd kv) :: tget [] C (fst kv)) C)
+  end.
+
+Fixpoint tr_rows (b : positive) (M : spmat) (C : gtrie row) : gtrie row :=
+  match M with
+  | [] => C
+  | r :: M' => tr_rows (Pos.succ b) M' (tr_row b r C)
+  end.
+
+Definition transp (M : spmat) : gtrie row := tr_rows 1%positive M TL.
+
+Lemma tr_row_get (b : positive) (r : row) : forall C k b',
+  kcoef Pos.eq_dec (tget [] (tr_row b r C) k) b'
+  = kcoef Pos.eq_dec (tget [] C k) b' + (if Pos.eq_dec b b' then kcoef Pos.eq_dec r k else 0).
+Proof.
+  induction r as [|[k0 v] r IH]; intros C k b'; cbn [tr_row].
+  - destruct (Pos.eq_dec b b'); cbv iota; try simpl; lia.
+  - rewrite IH, tget_tins'. rewrite (kcoef_cons Pos.eq_dec (k0, v) r k). cbn [fst snd].
+    destruct (Pos.eq_dec k0 k) as [E|E]; cbv iota.
+    + subst k0. rewrite (kcoef_cons Pos.eq_dec (b, v) (tget [] C k) b'). cbn [fst snd].
+      destruct (Pos.eq_dec b b') as [E2|E2]; cbv iota; lia.
+    + destruct (Pos.eq_dec b b') as [E2|E2]; cbv iota; lia.
+Qed.
+
+Lemma tr_rows_get (M : spmat) : forall b C k b',
+  kcoef Pos.eq_dec (tget [] (tr_rows b M C) k) b'
+  = kcoef Pos.eq_dec (tget [] C k) b'
+    + (if (Pos.to_nat b <=? Pos.to_nat b')%nat
+       then kcoef Pos.eq_dec (nth (Pos.to_nat b' - Pos.to_nat b) M []) k else 0).
+Proof.
+  induction M as [|r M IH]; intros b C k b'; cbn [tr_rows].
+  - rewrite nth_nil_gen. destruct (Pos.to_nat b <=? Pos.to_nat b')%nat; simpl; lia.
+  - rewrite IH, tr_row_get, Pos2Nat.inj_succ.
+    destruct (Pos.eq_dec b b') as [E|E].
+    + subst b'.
+      replace (Pos.to_nat b <=? Pos.to_nat b)%nat with true by (symmetry; apply Nat.leb_refl).
+      replace (S (Pos.to_nat b) <=? Pos.to_nat b)%nat with false by (symmetry; apply Nat.leb_gt; lia).
+      rewrite Nat.sub_diag. cbv iota. cbn [nth]. lia.
+    + assert (Hne : Pos.to_nat b <> Pos.to_nat b') by (intro H; apply E; apply Pos2Nat.inj; exact H).
+      cbv iota.
+      destruct (Nat.lt_ge_cases (Pos.to_nat b) (Pos.to_nat b')) as [Hl|Hl].
+      * replace (S (Pos.to_nat b) <=? Pos.to_nat b')%nat with true by (symmetry; apply Nat.leb_le; lia).
+        replace (Pos.to_nat b <=? Pos.to_nat b')%nat with true by (symmetry; apply Nat.leb_le; lia).
+        replace (Pos.to_nat b' - Pos.to_nat b)%nat with (S (Pos.to_nat b' - S (Pos.to_nat b))) by lia.
+        cbv iota. cbn [nth]. lia.
+      * replace (S (Pos.to_nat b) <=? Pos.to_nat b')%nat with false by (symmetry; apply Nat.leb_gt; lia).
+        replace (Pos.to_nat b <=? Pos.to_nat b')%nat with false by (symmetry; apply Nat.leb_gt; lia).
+        cbv iota. lia.
+Qed.
+
+Lemma transp_get (M : spmat) b k :
+  kcoef Pos.eq_dec (tget [] (transp M) k) b = kcoef Pos.eq_dec (nth (ridx b) M []) k.
+Proof.
+  unfold transp. rewrite tr_rows_get. cbn [tget]. rewrite Pos2Nat.inj_1.
+  pose proof (Pos2Nat.is_pos b) as Hp.
+  replace (1 <=? Pos.to_nat b)%nat with true by (symmetry; apply Nat.leb_le; lia).
+  unfold ridx. replace (Pos.to_nat b - 1)%nat with (Nat.pred (Pos.to_nat b)) by lia.
+  cbv iota. simpl. lia.
+Qed.
+
+(** Merging by key. *)
+
+Fixpoint tsum (s : svec) (t : gtrie Z) : gtrie Z :=
+  match s with
+  | [] => t
+  | kv :: s' => tsum s' (tins 0 (fst kv) (snd kv + tget 0 t (fst kv)) t)
+  end.
+
+Lemma tsum_get (s : svec) : forall t c,
+  tget 0 (tsum s t) c = tget 0 t c + kcoef Pos.eq_dec s c.
+Proof.
+  induction s as [|[k a] s IH]; intros t c; [simpl; lia|].
+  cbn [tsum fst snd]. rewrite IH, tget_tins', kcoef_cons. cbn [fst snd].
+  destruct (Pos.eq_dec k c) as [E|E]; cbv iota; [subst; lia | lia].
+Qed.
+
+Fixpoint emit (p : Z) (s : svec) (t : gtrie Z) : svec :=
+  match s with
+  | [] => []
+  | kv :: s' => (fst kv, tget 0 t (fst kv) mod p) :: emit p s' (tins 0 (fst kv) 0 t)
+  end.
+
+Lemma emit_get p (s : svec) : forall t c,
+  kcoef Pos.eq_dec (emit p s t) c
+  = if in_dec Pos.eq_dec c (map fst s) then tget 0 t c mod p else 0.
+Proof.
+  induction s as [|[k a] s IH]; intros t c; [reflexivity|].
+  cbn [emit fst snd map]. rewrite kcoef_cons, IH, tget_tins'. cbn [fst snd].
+  destruct (Pos.eq_dec k c) as [E|E]; cbv iota.
+  - subst c.
+    replace (0 mod p) with 0 by reflexivity.
+    destruct (in_dec Pos.eq_dec k (k :: map fst s)) as [H|H]; [|exfalso; apply H; left; reflexivity].
+    destruct (in_dec Pos.eq_dec k (map fst s)) as [H2|H2]; cbv iota; lia.
+  - destruct (in_dec Pos.eq_dec c (map fst s)) as [H|H];
+      destruct (in_dec Pos.eq_dec c (k :: map fst s)) as [H2|H2]; cbv iota.
+    + lia.
+    + exfalso. apply H2. right. exact H.
+    + exfalso. cbn [In] in H2. destruct H2 as [H2|H2]; [exact (E H2) | exact (H H2)].
+    + lia.
+Qed.
+
+Definition smerge (p : Z) (s : svec) : svec :=
+  filter (fun kv => negb (Z.eqb (snd kv) 0)) (emit p s (tsum s TL)).
+
+Lemma smerge_sget p s c : cg p (sget (smerge p s) c) (sget s c).
+Proof.
+  unfold sget, smerge. rewrite kcoef_nz, emit_get.
+  destruct (in_dec Pos.eq_dec c (map fst s)) as [Hi|Hn]; cbv iota.
+  - rewrite tsum_get. cbn [tget]. eapply cg_trans; [apply cg_mod|]. apply cg_eq. lia.
+  - rewrite (kcoef_notin_keys s c Hn). apply cg_refl.
+Qed.
+
+Definition scol (C : gtrie row) (cx : positive * Z) : svec :=
+  map (fun bv => (fst bv, snd bv * snd cx)) (tget [] C (fst cx)).
+
+Definition sapply (C : gtrie row) (s : svec) : svec := flat_map (scol C) s.
+
+Definition smv (p : Z) (C : gtrie row) (s : svec) : svec := smerge p (sapply C s).
+
+Lemma kcoef_sapply (C : gtrie row) (s : svec) b :
+  sget (sapply C s) b = ksum s (fun c => sget (tget [] C c) b).
+Proof.
+  induction s as [|t s IH]; [reflexivity|].
+  unfold sapply in *. cbn [flat_map ksum]. unfold sget in *. rewrite kcoef_app, IH.
+  unfold scol. rewrite kcoef_scale_r. ring.
+Qed.
+
+Lemma ksum_ind (R : row) (c : positive) a :
+  ksum R (fun k => if Pos.eq_dec c k then a else 0) = a * kcoef Pos.eq_dec R c.
+Proof.
+  induction R as [|u R IH]; [simpl; ring|].
+  cbn [ksum]. rewrite IH, kcoef_cons.
+  destruct (Pos.eq_dec c (fst u)) as [E|E]; destruct (Pos.eq_dec (fst u) c) as [E2|E2];
+    try (exfalso; congruence); cbv iota; ring.
+Qed.
+
+Lemma ksum_zero_fun (R : row) (F : positive -> Z) : (forall k, F k = 0) -> ksum R F = 0.
+Proof. intros H. induction R as [|u R IH]; [reflexivity|]. cbn [ksum]. rewrite IH, H. ring. Qed.
+
+Lemma ksum_swap (s : svec) (R : row) : ksum s (sget R) = ksum R (sget s).
+Proof.
+  induction s as [|t s IH].
+  - symmetry. apply ksum_zero_fun. intros k. reflexivity.
+  - cbn [ksum]. rewrite IH.
+    assert (E : ksum R (sget (t :: s))
+              = ksum R (fun k => (if Pos.eq_dec (fst t) k then snd t else 0) + sget s k))
+      by (apply ksum_ext; intros k; unfold sget; apply kcoef_cons).
+    rewrite E, ksum_add_fun, ksum_ind. reflexivity.
+Qed.
+
+Lemma smv_rel p M s x : srel p s x -> srel p (smv p (transp M) s) (mv p M x).
+Proof.
+  intros H b.
+  eapply cg_trans; [apply smerge_sget|].
+  assert (E1 : sget (sapply (transp M) s) b = ksum (nth (ridx b) M []) (sget s)).
+  { rewrite kcoef_sapply.
+    rewrite (ksum_ext s (fun c => sget (tget [] (transp M) c) b) (sget (nth (ridx b) M [])))
+      by (intros c; unfold sget; apply transp_get).
+    apply ksum_swap. }
+  rewrite E1.
+  unfold xnth. rewrite nth_mv.
+  eapply cg_trans; [|apply cg_sym; apply cg_mod].
+  apply ksum_cg. intros c. apply H.
+Qed.
+
+Fixpoint siter (p : Z) (C : gtrie row) (k : nat) (s : svec) : svec :=
+  match k with
+  | O => s
+  | S k' => smv p C (siter p C k' s)
+  end.
+
+Fixpoint smono (p : Z) (Cs : list (gtrie row)) (m : mono) (s : svec) : svec :=
+  match Cs, m with
+  | C :: os, k :: m' => siter p C k (smono p os m' s)
+  | _, _ => s
+  end.
+
+Definition sev (p : Z) (Cs : list (gtrie row)) (f : poly) (s : svec) : svec :=
+  smerge p (flat_map (fun t => map (fun kv => (fst kv, snd t * snd kv)) (smono p Cs (fst t) s)) f).
+
+Lemma siter_rel p M k : forall s x,
+  srel p s x -> srel p (siter p (transp M) k s) (iter (mv p M) k x).
+Proof.
+  induction k as [|k IH]; intros s x H; [exact H|].
+  cbn [siter iter]. apply smv_rel. apply IH. exact H.
+Qed.
+
+Lemma smono_rel p ops : forall m s x,
+  srel p s x -> srel p (smono p (map transp ops) m s) (mono_apply p ops m x).
+Proof.
+  induction ops as [|M os IH]; intros m s x H; [exact H|].
+  destruct m as [|k m]; [exact H|].
+  cbn [map smono mono_apply]. apply siter_rel. apply IH. exact H.
+Qed.
+
+Lemma kcoef_scaled_terms (g : mono -> svec) (f : poly) c :
+  kcoef Pos.eq_dec (flat_map (fun t => map (fun kv => (fst kv, snd t * snd kv)) (g (fst t))) f) c
+  = ksum f (fun m => kcoef Pos.eq_dec (g m) c).
+Proof.
+  induction f as [|t f IH]; [reflexivity|].
+  cbn [flat_map ksum]. rewrite kcoef_app, IH, kcoef_scale. ring.
+Qed.
+
+Lemma sev_rel p ops f s x :
+  srel p s x -> srel p (sev p (map transp ops) f s) (ev p ops f x).
+Proof.
+  intros H c.
+  eapply cg_trans; [apply smerge_sget|].
+  eapply cg_trans.
+  { exact (cg_eq p _ _ (kcoef_scaled_terms (fun m => smono p (map transp ops) m s) f c)). }
+  eapply cg_trans.
+  { apply ksum_cg with (G := fun m => nth (ridx c) (mono_apply p ops m x) 0).
+    intros m. exact (smono_rel p ops m s x H c). }
+  apply cg_sym. exact (ev_nth p ops f x (ridx c)).
+Qed.
+
+Definition szero_b (p : Z) (s : svec) : bool :=
+  let t := tsum s TL in forallb (fun kv => Z.eqb (tget 0 t (fst kv) mod p) 0) s.
+
+Lemma szero_b_sound p s : szero_b p s = true -> forall c, cg p (sget s c) 0.
+Proof.
+  intros H c. unfold szero_b in H. cbv zeta in H. rewrite forallb_forall in H.
+  destruct (in_dec Pos.eq_dec c (map fst s)) as [Hi|Hn].
+  - apply in_map_iff in Hi as [kv [Hkv Hin]]. specialize (H kv Hin). rewrite Hkv in H.
+    apply Z.eqb_eq in H. rewrite tsum_get in H. cbn [tget] in H. rewrite Z.add_0_l in H.
+    apply cg_zero_of_mod. exact H.
+  - unfold sget. rewrite (kcoef_notin_keys s c Hn). apply cg_refl.
+Qed.
+
+Fixpoint dsp (k : positive) (x : list Z) : svec :=
+  match x with
+  | [] => []
+  | a :: x' => if Z.eqb a 0 then dsp (Pos.succ k) x' else (k, a) :: dsp (Pos.succ k) x'
+  end.
+
+Lemma sget_dsp x : forall k c,
+  sget (dsp k x) c =
+  nth (if (Pos.to_nat k <=? Pos.to_nat c)%nat then (Pos.to_nat c - Pos.to_nat k)%nat else length x) x 0.
+Proof.
+  induction x as [|a x IH]; intros k c.
+  - unfold sget. cbn [dsp]. rewrite nth_nil_Z. reflexivity.
+  - pose proof (IH (Pos.succ k) c) as IH1. unfold sget in IH1. rewrite Pos2Nat.inj_succ in IH1.
+    unfold sget. cbn [dsp length].
+    destruct (Nat.lt_trichotomy (Pos.to_nat k) (Pos.to_nat c)) as [Hl|[He|Hg]].
+    + assert (Hne : k <> c) by (intro E; subst; lia).
+      replace ((Pos.to_nat k <=? Pos.to_nat c)%nat) with true by (symmetry; apply Nat.leb_le; lia).
+      replace ((S (Pos.to_nat k) <=? Pos.to_nat c)%nat) with true in IH1
+        by (symmetry; apply Nat.leb_le; lia).
+      replace (Pos.to_nat c - Pos.to_nat k)%nat with (S (Pos.to_nat c - S (Pos.to_nat k))) by lia.
+      cbv iota in IH1 |- *. cbn [nth].
+      destruct (Z.eqb a 0) eqn:Ea; cbv iota.
+      * exact IH1.
+      * rewrite kcoef_cons, IH1. cbn [fst snd].
+        destruct (Pos.eq_dec k c) as [E|E]; [contradiction|]. reflexivity.
+    + assert (Hkc : k = c) by (apply Pos2Nat.inj; exact He). subst c.
+      replace ((Pos.to_nat k <=? Pos.to_nat k)%nat) with true by (symmetry; apply Nat.leb_refl).
+      replace ((S (Pos.to_nat k) <=? Pos.to_nat k)%nat) with false in IH1
+        by (symmetry; apply Nat.leb_gt; lia).
+      rewrite Nat.sub_diag. cbv iota in IH1 |- *. rewrite nth_overflow in IH1 by lia. cbn [nth].
+      destruct (Z.eqb a 0) eqn:Ea; cbv iota.
+      * apply Z.eqb_eq in Ea. subst a. exact IH1.
+      * rewrite kcoef_cons, IH1. cbn [fst snd].
+        destruct (Pos.eq_dec k k) as [_|N]; [|congruence]. cbv iota. lia.
+    + assert (Hne : k <> c) by (intro E; subst; lia).
+      replace ((Pos.to_nat k <=? Pos.to_nat c)%nat) with false by (symmetry; apply Nat.leb_gt; lia).
+      replace ((S (Pos.to_nat k) <=? Pos.to_nat c)%nat) with false in IH1
+        by (symmetry; apply Nat.leb_gt; lia).
+      cbv iota in IH1 |- *. rewrite nth_overflow in IH1 by lia.
+      rewrite (nth_overflow (a :: x) 0) by (cbn [length]; lia).
+      destruct (Z.eqb a 0) eqn:Ea; cbv iota.
+      * exact IH1.
+      * rewrite kcoef_cons, IH1. cbn [fst snd].
+        destruct (Pos.eq_dec k c) as [E|E]; [contradiction|]. reflexivity.
+Qed.
+
+Lemma srel_dsp p x : srel p (dsp 1%positive x) x.
+Proof.
+  intros c. rewrite sget_dsp. unfold xnth, ridx. rewrite Pos2Nat.inj_1.
+  pose proof (Pos2Nat.is_pos c) as Hp.
+  replace (1 <=? Pos.to_nat c)%nat with true by (symmetry; apply Nat.leb_le; lia).
+  replace (Pos.to_nat c - 1)%nat with (Nat.pred (Pos.to_nat c)) by lia.
+  cbv iota. apply cg_refl.
+Qed.
+
 (** * Products, certificates and the checker *)
 
 Fixpoint shift (o : nat) (l : list Z) : list Z :=
@@ -852,18 +1228,26 @@ Definition hilbert_cell (p : Z) (n : nat) (J G : list poly) (d r : nat) : Prop :
     independent_mod p n (J ++ m_products n G d) (select_products n G d sel) /\
     spans_mod p n (J ++ m_products n G d) (products n G d) (select_products n G d sel).
 
-Definition vzero_b (p : Z) (x : vec) : bool := forallb (fun a => Z.eqb (a mod p) 0) x.
-
 Definition rowprod (M N : spmat) (b : nat) : row :=
   flat_map (fun cv => map (fun t => (fst t, snd cv * snd t)) (nth (ridx (fst cv)) N [])) (nth b M []).
 
 Definition rowdiff_b (p : Z) (R1 R2 : row) : bool :=
-  let L := R1 ++ map (fun t => (fst t, - snd t)) R2 in
-  forallb (fun c => Z.eqb (kcoef Pos.eq_dec L c mod p) 0) (map fst L).
+  szero_b p (R1 ++ map (fun t => (fst t, - snd t)) R2).
+
+Definition rtree (N : spmat) : gtrie row := vtree [] N 1%positive TL.
+
+Definition rowprod' (r : row) (NT : gtrie row) : row :=
+  flat_map (fun cv => map (fun t => (fst t, snd cv * snd t)) (tget [] NT (fst cv))) r.
+
+Fixpoint comm_aux (p : Z) (MT NT : gtrie row) (fuel : nat) (M N : spmat) : bool :=
+  match fuel with
+  | O => true
+  | S f => rowdiff_b p (rowprod' (hd [] M) NT) (rowprod' (hd [] N) MT)
+           && comm_aux p MT NT f (tl M) (tl N)
+  end.
 
 Definition comm_b (p : Z) (M N : spmat) : bool :=
-  forallb (fun b => rowdiff_b p (rowprod M N b) (rowprod N M b))
-    (seq 0 (Nat.max (length M) (length N))).
+  comm_aux p (rtree M) (rtree N) (Nat.max (length M) (length N)) M N.
 
 Definition strict_b (p : Z) (lev : list nat) (M : spmat) : bool :=
   forallb (fun b => forallb (fun cv => Z.eqb (snd cv mod p) 0 ||
@@ -871,31 +1255,30 @@ Definition strict_b (p : Z) (lev : list nat) (M : spmat) : bool :=
                       (nth b M []))
     (seq 0 (length M)).
 
-Fixpoint left_ok (p : Z) (L : spmat) (vs : list vec) (i : nat) : bool :=
+Fixpoint left_ok (p : Z) (CL : gtrie row) (vs : list svec) (i : nat) : bool :=
   match vs with
   | [] => true
-  | v :: vs' => vzero_b p (vadd p (mv p L v) (vscale p (-1) (shift i [1]))) &&
-                left_ok p L vs' (S i)
+  | v :: vs' => szero_b p (smv p CL v ++ [(Pos.of_nat (S i), -1)]) && left_ok p CL vs' (S i)
   end.
 
-Fixpoint vstep (p : Z) (ops : list spmat) (G : list poly) (prev : list (list vec))
-  : list (list vec) :=
+Fixpoint vstep (p : Z) (Cs : list (gtrie row)) (G : list poly) (prev : list (list svec))
+  : list (list svec) :=
   match G, prev with
   | g :: G', pg :: prev' =>
-      let rest := vstep p ops G' prev' in
-      (map (fun v => ev p ops g v) pg ++ nth 0 rest []) :: rest
+      let rest := vstep p Cs G' prev' in
+      (map (fun v => sev p Cs g v) pg ++ nth 0 rest []) :: rest
   | _, _ => [[]]
   end.
 
-Fixpoint vlevels (p : Z) (ops : list spmat) (e : vec) (G : list poly) (d : nat)
-  : list (list vec) :=
+Fixpoint vlevels (p : Z) (Cs : list (gtrie row)) (e : svec) (G : list poly) (d : nat)
+  : list (list svec) :=
   match d with
   | O => repeat [e] (S (length G))
-  | S d' => vstep p ops G (vlevels p ops e G d')
+  | S d' => vstep p Cs G (vlevels p Cs e G d')
   end.
 
-Definition pvecs (p : Z) (ops : list spmat) (e : vec) (G : list poly) (d : nat) : list vec :=
-  nth 0 (vlevels p ops e G d) [].
+Definition pvecs (p : Z) (Cs : list (gtrie row)) (e : svec) (G : list poly) (d : nat) : list svec :=
+  nth 0 (vlevels p Cs e G d) [].
 
 Record cert := mk_cert {
   c_ops : list spmat;
@@ -906,14 +1289,16 @@ Record cert := mk_cert {
 
 Definition check_cert (p : Z) (n : nat) (J G : list poly) (d : nat) (c : cert) : bool :=
   let ops := c_ops c in
-  let PV := pvecs p ops (c_e c) G d in
+  let Cs := map transp ops in
+  let es := dsp 1%positive (c_e c) in
+  let PV := pvecs p Cs es G d in
   Nat.eqb (length ops) n
   && forallb (fun M => forallb (fun N => comm_b p M N) ops) ops
   && forallb (strict_b p (c_lev c)) ops
-  && forallb (fun g => vzero_b p (ev p ops g (c_e c))) J
-  && forallb (fun v => forallb (fun M => vzero_b p (mv p M v)) ops) PV
+  && forallb (fun g => szero_b p (sev p Cs g es)) J
+  && forallb (fun v => forallb (fun C => szero_b p (smv p C v)) Cs) PV
   && forallb (fun i => Nat.ltb i (length PV)) (c_sel c)
-  && left_ok p (c_left c) (map (fun i => nth i PV (c_e c)) (c_sel c)) 0.
+  && left_ok p (transp (c_left c)) (map (fun i => nth i PV es) (c_sel c)) 0.
 
 (** * Calibration: a two-variable cell over F_7 *)
 
@@ -972,33 +1357,13 @@ Proof.
   apply cg_add; [apply nth_vscale | apply cg_refl].
 Qed.
 
-Lemma veq_of_vsub p x y : veq p (vadd p x (vscale p (-1) y)) [] -> veq p x y.
-Proof.
-  intros H b. pose proof (H b) as Hb. rewrite nth_nil_Z in Hb.
-  assert (H2 : cg p (nth b x 0 + (-1) * nth b y 0) 0).
-  { eapply cg_trans; [|exact Hb]. apply cg_sym.
-    eapply cg_trans; [apply nth_vadd|].
-    apply cg_add; [apply cg_refl | apply nth_vscale]. }
-  unfold cg in *.
-  replace (nth b x 0 - nth b y 0) with (nth b x 0 + (-1) * nth b y 0 - 0) by ring.
-  exact H2.
-Qed.
-
-Lemma vzero_b_sound p x : vzero_b p x = true -> veq p x [].
-Proof.
-  intros H b. rewrite nth_nil_Z. unfold vzero_b in H. rewrite forallb_forall in H.
-  destruct (Nat.lt_ge_cases b (length x)) as [Hl|Hl].
-  - apply cg_zero_of_mod. apply Z.eqb_eq. apply H. apply nth_In. exact Hl.
-  - rewrite nth_overflow by exact Hl. apply cg_refl.
-Qed.
 
 Lemma rowdiff_sound p R1 R2 : rowdiff_b p R1 R2 = true ->
   forall F, cg p (ksum R1 F) (ksum R2 F).
 Proof.
-  intros H F. unfold rowdiff_b in H. rewrite forallb_forall in H.
+  intros H F. unfold rowdiff_b in H.
   assert (H0 : cg p (ksum (R1 ++ map (fun t => (fst t, - snd t)) R2) F) 0).
-  { apply (ksum_zero_keys Pos.eq_dec). intros k Hk. apply cg_zero_of_mod.
-    apply Z.eqb_eq. apply H. exact Hk. }
+  { apply (ksum_zero_keys Pos.eq_dec). intros k _. exact (szero_b_sound p _ H k). }
   rewrite ksum_app, ksum_neg_list in H0. unfold cg in *.
   replace (ksum R1 F - ksum R2 F) with (ksum R1 F + - ksum R2 F - 0) by ring.
   exact H0.
@@ -1020,17 +1385,47 @@ Proof.
   apply ksum_cg. intros c. apply mv_nth_cg.
 Qed.
 
+Lemma rowprod'_eq M N b : rowprod' (nth b M []) (rtree N) = rowprod M N b.
+Proof.
+  unfold rowprod', rowprod, rtree. apply flat_map_ext. intros cv.
+  rewrite tget_vtree1. reflexivity.
+Qed.
+
+Lemma nth_0_hd (l : spmat) : nth 0 l [] = hd [] l.
+Proof. destruct l; reflexivity. Qed.
+
+Lemma nth_S_tl (l : spmat) b : nth (S b) l [] = nth b (tl l) [].
+Proof.
+  destruct l as [|a l]; [|reflexivity].
+  rewrite (nth_nil_gen ([] : row) (S b)).
+  change (tl ([] : spmat)) with ([] : spmat).
+  rewrite (nth_nil_gen ([] : row) b). reflexivity.
+Qed.
+
+Lemma comm_aux_sound p MT NT : forall fuel M N,
+  (length M <= fuel)%nat -> (length N <= fuel)%nat -> comm_aux p MT NT fuel M N = true ->
+  forall b, rowdiff_b p (rowprod' (nth b M []) NT) (rowprod' (nth b N []) MT) = true.
+Proof.
+  induction fuel as [|f IH]; intros M N HM HN H b.
+  - destruct M as [|r M]; [|cbn [length] in HM; lia].
+    destruct N as [|s N]; [|cbn [length] in HN; lia].
+    rewrite (nth_nil_gen ([] : row) b). reflexivity.
+  - cbn [comm_aux] in H. apply andb_true_iff in H as [H1 H2].
+    destruct b as [|b].
+    + rewrite !nth_0_hd. exact H1.
+    + rewrite !nth_S_tl. apply IH; [|  |exact H2].
+      * destruct M; cbn [length tl] in *; lia.
+      * destruct N; cbn [length tl] in *; lia.
+Qed.
+
 Lemma comm_b_sound p M N : comm_b p M N = true -> commutes p (mv p M) (mv p N).
 Proof.
   intros H x b.
   eapply cg_trans; [apply mv_mv_nth|].
   eapply cg_trans; [|apply cg_sym; apply mv_mv_nth].
-  destruct (Nat.lt_ge_cases b (Nat.max (length M) (length N))) as [Hl|Hl].
-  - unfold comm_b in H. rewrite forallb_forall in H.
-    apply rowdiff_sound. apply H. apply (proj2 (in_seq _ _ _)). lia.
-  - assert (HM : nth b M [] = []) by (apply nth_overflow; lia).
-    assert (HN : nth b N [] = []) by (apply nth_overflow; lia).
-    unfold rowprod. rewrite HM, HN. simpl. apply cg_refl.
+  apply rowdiff_sound.
+  rewrite <- (rowprod'_eq M N b), <- (rowprod'_eq N M b).
+  exact (comm_aux_sound p (rtree M) (rtree N) _ M N (Nat.le_max_l _ _) (Nat.le_max_r _ _) H b).
 Qed.
 
 Definition Vanish (p : Z) (lev : list nat) (L : nat) (y : vec) : Prop :=
@@ -1273,15 +1668,52 @@ Proof.
     apply shift_cons.
 Qed.
 
-Lemma left_ok_sound p L : forall vs i, left_ok p L vs i = true ->
-  forall j, (j < length vs)%nat -> veq p (mv p L (nth j vs [])) (shift (i + j) [1]).
+Lemma unit_row p (s : svec) (y : vec) i :
+  srel p s y -> szero_b p (s ++ [(Pos.of_nat (S i), -1)]) = true -> veq p y (shift i [1]).
 Proof.
-  induction vs as [|v vs IH]; intros i H j Hj; [simpl in Hj; lia|].
-  simpl in H. apply andb_true_iff in H as [H1 H2].
+  intros Hr Hz b.
+  pose proof (szero_b_sound p _ Hz (Pos.of_nat (S b))) as Hb.
+  pose proof (Hr (Pos.of_nat (S b))) as Hr1. unfold xnth in Hr1. rewrite ridx_of_nat in Hr1.
+  unfold sget in Hb, Hr1. rewrite kcoef_app in Hb. cbn [kcoef fst snd] in Hb.
+  destruct (Nat.eq_dec i b) as [Ei|Ni].
+  - subst b.
+    destruct (Pos.eq_dec (Pos.of_nat (S i)) (Pos.of_nat (S i))) as [_|N];
+      [|exfalso; apply N; reflexivity].
+    cbv iota in Hb.
+    rewrite (nth_shift_ge i [1] i (Nat.le_refl i)), Nat.sub_diag. cbn [nth].
+    eapply cg_trans; [apply cg_sym; exact Hr1|].
+    unfold cg in *.
+    replace (kcoef Pos.eq_dec s (Pos.of_nat (S i)) - 1)
+      with (kcoef Pos.eq_dec s (Pos.of_nat (S i)) + (-1 + 0) - 0) by ring.
+    exact Hb.
+  - destruct (Pos.eq_dec (Pos.of_nat (S i)) (Pos.of_nat (S b))) as [E|E];
+      [exfalso; apply Ni;
+       pose proof (Nat2Pos.inj _ _ (Nat.neq_succ_0 i) (Nat.neq_succ_0 b) E) as E1; lia|].
+    cbv iota in Hb.
+    assert (Hs0 : cg p (kcoef Pos.eq_dec s (Pos.of_nat (S b))) 0).
+    { unfold cg in *.
+      replace (kcoef Pos.eq_dec s (Pos.of_nat (S b)) - 0)
+        with (kcoef Pos.eq_dec s (Pos.of_nat (S b)) + (0 + 0) - 0) by ring.
+      exact Hb. }
+    assert (Hn : nth b (shift i [1]) 0 = 0).
+    { destruct (Nat.lt_ge_cases b i) as [Hl|Hl]; [apply nth_shift_lt; exact Hl|].
+      rewrite nth_shift_ge by exact Hl.
+      replace (b - i)%nat with (S (b - i - 1)) by lia. cbn [nth]. apply nth_nil_Z. }
+    rewrite Hn. eapply cg_trans; [apply cg_sym; exact Hr1|exact Hs0].
+Qed.
+
+Lemma left_ok_sound p L : forall vs i, left_ok p (transp L) vs i = true ->
+  forall j, (j < length vs)%nat -> forall x, srel p (nth j vs []) x ->
+  veq p (mv p L x) (shift (i + j) [1]).
+Proof.
+  induction vs as [|v vs IH]; intros i H j Hj x Hx; [cbn [length] in Hj; lia|].
+  cbn [left_ok] in H. apply andb_true_iff in H as [H1 H2].
   destruct j as [|j].
-  - simpl. rewrite Nat.add_0_r. apply veq_of_vsub. apply vzero_b_sound. exact H1.
-  - simpl. replace (i + S j)%nat with (S i + j)%nat by lia.
-    apply IH; [exact H2|]. simpl in Hj. lia.
+  - cbn [nth] in Hx. rewrite Nat.add_0_r.
+    exact (unit_row p _ _ i (smv_rel p L v x Hx) H1).
+  - cbn [nth] in Hx. replace (i + S j)%nat with (S i + j)%nat by lia.
+    assert (Hj' : (j < length vs)%nat) by (cbn [length] in Hj; lia).
+    exact (IH (S i) H2 j Hj' x Hx).
 Qed.
 
 Lemma nth_repeat_lt {A : Type} (a d : A) m k : (k < m)%nat -> nth k (repeat a m) d = a.
@@ -1290,25 +1722,25 @@ Proof.
   destruct k as [|k]; [reflexivity|]. simpl. apply IH. lia.
 Qed.
 
-Lemma vstep_length p ops G : forall prev,
-  length prev = S (length G) -> length (vstep p ops G prev) = S (length G).
+Lemma vstep_length p Cs G : forall prev,
+  length prev = S (length G) -> length (vstep p Cs G prev) = S (length G).
 Proof.
   induction G as [|g G IH]; intros prev H; [reflexivity|].
   destruct prev as [|pg prev]; [discriminate|].
   simpl in H. injection H as H. simpl. rewrite (IH prev H). reflexivity.
 Qed.
 
-Lemma vlevels_length p ops e G : forall d, length (vlevels p ops e G d) = S (length G).
+Lemma vlevels_length p Cs e G : forall d, length (vlevels p Cs e G d) = S (length G).
 Proof.
   induction d as [|d IH]; [apply repeat_length|].
   simpl. apply vstep_length. exact IH.
 Qed.
 
-Lemma vstep_correct p ops (F : list poly -> list vec) : forall G prev,
+Lemma vstep_correct p Cs (F : list poly -> list svec) : forall G prev,
   length prev = S (length G) ->
   (forall k, (k <= length G)%nat -> nth k prev [] = F (skipn k G)) ->
   forall k, (k <= length G)%nat ->
-    nth k (vstep p ops G prev) [] = mset_aux (fun g v => ev p ops g v) F (skipn k G).
+    nth k (vstep p Cs G prev) [] = mset_aux (fun g v => sev p Cs g v) F (skipn k G).
 Proof.
   induction G as [|g G IH]; intros prev Hl Hp k Hk.
   - destruct k as [|k]; [reflexivity | simpl in Hk; lia].
@@ -1318,26 +1750,26 @@ Proof.
     { intros k' Hk'. exact (Hp (S k') (le_n_S _ _ Hk')). }
     destruct k as [|k].
     + assert (Hpg : pg = F (g :: G)) by exact (Hp 0%nat (Nat.le_0_l _)).
-      assert (Hr : nth 0 (vstep p ops G prev) [] = mset_aux (fun g v => ev p ops g v) F G)
+      assert (Hr : nth 0 (vstep p Cs G prev) [] = mset_aux (fun g v => sev p Cs g v) F G)
         by exact (IH prev Hl Hp' 0%nat (Nat.le_0_l _)).
       simpl. rewrite Hpg, Hr. reflexivity.
     + simpl in Hk. simpl. exact (IH prev Hl Hp' k (le_S_n _ _ Hk)).
 Qed.
 
-Lemma vlevels_correct p ops e G : forall d k, (k <= length G)%nat ->
-  nth k (vlevels p ops e G d) [] = msets (fun g v => ev p ops g v) e d (skipn k G).
+Lemma vlevels_correct p Cs e G : forall d k, (k <= length G)%nat ->
+  nth k (vlevels p Cs e G d) [] = msets (fun g v => sev p Cs g v) e d (skipn k G).
 Proof.
   induction d as [|d IH]; intros k Hk.
   - change (nth k (repeat [e] (S (length G))) []
-            = msets (fun g v => ev p ops g v) e 0 (skipn k G)).
+            = msets (fun g v => sev p Cs g v) e 0 (skipn k G)).
     rewrite (nth_repeat_lt [e] [] (S (length G)) k (le_n_S _ _ Hk)). reflexivity.
-  - simpl. apply (vstep_correct p ops (msets (fun g v => ev p ops g v) e d));
+  - simpl. apply (vstep_correct p Cs (msets (fun g v => sev p Cs g v) e d));
       [apply vlevels_length | exact IH | exact Hk].
 Qed.
 
-Lemma pvecs_msets p ops e G d :
-  pvecs p ops e G d = msets (fun g v => ev p ops g v) e d G.
-Proof. exact (vlevels_correct p ops e G d 0%nat (Nat.le_0_l _)). Qed.
+Lemma pvecs_msets p Cs e G d :
+  pvecs p Cs e G d = msets (fun g v => sev p Cs g v) e d G.
+Proof. exact (vlevels_correct p Cs e G d 0%nat (Nat.le_0_l _)). Qed.
 
 Lemma Forall2_map_rel {A B : Type} (R : A -> B -> Prop) (f : A -> A) (f' : B -> B) l l' :
   Forall2 R l l' -> (forall a b, R a b -> R (f a) (f' b)) ->
@@ -1414,19 +1846,25 @@ Proof.
   assert (Hst : Forall (strict_mat p lev) ops).
   { rewrite Forall_forall. intros M HM. apply strict_b_sound.
     rewrite forallb_forall in Hstr. exact (Hstr M HM). }
-  assert (Hrel : Forall2 (fun (P : poly) (v : vec) => veq p v (ev p ops P e))
-                   (products (length ops) G d) (pvecs p ops e G d)).
+  set (Cs := map transp ops) in *.
+  set (es := dsp 1%positive e) in *.
+  assert (Hes : srel p es e) by apply srel_dsp.
+  assert (Hrel : Forall2 (fun (P : poly) (v : svec) => srel p v (ev p ops P e))
+                   (products (length ops) G d) (pvecs p Cs es G d)).
   { unfold products. rewrite pvecs_msets. apply msets_rel.
-    - exact (ev_one p ops (length ops) e).
+    - exact (srel_veq p es e _ Hes (ev_one p ops (length ops) e)).
     - intros g P v Hr. simpl.
-      etransitivity; [apply (lin_proper p _ (ev_lin p ops g) _ _ Hr)|].
+      eapply srel_veq; [exact (sev_rel p ops g v _ Hr)|].
       symmetry. apply ev_pmul. exact Hpc. }
   assert (HJ' : forall g, In g J -> veq p (ev p ops g e) []).
-  { intros g Hg. rewrite forallb_forall in HJ. apply vzero_b_sound. exact (HJ g Hg). }
-  assert (HPV : forall v, In v (pvecs p ops e G d) ->
-                forall M, In M ops -> veq p (mv p M v) []).
-  { intros v Hv M HM. rewrite forallb_forall in Hd. specialize (Hd v Hv).
-    rewrite forallb_forall in Hd. apply vzero_b_sound. exact (Hd M HM). }
+  { intros g Hg. rewrite forallb_forall in HJ.
+    exact (srel_zero p _ _ (sev_rel p ops g es e Hes) (szero_b_sound p _ (HJ g Hg))). }
+  assert (HPV : forall v, In v (pvecs p Cs es G d) -> forall x, srel p v x ->
+                forall M, In M ops -> veq p (mv p M x) []).
+  { intros v Hv x Hx M HM. rewrite forallb_forall in Hd. specialize (Hd v Hv).
+    rewrite forallb_forall in Hd.
+    exact (srel_zero p _ _ (smv_rel p M v x Hx)
+             (szero_b_sound p _ (Hd (transp M) (in_map transp ops M HM)))). }
   assert (G1 : Forall (fun g => veq p (ev p ops g e) []) (J ++ m_products (length ops) G d)).
   { rewrite Forall_forall. intros g Hg. apply in_app_iff in Hg as [Hg|Hg].
     - exact (HJ' g Hg).
@@ -1435,12 +1873,9 @@ Proof.
       destruct (Forall2_In_l _ _ _ _ Hrel HP) as [v [Hv Hr]].
       pose proof (proj1 (in_seq _ _ _) Hk) as Hk'.
       etransitivity; [apply ev_pmul; exact Hpc|].
-      etransitivity;
-        [apply (lin_proper p _ (ev_lin p ops (var (length ops) k)));
-         symmetry; exact Hr|].
       etransitivity; [apply ev_var|].
       etransitivity; [apply mono_unit; lia|].
-      apply (HPV v Hv). apply nth_In. lia. }
+      apply (HPV v Hv (ev p ops P e) Hr). apply nth_In. lia. }
   intros cs Hlen [u [cofs [Hwu [Hwc [Hlc [Hnz Hz]]]]]].
   set (f := lincomb cs (select_products (length ops) G d sel)) in *.
   assert (H1 : veq p (ev p ops (pmul u f) e) []).
@@ -1455,16 +1890,16 @@ Proof.
     intros j Hj. unfold select_products in Hj. rewrite length_map in Hj.
     unfold select_products.
     rewrite (nth_map_in _ sel j _ 0%nat Hj).
-    assert (Hq : veq p (nth (nth j sel 0%nat) (pvecs p ops e G d) e)
-                       (ev p ops (nth (nth j sel 0%nat) (products (length ops) G d)
-                                    (one_poly (length ops))) e)).
-    { exact (Forall2_nth_R _ _ _ _ _ Hrel (ev_one p ops (length ops) e) (nth j sel 0%nat)). }
-    etransitivity; [apply (lin_proper p _ (mv_lin p L)); symmetry; exact Hq|].
-    assert (Hj' : (j < length (map (fun i => nth i (pvecs p ops e G d) e) sel))%nat)
+    assert (Hq : srel p (nth (nth j sel 0%nat) (pvecs p Cs es G d) es)
+                   (ev p ops (nth (nth j sel 0%nat) (products (length ops) G d)
+                                (one_poly (length ops))) e)).
+    { exact (Forall2_nth_R _ _ _ _ _ Hrel
+               (srel_veq p es e _ Hes (ev_one p ops (length ops) e)) (nth j sel 0%nat)). }
+    assert (Hj' : (j < length (map (fun i => nth i (pvecs p Cs es G d) es) sel))%nat)
       by (rewrite length_map; exact Hj).
     pose proof (left_ok_sound p L _ 0 Hleft j Hj') as H0.
     rewrite (nth_map_in _ sel j _ 0%nat Hj) in H0.
-    exact H0. }
+    exact (H0 _ Hq). }
   assert (H4 : veq p cs []).
   { etransitivity; [symmetry; exact H3|]. apply (lin_zero p _ (mv_lin p L)). exact H2. }
   rewrite Forall_forall. intros c0 Hc.
@@ -1472,12 +1907,12 @@ Proof.
   specialize (H4 i). rewrite Hi, nth_nil_Z in H4. exact H4.
 Qed.
 
-Lemma products_pvecs_length p n ops e G d :
-  length (products n G d) = length (pvecs p ops e G d).
+Lemma products_pvecs_length p n Cs es G d :
+  length (products n G d) = length (pvecs p Cs es G d).
 Proof.
   unfold products. rewrite pvecs_msets.
-  exact (Forall2_length (msets_rel (fun (_ : poly) (_ : vec) => True) pmul
-           (fun g v => ev p ops g v) (one_poly n) e I (fun _ _ _ _ => I) d G)).
+  exact (Forall2_length (msets_rel (fun (_ : poly) (_ : svec) => True) pmul
+           (fun g v => sev p Cs g v) (one_poly n) es I (fun _ _ _ _ => I) d G)).
 Qed.
 
 Lemma check_cert_sel_range p n J G d c :
@@ -1488,7 +1923,7 @@ Proof.
   apply andb_true_iff in H as [H _]. apply andb_true_iff in H as [_ Hsel].
   rewrite forallb_forall in Hsel. specialize (Hsel i Hi).
   apply Nat.ltb_lt in Hsel.
-  rewrite (products_pvecs_length p n (c_ops c) (c_e c) G d). exact Hsel.
+  rewrite (products_pvecs_length p n (map transp (c_ops c)) (dsp 1%positive (c_e c)) G d). exact Hsel.
 Qed.
 
 Lemma prime_7 : prime 7.
