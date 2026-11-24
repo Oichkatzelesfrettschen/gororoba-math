@@ -330,6 +330,32 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
   rw [hPT, ← s1, s2, s3, hPB, ← s4]
   ring
 
+/-- Over a domain with `2 ≠ 0`, for an alternating `6 × 6` block `B` with nonzero Pfaffian, the
+Pfaffian on four complement indices of `det B • D + Xᵀ * adjugate B * X` is `Pf B ^ 3` times the
+Pfaffian of `T = [[B, X], [-Xᵀ, D]]` on the six leading indices followed by those four. -/
+theorem schur_pfaffian_six [IsDomain R] (h2 : (2 : R) ≠ 0) (B : Matrix (Fin 6) (Fin 6) R)
+    (X : Matrix (Fin 6) κ R) (D : Matrix κ κ R) (hBs : ∀ i j, B i j = -B j i)
+    (hBd : ∀ i, B i i = 0) (hDs : ∀ i j, D i j = -D j i) (hPf : pfaffian B ≠ 0) (a b c d : κ) :
+    pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) [a, b, c, d] =
+      pfaffian B ^ 3 * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
+        ((List.finRange 6).map Sum.inl ++ [Sum.inr a, Sum.inr b, Sum.inr c, Sum.inr d]) := by
+  have hB : Bᵀ = -B := Matrix.ext fun i j => by simp [hBs j i]
+  have hD : Dᵀ = -D := Matrix.ext fun i j => by simp [hDs j i]
+  have h0 := schur_cleared (mul_right_injective₀ h2) B X D hB hD [a, b, c, d] (by simp)
+  have e2 : [a, b, c, d].length / 2 = 2 := by simp
+  have e1 : [a, b, c, d].length = 4 := by simp
+  rw [e2, e1] at h0
+  have h : B.det ^ 4 * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
+        ((List.finRange 6).map Sum.inl ++ [Sum.inr a, Sum.inr b, Sum.inr c, Sum.inr d]) =
+      pfaffian B * B.det ^ 2 * pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) [a, b, c, d] := h0
+  have hdet := det_eq_pfaffian_sq_fin_six B hBs hBd
+  generalize pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) [a, b, c, d] = W at h ⊢
+  generalize pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
+        ((List.finRange 6).map Sum.inl ++ [Sum.inr a, Sum.inr b, Sum.inr c, Sum.inr d]) = P at h ⊢
+  rw [hdet] at h
+  refine mul_left_cancel₀ (pow_ne_zero 5 hPf) ?_
+  linear_combination (-1 : R) * h
+
 end Schur
 
 end Matrix
