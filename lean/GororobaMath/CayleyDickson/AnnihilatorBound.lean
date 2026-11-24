@@ -28,6 +28,13 @@ bound.
   reals, the kernel of left multiplication has dimension divisible by four.
 * `Tower.finrank_ker_mulLeft_add_le`: Proposition 9.10 of the paper: for nonzero `x` at level
   `n ≥ 2`, the kernel has dimension at most `2 ^ n - 4 n + 4`.
+* `Tower.mk_mul_iota_mul_mk_iota_mul_eq_zero`, `Tower.mk_mul_iota_mul_mk_neg_iota_mul_eq_zero`:
+  the two inclusions of Theorem 10.2: `(x, i x)` with `a x = 0` and `(y, -i y)` with `y`
+  orthogonal to `1`, `i`, `a` and `i a` lie in the kernel of left multiplication by `(a, i a)`,
+  `i = (0, 1)`; `Tower.mul_add_mul_of_star_eq_neg` is the polarization `u v + v u = -2 ⟨u, v⟩`
+  of pure elements that the second one rests on.
+* `Tower.two_pow_sub_four_add_finrank_ker_le`: the lower bound
+  `2 ^ n - 4 + dim Ann a ≤ dim Ann (a, i a)` of the dimension count of Theorem 10.2.
 -/
 
 @[expose] public section
@@ -160,6 +167,121 @@ theorem finrank_ker_mulLeft_mk_le (hsq : ∀ x : K, 0 ≤ x * x) {k : ℕ} {a b 
 
 end Field
 
+section Isotropic
+
+variable {K : Type u} [Field K] [StarRing K] [TrivialStar K] [PartialOrder K]
+  [IsOrderedAddMonoid K]
+
+omit [PartialOrder K] [IsOrderedAddMonoid K] in
+/-- The square of a pure element is minus its norm times `1`. -/
+theorem mul_self_of_star_eq_neg {j : ℕ} {u : Tower K j} (hu : star u = -u) :
+    u * u = (-dot j u u) • (1 : Tower K j) := by
+  have h := (mul_star_eq_dot j u).1
+  rw [hu, mul_neg] at h
+  rw [neg_smul, ← h, neg_neg]
+
+omit [PartialOrder K] [IsOrderedAddMonoid K] in
+/-- Polarization for pure elements: `u v + v u = -2 ⟨u, v⟩`, with no associativity. -/
+theorem mul_add_mul_of_star_eq_neg {j : ℕ} {u v : Tower K j} (hu : star u = -u)
+    (hv : star v = -v) : u * v + v * u = (-2 * dot j u v) • (1 : Tower K j) := by
+  have hs : star (u + v) = -(u + v) := by rw [star_add, hu, hv, neg_add]
+  have e : (u + v) * (u + v) = u * u + (u * v + v * u) + v * v := by
+    rw [mul_add, add_mul, add_mul]
+    abel
+  calc u * v + v * u = (u + v) * (u + v) - u * u - v * v := by rw [e]; abel
+    _ = (-dot j (u + v) (u + v)) • (1 : Tower K j) - (-dot j u u) • (1 : Tower K j) -
+        (-dot j v v) • (1 : Tower K j) := by
+      rw [mul_self_of_star_eq_neg hs, mul_self_of_star_eq_neg hu, mul_self_of_star_eq_neg hv]
+    _ = (-2 * dot j u v) • (1 : Tower K j) := by
+      rw [dot_add_left, dot_add_right, dot_add_right, dot_comm j v u]
+      module
+
+omit [PartialOrder K] [IsOrderedAddMonoid K] in
+/-- The isotropic pair `(a, i a)` with `a = (p, q)` pure and the vector `(y, -i y)` with
+`y = (y₁, y₂)` pure multiply to zero when `⟨y₁, p⟩ + ⟨y₂, q⟩ = 0` and `⟨y₁, q⟩ = ⟨y₂, p⟩`: every
+component of the product is a sum of the polarized squares `u v + v u = -2 ⟨u, v⟩` of pure elements,
+and the two orthogonality relations cancel those sums. -/
+theorem mk_mk_mul_mk_mk_eq_zero {j : ℕ} {p q y1 y2 : Tower K j} (hp : star p = -p)
+    (hq : star q = -q) (hy1 : star y1 = -y1) (hy2 : star y2 = -y2)
+    (h1 : dot j y1 p + dot j y2 q = 0) (h2 : dot j y1 q = dot j y2 p) :
+    mk (mk p q) (mk q (-p)) * mk (mk y1 y2) (mk (-y2) y1) = 0 := by
+  simp only [mk_mul_mk, star_mk, star_neg, hp, hq, hy1, hy2, mul_neg, neg_mul, neg_neg,
+    sub_neg_eq_add, sub_mk, add_mk, zero_eq_mk, mk_inj]
+  refine ⟨⟨by abel, ?_⟩, ⟨by abel, ?_⟩⟩
+  · have P1 := mul_add_mul_of_star_eq_neg hy2 hp
+    have P2 := mul_add_mul_of_star_eq_neg hq hy1
+    calc y2 * p + -(q * y1) - (-(p * y2) + y1 * q) = (y2 * p + p * y2) - (q * y1 + y1 * q) := by
+          abel
+      _ = 0 := by rw [P1, P2, dot_comm j q y1, ← h2, sub_self]
+  · have P3 := mul_add_mul_of_star_eq_neg hq hy2
+    have P4 := mul_add_mul_of_star_eq_neg hy1 hp
+    have h3 : dot j y1 p = -dot j y2 q := eq_neg_of_add_eq_zero_left h1
+    calc -(q * y2) + -(y1 * p) + (-(y2 * q) + -(p * y1))
+        = -((q * y2 + y2 * q) + (y1 * p + p * y1)) := by abel
+      _ = 0 := by
+        rw [P3, P4, dot_comm j q y2, h3]
+        module
+
+omit [TrivialStar K] [PartialOrder K] [IsOrderedAddMonoid K] in
+/-- Left multiplication by the adjoined unit `i = (0, 1)` on a pair of pure elements swaps and
+negates its halves: `i (p, q) = (q, -p)`. -/
+theorem iota_mul_mk_of_star_eq_neg {j : ℕ} {p q : Tower K j} (hp : star p = -p)
+    (hq : star q = -q) : mk (0 : Tower K j) 1 * mk p q = mk q (-p) := by
+  rw [mk_mul_mk, zero_mul, mul_one, zero_sub, hq, neg_neg, mul_zero, one_mul, zero_add, hp]
+
+/-- The inclusion of Theorem 10.2 of Biss, Dugger and Isaksen for the vectors `(y, -i y)`: when
+`a` is orthogonal to the complex line `⟨1, i⟩` and `y` is orthogonal to `1`, `i`, `a` and `i a`
+(that is, to the quaternionic span of `a` and `i`), the pair `(y, -i y)` lies in the kernel of
+left multiplication by `(a, i a)`, where `i = (0, 1)` is the adjoined unit of the level of `a`. -/
+theorem mk_mul_iota_mul_mk_neg_iota_mul_eq_zero {j : ℕ} {a y : Tower K (j + 1)}
+    (ha1 : dot (j + 1) a 1 = 0) (ha2 : dot (j + 1) a (mk (0 : Tower K j) 1) = 0)
+    (hy1 : dot (j + 1) y 1 = 0) (hy2 : dot (j + 1) y (mk (0 : Tower K j) 1) = 0)
+    (hya : dot (j + 1) y a = 0) (hyia : dot (j + 1) y (mk (0 : Tower K j) 1 * a) = 0) :
+    mk a (mk (0 : Tower K j) 1 * a) * mk y (-(mk (0 : Tower K j) 1 * y)) = 0 := by
+  obtain ⟨p, q, rfl⟩ : ∃ p q : Tower K j, a = mk p q := ⟨_, _, rfl⟩
+  obtain ⟨y1, y2, rfl⟩ : ∃ y1 y2 : Tower K j, y = mk y1 y2 := ⟨_, _, rfl⟩
+  rw [dot_one_right, re_mk] at ha1 hy1
+  rw [dot_mk, dot_zero_right, zero_add, dot_one_right] at ha2 hy2
+  have hp : star p = -p := star_eq_neg_of_re_eq_zero ha1
+  have hq : star q = -q := star_eq_neg_of_re_eq_zero ha2
+  have hy1' : star y1 = -y1 := star_eq_neg_of_re_eq_zero hy1
+  have hy2' : star y2 = -y2 := star_eq_neg_of_re_eq_zero hy2
+  rw [iota_mul_mk_of_star_eq_neg hp hq, dot_mk, dot_neg_right] at hyia
+  rw [iota_mul_mk_of_star_eq_neg hp hq, iota_mul_mk_of_star_eq_neg hy1' hy2', neg_mk, neg_neg]
+  rw [dot_mk] at hya
+  exact mk_mk_mul_mk_mk_eq_zero hp hq hy1' hy2' hya (by linear_combination hyia)
+
+/-- The inclusion of Theorem 10.2 of Biss, Dugger and Isaksen for the vectors `(x, i x)`: when
+`a = (p, q)` has pure halves and `a x = 0`, the pair `(x, i x)` lies in the kernel of left
+multiplication by `(a, i a)`. The theorem is the case `α = 1`, `β = i` of the inclusion of
+Theorem 10.1 with scalars of the complex line, which holds although `α ^ 2 + β ^ 2 = 0`, with
+`i x` in the kernel by Lemma 9.6. -/
+theorem mk_mul_iota_mul_mk_iota_mul_eq_zero (hsq : ∀ x : K, 0 ≤ x * x) {j : ℕ} {p q : Tower K j}
+    (hp : star p = -p) (hq : star q = -q) {x : Tower K (j + 1)} (hx : mk p q * x = 0) :
+    mk (mk p q) (mk (0 : Tower K j) 1 * mk p q) * mk x (mk (0 : Tower K j) 1 * x) = 0 := by
+  have hy : mk p q * (mk (0 : Tower K j) 1 * x) = 0 := by
+    have := mul_cs_mul_eq_zero hp hq hx 0 1
+    have hc : (cs 0 1 : Tower K (j + 1)) = mk (0 : Tower K j) 1 := by
+      simp only [cs, zero_smul, zero_add, one_smul]
+    rwa [hc] at this
+  have := mk_cs_mul_eq_zero_of_mul_eq_zero hsq hx hy 1 0 0 1
+  have hc0 : (cs 0 1 : Tower K (j + 1)) = mk (0 : Tower K j) 1 := by
+    simp only [cs, zero_smul, zero_add, one_smul]
+  have hc1 : (cs 1 0 : Tower K (j + 1)) = 1 := by
+    simp only [cs, one_smul, zero_smul, add_zero]
+  rwa [hc0, hc1, one_mul] at this
+
+omit [TrivialStar K] [PartialOrder K] [IsOrderedAddMonoid K] in
+/-- Left multiplication by the adjoined unit `i = (0, 1)` squares to minus the identity:
+`i (i z) = -z`. -/
+theorem iota_mul_iota_mul {j : ℕ} (z : Tower K (j + 1)) :
+    mk (0 : Tower K j) 1 * (mk (0 : Tower K j) 1 * z) = -z := by
+  obtain ⟨z1, z2, rfl⟩ : ∃ z1 z2 : Tower K j, z = mk z1 z2 := ⟨_, _, rfl⟩
+  simp only [mk_mul_mk, zero_mul, mul_one, one_mul, mul_zero, zero_sub, zero_add, star_neg,
+    star_star, neg_mk]
+
+end Isotropic
+
 section Real
 
 /-- Moreno's divisibility by four for every nonzero element of level `k + 1 ≥ 2`: a nonzero
@@ -240,6 +362,87 @@ theorem finrank_ker_mulLeft_add_le {n : ℕ} (hn : 2 ≤ n) (x : Tower ℝ n) (h
         omega
     rw [pow_succ]
     omega
+
+/-- One half of the dimension count of Theorem 10.2 of Biss, Dugger and Isaksen: for `a`
+orthogonal to the complex line, the kernel of left multiplication by `(a, i a)` has dimension at
+least `2 ^ n - 4` plus the dimension of the kernel of `a` (`n` the level of `a`). The vectors
+`(x + y, i (x - y))`, with `x` annihilated by `a` and `y` orthogonal to `1`, `i`, `a`, `i a`, are
+annihilated by the pair (the two inclusions above) and determine `(x, y)`, since left
+multiplication by `i` squares to `-1`; four linear conditions cut `y` from a space of dimension
+`2 ^ n`. -/
+theorem two_pow_sub_four_add_finrank_ker_le {j : ℕ} {a : Tower ℝ (j + 1)}
+    (ha1 : dot (j + 1) a 1 = 0) (ha2 : dot (j + 1) a (mk (0 : Tower ℝ j) 1) = 0) :
+    2 ^ (j + 1) - 4 + finrank ℝ (LinearMap.ker (mulLeft ℝ (j + 1) a)) ≤
+      finrank ℝ (LinearMap.ker (mulLeft ℝ (j + 1 + 1) (mk a (mk (0 : Tower ℝ j) 1 * a)))) := by
+  have hsq : ∀ y : ℝ, 0 ≤ y * y := fun y => mul_self_nonneg y
+  let dotL : Tower ℝ (j + 1) → Tower ℝ (j + 1) →ₗ[ℝ] ℝ := fun v =>
+    { toFun := fun y => dot (j + 1) y v
+      map_add' := fun x y => dot_add_left (j + 1) x y v
+      map_smul' := fun r x => by
+        rw [dot_smul_left]
+        rfl }
+  let f : Tower ℝ (j + 1) →ₗ[ℝ] ℝ × ℝ × ℝ × ℝ :=
+    (dotL 1).prod ((dotL (mk (0 : Tower ℝ j) 1)).prod
+      ((dotL a).prod (dotL (mk (0 : Tower ℝ j) 1 * a))))
+  let iL : Tower ℝ (j + 1) →ₗ[ℝ] Tower ℝ (j + 1) := mulLeft ℝ (j + 1) (mk (0 : Tower ℝ j) 1)
+  let X := LinearMap.ker (mulLeft ℝ (j + 1) a)
+  let Y := LinearMap.ker f
+  let Φ : X × Y →ₗ[ℝ] Tower ℝ (j + 1 + 1) :=
+    (CayleyDickson.linearEquivProd (Tower ℝ (j + 1)) ℝ).symm.toLinearMap ∘ₗ
+      LinearMap.prod (X.subtype ∘ₗ LinearMap.fst ℝ X Y + Y.subtype ∘ₗ LinearMap.snd ℝ X Y)
+        (iL ∘ₗ (X.subtype ∘ₗ LinearMap.fst ℝ X Y - Y.subtype ∘ₗ LinearMap.snd ℝ X Y))
+  have hΦ : ∀ z : X × Y, Φ z = mk (z.1.1 + z.2.1) (mk (0 : Tower ℝ j) 1 * (z.1.1 - z.2.1)) :=
+    fun z => rfl
+  have hinj : Function.Injective Φ := by
+    rw [← LinearMap.ker_eq_bot, LinearMap.ker_eq_bot']
+    intro z hz
+    rw [hΦ, zero_eq_mk, mk_inj] at hz
+    obtain ⟨h1, h2⟩ := hz
+    have h3 : z.1.1 - z.2.1 = 0 := by
+      have := iota_mul_iota_mul (j := j) (z.1.1 - z.2.1)
+      rw [h2, mul_zero] at this
+      exact neg_eq_zero.1 this.symm
+    have h4 : z.1.1 = z.2.1 := sub_eq_zero.1 h3
+    have h5 : z.1.1 = 0 := by
+      rw [← h4, ← two_smul ℝ z.1.1] at h1
+      exact (smul_eq_zero.1 h1).resolve_left two_ne_zero
+    refine Prod.ext (Subtype.ext h5) (Subtype.ext ?_)
+    rw [← h4, h5]
+    rfl
+  obtain ⟨p, q, rfl⟩ : ∃ p q : Tower ℝ j, a = mk p q := ⟨_, _, rfl⟩
+  have ha1' := ha1
+  have ha2' := ha2
+  rw [dot_one_right, re_mk] at ha1'
+  rw [dot_mk, dot_zero_right, zero_add, dot_one_right] at ha2'
+  have hp : star p = -p := star_eq_neg_of_re_eq_zero ha1'
+  have hq : star q = -q := star_eq_neg_of_re_eq_zero ha2'
+  have hle : LinearMap.range Φ ≤ LinearMap.ker (mulLeft ℝ (j + 1 + 1)
+      (mk (mk p q) (mk (0 : Tower ℝ j) 1 * mk p q))) := by
+    rintro _ ⟨⟨x, y⟩, rfl⟩
+    have hy := LinearMap.mem_ker.1 y.2
+    have hy1 : dot (j + 1) y.1 1 = 0 := congrArg Prod.fst hy
+    have hy2 : dot (j + 1) y.1 (mk (0 : Tower ℝ j) 1) = 0 := congrArg (fun t => t.2.1) hy
+    have hya : dot (j + 1) y.1 (mk p q) = 0 := congrArg (fun t => t.2.2.1) hy
+    have hyia : dot (j + 1) y.1 (mk (0 : Tower ℝ j) 1 * mk p q) = 0 :=
+      congrArg (fun t => t.2.2.2) hy
+    have hx : mk p q * x.1 = 0 := x.2
+    have e : mk (x.1 + y.1) (mk (0 : Tower ℝ j) 1 * (x.1 - y.1)) =
+        mk x.1 (mk (0 : Tower ℝ j) 1 * x.1) + mk y.1 (-(mk (0 : Tower ℝ j) 1 * y.1)) := by
+      rw [add_mk, mul_sub, sub_eq_add_neg]
+    rw [LinearMap.mem_ker, mulLeft_apply, hΦ, e, mul_add,
+      mk_mul_iota_mul_mk_iota_mul_eq_zero hsq hp hq hx,
+      mk_mul_iota_mul_mk_neg_iota_mul_eq_zero ha1 ha2 hy1 hy2 hya hyia, add_zero]
+  have h6 := Submodule.finrank_mono hle
+  have h7 := LinearMap.finrank_range_of_inj hinj
+  have h8 : finrank ℝ (X × Y) = finrank ℝ X + finrank ℝ Y := Module.finrank_prod
+  have h9 := LinearMap.finrank_range_add_finrank_ker f
+  have h10 : finrank ℝ (LinearMap.range f) ≤ 4 := by
+    have := Submodule.finrank_le (LinearMap.range f)
+    simpa [Module.finrank_prod] using this
+  have hXg : finrank ℝ X = finrank ℝ (LinearMap.ker (mulLeft ℝ (j + 1) (mk p q))) := rfl
+  have hYd : finrank ℝ Y = finrank ℝ (LinearMap.ker f) := rfl
+  have h11 : finrank ℝ (Tower ℝ (j + 1)) = 2 ^ (j + 1) := finrank_eq ℝ (j + 1)
+  omega
 
 end Real
 
