@@ -9,18 +9,22 @@
 # CUDA_HOME names a CUDA 13 toolkit (bin/nvcc, lib64/libcudart.so),
 # CUDA_BUILD_DIR a directory outside the checkout that receives the Lake tree
 # of the cuda package, and CUDA_ARCH the device architecture (default sm_89;
-# the pinned toolchain builds for sm_80 and newer). A cmp of the first level's
+# the pinned toolchain compiles its device runtime for sm_80 and sm_89 and
+# fails for sm_75). Each LEVEL lies between 1 and 10, the range the device
+# program accepts. A cmp of the first level's
 # Lean table against the device table with its first entry negated must
 # report a difference before any verdict counts.
 # Runs on demand, outside ci/check.sh, because it needs an NVIDIA device and
 # the toolchain that cuda/lean-toolchain names.
 # Exit status: 0 every table identical, 1 a table differs or the comparison
 # accepted the negated table, 2 a tool, the toolkit or a table producer is
-# missing or fails. Writes under CUDA_BUILD_DIR and a temporary directory it
-# removes.
+# missing or fails, a LEVEL is out of range, or CUDA_BUILD_DIR resolves
+# inside the checkout; a failing mkdir, mktemp or cp ends the script with
+# that utility's status. Writes under CUDA_BUILD_DIR and a temporary
+# directory it removes.
 set -eu
 
-for tool in git lake cmp awk; do
+for tool in git lake cmp awk mkdir mktemp cp cat tail dirname; do
   command -v "$tool" >/dev/null || {
     echo "compare_cuda_signs: $tool is not on PATH" >&2
     exit 2
@@ -43,17 +47,40 @@ for level in "$@"; do
     exit 2
     ;;
   esac
+  # The reference table holds 4 ^ LEVEL entries, so the bound is read
+  # before either producer runs.
+  [ "${#level}" -le 2 ] && [ "$level" -ge 1 ] && [ "$level" -le 10 ] || {
+    echo "compare_cuda_signs: level $level is outside 1 to 10" >&2
+    exit 2
+  }
 done
 
-root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
-mkdir -p "$CUDA_BUILD_DIR"
-build=$(CDPATH='' cd -- "$CUDA_BUILD_DIR" && pwd)
-case "$build/" in
-"$root"/*)
-  echo "compare_cuda_signs: CUDA_BUILD_DIR lies inside the checkout" >&2
+# Both paths are compared in physical form, since a symbolic link outside the
+# checkout can name a directory inside it. The nearest existing ancestor is
+# read before mkdir, and the directory itself again after it.
+root=$(CDPATH='' cd -- "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" && pwd -P)
+inside() {
+  case "$1/" in
+  "$root"/*) return 0 ;;
+  esac
+  return 1
+}
+ancestor=$CUDA_BUILD_DIR
+while [ ! -d "$ancestor" ]; do
+  parent=$(dirname -- "$ancestor")
+  [ "$parent" != "$ancestor" ] || break
+  ancestor=$parent
+done
+if [ ! -d "$ancestor" ] || inside "$(CDPATH='' cd -- "$ancestor" && pwd -P)"; then
+  echo "compare_cuda_signs: CUDA_BUILD_DIR resolves inside the checkout or under no directory" >&2
   exit 2
-  ;;
-esac
+fi
+mkdir -p -- "$CUDA_BUILD_DIR"
+build=$(CDPATH='' cd -- "$CUDA_BUILD_DIR" && pwd -P)
+if inside "$build"; then
+  echo "compare_cuda_signs: CUDA_BUILD_DIR resolves inside the checkout" >&2
+  exit 2
+fi
 work=$(mktemp -d)
 trap 'rm -r "$work" </dev/null' EXIT
 trap 'exit 130' INT

@@ -5,10 +5,12 @@ toolchain `cuda/lean-toolchain` names, an experimental Lean 4.33.0 compiler with
 nightly of 2026-11-21, binaries only), and stays apart from `lean/`: no module here is a library module, the
 admission gate builds none of it, and no proof imports it.
 
-A device result is a computation, and its evidence class is that of a compiled program. A statement reaches the
-library only through a proof that the kernel of the Lean release in `lean/lean-toolchain` checks; a table or a
-witness computed here is a candidate that such a proof, or an exact comparison against a library definition,
-accepts or rejects.
+A device result is runtime evidence: one execution on a named device, driver, toolkit and architecture, for the
+inputs that run enumerated. A statement reaches the library only through a proof that the kernel of the Lean
+release in `lean/lean-toolchain` checks; a table or a witness computed here is a candidate that such a proof
+accepts or rejects, and an exact comparison against a library definition accepts it for the enumerated inputs
+alone. No record cites a device table as a certificate; a certificate that a proof evaluates follows the evidence
+axis of the guide ("Statements and proofs") and is a Rocq artifact.
 
 | Program | Computes | Mirrors | Comparison |
 |---|---|---|---|
@@ -23,9 +25,9 @@ The toolchain is installed from its digest-pinned archive and linked into elan u
 CUDA_HOME=/opt/cuda CUDA_BUILD_DIR="$HOME/build/gororoba-math-cuda" sh ci/compare_cuda_signs.sh 3 4 5 6
 ```
 
-`-Karch=sm_NN` selects the device architecture. This release compiles its device runtime for `sm_80` and newer
-(measured: `sm_80` and `sm_89` compile, `sm_75` fails in the runtime header); execution is measured on compute
-capability 8.9.
+`-Karch=sm_NN` selects the device architecture. Measured for this release: the device runtime compiles for
+`sm_80` and `sm_89` and fails for `sm_75` in the runtime header, and execution is measured on compute capability
+8.9 alone.
 
 ## Measured constraints of the backend
 
