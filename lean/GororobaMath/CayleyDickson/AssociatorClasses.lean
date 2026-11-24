@@ -78,6 +78,60 @@ theorem class_parity {k : ℕ} (b c d : BitVec k) :
   revert s1 s2 s3 s4 s5 s6 s7 s8 s9
   decide
 
+/-- On distinct nonzero `b, c, d` with `b ^^^ c ≠ d` the three class phases have odd sum. -/
+theorem class_parity_of_independent {k : ℕ} {b c d : BitVec k} (hb : b ≠ 0#k) (hc : c ≠ 0#k)
+    (hd : d ≠ 0#k) (hbc : b ≠ c) (hcd : c ≠ d) (hbd : b ≠ d) (hind : b ^^^ c ≠ d) :
+    (class1 b c d ^^ class2 b c d ^^ class3 b c d) = true := by
+  have h1 : b ^^^ d ≠ c := fun h =>
+    hind (by rw [← h, ← BitVec.xor_assoc, BitVec.xor_self, BitVec.zero_xor])
+  have h2 : b ^^^ d ≠ 0#k := fun h => hbd (BitVec.xor_eq_zero_iff.mp h)
+  rw [class_parity, commPhase_eq, commPhase_eq, commPhase_eq]
+  simp [hb, hc, hd, hbc, hcd, h1, h2]
+
+/-- On a dependent triad `d = b ^^^ c` the three class phases have even sum. -/
+theorem class_parity_of_dependent {k : ℕ} (b c : BitVec k) :
+    (class1 b c (b ^^^ c) ^^ class2 b c (b ^^^ c) ^^ class3 b c (b ^^^ c)) = false := by
+  have h : b ^^^ (b ^^^ c) = c := by rw [← BitVec.xor_assoc, BitVec.xor_self, BitVec.zero_xor]
+  rw [class_parity, h, commPhase_eq, commPhase_eq, commPhase_eq]
+  have e : b ≠ 0#k → c ≠ b ^^^ c := fun hb h =>
+    hb (xor_left_eq_self_iff.mp (by rw [BitVec.xor_comm]; exact h.symm))
+  by_cases hb : b = 0#k <;> by_cases hc : c = 0#k <;> by_cases hbc : b = c <;>
+    simp [hb, hc, hbc, e]
+
+/-- Wilmot's Theorem 5 on an independent triad: some class fails, and the number of failing
+classes is `1` or `3`. -/
+theorem nonassociative_classes {k : ℕ} {b c d : BitVec k} (hb : b ≠ 0#k) (hc : c ≠ 0#k)
+    (hd : d ≠ 0#k) (hbc : b ≠ c) (hcd : c ≠ d) (hbd : b ≠ d) (hind : b ^^^ c ≠ d) :
+    (class1 b c d && class2 b c d && class3 b c d) ||
+      (class1 b c d && !class2 b c d && !class3 b c d) ||
+      (!class1 b c d && class2 b c d && !class3 b c d) ||
+      (!class1 b c d && !class2 b c d && class3 b c d) = true := by
+  have h := class_parity_of_independent hb hc hd hbc hcd hbd hind
+  generalize class1 b c d = x at *
+  generalize class2 b c d = y at *
+  generalize class3 b c d = z at *
+  revert x y z
+  decide
+
+/-- The triads `0 < b < c < d` of level `4` with `b ^^^ c ≠ d` on which all three classes fail. -/
+theorem card_triads_all_fail_four :
+    (((Finset.univ : Finset (BitVec 4 × BitVec 4 × BitVec 4)).filter fun t =>
+      0 < t.1.toNat ∧ t.1.toNat < t.2.1.toNat ∧ t.2.1.toNat < t.2.2.toNat ∧
+        t.1 ^^^ t.2.1 ≠ t.2.2 ∧
+        class1 t.1 t.2.1 t.2.2 = true ∧ class2 t.1 t.2.1 t.2.2 = true ∧
+        class3 t.1 t.2.1 t.2.2 = true).card) = 252 := by
+  decide +kernel
+
+/-- The triads `0 < b < c < d` of level `4` with `b ^^^ c ≠ d` on which exactly one class fails. -/
+theorem card_triads_exactly_one_fail_four :
+    (((Finset.univ : Finset (BitVec 4 × BitVec 4 × BitVec 4)).filter fun t =>
+      0 < t.1.toNat ∧ t.1.toNat < t.2.1.toNat ∧ t.2.1.toNat < t.2.2.toNat ∧
+        t.1 ^^^ t.2.1 ≠ t.2.2 ∧
+        (class1 t.1 t.2.1 t.2.2 ^^ class2 t.1 t.2.1 t.2.2 ^^ class3 t.1 t.2.1 t.2.2) = true ∧
+        ¬ (class1 t.1 t.2.1 t.2.2 = true ∧ class2 t.1 t.2.1 t.2.2 = true ∧
+          class3 t.1 t.2.1 t.2.2 = true)).card) = 168 := by
+  decide +kernel
+
 end Tower
 
 end CayleyDickson
