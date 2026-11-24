@@ -61,3 +61,4 @@ public import GororobaMath.KernelMap.EstimatorWalsh
 public import GororobaMath.CayleyDickson.TwoTermScalar
 public import GororobaMath.CayleyDickson.AlignedPairEndpoints
 public import GororobaMath.LinearAlgebra.Pfaffian
+public import GororobaMath.LinearAlgebra.PfaffianForm
