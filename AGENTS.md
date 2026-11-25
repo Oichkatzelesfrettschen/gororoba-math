@@ -76,11 +76,16 @@ gororoba repository shares; this file governs where the two differ.
   gororoba-open ingests for a theorem receipt, and
   `ci/check_kernel_replay_evidence.sh` calibrates it; `ci/check_rocq.sh` runs
   that calibration from its export of `HEAD`.
-- `ci/quantum-sources/` holds the generators of eight `rocq/quantum` sources
+- `ci/quantum-sources/` holds the generators of ten `rocq/quantum` sources
   (`CdSignPythonSemantics.v`, `CdSignSourceCertificate.v`, `TargetFlipN21.v`,
   `CdTowerCanonicalKernels.v`, `CdTowerG2Derivations.v`,
-  `A5W8ArcMatrixRanks.v`, `CdTowerG2DerivationSpan.v` and
-  `StiefelWitnessInvertible.v`), the JSON records three of them render
+  `A5W8ArcMatrixRanks.v`, `CdTowerG2DerivationSpan.v`,
+  `StiefelWitnessInvertible.v`, `E8ConjugationMap.v` from
+  `conjugation_map_certificate.py` and `E8ConjugationIdeal.v` from
+  `e8_conjugation_ideal.py`), and `hilbert_cell_certificate.py`, which renders
+  `HilbertCellA5_108.v` and `HilbertCellA5_111.v` from the pinned cell
+  certificate export named on its command line (`--check` compares the
+  rendering with the tracked source, outside `ci/check_quantum_sources.sh`); the JSON records three of them render
   (`certificates.json`, `left-inverses.json`, `span.json`), and the helpers of
   the span certificate. A generator reads `gororoba_quantum/cd_core.py`,
   `parallel.py` and evidence records of the checkout `GOROROBA_QUANTUM`
@@ -175,6 +180,24 @@ gororoba repository shares; this file governs where the two differ.
   `ci/compare_schreier.sh` compares `Tower.schreier` with `schreier` of
   `rocq/open/theories/SchreierSignCode.v` on every triple at orders 1 to 5; both reject a
   mutated Rocq reference and need `rocq-9.3`.
+  `ci/compare_cz_matrix.sh` compares the entries of `Tower.czMatrix` (through
+  `Tower.czMatrix_apply`, since the matrix is noncomputable) with `_c_matrix` of
+  gororoba-quantum's `holomorphic_kernel_lemma.py` on seeded integer vectors at levels 4
+  and 5, and rejects a reference with one negated sign; `ci/compare_hilbert_cell_header.sh`
+  binds the J and G tables of `HilbertCellA5_108.v` and `HilbertCellA5_111.v` to the
+  canonical header of those cells with its own header reader, and rejects a header copy
+  with one changed coefficient. `ci/compare_walsh.sh` compares `KernelMap.walshChar` and
+  `KernelMap.coeff` with `walsh_matrix` and `coefficients` of gororoba-quantum's
+  `nhat_spectral.py` as exact fractions; `ci/compare_pfaffian.sh` compares
+  `Matrix.pfaffianAux` with `pf` of `rocq/quantum/Pfaffian.v` over the integers on
+  skew and general matrices and permuted, reversed and repeated index lists;
+  `ci/compare_box_kite_census.sh` compares `sed_sign` of
+  `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
+  pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
+  the 4096 ordered triples. Each runs on demand and rejects a mutated reference; the Walsh
+  and C_z comparisons need `GOROROBA_QUANTUM` and a built `lean/.lake`, the box-kite and
+  header comparisons `GOROROBA_QUANTUM` and the `rocq-9.3` switch, and the Pfaffian
+  comparison, which reads no other repository, both a built `lean/.lake` and `rocq-9.3`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
