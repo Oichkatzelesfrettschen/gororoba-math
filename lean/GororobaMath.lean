@@ -82,3 +82,4 @@ public import GororobaMath.CayleyDickson.BorderedLeftMul
 public import GororobaMath.CayleyDickson.E8ConjugationIdeal
 public import GororobaMath.CayleyDickson.E8ConjugationIdealEval
 public import GororobaMath.EisenbudGoto.MinimalMultiplicity
+public import GororobaMath.CayleyDickson.DivisionLevels
