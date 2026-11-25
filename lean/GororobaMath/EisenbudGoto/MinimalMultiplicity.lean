@@ -1,7 +1,14 @@
 /- SPDX-License-Identifier: Apache-2.0 -/
 module
 
-public import Mathlib
+public import Mathlib.Algebra.Polynomial.Coeff
+public import Mathlib.Data.Nat.Choose.Vandermonde
+public import Mathlib.RingTheory.Polynomial.HilbertPoly
+public import Mathlib.RingTheory.PowerSeries.WellKnown
+public import Mathlib.Tactic.ComputeDegree
+public import Mathlib.Tactic.Linarith
+public import Mathlib.Tactic.LinearCombination
+public import Mathlib.Tactic.Ring
 
 /-!
 # Numerical core of the Eisenbud-Goto bounds for minimal multiplicity
@@ -15,34 +22,50 @@ of the 2-linear resolution of a variety of minimal degree (Eagon-Northcott compl
 free module in degree 0 (whose rank 1 is the leading `1` of `numerator`).
 
 Eisenbud and Goto, "Linear free resolutions and minimal multiplicity", J. Algebra 88 (1984),
-Proposition 1.7 and Corollary 1.11: for `R = S / I` homogeneous of codimension `c` with a
-`p`-linear resolution, `R` is Cohen-Macaulay if and only if the minimal number of generators
+Proposition 1.7 and Corollary 1.11: for `R = S / I` a standard graded algebra over a field
+(`S` a polynomial ring), `I` a homogeneous ideal without linear forms, of codimension `c`
+with a `p`-linear resolution, `R` is Cohen-Macaulay if and only if the minimal number of generators
 of `I` is at most `C(c + p - 1, c - 1)`, if and only if the multiplicity is at least
 `C(c + p - 1, c)`, and then both are equalities. At `p = 2` the two numbers are
 `C(c + 1, 2) = betti c 1` and `c + 1 = h(1)`.
 
 ## Main results
 
+Hypotheses: `coeff_hilbertSeries_zero`, `coeff_hilbertSeries`, `betti_identity`,
+`coeff_one_sub_X_pow`, `numerator_eq` and `hilbertFn_one_add_betti_one` hold for all `c`, `d`;
+`alternating_betti` and `eisenbudGoto_numbers_two` need `1 ≤ c` and fail at `c = 0`.
+
+* `EisenbudGoto.coeff_hilbertSeries_zero`: the degree-0 coefficient of the Hilbert series is 1,
+  over every commutative ring.
 * `EisenbudGoto.coeff_hilbertSeries`: the Hilbert function at `n + 1` is
   `C(d + n + 1, d) + c C(d + n, d)`, over every commutative ring.
 * `EisenbudGoto.eval_hilbertPoly`: the Mathlib Hilbert polynomial of `1 + c t` takes that value
   at every `n ≥ 2`.
 * `EisenbudGoto.hilbertFn_one_add_betti_one`: the Hilbert function at 2 plus the number of
   quadrics is `C(c + d + 2, 2)`, the dimension of the quadrics of the ambient polynomial ring.
+* `EisenbudGoto.coeff_one_sub_X_pow`: the coefficient of `(1 - t)^c` at `t^k` is
+  `(-1)^k C(c, k)`.
+* `EisenbudGoto.betti_identity`: `j C(c + 1, j + 1) = c C(c, j) - C(c, j + 1)` in `ℤ`.
 * `EisenbudGoto.numerator_eq`: `1 + Σ_q (-1)^q betti c q t^(q+1) = (1 - t)^c (1 + c t)`, the
   Betti numbers recover the Hilbert series numerator.
 * `EisenbudGoto.alternating_betti`: the alternating sum of the Betti numbers, with the leading 1,
   is 0 for `c ≥ 1`.
-* `EisenbudGoto.e8_hilbertFn`, `EisenbudGoto.e8_betti`: the instance `c = 6`, `d + 1 = 4`
-  (Hilbert series `(1 + 6 t) / (1 - t) ^ 4`): values 10, 34, 80, 155, 266, 420, 624, 885 at
-  `n = 1 .. 8` and Betti numbers 21, 70, 105, 84, 35, 6.
+* `EisenbudGoto.eisenbudGoto_numbers_two`: for `c ≥ 1`, `betti c 1 = C(c + 1, c - 1)` and
+  `1 + c = C(c + 1, c)`, the two Eisenbud-Goto numbers at `p = 2`.
+* `EisenbudGoto.e8_hilbertFn`, `EisenbudGoto.e8_betti`: the instance of the E8-bar to VB quadric
+  ring of the A5 program, codimension `c = 6` and Krull dimension `d + 1 = 4` (Hilbert series
+  `(1 + 6 t) / (1 - t) ^ 4`). With the index convention of `hilbertFn` (`n = 0 .. 7` is degree
+  `n + 1 = 1 .. 8`) the values are 10, 34, 80, 155, 266, 420, 624, 885; the Betti numbers in
+  degrees `q = 1 .. 6` are 21, 70, 105, 84, 35, 6. Both evaluate the shared definitions
+  `hilbertFn` and `betti` by `decide`.
 
 ## What this file does not prove
 
-Mathlib v4.35.0 holds no `IsCohenMacaulay`, no depth or regular-sequence theory over graded
-rings, no Castelnuovo-Mumford regularity, no minimal graded free resolution or graded Betti
-table, no Eagon-Northcott complex and no multiplicity of a graded module (a search of the tree for
-`CohenMacaulay` finds nothing, and `hilbertPoly` only turns a numerator into a polynomial). The
+Mathlib v4.35.0 holds `Ideal.depth`, `ModuleCat.depth` and `RingTheory.Sequence.IsRegular`. It
+holds no graded or homogeneous regular-sequence and depth lemmas, no `IsCohenMacaulay`, no minimal
+graded free resolution or graded Betti table, no Eagon-Northcott complex, no Castelnuovo-Mumford
+regularity and no multiplicity of a graded module (`hilbertPoly` only turns a numerator into a
+polynomial). The
 equivalences of Corollary 1.11 therefore need these definitions, in this order: graded depth and
 `IsCohenMacaulay` for a graded ring; a minimal graded free resolution and its graded Betti numbers;
 the property "`p`-linear resolution"; the multiplicity `e(R)` as `h(1)` of the Hilbert series
@@ -69,22 +92,32 @@ noncomputable def hilbertSeries (S : Type*) [CommRing S] (c d : ℕ) : PowerSeri
 degree `q` (degree `q + 1`). -/
 def betti (c q : ℕ) : ℕ := q * (c + 1).choose (q + 1)
 
-/-- The Hilbert function `C(d + n, d) + c C(d + n - 1, d)` at `n + 1`, written without
-truncated subtraction. -/
+/-- The Hilbert function `C(d + n + 1, d) + c C(d + n, d)`, the coefficient of `t ^ (n + 1)` in
+the Hilbert series, so `n = 0, 1, ...` indexes the degrees `1, 2, ...`. -/
 def hilbertFn (c d n : ℕ) : ℕ := (d + (n + 1)).choose d + c * (d + n).choose d
+
+/-- The Hilbert series splits as `(1 - t) ^ (-(d + 1)) + c t (1 - t) ^ (-(d + 1))`. -/
+theorem hilbertSeries_eq (S : Type*) [CommRing S] (c d : ℕ) :
+    hilbertSeries S c d = (PowerSeries.invOneSubPow S (d + 1)).val
+      + PowerSeries.C (c : S) * (PowerSeries.X * (PowerSeries.invOneSubPow S (d + 1)).val) := by
+  have h1 : (hilbertNumerator S c : PowerSeries S)
+      = 1 + PowerSeries.C (c : S) * PowerSeries.X := by
+    simp only [hilbertNumerator, Polynomial.coe_add, Polynomial.coe_one, Polynomial.coe_mul,
+      Polynomial.coe_C, Polynomial.coe_X]
+  unfold hilbertSeries; rw [h1]; ring
+
+/-- The degree-0 coefficient of the Hilbert series is 1. -/
+theorem coeff_hilbertSeries_zero (S : Type*) [CommRing S] (c d : ℕ) :
+    (hilbertSeries S c d).coeff 0 = 1 := by
+  rw [hilbertSeries_eq, map_add, PowerSeries.coeff_C_mul, PowerSeries.coeff_zero_X_mul,
+    PowerSeries.invOneSubPow_val_succ_eq_mk_add_choose, PowerSeries.coeff_mk]
+  simp
 
 /-- The coefficient of `t ^ (n + 1)` in `(1 + c t) / (1 - t) ^ (d + 1)` is the Hilbert function
 of minimal multiplicity. -/
 theorem coeff_hilbertSeries (S : Type*) [CommRing S] (c d n : ℕ) :
     (hilbertSeries S c d).coeff (n + 1) = (hilbertFn c d n : S) := by
-  have h1 : (hilbertNumerator S c : PowerSeries S)
-      = 1 + PowerSeries.C (c : S) * PowerSeries.X := by
-    simp only [hilbertNumerator, Polynomial.coe_add, Polynomial.coe_one, Polynomial.coe_mul,
-      Polynomial.coe_C, Polynomial.coe_X]
-  have h2 : (hilbertSeries S c d) = (PowerSeries.invOneSubPow S (d + 1)).val
-      + PowerSeries.C (c : S) * (PowerSeries.X * (PowerSeries.invOneSubPow S (d + 1)).val) := by
-    unfold hilbertSeries; rw [h1]; ring
-  rw [h2, map_add, PowerSeries.coeff_C_mul, PowerSeries.coeff_succ_X_mul,
+  rw [hilbertSeries_eq, map_add, PowerSeries.coeff_C_mul, PowerSeries.coeff_succ_X_mul,
     PowerSeries.invOneSubPow_val_succ_eq_mk_add_choose, PowerSeries.coeff_mk,
     PowerSeries.coeff_mk]
   simp [hilbertFn]
@@ -203,12 +236,14 @@ theorem eisenbudGoto_numbers_two (c : ℕ) (hc : 1 ≤ c) :
   · rw [Nat.choose_succ_self_right]
     ring
 
-/-- The Hilbert function of the instance `c = 6`, `d + 1 = 4` at `n = 1 .. 8`. -/
+/-- The Hilbert function of the instance `c = 6`, `d + 1 = 4` (the E8-bar to VB quadric ring)
+at `n = 0 .. 7`, that is in degrees `1 .. 8`. -/
 theorem e8_hilbertFn :
     (List.range 8).map (fun n => hilbertFn 6 3 n) = [10, 34, 80, 155, 266, 420, 624, 885] := by
   decide
 
-/-- The Betti numbers of the instance `c = 6` in degrees `q = 1 .. 6`. -/
+/-- The Betti numbers of the instance `c = 6` (the E8-bar to VB quadric ring) in homological
+degrees `q = 1 .. 6`. -/
 theorem e8_betti : (List.range 6).map (fun q => betti 6 (q + 1)) = [21, 70, 105, 84, 35, 6] := by
   decide
 
