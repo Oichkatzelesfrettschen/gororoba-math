@@ -185,7 +185,10 @@ def render_mutant(cert: dict, kind: str, nibble: int) -> str:
     stop = text.index("*)", start) + 3
     text = text[:start] + f"(** Known-bad calibration: one nibble of a cofactor {kind} changed. *)\n" + text[stop:]
     text = mutate_nibble(text, nibble)
-    text = text.replace("= true.\nProof. vm_compute. reflexivity. Qed.", "= false.\nProof. vm_compute. reflexivity. Qed.")
+    text = text.replace(
+        "= true.\nProof. vm_compute. reflexivity. Qed.",
+        "= false.\nProof. vm_compute. reflexivity. Qed.",
+    )
     text = text[: text.index("Theorem k2_in_ideal_03")]
     return text.replace("k2_check_03", "k2_check_mutant").replace("k2_data_03", "k2_data_mutant")
 
@@ -301,7 +304,9 @@ def main() -> None:
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument("--write", action="store_true", help="write the Rocq sources")
     actions.add_argument("--check", action="store_true", help="require the tracked sources to equal the rendering")
-    actions.add_argument("--mutants", type=Path, metavar="DIR", help="write the known-bad sources of quadric 3 into DIR")
+    actions.add_argument(
+        "--mutants", type=Path, metavar="DIR", help="write the known-bad sources of quadric 3 into DIR"
+    )
     args = parser.parse_args()
     cert = load(args.input)
     if args.mutants is not None:
