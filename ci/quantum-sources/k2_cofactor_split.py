@@ -5,7 +5,7 @@ certified through a basis change, q09 - 22069 q07, q21 - 22069 q17, q15 - q13, q
 q16 - q10, q11 - q08 and q13 - 16685 q06 in place of the quadric they start with (the cofactors are the same
 linear combinations of the pinned cofactors modulo 32029), and every certified quadric is cut into steps.
 A step holds the cofactors of a few J indices and a few outer Horner indices a (the products G_a H_a with
-H_a the Horner sum over b >= a), at most about STEP_PRODUCTS monomial products of its identity, and the
+H_a the Horner sum over b >= a), at most about 600,000 monomial products of its identity, and the
 remainders R_j and R_{j+1} of the chain R_0 = q(G), R_{j+1} = R_j - (the combination of the step j), which end
 at R_m = 0. The outputs are K2CofactorE8barVBHeader.v (k2_J, k2_G and the 21 quadrics), K2CofactorE8barVBsNN_MM.v
 (step MM of quadric NN: the check of K2CofactorSplit.v), K2CofactorE8barVBcNN.v (the chain of quadric NN and
@@ -13,7 +13,7 @@ the recovery of the original quadric), K2CofactorE8barVB.v (the statement for al
 K2Split.order (the compile order, one module name per line).
 
 Usage: k2_cofactor_split.py INPUT.json --plan
-       k2_cofactor_split.py INPUT.json --write
+       k2_cofactor_split.py INPUT.json --write [--step-products N]
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ NV = base.NVARS
 NJ = base.NJ
 PAIRS = base.PAIRS
 SLOT = 8
-STEP_PRODUCTS = 1_000_000
+STEP_PRODUCTS = 600_000
 CHUNK = 256
 GENERATOR = "ci/quantum-sources/k2_cofactor_split.py"
 OUTPUT_DIR = base.OUTPUT_DIR
@@ -331,12 +331,15 @@ def quadric_order() -> list:
 
 
 def main() -> None:
+    global STEP_PRODUCTS
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("input", type=Path)
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument("--plan", action="store_true", help="print the steps and remainder sizes")
     actions.add_argument("--write", action="store_true", help="write the Rocq sources")
+    parser.add_argument("--step-products", type=int, default=STEP_PRODUCTS, help="product bound of one step")
     args = parser.parse_args()
+    STEP_PRODUCTS = args.step_products
     cert = base.load(args.input)
     base.validate(cert)
     J = [to_dict(p) for p in cert["J"]]
