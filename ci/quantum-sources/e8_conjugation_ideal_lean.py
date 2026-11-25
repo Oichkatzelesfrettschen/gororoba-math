@@ -25,9 +25,13 @@ from quantum_checkout import MATH
 TARGET = MATH / "lean" / "GororobaMath" / "CayleyDickson" / "E8ConjugationIdeal.lean"
 WIDTH = 100
 INDENT = "    "
-CONTINUATION = "      "
 
 Poly = base.Poly
+
+
+def fail(message: str) -> SystemExit:
+    print(f"e8_conjugation_ideal_lean: {message}", file=sys.stderr)
+    return SystemExit(1)
 
 
 def flip(poly: Poly) -> Poly:
@@ -48,10 +52,10 @@ def check_flip_character(minus: list[Poly], plus: list[Poly], flags: list[bool])
     parity of deg s3 + deg s5 + deg s6 of the generator, which that degree fixes on every monomial."""
     for k, (g, h, positive) in enumerate(zip(minus, plus, flags, strict=True), start=1):
         if phi_after_flip(g) != h:
-            raise base.fail(f"Phi after the flip of s3, s5, s6 maps generator {k} of J_N- to no generator of J_N+")
+            raise fail(f"Phi after the flip of s3, s5, s6 maps generator {k} of J_N- to no generator of J_N+")
         parities = {(e[3] + e[5] + e[6]) % 2 for e in g}
         if len(parities) != 1 or (parities == {0}) != positive:
-            raise base.fail(f"generator {k} of J_N- is no eigenvector of the flip of s3, s5, s6 with the sign of Phi")
+            raise fail(f"generator {k} of J_N- is no eigenvector of the flip of s3, s5, s6 with the sign of Phi")
 
 
 def term(monomial: base.Monomial, coefficient: int) -> str:
@@ -109,18 +113,43 @@ def render_def(name: str, prefix: str, side: str, polys: list[Poly]) -> str:
     return gens + "\n" + render_vector(name, prefix, side, len(polys))
 
 
-def simp_set(count: int) -> str:
-    names = [f"{prefix}Gen{k:02d}" for prefix in ("jm", "jp") for k in range(count)]
-    lines: list[str] = []
-    current = "attribute [local simp]"
-    for name in names:
-        if len(current + " " + name) > WIDTH:
-            lines.append(current)
-            current = "  " + name
-        else:
-            current += " " + name
-    lines.append(current)
-    return "\n".join(lines) + "\n"
+def lemma_blocks(flags: list[bool]) -> str:
+    """One lemma per generator pair for Phi, for Phi after the flip and for the ring homomorphism, each checked by one
+    call of ring or simp, so that no declaration needs more than the default heartbeat limit."""
+    blocks = []
+    for k, positive in enumerate(flags):
+        n = f"{k:02d}"
+        sign = "1" if positive else "-1"
+        blocks.append(
+            f"/-- Phi of generator §{k}§ of J_N- is §{sign}§ times generator §{k}§ of J_N+. -/\n"
+            f"theorem jm_phi_gen{n} ({ARGS} : A) :\n"
+            f"    jmGen{n} (-i) s1 s2 s3 (-s5) s4 s6 s8 s7 s9 =\n      ({sign} : A) * jpGen{n} {ARGS} := by\n"
+            f"  unfold jmGen{n} jpGen{n}\n  ring\n\n"
+            f"/-- Phi after the flip carries generator §{k}§ of J_N- to generator §{k}§ of J_N+. -/\n"
+            f"theorem jm_phi_flip_gen{n} ({ARGS} : A) :\n"
+            f"    jmGen{n} (-i) s1 s2 (-s3) (-s5) (-s4) (-s6) s8 s7 s9 =\n      jpGen{n} {ARGS} := by\n"
+            f"  unfold jmGen{n} jpGen{n}\n  ring\n\n"
+            f"/-- A ring homomorphism carries generator §{k}§ of J_N- at the ten variables to the one at their\n"
+            f"images. -/\n"
+            f"theorem map_jmGen{n} {{B : Type*}} [CommRing B] {{F : Type*}} [FunLike F A B] [RingHomClass F A B]\n"
+            f"    (f : F) ({ARGS} : A) :\n"
+            f"    f (jmGen{n} {ARGS}) =\n      jmGen{n} {' '.join('(f ' + v + ')' for v in base.VARS)} := by\n"
+            f"  simp [jmGen{n}, map_ofNat f]\n"
+        )
+    return "\n".join(blocks).replace("§", "\x60") + "\n"
+
+
+def theorems(count: int) -> str:
+    args = "i s1 s2 s3 s4 s5 s6 s7 s8 s9"
+    vs = " ".join(f"(v {n})" for n in range(10))
+    phi = case_lines(count, lambda n: f"simpa [jm, jp, phiSign] using jm_phi_gen{n} {args}")
+    flip = case_lines(count, lambda n: f"exact jm_phi_flip_gen{n} {args}")
+    mapped = case_lines(count, lambda n: f"exact map_jmGen{n} f {vs}")
+    return POSTAMBLE_THEOREMS.replace("@PHI@", phi).replace("@FLIP@", flip).replace("@MAP@", mapped).replace("§", "\x60")
+
+
+def case_lines(count: int, tactic) -> str:
+    return "\n".join(f"  · {tactic(f'{k:02d}')}" for k in range(count)) + "\n"
 
 
 def source(minus: list[Poly], plus: list[Poly], flags: list[bool]) -> str:
@@ -133,10 +162,11 @@ def source(minus: list[Poly], plus: list[Poly], flags: list[bool]) -> str:
         + "\n"
         + render_def("jp", "jp", "J_N+", plus)
         + "\n"
-        + simp_set(count)
-        + "\n/-- The sign of the §k§-th generator pair: Phi of §jm k§ is §phiSign k§ times §jp k§. -/\n"
+        + "/-- The sign of the §k§-th generator pair: Phi of §jm k§ is §phiSign k§ times §jp k§. -/\n"
         + f"def phiSign : Fin {count} → ℤ :=\n  ![{sign_list}]\n"
         + POSTAMBLE
+        + lemma_blocks(flags)
+        + theorems(count)
     ).replace("§", "\x60")
 
 
@@ -169,8 +199,9 @@ negates §s3, s5, s6§ (§flipVars§). Variable §0§ of §Fin 10§ is §i§ and
   is §phiSign k§ times generator §k§ of J_N+; the sign is §-1§ at
   §k + 1 = @NEGATIVE@§ and §+1§ elsewhere.
 * §CayleyDickson.E8Conjugation.jm_phi_flip§: Phi after the flip carries generator §k§ of J_N- to
-  generator §k§ of J_N+ with no sign, so §phiSign k§ is the character
-  §(-1) ^ (deg s3 + deg s5 + deg s6)§ of generator §k§.
+  generator §k§ of J_N+ with no sign. The generator script checks in Python, outside Lean, that
+  §phiSign k§ equals §(-1) ^ (deg s3 + deg s5 + deg s6)§ on every monomial of generator §k§; no
+  Lean theorem states that parity character.
 * §CayleyDickson.E8Conjugation.span_phi_jm§: in §MvPolynomial (Fin 10) R§ the ideal generated by
   the images of the generators of J_N- under the algebra endomorphism Phi is J_N+, and
   §span_phiFlip_jm§ states it for Phi after the flip.
@@ -205,38 +236,27 @@ def flipVars (v : Fin 10 → A) : Fin 10 → A :=
 theorem phiSign_mul_self (k : Fin 27) : (phiSign k : A) * (phiSign k : A) = 1 := by
   fin_cases k <;> simp [phiSign]
 
-set_option maxHeartbeats 1600000 in
--- the case split over 27 generators of 12 to 16 terms exceeds the default limit
-/-- Phi of generator §k§ of J_N- is §phiSign k§ times generator §k§ of J_N+, by §ring§ on each
+"""
+
+POSTAMBLE_THEOREMS = """/-- Phi of generator §k§ of J_N- is §phiSign k§ times generator §k§ of J_N+, by the lemma of each
 pair. -/
 theorem jm_phi (i s1 s2 s3 s4 s5 s6 s7 s8 s9 : A) (k : Fin 27) :
     jm (-i) s1 s2 s3 (-s5) s4 s6 s8 s7 s9 k =
       (phiSign k : A) * jp i s1 s2 s3 s4 s5 s6 s7 s8 s9 k := by
-  fin_cases k <;> simp [jm, jp, phiSign] <;> ring
-
-set_option maxHeartbeats 1600000 in
--- the case split over 27 generators of 12 to 16 terms exceeds the default limit
+  fin_cases k
+@PHI@
 /-- Phi after the flip of §s3, s5, s6§ carries generator §k§ of J_N- to generator §k§ of J_N+ with
 no sign. -/
 theorem jm_phi_flip (i s1 s2 s3 s4 s5 s6 s7 s8 s9 : A) (k : Fin 27) :
     jm (-i) s1 s2 (-s3) (-s5) (-s4) (-s6) s8 s7 s9 k = jp i s1 s2 s3 s4 s5 s6 s7 s8 s9 k := by
-  fin_cases k <;> simp [jm, jp] <;> ring
-
-set_option maxHeartbeats 1600000 in
--- the case split over 27 generators of 12 to 16 terms exceeds the default limit
+  fin_cases k
+@FLIP@
 /-- A ring homomorphism carries the generators of J_N- at a vector to those at the image
 vector. -/
 theorem map_jmAt {B : Type*} [CommRing B] {F : Type*} [FunLike F A B] [RingHomClass F A B]
     (f : F) (v : Fin 10 → A) (k : Fin 27) : f (jmAt v k) = jmAt (fun n => f (v n)) k := by
-  fin_cases k <;> simp [jmAt, jm, map_ofNat f]
-
-set_option maxHeartbeats 1600000 in
--- the case split over 27 generators of 12 to 16 terms exceeds the default limit
-/-- A ring homomorphism carries the generators of J_N+ at a vector to those at the image
-vector. -/
-theorem map_jpAt {B : Type*} [CommRing B] {F : Type*} [FunLike F A B] [RingHomClass F A B]
-    (f : F) (v : Fin 10 → A) (k : Fin 27) : f (jpAt v k) = jpAt (fun n => f (v n)) k := by
-  fin_cases k <;> simp [jpAt, jp, map_ofNat f]
+  fin_cases k
+@MAP@
 
 section Polynomial
 
@@ -334,7 +354,7 @@ def main() -> int:
     target = TARGET
     if arguments.write:
         if TARGET.is_symlink() or not TARGET.parent.is_dir() or not TARGET.resolve().is_relative_to(MATH.resolve()):
-            raise base.fail(f"{TARGET} is no plain file of this checkout")
+            raise fail(f"{TARGET} is no plain file of this checkout")
         TARGET.write_text(text, encoding="utf-8")
         print(f"e8_conjugation_ideal_lean: wrote {TARGET.name}; {len(flags)} generator pairs, {flags.count(False)} with sign -1")
         return 0
