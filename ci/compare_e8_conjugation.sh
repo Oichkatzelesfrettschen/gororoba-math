@@ -21,6 +21,12 @@ for tool in "$PYTHON" awk cmp ln cp mkdir; do
   }
 done
 : "${GOROROBA_QUANTUM:?compare_e8_conjugation: set GOROROBA_QUANTUM to a gororoba-quantum checkout}"
+# The scratch checkouts below link into this path, and a relative link target resolves against the link's own
+# directory, so the path is made absolute first.
+GOROROBA_QUANTUM=$(CDPATH='' cd -- "$GOROROBA_QUANTUM" && pwd) || {
+  echo "compare_e8_conjugation: GOROROBA_QUANTUM=$GOROROBA_QUANTUM is no directory" >&2
+  exit 2
+}
 export GOROROBA_QUANTUM
 export PYTHONDONTWRITEBYTECODE=1
 root=$(CDPATH='' cd -- "$(dirname "$0")/.." && pwd)
