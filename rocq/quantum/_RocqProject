@@ -60,6 +60,7 @@ CdTwistedProduct.v
 CdTwistedProductBridge.v
 E8ConjugationIdeal.v
 E8ConjugationMap.v
+E8RootExchange.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
 HilbertCellA5_108.v
