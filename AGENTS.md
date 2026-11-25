@@ -180,6 +180,12 @@ gororoba repository shares; this file governs where the two differ.
   `ci/compare_schreier.sh` compares `Tower.schreier` with `schreier` of
   `rocq/open/theories/SchreierSignCode.v` on every triple at orders 1 to 5; both reject a
   mutated Rocq reference and need `rocq-9.3`.
+  `ci/compare_e8_conjugation.sh` renders
+  `lean/GororobaMath/CayleyDickson/E8ConjugationIdeal.lean` again from the `ideal J=` lines of
+  gororoba-quantum's `conjugation_map.sing` (pinned by sha256) through
+  `ci/quantum-sources/e8_conjugation_ideal_lean.py`, requires the tracked module to equal the rendering,
+  rejects a copy with one changed digit and a `conjugation_map.sing` with one changed digit (refused by its
+  pinned sha256), needs `GOROROBA_QUANTUM`, and runs on demand.
   `ci/compare_cz_matrix.sh` compares the entries of `Tower.czMatrix` (through
   `Tower.czMatrix_apply`, since the matrix is noncomputable) with `_c_matrix` of
   gororoba-quantum's `holomorphic_kernel_lemma.py` on seeded integer vectors at levels 4
