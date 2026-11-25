@@ -64,7 +64,7 @@ claim, sorted by `source` in byte order, sources unique.
   readings gave a `neither` row a Rocq proof of its own (five rows of
   gororoba-open and two of gororoba-quantum), the row reads `partial` with that
   proof and a note, since a proof is on record.
-- The 549 rows of the findings ledger
+- The 589 rows of the findings ledger
   `docs/evidence/a5-exceptional-fibers/ledger.tsv` are placed row by row
   (owner, 2026-11-17). A row whose findings status is refuted, superseded,
   stalled, rejected or open is not asserted by its source and reads
@@ -73,7 +73,7 @@ claim, sorted by `source` in byte order, sources unique.
   Hilbert-function value, an ideal equality, a rank, a Cohen-Macaulay or
   reducedness property) is a Rocq certificate and reads `owed`, and a
   statement over every level or a class of fields is owed in Lean. The rows
-  read: 9 lean, owed; 10 lean, partial; 177 none, no-proof-owed; 343 rocq, owed; 8 rocq, partial; 2 rocq, proved. The note of an
+  read: 9 lean, owed; 10 lean, partial; 184 none, no-proof-owed; 374 rocq, owed; 10 rocq, partial; 2 rocq, proved. The note of an
   owed row says what a proof certifies and carries the findings status, whose
   `proved` and `certified` name a computation; `survives` marks a statement
   the source has not proved.
@@ -97,7 +97,7 @@ claim, sorted by `source` in byte order, sources unique.
 A claim that its source marks refuted, superseded, closed, rejected, stalled
 or open takes the clause `Outside the clauses: the source does not assert
 the claim` whenever it reads `no-proof-owed`, before the other two
-`Outside the clauses` rows are considered (194 rows).
+`Outside the clauses` rows are considered (195 rows).
 
 `Result already in a proof tree stays where it is` also covers the rows whose
 statement class puts them in the other prover: an every-level law that
@@ -154,10 +154,11 @@ For the findings ledger of gororoba-quantum the list is the whole file.
 
 - The rows come from a reading of the gororoba-open registry (gororoba-open
   `3c04c2eb`) and of the evidence documents of gororoba-quantum
-  (`78c780bc6`), classified against `AGENTS.md`; the findings ledger, whose
-  rows A5-565 to A5-571 the earlier commit lacks, and the topic notes
+  (`78c780bc6`), classified against `AGENTS.md`; the topic notes
   `cd-star-lattice-tower.md` and `c5-zero-divisor-code-falsification.md` of
-  the second pass were read at gororoba-quantum `b7c2b373c`.
+  the second pass were read at gororoba-quantum `b7c2b373c`, and the findings
+  ledger, whose rows A5-572 to A5-611 the earlier commits lack, at
+  gororoba-quantum `57c2c08bf`.
   `expected-sources.tsv` holds the full commit of each source.
 - The check proves that each proof entry names a declaration. It does not prove
   that the declaration states the claim; that is the reading recorded under

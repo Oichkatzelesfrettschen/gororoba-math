@@ -63,12 +63,13 @@ HEADER = ["source", "commit", "sha256"]
 OPEN_COMMIT = "3c04c2eb0cb0580cd0eaab26992e092e7d6fa283"
 QUANTUM_COMMIT = "78c780bc6993dcb1f14e72c3d9dd1e4e23da4ba3"
 QUANTUM_LATER = "b7c2b373ca05be1f7096694d50f0c4638231b778"
-# Files of gororoba-quantum read at the later commit: the findings ledger, whose rows A5-565 to
-# A5-571 the earlier commit lacks, the two topic notes of the second pass, and the analysis of the
-# scratch runs, which the earlier commits lack.
+# Files of gororoba-quantum read at later commits: the two topic notes of the second pass at
+# QUANTUM_LATER, the findings ledger (rows A5-001 to A5-611) at QUANTUM_FINDINGS, and the analysis
+# of the scratch runs at QUANTUM_SCRATCH, which the earlier commits lack.
+QUANTUM_FINDINGS = "57c2c08bfd013cc6687f135dc47d889f372f521c"
 QUANTUM_SCRATCH = "5f6107278075d8c967ec375df5591cd0b9b9a061"
 PINS = {
-    "docs/evidence/a5-exceptional-fibers/ledger.tsv": QUANTUM_LATER,
+    "docs/evidence/a5-exceptional-fibers/ledger.tsv": QUANTUM_FINDINGS,
     "docs/notes/topics/cd-star-lattice-tower.md": QUANTUM_LATER,
     "docs/notes/topics/c5-zero-divisor-code-falsification.md": QUANTUM_LATER,
     "docs/evidence/a5-exceptional-fibers/scratch-runs/ANALYSIS.md": QUANTUM_SCRATCH,
