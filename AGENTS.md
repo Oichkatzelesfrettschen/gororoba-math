@@ -175,6 +175,11 @@ gororoba repository shares; this file governs where the two differ.
   `ci/compare_schreier.sh` compares `Tower.schreier` with `schreier` of
   `rocq/open/theories/SchreierSignCode.v` on every triple at orders 1 to 5; both reject a
   mutated Rocq reference and need `rocq-9.3`.
+  `ci/compare_e8_conjugation.sh` renders
+  `lean/GororobaMath/CayleyDickson/E8ConjugationIdeal.lean` again from the `ideal J=` lines of
+  gororoba-quantum's `conjugation_map.sing` (pinned by sha256) through
+  `ci/quantum-sources/e8_conjugation_ideal_lean.py`, requires the tracked module to equal the rendering,
+  rejects a copy with one changed digit, needs `GOROROBA_QUANTUM`, and runs on demand.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
