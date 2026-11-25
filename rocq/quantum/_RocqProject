@@ -59,6 +59,7 @@ CdTowerTwoTermRecursion.v
 CdTwistedProduct.v
 CdTwistedProductBridge.v
 E8ConjugationIdeal.v
+E8ConjugationIdealBridge.v
 E8ConjugationMap.v
 FoldAverageDescent.v
 GaussianIntegerHom.v

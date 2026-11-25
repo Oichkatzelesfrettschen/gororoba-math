@@ -804,6 +804,9 @@ quantum	CdTwistedProductBridge.v	deprecated-transitive-library-file-since-Stdlib
 quantum	E8ConjugationIdeal.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	E8ConjugationIdeal.v	disj-pattern-notation
 quantum	E8ConjugationIdeal.v	using-fallback-loc
+quantum	E8ConjugationIdealBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	E8ConjugationIdealBridge.v	disj-pattern-notation
+quantum	E8ConjugationIdealBridge.v	using-fallback-loc
 quantum	E8ConjugationMap.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	E8ConjugationMap.v	disj-pattern-notation
 quantum	E8ConjugationMap.v	using-fallback-loc
