@@ -3,7 +3,7 @@
 reference HEADER TABLES            parse the pinned canonical header and write its J and G tables as JSON
 reference-unpinned HEADER TABLES   the same without the digest check, for the mutated copies
 mutate HEADER OUT TABLE            copy the header with one coefficient of TABLE (J or G) changed
-rocq TEXT TABLES                   read the Eval output of a5_108_J and a5_108_G and write them as JSON
+rocq TEXT TABLES                   read the Eval output of the J and G tables of a cell and write them as JSON
 compare REFERENCE ROCQ             exit 0 when every polynomial agrees term by term, 1 on a difference
 
 A table is a list of polynomials; a polynomial is a list of [exponents, coefficient] pairs, and the
