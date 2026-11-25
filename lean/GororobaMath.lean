@@ -79,3 +79,4 @@ public import GororobaMath.CayleyDickson.Strata
 public import GororobaMath.CayleyDickson.ZeroDivisorPairs
 public import GororobaMath.CayleyDickson.CzMatrix
 public import GororobaMath.CayleyDickson.BorderedLeftMul
+public import GororobaMath.CayleyDickson.E8ConjugationIdeal
