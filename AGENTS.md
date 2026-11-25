@@ -82,12 +82,12 @@ gororoba repository shares; this file governs where the two differ.
   `A5W8ArcMatrixRanks.v`, `CdTowerG2DerivationSpan.v`,
   `StiefelWitnessInvertible.v`, `E8ConjugationMap.v` from
   `conjugation_map_certificate.py` and `E8ConjugationIdeal.v` from
-  `e8_conjugation_ideal.py`), and `hilbert_cell_certificate.py`, which renders
+  `e8_conjugation_ideal.py`), the JSON records three of them render
+  (`certificates.json`, `left-inverses.json`, `span.json`), the helpers of
+  the span certificate, and `hilbert_cell_certificate.py`, which renders
   `HilbertCellA5_108.v` and `HilbertCellA5_111.v` from the pinned cell
-  certificate export named on its command line (`--check` compares the
-  rendering with the tracked source, outside `ci/check_quantum_sources.sh`); the JSON records three of them render
-  (`certificates.json`, `left-inverses.json`, `span.json`), and the helpers of
-  the span certificate. A generator reads `gororoba_quantum/cd_core.py`,
+  certificate export named on its command line (its `--check` compares the
+  rendering with the tracked source, outside `ci/check_quantum_sources.sh`). A generator reads `gororoba_quantum/cd_core.py`,
   `parallel.py` and evidence records of the checkout `GOROROBA_QUANTUM`
   names, so no admission check runs it. `ci/check_quantum_sources.sh` renders
   each source again, requires it to equal the tracked file, rejects a copy
