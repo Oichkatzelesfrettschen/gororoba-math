@@ -69,7 +69,10 @@ def term(monomial: base.Monomial, coefficient: int) -> str:
 
 
 def render_poly(poly: Poly, closing: str) -> list[str]:
-    """The lines of one polynomial, each at most WIDTH columns; an operator ends its line, CLOSING follows the last term."""
+    """The lines of one polynomial, each at most WIDTH columns.
+
+    An operator ends its line, and CLOSING follows the last term.
+    """
     monomials = sorted(poly, key=lambda m: (-sum(m), [-x for x in m]))
     chunks = []
     for n, m in enumerate(monomials):
@@ -145,7 +148,8 @@ def theorems(count: int) -> str:
     phi = case_lines(count, lambda n: f"simpa [jm, jp, phiSign] using jm_phi_gen{n} {args}")
     flip = case_lines(count, lambda n: f"exact jm_phi_flip_gen{n} {args}")
     mapped = case_lines(count, lambda n: f"exact map_jmGen{n} f {vs}")
-    return POSTAMBLE_THEOREMS.replace("@PHI@", phi).replace("@FLIP@", flip).replace("@MAP@", mapped).replace("§", "\x60")
+    text = POSTAMBLE_THEOREMS.replace("@PHI@", phi).replace("@FLIP@", flip).replace("@MAP@", mapped)
+    return text.replace("§", "\x60")
 
 
 def case_lines(count: int, tactic) -> str:
@@ -238,8 +242,8 @@ theorem phiSign_mul_self (k : Fin 27) : (phiSign k : A) * (phiSign k : A) = 1 :=
 
 """
 
-POSTAMBLE_THEOREMS = """/-- Phi of generator §k§ of J_N- is §phiSign k§ times generator §k§ of J_N+, by the lemma of each
-pair. -/
+POSTAMBLE_THEOREMS = """/-- Phi of generator §k§ of J_N- is §phiSign k§ times generator §k§ of J_N+,
+by the lemma of each pair. -/
 theorem jm_phi (i s1 s2 s3 s4 s5 s6 s7 s8 s9 : A) (k : Fin 27) :
     jm (-i) s1 s2 s3 (-s5) s4 s6 s8 s7 s9 k =
       (phiSign k : A) * jp i s1 s2 s3 s4 s5 s6 s7 s8 s9 k := by
@@ -356,14 +360,20 @@ def main() -> int:
         if TARGET.is_symlink() or not TARGET.parent.is_dir() or not TARGET.resolve().is_relative_to(MATH.resolve()):
             raise fail(f"{TARGET} is no plain file of this checkout")
         TARGET.write_text(text, encoding="utf-8")
-        print(f"e8_conjugation_ideal_lean: wrote {TARGET.name}; {len(flags)} generator pairs, {flags.count(False)} with sign -1")
+        print(
+            f"e8_conjugation_ideal_lean: wrote {TARGET.name}; "
+            f"{len(flags)} generator pairs, {flags.count(False)} with sign -1"
+        )
         return 0
     if arguments.source:
         target = Path(arguments.source)
     if not target.is_file() or target.read_text(encoding="utf-8") != text:
         print(f"e8_conjugation_ideal_lean: {target.name} differs from the rendering", file=sys.stderr)
         return 1
-    print(f"e8_conjugation_ideal_lean: {target.name} fresh; {len(flags)} generator pairs, {flags.count(False)} with sign -1")
+    print(
+        f"e8_conjugation_ideal_lean: {target.name} fresh; "
+        f"{len(flags)} generator pairs, {flags.count(False)} with sign -1"
+    )
     return 0
 
 

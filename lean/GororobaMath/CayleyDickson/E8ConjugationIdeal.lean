@@ -1011,8 +1011,8 @@ theorem map_jmGen26 {B : Type*} [CommRing B] {F : Type*} [FunLike F A B] [RingHo
       jmGen26 (f i) (f s1) (f s2) (f s3) (f s4) (f s5) (f s6) (f s7) (f s8) (f s9) := by
   simp [jmGen26, map_ofNat f]
 
-/-- Phi of generator `k` of J_N- is `phiSign k` times generator `k` of J_N+, by the lemma of each
-pair. -/
+/-- Phi of generator `k` of J_N- is `phiSign k` times generator `k` of J_N+,
+by the lemma of each pair. -/
 theorem jm_phi (i s1 s2 s3 s4 s5 s6 s7 s8 s9 : A) (k : Fin 27) :
     jm (-i) s1 s2 s3 (-s5) s4 s6 s8 s7 s9 k =
       (phiSign k : A) * jp i s1 s2 s3 s4 s5 s6 s7 s8 s9 k := by
