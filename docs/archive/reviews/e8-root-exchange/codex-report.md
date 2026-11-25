@@ -1,0 +1,59 @@
+**Review Scope**
+- **[Computed]** `HEAD` is `6ab5427d77bb3f7833a1f1ba71f9450323dc9dca`; `origin/main` is `72049bcb9d8d5fe20f851bfc3dc422c30c4fe338`.
+- **[Computed]** `git diff --name-status origin/main...6ab5427d7` reports one new source and two bookkeeping edits: `rocq/quantum/E8RootExchange.v`, `rocq/quantum/_RocqProject`, and `ci/rocq-warnings/allowed.tsv`.
+- **[Computed]** `git diff --check origin/main...6ab5427d7` succeeds.
+- **[Computed]** The worktree is clean.
+- Builds, Rocq, Lean, Python, and subagents were not run, as required. Compile acceptance and emitted warning pairs therefore remain outside this review.
+
+**Claim 1: Justified**
+- **[Proved]** The convention maps index 1 to `i` and indices 2 through 10 to `s1` through `s9`; `flipSP` negates a monomial according to the parity of flipped variables. `rocq/quantum/E8RootExchange.v:3`, `rocq/quantum/E8RootExchange.v:31`, `rocq/quantum/E8RootExchange.v:33`, `rocq/quantum/E8RootExchange.v:36`
+- **[Proved]** `T1`, `T2`, and `T3` encode `{s1,s3,s6,s9}`, `{i,s2,s3,s4,s6,s7,s8}`, and their symmetric difference. `T2p` and `T3p` replace `s4` by `s5`, exactly matching the stated N+ exchange. `rocq/quantum/E8RootExchange.v:42`, `rocq/quantum/E8RootExchange.v:43`, `rocq/quantum/E8RootExchange.v:44`, `rocq/quantum/E8RootExchange.v:45`, `rocq/quantum/E8RootExchange.v:46`
+- **[Proved]** The 15-entry vectors `d1L`, `d2L`, and `d3L` are explicit. Entrywise inspection gives `d3L[a] = d1L[a] * d2L[a]`. `rocq/quantum/E8RootExchange.v:48`, `rocq/quantum/E8RootExchange.v:49`, `rocq/quantum/E8RootExchange.v:50`
+- **[Proved]** `symCheck` compares the raw coefficient lists of `flipSP T (C a b)` and `(d_a d_b) C a b`. It does not rely on evaluation, normalization, or the relation `i^2 = -1`. `rocq/quantum/E8RootExchange.v:53`, `rocq/quantum/E8RootExchange.v:60`, `rocq/quantum/E8RootExchange.v:62`
+- **[Proved]** `allpairs` enumerates precisely the 225 pairs with `0 <= a,b < 15`, and `allpairs_sound` exports each checked equality. `rocq/quantum/E8ConjugationMap.v:193`, `rocq/quantum/E8ConjugationMap.v:195`, `rocq/quantum/E8ConjugationMap.v:251`, `rocq/quantum/E8ConjugationMap.v:258`
+- **[Proved]** The six certificate lemmas cover all three N- and all three N+ congruences. `symm_of_check` then states the evaluated entrywise formula with multiplier `d_a d_b`. `rocq/quantum/E8RootExchange.v:66`, `rocq/quantum/E8RootExchange.v:71`, `rocq/quantum/E8RootExchange.v:149`, `rocq/quantum/E8RootExchange.v:161`
+- **Verdict:** justified. The list equality proves a stronger syntactic polynomial identity and exports exactly the claimed matrix congruence.
+
+**Claim 2: Justified with a Count Correction**
+- **[Proved]** The homogeneity section quantifies over an arbitrary carrier and assumes only a `ring_theory`, which is the repository’s commutative-ring interface. `rocq/quantum/E8RootExchange.v:74`, `rocq/quantum/E8RootExchange.v:75`, `rocq/quantum/E8RootExchange.v:77`, `rocq/quantum/CdTowerRing.v:65`
+- **[Proved]** Each theorem unfolds all 27 generators, expands the requested signs, and discharges every generator equality with the ring decision procedure before proving list termination by reflexivity. `rocq/quantum/E8RootExchange.v:81`, `rocq/quantum/E8RootExchange.v:84`, `rocq/quantum/E8RootExchange.v:90`, `rocq/quantum/E8RootExchange.v:99`, `rocq/quantum/E8RootExchange.v:108`, `rocq/quantum/E8RootExchange.v:117`
+- **[Proved]** The sign lists align with the 27 generators of `jm`; `true` selects the unchanged generator and `false` selects its additive inverse. `rocq/quantum/E8ConjugationIdeal.v:61`, `rocq/quantum/E8ConjugationIdeal.v:88`, `rocq/quantum/E8ConjugationIdeal.v:122`, `rocq/quantum/E8ConjugationIdeal.v:124`
+- **[Proved]** The `T2` sign vector equals the pointwise product of the vectors for `{s3,s5,s6}` and `{i,s2,s5,s7,s8}`; the remaining `{s4}` component contributes only plus signs. This matches the symmetric-difference decomposition of `T2`. `rocq/quantum/E8RootExchange.v:80`, `rocq/quantum/E8RootExchange.v:89`, `rocq/quantum/E8RootExchange.v:107`, `rocq/quantum/E8RootExchange.v:116`
+- **[Proved]** The source contains four base-flip theorems plus the separate composite theorem `jm_flip_T2`, for five `jm_flip_*` statements in total. `rocq/quantum/E8RootExchange.v:81`, `rocq/quantum/E8RootExchange.v:90`, `rocq/quantum/E8RootExchange.v:99`, `rocq/quantum/E8RootExchange.v:108`, `rocq/quantum/E8RootExchange.v:117`
+- **Verdict:** justified after reading “four flips” as the four base flips. The file additionally proves the composite `T2` flip.
+
+**Claim 3: Falsified as Written**
+- **[Proved]** `RootExchange` is a functor over `CommutativeRingWithI`, whose interface supplies a commutative ring, a distinguished `i`, and `i^2 = -1`. `GaussianRootExchange` instantiates it with the Gaussian integers. `rocq/quantum/E8RootExchange.v:127`, `rocq/quantum/E8RootExchange.v:207`, `rocq/quantum/CdTowerRing.v:478`, `rocq/quantum/CdTowerRing.v:568`
+- **[Proved]** The acting flip is not a pure change `i -> -i`. `T2` also negates `s2`, `s3`, `s4`, `s6`, `s7`, and `s8`; `flipx` applies every one of those coordinate changes. `rocq/quantum/E8RootExchange.v:43`, `rocq/quantum/E8RootExchange.v:131`
+- **[Proved]** `root_exchange_C` states the N- congruence under that complete `T2` flip. It requires no root equation. `rocq/quantum/E8RootExchange.v:176`
+- **[Proved]** `root_exchange_detB` states invariance of `detBD Cm Fm` under the complete `T2` flip, assuming `xv 1` squares to `-1`. The proof uses the existing closed form and the simultaneous negation of both `i` and `s2`. `rocq/quantum/E8RootExchange.v:182`, `rocq/quantum/E8ConjugationMap.v:523`
+- **[Proved]** `root_exchange_ideal` states extensional equality of the two generated ideals under the complete `T2` flip. It needs no root equation because generator homogeneity already holds over every commutative ring. `rocq/quantum/E8RootExchange.v:191`
+- **[Computed]** `git grep -n -E '\\b(Fm|Fp|G|root_exchange_F|root_exchange_G)\\b' 6ab5427d7 -- rocq/quantum/E8RootExchange.v` finds `Fm` in `root_exchange_detB` and finds no `G` or F/G covariance theorem. `rocq/quantum/E8RootExchange.v:184`
+- **[Proved]** `detBD C F` is explicitly constructed from both `C` and `F` through `TD C F`; the determinant theorem therefore does mention and depend on the fixed matrix `Fm`. `rocq/quantum/E8ConjugationMap.v:428`, `rocq/quantum/E8ConjugationMap.v:440`
+- **Verdict:** falsified literally. The accurate claim is: the complete `T2` coordinate flip negates the root coordinate, carries `C` by diagonal congruence, preserves `detBD Cm Fm`, and preserves the generated ideal. The file proves no transformation law for `F` or `G`, but the determinant statement contains `Fm`.
+
+**Claim 4: Justified Structurally**
+- **[Computed]** `git grep` finds none of `Axiom`, `Parameter`, `Conjecture`, `Admitted`, `admit`, unsafe checking directives, bypass attributes, or unsafe theory flags in the changed files.
+- **[Proved]** The source introduces hypotheses and module parameters transparently rather than adding a global axiom. `rocq/quantum/E8RootExchange.v:74`, `rocq/quantum/E8RootExchange.v:127`
+- **[Proved]** `_RocqProject` lists the new source in sorted dependency order after both imported E8 files. `rocq/quantum/_RocqProject:61`
+- **[Proved]** `allowed.tsv` adds exactly three rows for the new source, and all three warning names already have documented causes and removal conditions. `ci/rocq-warnings/allowed.tsv:810`, `ci/rocq-warnings/allowed.tsv:811`, `ci/rocq-warnings/allowed.tsv:812`, `ci/rocq-warnings/causes.tsv:5`, `ci/rocq-warnings/causes.tsv:6`, `ci/rocq-warnings/causes.tsv:7`
+- **[Hypothesis]** A Rocq compile emits precisely those three warning pairs. The prohibited build was the decisive falsifier.
+- **[Proved]** The module docstring states the variable indexing, polynomial representation, point and polynomial flips, diagonal-congruence convention, generator convention, main results, and scope. `rocq/quantum/E8RootExchange.v:1`
+- **Verdict:** justified within source evidence. Exact warning emission remains uncomputed.
+
+**Defects Beyond the Claims**
+- **SERIOUS — [Proved] Root-only wording suppresses six simultaneous coordinate changes.** The comments describe data at root `r` moving to data at root `-r`, while the theorem also negates `s2`, `s3`, `s4`, `s6`, `s7`, and `s8`. A downstream citation can therefore mistake the result for invariance under changing only the chosen square root. `rocq/quantum/E8RootExchange.v:19`, `rocq/quantum/E8RootExchange.v:23`, `rocq/quantum/E8RootExchange.v:43`, `rocq/quantum/E8RootExchange.v:182`
+- **SLOPPY — [Proved] `RootExchange` carries an unused distinguished square root.** The functor requires `D.i` and `D.i_squared`, but the new file never references either field. Its active root is `xv 1`, and the determinant theorem takes that root equation as an explicit hypothesis. `rocq/quantum/CdTowerRing.v:480`, `rocq/quantum/CdTowerRing.v:482`, `rocq/quantum/E8RootExchange.v:127`, `rocq/quantum/E8RootExchange.v:183`
+- **COSMETIC — [Proved] The opening convention names `checkEq`, while the new congruence certificates use raw list equality through `spoly_eq_dec`.** The main-result paragraph later states the correct mechanism, so the discrepancy affects orientation rather than correctness. `rocq/quantum/E8RootExchange.v:3`, `rocq/quantum/E8RootExchange.v:15`, `rocq/quantum/E8RootExchange.v:53`, `rocq/quantum/E8RootExchange.v:62`
+
+**Conjectures**
+- **[Hypothesis]** The identity together with `T1`, `T2`, and `T3` defines a Klein-four action on each C matrix, with diagonal characters `1`, `D1`, `D2`, and `D1D2`. **Falsifier:** exhibit an index where composing the `T1` and `T2` polynomial flips differs from `T3`, or where `d1L[a] * d2L[a]` differs from `d3L[a]`. `rocq/quantum/E8RootExchange.v:42`, `rocq/quantum/E8RootExchange.v:48`
+- **[Hypothesis]** The four base flips define sign characters on the 27-dimensional generator list, and every generated flip has a sign vector obtained by pointwise multiplication. **Falsifier:** find one generator whose sign under a composed substitution differs from the product of its component signs. `rocq/quantum/E8RootExchange.v:80`, `rocq/quantum/E8RootExchange.v:116`
+- **[Hypothesis]** A pure flip of the `i` coordinate, with every `s` coordinate fixed, exchanges the N- and N+ determinant closed forms rather than preserving the N- determinant. **Falsifier:** prove or compute a root-valued point where `detBD Cm Fm` after the pure `i` flip differs from `detBD Cp Fp` at the original point. `rocq/quantum/E8ConjugationMap.v:523`, `rocq/quantum/E8ConjugationMap.v:531`
+- **[Hypothesis]** The polynomial congruence and ideal-preservation layer can be factored over the weaker `CommutativeRing` interface; only determinant specialization needs an explicit square-root hypothesis. **Falsifier:** locate an unavoidable use of the module field `D.i` or `D.i_squared` in those two layers after dependency separation. `rocq/quantum/E8RootExchange.v:149`, `rocq/quantum/E8RootExchange.v:192`, `rocq/quantum/CdTowerRing.v:65`
+
+**Overall Verdict**
+- The diagonal congruences, generator homogeneity, ideal equality, project registration, and source-level trust discipline are sound by inspection.
+- Claim 3 overstates the result as a pure root exchange and understates the determinant’s dependence on `Fm`.
+- The decisive correction is documentary: name the complete `T2` coordinate involution wherever the result is described as exchanging roots.
+- Compilation, kernel checking, assumption output, and warning-pair calibration remain **not run** under the explicit memory-safety boundary.
