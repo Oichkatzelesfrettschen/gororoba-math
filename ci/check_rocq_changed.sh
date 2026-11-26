@@ -227,16 +227,20 @@ save_objects() {
 }
 
 # overlay_objects SAVED EXPORT: lays the saved objects over the export, sets the
-# time of every object to now (newer than the library objects of the switch,
-# which each object depends on, whatever clock saved it) and of every other
+# time of every object to one instant now (newer than the library objects of
+# the switch, which each object depends on, whatever clock saved it) and of every other
 # file to 2000-01-01, waits a second so that a source touched afterwards is
 # newer, and removes each object whose source the export lacks.
 overlay_objects() {
   cp -pR "$1/rocq/." "$2/rocq/" || fail "cannot copy the saved objects"
   find "$2/rocq" -type f ! -name '*.vo' ! -name '*.glob' ! -name '.*.aux' -exec touch -t 200001010000 {} + ||
     fail "cannot date the sources"
-  find "$2/rocq" -type f \( -name '*.vo' -o -name '*.glob' -o -name '.*.aux' \) -exec touch {} + ||
+  # One reference time for every object: make rebuilds a target whose
+  # prerequisite is newer, and separate touch calls would order the objects.
+  touch "$2/object-time" || fail "cannot create the reference time"
+  find "$2/rocq" -type f \( -name '*.vo' -o -name '*.glob' -o -name '.*.aux' \) -exec touch -r "$2/object-time" {} + ||
     fail "cannot date the objects"
+  rm "$2/object-time"
   sleep 1
   find "$2/rocq" -type f -name '*.vo' >"$work/overlay-objects.txt" || fail "find failed"
   while IFS= read -r object; do
