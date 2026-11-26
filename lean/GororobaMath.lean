@@ -65,8 +65,6 @@ public import GororobaMath.LinearAlgebra.Pfaffian
 public import GororobaMath.LinearAlgebra.PfaffianForm
 public import GororobaMath.LinearAlgebra.PfaffianBlock
 public import GororobaMath.LinearAlgebra.BorderedKernel
-public import GororobaMath.LinearAlgebra.SparsePoly
-public import GororobaMath.LinearAlgebra.PfaffianTable
 public import GororobaMath.LinearAlgebra.PfaffianSixteen
 public import GororobaMath.FiberCone.Basic
 public import GororobaMath.FiberCone.SeparatingOrder
