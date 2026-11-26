@@ -16,15 +16,11 @@ import itertools
 import re
 import sys
 
-CASES = [
-    (n, gammas)
-    for n in (2, 3)
-    for gammas in itertools.product((-1, 1), repeat=n)
-]
+CASES = [(n, gammas) for n in (2, 3) for gammas in itertools.product((-1, 1), repeat=n)]
 
 
 def z_literal(value):
-    return "(%d)%%Z" % value
+    return f"({value:d})%Z"
 
 
 def rocq_source(mutated):
@@ -36,16 +32,15 @@ def rocq_source(mutated):
         "Open Scope Z_scope.",
         "",
         "Definition table (n : nat) (gs : list Z) : list Z :=",
-        "  let g := fun k => %s in" % sign,
+        f"  let g := fun k => {sign} in",
         "  flat_map (fun p => flat_map (fun q =>",
         "    flat n (ZT.mul n g (basis n p) (basis n q))) (seq 0 (Nat.pow 2 n)))",
         "    (seq 0 (Nat.pow 2 n)).",
         "",
     ]
     for n, gammas in CASES:
-        lines.append(
-            "Compute (table %d [%s])." % (n, "; ".join(z_literal(g) for g in gammas))
-        )
+        signature = "; ".join(z_literal(g) for g in gammas)
+        lines.append(f"Compute (table {n:d} [{signature}]).")
     return "\n".join(lines) + "\n"
 
 
@@ -67,11 +62,8 @@ def parse_rocq(path):
         text = handle.read()
     blocks = re.findall(r"=\s*(.*?)\s*:\s*list Z", text, flags=re.S)
     if len(blocks) != len(CASES):
-        raise SystemExit("compare_split_tower: %d Rocq results, %d expected" % (len(blocks), len(CASES)))
-    return {
-        case: [int(x) for x in re.findall(r"-?\d+", block)]
-        for case, block in zip(CASES, blocks)
-    }
+        raise SystemExit(f"compare_split_tower: {len(blocks)} Rocq results, {len(CASES)} expected")
+    return {case: [int(x) for x in re.findall(r"-?\d+", block)] for case, block in zip(CASES, blocks, strict=True)}
 
 
 def compare(rust_path, rocq_path):
@@ -82,21 +74,19 @@ def compare(rust_path, rocq_path):
         n, gammas = case
         want = rust.get(case)
         have = rocq[case]
-        if want is None or len(want) != 4 ** n * 2 ** n:
-            raise SystemExit("compare_split_tower: the Rust output lacks case %r" % (case,))
+        if want is None or len(want) != 4**n * 2**n:
+            raise SystemExit(f"compare_split_tower: the Rust output lacks case {case!r}")
         if want != have:
-            first = next(i for i, (a, b) in enumerate(zip(want, have)) if a != b)
-            pair, coord = divmod(first, 2 ** n)
+            first = next(i for i, (a, b) in enumerate(zip(want, have, strict=False)) if a != b)
+            pair, coord = divmod(first, 2**n)
             print(
-                "compare_split_tower: level %d gammas %s differ at e_%d e_%d coordinate %d: %d against %d"
-                % (n, list(gammas), pair // 2 ** n, pair % 2 ** n, coord, want[first], have[first])
+                f"compare_split_tower: level {n} gammas {list(gammas)} differ at e_{pair // 2**n} e_{pair % 2**n} "
+                f"coordinate {coord}: {want[first]} against {have[first]}"
             )
             status = 1
     if status == 0:
-        print(
-            "compare_split_tower: %d cases, %d coordinates agree"
-            % (len(CASES), sum(len(v) for v in rust.values()))
-        )
+        total = sum(len(v) for v in rust.values())
+        print(f"compare_split_tower: {len(CASES)} cases, {total} coordinates agree")
     return status
 
 
