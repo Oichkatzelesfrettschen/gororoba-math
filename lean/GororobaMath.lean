@@ -86,3 +86,4 @@ public import GororobaMath.CayleyDickson.E8ConjugationIdeal
 public import GororobaMath.CayleyDickson.E8ConjugationIdealEval
 public import GororobaMath.EisenbudGoto.MinimalMultiplicity
 public import GororobaMath.LinearAlgebra.PfaffianCross
+public import GororobaMath.LinearAlgebra.PfaffianSchur
