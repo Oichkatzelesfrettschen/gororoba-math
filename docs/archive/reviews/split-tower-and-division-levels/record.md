@@ -39,7 +39,7 @@ Verdict codes: F is Fixed in the named commit, Rf is Refuted with the reason fro
 | R20 | agy 132, break 5 (c) | ledger text of C-1760 is truncated; the full claim may add statements | the registry statement ends "e_1+e_9 has parallel imaginary halves and trivial left annihilator"; it asserts equal norms of the four vectors and nothing about zero divisors of the other three | Rf: full statement read |
 | R21 | agy 132, claim 4 | SplitDoublingTower.v is out of alphabetical order in _RocqProject | the gate requires a listing, and no sort order | Rf |
 | R22 | agy 132, claim 4 | docstring omits the blade-census convention | docstring states the 56 blades e_i +- e_j (i < j), the ordered and unordered counts and the status of 52 | F 82660baf2 |
-| R23 | agy 132, claim 4 | the product mirrors cd_multiply_split of gororoba-open (named in the docstring) with no comparison under ci/ and no bridge to the CdTowerDomain tower at gamma = -1 | the docstring still names cd_multiply_split; the comparison ci/compare_split_tower.sh (Rust reference built through a temporary crate that depends on cd_kernel, 12 signatures, 1,152 products, a mutated-sign Rocq copy) built and ran the reference in one workstation run, and its mutated copy and the bridge theorems of the tower at gamma = -1 to ZTower.mul (levels 2 and 3, all elements) are not in the tree: neither built yet | U: open, blocker recorded |
+| R23 | agy 132, claim 4 | the product mirrors cd_multiply_split of gororoba-open (named in the docstring) with no comparison under ci/ and no bridge to the CdTowerDomain tower at gamma = -1 | ci/compare_split_tower.sh with ci/compare_split_tower.py runs cd_multiply_split of cd_kernel and ZT.mul on 12 signatures (576 basis products, 4,352 coordinates), agrees, and rejects an evaluation with every gamma negated; SplitTowerStandardBridge.v proves ZT.mul at gamma = -1 equal to ZTower.mul on all elements of levels 2 and 3 (closed under the global context, rocq check passes in both modes) | F e6e3fb937 |
 | R24 | agy 132, defect 1 | dead definition gq | definition removed | F 82660baf2 |
 | R25 | agy 132, defect 2 | basis n p silently saturates for p >= 2^n | basis n p returns the zero vector for p >= 2^n and basis_out_of_range proves it | F 90a7e6fa0 |
 | R26 | agy 132, defect 3 | commit text of a41e0b0fa counts rows | agy confirms the eight rows match; C-1760 moved in its own commit ada1a9e8c | Rf |
@@ -65,7 +65,7 @@ Verdict codes: F is Fixed in the named commit, Rf is Refuted with the reason fro
 | R46 | codex 133, conjecture 3; agy 133, conjecture 4 | box-kite frustration minimum 3 and the 8 triangles of sign -1 | row octonion_structure_checks.md:15 kite frustration is partial and names both as not stated | B: that ledger row (partial) |
 | R47 | agy 133, conjecture 1 | direct unique solvability for k <= 3 | existsUnique_mul_eq_of_le_three | F 09d28a825 |
 
-Totals: 26 Fixed, 11 Refuted, 8 Boundary, 1 Unaddressed.
+Totals: 27 Fixed, 11 Refuted, 8 Boundary, 0 Unaddressed.
 
 ## Readings of the points checked with care
 
@@ -88,7 +88,6 @@ The rocq dispatch ran with ROCQ_CHECK_VM=1, the bytecode check, so the new vm_co
 
 ## Open items
 
-- Unaddressed: R23 (comparison script and bridge theorem, blocker in the row).
 - Boundary rows: C-631, C-809, C-810, C-578, the box-kite frustration row (R10, R16, R17, R37, R44 to R46).
 - Pure re-check of SplitDoublingTower.v: owed.
 - Conjectures that no ledger row or theorem records:
