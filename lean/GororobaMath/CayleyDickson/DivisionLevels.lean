@@ -3,7 +3,6 @@ module
 
 public import GororobaMath.CayleyDickson.AlternativeIdentities
 public import GororobaMath.CayleyDickson.NonAssociative
-public import GororobaMath.CayleyDickson.ZeroDivisors
 
 /-!
 # Associativity, alternativity and division at the levels of the real division algebras
@@ -35,6 +34,8 @@ zero-divisor pair exists from level 4 on only over a nontrivial ring, `1 ≠ 0`
   no zero divisors and nonnegative squares, `x * y = 0` forces `x = 0` or `y = 0` at levels 0
   to 3.
 * `Tower.mul_eq_zero_iff_of_le_three`: the same as an equivalence.
+* `Tower.mul_comm_of_le_one` and `Tower.exists_mul_comm_ne`: the product is commutative at levels 0
+  and 1 and, over a ring with `2 ≠ 0`, not at level 2, so commutativity is the first property lost.
 * `Tower.existsUnique_mul_eq_of_le_three`: over an ordered field, for `a ≠ 0` at levels 0 to 3
   each of `a * x = b` and `y * a = b` has exactly one solution, which is the division property of
   the real quaternions and octonions.
@@ -53,6 +54,25 @@ variable {R : Type u} [CommRing R] [StarRing R] [TrivialStar R] {k : ℕ}
 /-- The product is associative at levels 0 to 2, since the associator vanishes there. -/
 theorem mul_assoc_of_le_two (hk : k ≤ 2) (x y z : Tower R k) : x * y * z = x * (y * z) :=
   sub_eq_zero.mp (associator_eq_zero_of_le_two hk x y z)
+
+/-- The product is commutative at levels 0 and 1: the base ring and its double. -/
+theorem mul_comm_of_le_one (hk : k ≤ 1) (x y : Tower R k) : x * y = y * x := by
+  interval_cases k
+  · exact mul_comm (show R from x) (show R from y)
+  · exact CayleyDickson.mul_comm_of_trivialStar (A := R) x y
+
+omit [TrivialStar R] in
+/-- Over a ring with `2 ≠ 0`, the quaternion units `e_1` and `e_2` do not commute: their
+commutator is `2 e_3`. -/
+theorem exists_mul_comm_ne (h2 : (2 : R) ≠ 0) : ∃ x y : Tower R 2, x * y ≠ y * x := by
+  refine ⟨e R 2 1#2, e R 2 2#2, fun h => ?_⟩
+  have hc : commutator (e R 2 1#2) (e R 2 2#2) = 0 := by
+    unfold commutator
+    rw [h, sub_self]
+  rw [commutator_e_e] at hc
+  have hs : sign 2 1#2 2#2 - sign 2 2#2 1#2 = 2 := by decide
+  rw [hs] at hc
+  exact zsmul_e_ne_zero (n := 2) (by simpa using h2) 2 _ hc
 
 /-- Over a ring with `2 ≠ 0`, an associativity-violating triple exists exactly from level 3 on. -/
 theorem exists_mul_assoc_ne_iff (h2 : (2 : R) ≠ 0) :
