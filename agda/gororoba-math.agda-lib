@@ -1,0 +1,3 @@
+name: gororoba-math
+include: src
+depend: standard-library-2.4

@@ -1,0 +1,3 @@
+
+planted : ∀ x y z → (x · y) · z ≋ x · (y · z)
+planted x y z = solveT 3 (OE.mul (OE.mul X₃ Y₃) Z₃) (OE.mul X₃ (OE.mul Y₃ Z₃)) ✓ (ρ₃ x y z)
