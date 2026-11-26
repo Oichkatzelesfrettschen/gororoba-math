@@ -7,7 +7,7 @@
 # agda/ in a temporary directory, so the interface files Agda writes beside a
 # library stay outside the checkout. Before the verdict counts, the check must
 # reject two planted copies: one whose root module claims that the octonion
-# product associates, an identity whose difference normalises to a nonzero
+# product associates, an identity whose difference normalizes to a nonzero
 # integer polynomial, and one with a postulate, which --safe refuses.
 # Runs on demand, outside ci/check.sh and ci/check_rocq.sh; on the
 # workstation it runs under the heavy-job lease (measured times and memory:
@@ -34,17 +34,25 @@ grep -q -x -F 'name: standard-library-2.4' "$stdlib/standard-library.agda-lib" 2
   echo "check_agda: $stdlib holds no agda-stdlib v2.4 library file" >&2
   exit 2
 }
-if [ -e "$stdlib/.git" ]; then
-  command -v git >/dev/null || {
-    echo "check_agda: git is not on PATH to read the agda-stdlib commit" >&2
-    exit 2
-  }
-  head=$(git -C "$stdlib" rev-parse HEAD)
-  [ "$head" = 2a5a0dec0a3cb5c87468ce101388a513d39dbf10 ] || {
-    echo "check_agda: $stdlib is at $head, not the v2.4 commit 2a5a0dec0a3c" >&2
-    exit 2
-  }
-fi
+[ -e "$stdlib/.git" ] || {
+  echo "check_agda: $stdlib is not a git checkout of agda-stdlib v2.4" >&2
+  exit 2
+}
+command -v git >/dev/null || {
+  echo "check_agda: git is not on PATH to read the agda-stdlib commit" >&2
+  exit 2
+}
+head=$(git -C "$stdlib" rev-parse HEAD)
+[ "$head" = 2a5a0dec0a3cb5c87468ce101388a513d39dbf10 ] || {
+  echo "check_agda: $stdlib is at $head, not the v2.4 commit 2a5a0dec0a3c" >&2
+  exit 2
+}
+# The tracked sources must equal the commit; _build, which Agda writes, is
+# untracked and outside this comparison.
+git -C "$stdlib" diff --quiet HEAD -- || {
+  echo "check_agda: $stdlib has tracked files that differ from 2a5a0dec0a3c" >&2
+  exit 2
+}
 
 here=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 root=$(CDPATH='' cd -- "$here/.." && pwd)
@@ -92,11 +100,16 @@ if check_tree assoc; then
   echo "check_agda: the copy that claims associativity type-checks" >&2
   exit 1
 fi
-grep -q -F "OctonionMoufangLoop.agda:$line." "$work/assoc.log" || {
+# The rejection names the planted line and the empty type that the
+# nonzero normal form of a coordinate reduces Zero (norm ...) to.
+if ! grep -q -F "OctonionMoufangLoop.agda:$line." "$work/assoc.log" ||
+  ! grep -q -F '[UnequalTerms]' "$work/assoc.log" ||
+  ! grep -q -F 'Data.Irrelevant.Irrelevant Data.Empty.Empty' "$work/assoc.log" ||
+  ! grep -q -F 'Zero (norm' "$work/assoc.log"; then
   cat "$work/assoc.log" >&2
-  echo "check_agda: the copy that claims associativity failed outside line $line" >&2
+  echo "check_agda: the associativity copy failed off its normal form, line $line" >&2
   exit 1
-}
+fi
 
 # Planted copy 2: a postulate, which --safe refuses.
 copy_tree postulate
@@ -105,10 +118,12 @@ if check_tree postulate; then
   echo "check_agda: the copy with a postulate type-checks" >&2
   exit 1
 fi
-grep -q -F 'safe' "$work/postulate.log" || {
+pline=$(wc -l <"$work/postulate/$doubling")
+if ! grep -q -F "Doubling.agda:$pline." "$work/postulate.log" ||
+  ! grep -q -F '[SafeFlagPostulate]' "$work/postulate.log"; then
   cat "$work/postulate.log" >&2
   echo "check_agda: the copy with a postulate failed for another reason" >&2
   exit 1
-}
+fi
 
 echo "check_agda: the library type-checks; both planted copies fail"

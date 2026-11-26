@@ -22,7 +22,7 @@
 --
 -- Each octonion identity is checked coordinate by coordinate:
 -- the same raw operations run on the integer-coefficient expressions of
--- GororobaMath.Solver.IntegerCoefficients, the type checker normalises the
+-- GororobaMath.Solver.IntegerCoefficients, the type checker normalizes the
 -- difference of the two sides of each coordinate to the zero polynomial,
 -- and solve-≈ evaluates the expressions at the coordinates of the
 -- arguments.  No identity assumes alternativity: each is a polynomial
@@ -163,7 +163,7 @@ private
   ρ₃ : Octonion → Octonion → Octonion → Vec Carrier 24
   ρ₃ x y z = flatten 3 x ++ (flatten 3 y ++ flatten 3 z)
 
-  -- Each coordinate of L - R normalises to the zero polynomial.
+  -- Each coordinate of L - R normalizes to the zero polynomial.
   Checked : ∀ {n} → Tower 3 (Expr ℤ n) → Tower 3 (Expr ℤ n) → Set
   Checked = Pointwise 3 (λ l r → Zero (norm (l ⊕ ⊝ r)))
 
@@ -340,8 +340,8 @@ moufang-right a x y = ≋.sym (ML.x∙zyz≈xzy∙z x y a)
 moufang-middle : ∀ a x y → (a ∙ x) ∙ (y ∙ a) ≈₁ (a ∙ (x ∙ y)) ∙ a
 moufang-middle a x y = ≋.trans (IsMoufangLoop.identical isMoufangLoop x y a) (ML.z∙xyz≈zxy∙z x y a)
 
--- The equations a x = b and y a = b have exactly the solutions
--- a \\ b and b // a.
+-- Every solution of a x = b equals a \\ b, and every solution of
+-- y a = b equals b // a; existence is leftDivides and rightDivides.
 solution-left : ∀ a x b → a ∙ x ≈₁ b → x ≈₁ a \\ b
 solution-left = Q.y≈x\\z
 
@@ -349,7 +349,7 @@ solution-right : ∀ a y b → y ∙ a ≈₁ b → y ≈₁ b // a
 solution-right a y b = Q.x≈z//y y a b
 
 ------------------------------------------------------------------------
--- The unit basis triple e₁, e₂, e₄ does not associate
+-- The unit basis triple e₁, e₂, e₄: an associator coordinate equal to 2
 
 private
   basisE : ∀ {n} → Vec (Expr ℤ n) 8 → Tower 3 (Expr ℤ n)
@@ -375,8 +375,7 @@ N-e₂ = solve-≈ (NE e₂E) (Κ (+ 1)) tt []
 N-e₄ : N e₄ ≈ 1#
 N-e₄ = solve-≈ (NE e₄E) (Κ (+ 1)) tt []
 
--- Coordinate 7 of the associator ((e₁ e₂) e₄) - (e₁ (e₂ e₄)) is 2:
--- (e₁ e₂) e₄ = e₇ and e₁ (e₂ e₄) = - e₇.
+-- Coordinate 7 of the associator ((e₁ e₂) e₄) - (e₁ (e₂ e₄)) is 1# + 1#.
 associator-e₁e₂e₄ :
   proj₂ (proj₂ (proj₂ ((e₁ · e₂) · e₄))) + - proj₂ (proj₂ (proj₂ (e₁ · (e₂ · e₄))))
     ≈ 1# + 1#
@@ -387,7 +386,8 @@ associator-e₁e₂e₄ =
   π₇ : Tower 3 (Expr ℤ 0) → Expr ℤ 0
   π₇ x = proj₂ (proj₂ (proj₂ x))
 
--- If the loop associates then 1# + 1# ≈ 0#.
+-- If the loop associates then 1# + 1# ≈ 0#; so the loop is not associative
+-- over a ring in which 1# + 1# is not 0#.
 not-associative : (∀ u v w → (u ∙ v) ∙ w ≈₁ u ∙ (v ∙ w)) → 1# + 1# ≈ 0#
 not-associative assoc = begin
   1# + 1#          ≈⟨ associator-e₁e₂e₄ ⟨

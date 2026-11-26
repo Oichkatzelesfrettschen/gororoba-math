@@ -4,10 +4,10 @@
 ------------------------------------------------------------------------
 -- A ring solver with integer coefficients over every commutative ring
 --
--- The reflective solver of agda-stdlib (Tactic.RingSolver) normalises with
+-- The reflective solver of agda-stdlib (Tactic.RingSolver) normalizes with
 -- the coefficients in the ring itself, so over a ring with an abstract
 -- carrier a sum such as 1# + (- 1#) stays a coefficient and x - x does not
--- normalise to 0.  Here the coefficients are integers, mapped into the
+-- normalize to 0.  Here the coefficients are integers, mapped into the
 -- ring R by the homomorphism n ↦ n × 1#, so cancellation happens on
 -- integer literals and the Horner normal form of an expression that is
 -- zero in every commutative ring is the constant polynomial 0.
@@ -185,7 +185,7 @@ homomorphism = record
   }
 
 ------------------------------------------------------------------------
--- Normalisation and its correctness (the construction of
+-- Normalization and its correctness (the construction of
 -- Tactic.RingSolver.NonReflective, with integer coefficients)
 
 open import Tactic.RingSolver.Core.Polynomial.Base (Homomorphism.from homomorphism)
@@ -221,6 +221,6 @@ private
 solve-0 : ∀ {n} (e : Expr ℤ n) → Zero (norm e) → ∀ ρ → ⟦ e ⟧ ρ ≈ 0#
 solve-0 e z ρ = sym (trans (poly-zero-hom (norm e) z ρ) (correct e ρ))
 
--- Two expressions whose difference normalises to zero are equal in R.
+-- Two expressions whose difference normalizes to zero are equal in R.
 solve-≈ : ∀ {n} (l r : Expr ℤ n) → Zero (norm (l ⊕ ⊝ r)) → ∀ ρ → ⟦ l ⟧ ρ ≈ ⟦ r ⟧ ρ
 solve-≈ l r z ρ = x∙y⁻¹≈ε⇒x≈y (⟦ l ⟧ ρ) (⟦ r ⟧ ρ) (solve-0 (l ⊕ ⊝ r) z ρ)
