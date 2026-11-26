@@ -67,6 +67,8 @@ Verdict codes: F is Fixed in the named commit, Rf is Refuted with the reason fro
 
 Totals: 29 Fixed, 11 Refuted, 7 Boundary, 0 Unaddressed (47 findings).
 
+Hosted review (Codex) on 738a63d37, one finding (P1): the split-tower results are stated over every commutative ring and the placement rule asks for such statements in Lean. Boundary: the ledger rows closed here are fixed-dimension statements whose definitions exist in Rocq only; the every-ring statements in Lean with instance bridges are tracked in issue 136.
+
 ## Readings of the points checked with care
 
 - C-631 (R9, R10). The row is partial and the note is exact. The forward census (pair i < j, product x y) gives 52 = 48 with a null-squaring blade (24 with both, 24 with one) + 4 without, as split_octonion_zero_product_pairs, _null_involving_pairs, _null_null_pairs and _proper_pairs. The order-independent census gives 76 unordered pairs (4 proper, 48 with exactly one null-squaring blade, 24 with both), 72 null-involving, and 128 ordered pairs. The claim words 48 and 4 therefore equal the forward count and not the unordered one.
