@@ -51,6 +51,8 @@ claim, sorted by `source` in byte order, sources unique.
   state an instance, a fixed level or a part of the claim, and the note says
   what is open. `owed` means that the placement
   clauses ask for a proof and gororoba-math holds none that the readings found.
+- A Lean proof entry meets the proof hygiene of `AGENTS.md` ("Proof hygiene"):
+  pinned `simp only`, bound and sized tables, externally checked axioms.
 - A reference of those readings that did not resolve against `origin/main` is
   repaired to the declaration it meant (nine rows; the first reading named
   `derivation_1..derivation_14` of `CdTowerG2Derivations.v`, whose declarations
