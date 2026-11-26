@@ -21,10 +21,18 @@ Pfaffian on `List.finRange n`.
 * `Matrix.pfaffianAux_append_of_zero`: if `A x y = 0` for every `x` in `l₁` and `y` in
   `l₂`, then `pfaffianAux A (l₁ ++ l₂) = pfaffianAux A l₁ * pfaffianAux A l₂`; no skewness and no
   parity hypothesis enters.
-* `Matrix.pfaffianAux_six`: the fifteen-term expansion of the Pfaffian on six indices.
+* `Matrix.pfaffianAux_six`, `Matrix.pfaffianAux_six_indices`: the fifteen-term expansion of the
+  Pfaffian on six indices, of `Fin 6` and of any index type.
+* `Matrix.pfaffianAux_eight_indices`: the expansion on eight indices into six-index Pfaffians.
+* `Matrix.pfaffianAux_append_swap_blocks`: swapping two blocks of a list multiplies the Pfaffian
+  of a skew matrix by `(-1) ^ (|blk| * |l|)`.
 * `Matrix.det_eq_pfaffian_sq_fin_two`, `Matrix.det_eq_pfaffian_sq_fin_four`,
   `Matrix.det_eq_pfaffian_sq_fin_six`: `det A = pfaffian A ^ 2` for an alternating `2 × 2`,
   `4 × 4` and `6 × 6` matrix over a commutative ring.
+* `Matrix.schur_cleared_of_mul`: for `T = [[B, X], [-Xᵀ, D]]` with `B`, `D` skew, `2`
+  left-regular and any `M` with `B * M = c • X`,
+  `c ^ |q| * Pf T = Pf B * c ^ (|q| / 2) * Pf (c • D + Xᵀ * M) q` for even `|q|`; a block whose
+  square is a scalar, `B * B = -s • 1`, clears with `c = s` and `M = -(B * X)`.
 * `Matrix.schur_cleared`: for `T = [[B, X], [-Xᵀ, D]]` with `B` of size `n`, `B`, `D` skew and `2`
   left-regular, the Pfaffian of `T` on the `n` leading indices followed by a list `q` of
   complement indices satisfies
@@ -48,7 +56,7 @@ private theorem pfaffianAux_cons_dite (A : ι → ι → R) (x : ι) (L : List �
   refine Eq.trans ?_ (Fin.sum_univ_eq_sum_range (fun k =>
     if h : k < L.length then (-1) ^ k * A x L[k] * pfaffianAux A (L.eraseIdx k) else 0) L.length)
   refine Finset.sum_congr rfl fun k _ => ?_
-  simp [k.isLt]
+  simp only [Fin.getElem_fin, k.isLt, ↓reduceDIte]
 
 /-- A zero block between two index lists factors the Pfaffian: when `A x y = 0` for every `x` in
 `l₁` and `y` in `l₂`, the expansion along each index of `l₁` meets only positions of `l₁`. -/
@@ -106,8 +114,14 @@ theorem det_eq_pfaffian_sq_fin_four (A : Matrix (Fin 4) (Fin 4) R) (hA : ∀ i j
     (hd : ∀ i, A i i = 0) : A.det = pfaffian A ^ 2 := by
   have e : pfaffian A = A 0 1 * A 2 3 - A 0 2 * A 1 3 + A 0 3 * A 1 2 := pfaffianAux_four A 0 1 2 3
   rw [e, Matrix.det_succ_row_zero]
-  simp +decide [Fin.sum_univ_succ, Matrix.det_fin_three, Fin.succAbove, hd, hA 1 0, hA 2 0, hA 3 0,
-    hA 2 1, hA 3 1, hA 3 2]
+  simp +decide only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, det_fin_three,
+      submatrix_apply, Fin.succ_zero_eq_one, Fin.succAbove, Fin.castSucc_zero, Fin.succ_one_eq_two,
+      Fin.castSucc_one, Fin.reduceSucc, Fin.reduceCastSucc, Fin.sum_univ_succ, Fin.coe_ofNat_eq_mod,
+      Nat.zero_mod, pow_zero, hd, mul_zero, ↓reduceIte, zero_mul, hA 3 2, mul_neg, neg_zero,
+      sub_self, hA 2 1, hA 3 1, zero_add, neg_mul, neg_neg, sub_zero, Fin.val_succ, Fin.succ_pos,
+      hA 1 0, sub_neg_eq_add, hA 2 0, hA 3 0, pow_one, one_mul, add_zero, even_two, Even.neg_pow,
+      one_pow, Finset.univ_unique, Fin.default_eq_zero, Fin.val_eq_zero, Odd.neg_one_pow,
+      Finset.sum_neg_distrib, Finset.sum_singleton]
   ring
 
 /-- The Pfaffian on six indices expands into its fifteen products of three entries. -/
@@ -118,17 +132,84 @@ theorem pfaffianAux_six (A : Fin 6 → Fin 6 → R) :
       A 0 4 * (A 1 2 * A 3 5 - A 1 3 * A 2 5 + A 1 5 * A 2 3) +
       A 0 5 * (A 1 2 * A 3 4 - A 1 3 * A 2 4 + A 1 4 * A 2 3) := by
   rw [pfaffianAux_cons_dite]
-  simp [Finset.sum_range_succ, pfaffianAux_four]
+  simp only [Fin.isValue, List.length_cons, List.length_nil, zero_add, Nat.reduceAdd,
+      Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, Nat.ofNat_pos, ↓reduceDIte,
+      pow_zero, List.getElem_cons_zero, one_mul, List.eraseIdx_zero, List.tail_cons,
+      pfaffianAux_four, Nat.one_lt_ofNat, pow_one, List.getElem_cons_succ, neg_mul,
+      List.eraseIdx_cons_succ, Nat.reduceLT, even_two, Even.neg_pow, one_pow, Nat.lt_add_one]
   ring
+
+/-- The Pfaffian on six indices of any type is the fifteen-term sum over the matchings of the
+first index, from two expansions along the head. -/
+theorem pfaffianAux_six_indices (A : ι → ι → R) (i₀ i₁ i₂ i₃ i₄ i₅ : ι) :
+    pfaffianAux A [i₀, i₁, i₂, i₃, i₄, i₅] =
+      A i₀ i₁ * (A i₂ i₃ * A i₄ i₅ - A i₂ i₄ * A i₃ i₅ + A i₂ i₅ * A i₃ i₄) -
+      A i₀ i₂ * (A i₁ i₃ * A i₄ i₅ - A i₁ i₄ * A i₃ i₅ + A i₁ i₅ * A i₃ i₄) +
+      A i₀ i₃ * (A i₁ i₂ * A i₄ i₅ - A i₁ i₄ * A i₂ i₅ + A i₁ i₅ * A i₂ i₄) -
+      A i₀ i₄ * (A i₁ i₂ * A i₃ i₅ - A i₁ i₃ * A i₂ i₅ + A i₁ i₅ * A i₂ i₃) +
+      A i₀ i₅ * (A i₁ i₂ * A i₃ i₄ - A i₁ i₃ * A i₂ i₄ + A i₁ i₄ * A i₂ i₃) := by
+  rw [pfaffianAux_cons_dite]
+  simp only [List.length_cons, List.length_nil, zero_add, Nat.reduceAdd, Finset.sum_range_succ,
+      Finset.range_one, Finset.sum_singleton, Nat.ofNat_pos, ↓reduceDIte, pow_zero,
+      List.getElem_cons_zero, one_mul, List.eraseIdx_zero, List.tail_cons, pfaffianAux_four,
+      Nat.one_lt_ofNat, pow_one, List.getElem_cons_succ, neg_mul, List.eraseIdx_cons_succ,
+      Nat.reduceLT, even_two, Even.neg_pow, one_pow, Nat.lt_add_one]
+  ring
+
+/-- The Pfaffian on eight indices of any type, expanded along the first index into six-index
+Pfaffians. -/
+theorem pfaffianAux_eight_indices (A : ι → ι → R) (i₀ i₁ i₂ i₃ i₄ i₅ i₆ i₇ : ι) :
+    pfaffianAux A [i₀, i₁, i₂, i₃, i₄, i₅, i₆, i₇] =
+      A i₀ i₁ * pfaffianAux A [i₂, i₃, i₄, i₅, i₆, i₇] -
+      A i₀ i₂ * pfaffianAux A [i₁, i₃, i₄, i₅, i₆, i₇] +
+      A i₀ i₃ * pfaffianAux A [i₁, i₂, i₄, i₅, i₆, i₇] -
+      A i₀ i₄ * pfaffianAux A [i₁, i₂, i₃, i₅, i₆, i₇] +
+      A i₀ i₅ * pfaffianAux A [i₁, i₂, i₃, i₄, i₆, i₇] -
+      A i₀ i₆ * pfaffianAux A [i₁, i₂, i₃, i₄, i₅, i₇] +
+      A i₀ i₇ * pfaffianAux A [i₁, i₂, i₃, i₄, i₅, i₆] := by
+  rw [pfaffianAux_cons_dite]
+  simp only [List.length_cons, List.length_nil, zero_add, Nat.reduceAdd, Finset.sum_range_succ,
+      Finset.range_one, Finset.sum_singleton, Nat.ofNat_pos, ↓reduceDIte, pow_zero,
+      List.getElem_cons_zero, one_mul, List.eraseIdx_zero, List.tail_cons, pfaffianAux_six_indices,
+      Nat.one_lt_ofNat, pow_one, List.getElem_cons_succ, neg_mul, List.eraseIdx_cons_succ,
+      Nat.reduceLT, even_two, Even.neg_pow, one_pow, Nat.lt_add_one]
+  ring
+
+/-- Swapping two blocks of a list multiplies the Pfaffian of a skew matrix by `(-1)` to the product
+of their lengths, one index moved past the first block at a time. -/
+theorem pfaffianAux_append_swap_blocks (A : ι → ι → R) (hA : ∀ a b, A a b = -A b a)
+    (blk l : List ι) :
+    pfaffianAux A (blk ++ l) = (-1) ^ (blk.length * l.length) * pfaffianAux A (l ++ blk) := by
+  suffices H : ∀ (l pre : List ι), pfaffianAux A (pre ++ blk ++ l) =
+      (-1) ^ (blk.length * l.length) * pfaffianAux A (pre ++ l ++ blk) by
+    simpa only [List.nil_append] using H l []
+  intro l
+  induction l with
+  | nil => intro pre; simp only [List.append_nil, List.length_nil, mul_zero, pow_zero, one_mul]
+  | cons y l ih =>
+    intro pre
+    rw [pfaffianAux_move_left A hA pre blk y l]
+    have e1 : pre ++ y :: (blk ++ l) = pre ++ [y] ++ blk ++ l := by simp only [List.append_assoc,
+        List.cons_append, List.nil_append]
+    have e2 : pre ++ [y] ++ l ++ blk = pre ++ y :: l ++ blk := by simp only [List.append_assoc,
+        List.cons_append, List.nil_append]
+    rw [e1, ih (pre ++ [y]), e2, List.length_cons]
+    ring
 
 /-- The determinant of an alternating `6 × 6` matrix is the square of its Pfaffian. -/
 theorem det_eq_pfaffian_sq_fin_six (A : Matrix (Fin 6) (Fin 6) R) (hA : ∀ i j, A i j = -A j i)
     (hd : ∀ i, A i i = 0) : A.det = pfaffian A ^ 2 := by
   have e : pfaffian A = _ := pfaffianAux_six A
   rw [e, Matrix.det_succ_row_zero]
-  simp +decide [Fin.sum_univ_succ, Matrix.det_succ_row_zero, Fin.succAbove, hd,
-    hA 1 0, hA 2 0, hA 3 0, hA 4 0, hA 5 0, hA 2 1, hA 3 1, hA 4 1, hA 5 1, hA 3 2, hA 4 2,
-    hA 5 2, hA 4 3, hA 5 3, hA 5 4]
+  simp +decide only [Nat.succ_eq_add_one, Nat.reduceAdd, Fin.isValue, det_succ_row_zero,
+      submatrix_apply, Fin.succ_zero_eq_one, Fin.succAbove, submatrix_submatrix,
+      Function.comp_apply, Fin.succ_one_eq_two, Fin.reduceSucc, det_unique, Fin.default_eq_zero,
+      Fin.castSucc_zero, Fin.sum_univ_succ, Fin.coe_ofNat_eq_mod, Nat.zero_mod, pow_zero, one_mul,
+      ↓reduceIte, Fin.castSucc_one, Finset.univ_unique, Fin.val_succ, Fin.val_eq_zero, zero_add,
+      pow_one, Fin.castSucc_succ, neg_mul, Fin.succ_pos, Finset.sum_neg_distrib,
+      Finset.sum_singleton, Fin.reduceCastSucc, even_two, Even.neg_pow, one_pow, Odd.neg_one_pow,
+      hd, mul_zero, hA 5 4, mul_neg, neg_neg, zero_mul, hA 4 3, hA 5 3, neg_zero, add_zero, hA 3 2,
+      hA 4 2, hA 5 2, hA 2 1, hA 3 1, hA 4 1, hA 5 1, hA 1 0, hA 2 0, hA 3 0, hA 4 0, hA 5 0]
   ring
 
 section Transvect
@@ -190,7 +271,7 @@ theorem pfaffianAux_append_map_smul (ω : V → V → R) (hsmul : ∀ (c : R) x 
         c ^ q.length * pfaffianAux ω (pre ++ q.map t) := by
   intro q
   induction q with
-  | nil => intro pre; simp
+  | nil => intro pre; simp only [List.map_nil, List.append_nil, List.length_nil, pow_zero, one_mul]
   | cons x q ih =>
     intro pre
     have h := ih (pre ++ [t x])
@@ -225,24 +306,25 @@ private theorem skewForm_skew {ι : Type*} [Fintype ι] (T : Matrix ι ι R) (hT
 
 private theorem skewForm_single {ι : Type*} [Fintype ι] [DecidableEq ι] (T : Matrix ι ι R)
     (i j : ι) : skewForm T (Pi.single i 1) (Pi.single j 1) = T i j := by
-  simp [skewForm, dotProduct, Matrix.mulVec, Pi.single_apply]
+  simp only [skewForm, dotProduct, Pi.single_apply, mulVec, mul_ite, mul_one, mul_zero,
+      Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, ite_mul, one_mul, zero_mul]
 
-/-- The cleared Schur-complement law of the Pfaffian: no inverse of `B` and no cancellation. -/
-theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R)
-    (X : Matrix (Fin n) κ R) (D : Matrix κ κ R) (hB : Bᵀ = -B) (hD : Dᵀ = -D) (q : List κ)
-    (hq : q.length % 2 = 0) :
-    B.det ^ q.length * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
+/-- The cleared Schur-complement law of the Pfaffian with a chosen clearing matrix: if
+`B * M = c • X`, replacing each tail generator by `c` times itself minus the combination `M` of the
+leading generators makes it pair to zero with them, so the tail Pfaffian becomes that of
+`c • D + Xᵀ * M`. -/
+theorem schur_cleared_of_mul (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R)
+    (X : Matrix (Fin n) κ R) (D : Matrix κ κ R) (hB : Bᵀ = -B) (hD : Dᵀ = -D) (c : R)
+    (M : Matrix (Fin n) κ R) (hBM : B * M = c • X) (q : List κ) (hq : q.length % 2 = 0) :
+    c ^ q.length * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
         ((List.finRange n).map Sum.inl ++ q.map Sum.inr) =
-      pfaffian B * B.det ^ (q.length / 2) *
-        pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) q := by
+      pfaffian B * c ^ (q.length / 2) * pfaffianAux (c • D + Xᵀ * M) q := by
   classical
   have : Fintype κ := Fintype.ofFinite κ
   set T : Matrix (Fin n ⊕ κ) (Fin n ⊕ κ) R := Matrix.fromBlocks B X (-Xᵀ) D with hTdef
-  set c : R := B.det with hc
-  set M : Matrix (Fin n) κ R := B.adjugate * X with hM
   have hT : Tᵀ = -T := by
     rw [hTdef, Matrix.fromBlocks_transpose, Matrix.fromBlocks_neg, hB, hD]
-    simp
+    simp only [transpose_neg, transpose_transpose, neg_neg]
   set ω : (Fin n ⊕ κ → R) → (Fin n ⊕ κ → R) → R := skewForm T with hω
   have hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z := skewForm_add T
   have hsmul : ∀ (a : R) x z, ω (a • x) z = a * ω x z := skewForm_smul T
@@ -251,7 +333,7 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
   set vl : List (Fin n ⊕ κ → R) := (List.finRange n).map fun a => g (Sum.inl a) with hvl
   set u : κ → (Fin n ⊕ κ → R) := fun j =>
     Sum.elim (fun a => -(M a j)) (c • Pi.single j (1 : R)) with hu
-  set W : Matrix κ κ R := c • D + Xᵀ * B.adjugate * X with hW
+  set W : Matrix κ κ R := c • D + Xᵀ * M with hW
   -- the Pfaffian of T on the index list is the Pfaffian of the form on the basis vectors
   have hPT : pfaffianAux T ((List.finRange n).map Sum.inl ++ q.map Sum.inr) =
       pfaffianAux ω (vl ++ q.map fun j => g (Sum.inr j)) := by
@@ -265,7 +347,8 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
     have := pfaffianAux_reindex ω (fun a => g (Sum.inl a)) _ (List.finRange n) rfl
     have e : (fun a b => ω (g (Sum.inl a)) (g (Sum.inl b))) = B := by
       funext a b
-      exact (skewForm_single T (Sum.inl a) (Sum.inl b)).trans (by simp [hTdef])
+      exact (skewForm_single T (Sum.inl a) (Sum.inl b)).trans (by simp only [hTdef,
+          fromBlocks_apply₁₁])
     rw [e] at this
     exact this
   -- the generators of the tail are combinations of the leading vectors
@@ -275,14 +358,19 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
     rw [List.map_map, ← Fin.sum_univ_def]
     funext x
     rcases x with a | i
-    · simp [hu, hg, Finset.sum_apply, Pi.single_apply]
-    · simp [hu, hg, Finset.sum_apply, Pi.single_apply]
-  have hBM : B * M = c • X := by
-    rw [hM, ← Matrix.mul_assoc, Matrix.mul_adjugate, smul_mul, Matrix.one_mul]
+    · simp only [hu, Sum.elim_inl, hg, Function.comp_apply, neg_smul, Finset.sum_neg_distrib,
+        Pi.add_apply, Pi.smul_apply, ne_eq, reduceCtorEq, not_false_eq_true, Pi.single_eq_of_ne,
+        smul_eq_mul, mul_zero, Pi.neg_apply, Finset.sum_apply, Pi.single_apply, Sum.inl.injEq,
+        mul_ite, mul_one, Finset.sum_ite_eq, Finset.mem_univ, ↓reduceIte, zero_add]
+    · simp only [hu, Sum.elim_inr, Pi.smul_apply, Pi.single_apply, smul_eq_mul, mul_ite, mul_one,
+        mul_zero, hg, Function.comp_apply, neg_smul, Finset.sum_neg_distrib, Pi.add_apply,
+        Sum.inr.injEq, Pi.neg_apply, Finset.sum_apply, reduceCtorEq, ↓reduceIte,
+        Finset.sum_const_zero, neg_zero, add_zero]
   -- the product of T with each tail generator
   have hdot : ∀ (z : Fin n ⊕ κ → R) (i : Fin n ⊕ κ), dotProduct (Pi.single i (1 : R)) z = z i := by
     intro z i
-    simp [dotProduct, Pi.single_apply]
+    simp only [dotProduct, Pi.single_apply, ite_mul, one_mul, zero_mul, Finset.sum_ite_eq',
+        Finset.mem_univ, ↓reduceIte]
   have hl : ∀ k j, (T.mulVec (u j)) (Sum.inl k) = 0 := by
     intro k j
     have e := congrFun (congrFun hBM k) j
@@ -290,19 +378,19 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
     rw [show u j = Sum.elim (fun a => -(M a j)) (c • Pi.single j (1 : R)) from rfl, hTdef,
       Matrix.fromBlocks_mulVec]
     simp only [Sum.elim_inl, Pi.add_apply]
-    simp [Matrix.mulVec, dotProduct, Pi.single_apply]
+    simp only [mulVec, dotProduct, Function.comp_apply, Sum.elim_inl, mul_neg,
+        Finset.sum_neg_distrib, Sum.elim_inr, Pi.smul_apply, Pi.single_apply, smul_eq_mul, mul_ite,
+        mul_one, mul_zero, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte]
     linear_combination (-1 : R) * e
   have hr : ∀ i j, (T.mulVec (u j)) (Sum.inr i) = W i j := by
     intro i j
     rw [show u j = Sum.elim (fun a => -(M a j)) (c • Pi.single j (1 : R)) from rfl, hTdef,
       Matrix.fromBlocks_mulVec]
     simp only [Sum.elim_inr, Pi.add_apply]
-    simp only [Matrix.mulVec, dotProduct, Matrix.neg_apply, Matrix.transpose_apply, hM,
-      Matrix.mul_apply, Function.comp_apply, Sum.elim_inl, mul_neg, neg_mul, neg_neg, Sum.elim_inr,
-      Pi.smul_apply, Pi.single_apply, smul_eq_mul, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
-      Finset.mem_univ, ↓reduceIte, hW, Matrix.add_apply, Matrix.smul_apply]
-    simp only [Finset.mul_sum, Finset.sum_mul, mul_assoc]
-    rw [Finset.sum_comm]
+    simp only [Matrix.mulVec, dotProduct, Matrix.neg_apply, Matrix.transpose_apply,
+      Function.comp_apply, Sum.elim_inl, mul_neg, neg_mul, neg_neg, Sum.elim_inr, Pi.smul_apply,
+      Pi.single_apply, smul_eq_mul, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
+      Finset.mem_univ, ↓reduceIte, hW, Matrix.add_apply, Matrix.smul_apply, Matrix.mul_apply]
     ring
   have hcross : ∀ x ∈ vl, ∀ y ∈ q.map u, ω x y = 0 := by
     intro x hx y hy
@@ -315,7 +403,8 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
     intro i j
     simp only [hω, skewForm, dotProduct, Fintype.sum_sum_type, hl, hr, mul_zero,
       Finset.sum_const_zero, zero_add]
-    simp [hu, Pi.single_apply]
+    simp only [hu, Sum.elim_inr, Pi.smul_apply, Pi.single_apply, smul_eq_mul, mul_ite, mul_one,
+        mul_zero, ite_mul, zero_mul, Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte]
   have s1 := pfaffianAux_append_map_smul ω hsmul hskew c (fun j => g (Sum.inr j)) q vl
   have s2 := pfaffianAux_append_map_of_combination ω hadd hsmul hskew h2 vl
     (fun j => c • g (Sum.inr j)) u
@@ -330,6 +419,18 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
   rw [hPT, ← s1, s2, s3, hPB, ← s4]
   ring
 
+/-- The cleared Schur-complement law of the Pfaffian: no inverse of `B` and no cancellation. -/
+theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R)
+    (X : Matrix (Fin n) κ R) (D : Matrix κ κ R) (hB : Bᵀ = -B) (hD : Dᵀ = -D) (q : List κ)
+    (hq : q.length % 2 = 0) :
+    B.det ^ q.length * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
+        ((List.finRange n).map Sum.inl ++ q.map Sum.inr) =
+      pfaffian B * B.det ^ (q.length / 2) *
+        pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) q := by
+  have h := schur_cleared_of_mul h2 B X D hB hD B.det (B.adjugate * X)
+    (by rw [← Matrix.mul_assoc, Matrix.mul_adjugate, smul_mul, Matrix.one_mul]) q hq
+  rwa [← Matrix.mul_assoc] at h
+
 /-- Over a domain with `2 ≠ 0`, for an alternating `6 × 6` block `B` with nonzero Pfaffian, the
 Pfaffian on four complement indices of `det B • D + Xᵀ * adjugate B * X` is `Pf B ^ 3` times the
 Pfaffian of `T = [[B, X], [-Xᵀ, D]]` on the six leading indices followed by those four. -/
@@ -339,11 +440,14 @@ theorem schur_pfaffian_six [IsDomain R] (h2 : (2 : R) ≠ 0) (B : Matrix (Fin 6)
     pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) [a, b, c, d] =
       pfaffian B ^ 3 * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
         ((List.finRange 6).map Sum.inl ++ [Sum.inr a, Sum.inr b, Sum.inr c, Sum.inr d]) := by
-  have hB : Bᵀ = -B := Matrix.ext fun i j => by simp [hBs j i]
-  have hD : Dᵀ = -D := Matrix.ext fun i j => by simp [hDs j i]
-  have h0 := schur_cleared (mul_right_injective₀ h2) B X D hB hD [a, b, c, d] (by simp)
-  have e2 : [a, b, c, d].length / 2 = 2 := by simp
-  have e1 : [a, b, c, d].length = 4 := by simp
+  have hB : Bᵀ = -B := Matrix.ext fun i j => by simp only [transpose_apply, hBs j i, neg_apply]
+  have hD : Dᵀ = -D := Matrix.ext fun i j => by simp only [transpose_apply, hDs j i, neg_apply]
+  have h0 := schur_cleared (mul_right_injective₀ h2) B X D hB hD [a, b, c, d] (by simp only [
+      List.length_cons, List.length_nil, zero_add, Nat.reduceAdd, Nat.reduceMod])
+  have e2 : [a, b, c, d].length / 2 = 2 := by simp only [List.length_cons, List.length_nil,
+      zero_add, Nat.reduceAdd, Nat.reduceDiv]
+  have e1 : [a, b, c, d].length = 4 := by simp only [List.length_cons, List.length_nil, zero_add,
+      Nat.reduceAdd]
   rw [e2, e1] at h0
   have h : B.det ^ 4 * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
         ((List.finRange 6).map Sum.inl ++ [Sum.inr a, Sum.inr b, Sum.inr c, Sum.inr d]) =

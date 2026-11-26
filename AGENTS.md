@@ -164,6 +164,9 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/CdImaginarySumConference.v` at levels 1 to 6, and `ci/compare_am_exponent.sh` compares
   `Tower.amExponent` with `am_exponent` of `rocq/quantum/CdTowerBasisSign.v` at levels 1 to 6; each
   rejects a mutated Rocq reference, reads no other repository, and runs on demand.
+  `ci/compare_split_tower.sh` compares `ZT.mul` of `rocq/quantum/SplitDoublingTower.v` with
+  `cd_multiply_split` of gororoba-open over the 12 signatures of levels 2 and 3, rejects a negated
+  signature, and needs `GOROROBA_OPEN`, cargo and `rocq-9.3`.
   `ci/compare_anf.sh` compares `Tower.anfCoeff`, `Tower.anfEval` and `Tower.anfDegree` with
   `anf_coef` and `anf_eval` of `rocq/quantum/CdSignRowAnf.v`, `anf_degree` of
   `rocq/quantum/CdAssociatorCensus.v` and with `boolean_anf.anf_coefficients`,
@@ -197,13 +200,17 @@ gororoba repository shares; this file governs where the two differ.
   `nhat_spectral.py` as exact fractions; `ci/compare_pfaffian.sh` compares
   `Matrix.pfaffianAux` with `pf` of `rocq/quantum/Pfaffian.v` over the integers on
   skew and general matrices and permuted, reversed and repeated index lists;
+  `ci/compare_bordered_matrix.sh` compares `PfaffianSixteen.borderedA` and `PfaffianSixteen.rhsv` with `Amat` and `rhs` of
+  `rocq/quantum/StiefelA5Certificate.v`, evaluated through `ev` of `StiefelA5Pfaffian.v`, on 24 seeded integer vectors,
+  and `Matrix.pfaffian` of `PfaffianSixteenSchur.A16` with `P.pf` over the evaluated matrix at three of them;
   `ci/compare_box_kite_census.sh` compares `sed_sign` of
   `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
   pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
   the 4096 ordered triples. Each runs on demand and rejects a mutated reference; the Walsh
   and C_z comparisons need `GOROROBA_QUANTUM` and a built `lean/.lake`, the box-kite and
   header comparisons `GOROROBA_QUANTUM` and the `rocq-9.3` switch, and the Pfaffian
-  comparison, which reads no other repository, both a built `lean/.lake` and `rocq-9.3`.
+  comparisons of the Pfaffian and of the bordered matrix, which read no other repository, both a built `lean/.lake`
+  and `rocq-9.3`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
@@ -328,6 +335,34 @@ gororoba repository shares; this file governs where the two differ.
   Mathlib's standard linter set on (`lean/lakefile.toml`); its header
   linter, which checks Mathlib's copyright and authors header, is off,
   since each file here carries one SPDX line.
+
+## Proof hygiene
+
+- Write each `simp` that is not the last tactic of its goal as the
+  `simp only [...]` that `simp?` prints, so a change of Mathlib's simp set
+  cannot move the proof, and build the result with `--wfail`: `simp?` can
+  omit a simproc (`↓reduceIte`, one of 145 calls pinned on 2026-11-26).
+- Set no option for a whole file. Scope a raised `maxHeartbeats` to one
+  declaration with `set_option ... in` and state its measured count there.
+- Use `decide +kernel` only on a finite table whose docstring states its
+  size and measured cost (`PfaffianSchurBlock.sedSign_eq_sign`: 210 goals,
+  0.54 s). A larger evaluation is a Rocq certificate under the evidence axis
+  above: a Pfaffian memo table check passed a 16 GiB cap before it reached
+  the needed size (single runs, Lean 4.35.0; the Rocq certificate of the
+  same identity compiles in 104 s at 549 MB).
+- Bind a literal table that mirrors a library definition to it by a theorem
+  (`PfaffianCross.octSign_eq_sign`), and confirm that the kernel rejects a
+  copy with one bound entry changed.
+- Prove an identity over every commutative ring in the polynomial ring over
+  `ℤ` and carry it by evaluation, proving each cancelled factor nonzero
+  there (`PfaffianSixteenSchur.pfaffian_A16_poly`).
+- Check an identity by exact computation first and keep the prediction: the
+  bordered sign convention held at 10 of 10 points, its swap at 0 of 9.
+- Replay one module per `leanchecker` call ("Statements and proofs"), and
+  confirm the axiom report of a headline theorem with
+  `ci/check_external_kernels.sh` before `README.md` cites it.
+- Give the body of a commit that changes a proof one sentence of evidence:
+  the build, audit or replay.
 
 ## Rocq sources
 
