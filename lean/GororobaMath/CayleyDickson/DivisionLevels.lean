@@ -16,20 +16,28 @@ Levels 0, 1, 2 and 3 are `R`, the complex pairs, the quaternions and the octonio
 `Tower.dot k x x` is the sum of the squares of the coordinates of `x`
 (`GororobaMath.CayleyDickson.AnnihilatorSymmetry`).
 
-The product is associative exactly up to level 2 and alternative up to level 3 (the existing
-theorems `Tower.associator_eq_zero_of_le_two`, `Tower.left_alternative_of_le_three` and
-`Tower.right_alternative_of_le_three`), and the trace form multiplies up to level 3
-(`Tower.dot_mul_self_of_le_three`), so a product of nonzero elements is nonzero on those levels.
-From level 4 on, `Tower.exists_zero_divisor` gives a zero-divisor pair.
+The product is associative at levels 0 to 2 and alternative at levels 0 to 3 over every commutative
+ring (the existing theorems `Tower.associator_eq_zero_of_le_two`,
+`Tower.left_alternative_of_le_three` and `Tower.right_alternative_of_le_three`), and the trace form
+multiplies up to level 3 (`Tower.dot_mul_self_of_le_three`), so a product of nonzero elements is
+nonzero on those levels over an ordered domain. Two nondegeneracy hypotheses make the levels exact.
+Associativity fails at every level from 3 on only when `2 ≠ 0` (the zero ring and the rings with
+`2 = 0` are associative at every level, where the tower is a group algebra of `(ℤ/2)^k`). A
+zero-divisor pair exists from level 4 on only over a nontrivial ring, `1 ≠ 0`
+(`Tower.exists_zero_divisor`); the zero ring has no nonzero element.
 
 ## Main results
 
 * `Tower.mul_assoc_of_le_two`: `x * y * z = x * (y * z)` at levels 0 to 2.
 * `Tower.exists_mul_assoc_ne_iff`: over a ring with `2 ≠ 0`, some triple fails associativity
   exactly at the levels `k ≥ 3`.
-* `Tower.mul_eq_zero_of_le_three`: over an ordered domain, `x * y = 0` forces `x = 0` or
-  `y = 0` at levels 0 to 3.
+* `Tower.mul_eq_zero_of_le_three`: over a commutative ring with a partial order, ordered addition,
+  no zero divisors and nonnegative squares, `x * y = 0` forces `x = 0` or `y = 0` at levels 0
+  to 3.
 * `Tower.mul_eq_zero_iff_of_le_three`: the same as an equivalence.
+* `Tower.existsUnique_mul_eq_of_le_three`: over an ordered field, for `a ≠ 0` at levels 0 to 3
+  each of `a * x = b` and `y * a = b` has exactly one solution, which is the division property of
+  the real quaternions and octonions.
 -/
 
 @[expose] public section
@@ -74,6 +82,42 @@ theorem mul_eq_zero_iff_of_le_three (hsq : ∀ x : R, 0 ≤ x * x) (hk : k ≤ 3
     (fun hy => by rw [hy, mul_zero])⟩
 
 end Ordered
+
+section Division
+
+variable {K : Type u} [Field K] [StarRing K] [TrivialStar K] [PartialOrder K] [IsOrderedAddMonoid K]
+
+/-- At levels 0 to 3 over an ordered field, for `a ≠ 0` the equations `a * x = b` and
+`y * a = b` each have exactly one solution: the solutions are `(dot a a)⁻¹ • (star a * b)` and
+`(dot a a)⁻¹ • (b * star a)`, and the left and right inverse properties give uniqueness. -/
+theorem existsUnique_mul_eq_of_le_three (hsq : ∀ x : K, 0 ≤ x * x) (hk : k ≤ 3) {a : Tower K k}
+    (ha : a ≠ 0) (b : Tower K k) : (∃! x, a * x = b) ∧ ∃! y, y * a = b := by
+  have hd : dot k a a ≠ 0 := dot_self_ne_zero hsq ha
+  refine ⟨⟨(dot k a a)⁻¹ • (star a * b), ?_, ?_⟩, ⟨(dot k a a)⁻¹ • (b * star a), ?_, ?_⟩⟩
+  · have h := star_mul_mul_of_le_three hk (star a) b
+    rw [star_star, dot_star_star] at h
+    change a * ((dot k a a)⁻¹ • (star a * b)) = b
+    rw [mul_smul_comm', h, smul_smul, inv_mul_cancel₀ hd, one_smul]
+  · intro x hx
+    have hx' : a * x = b := hx
+    have h := normInv_mul_mul_of_le_three hk hd x
+    rw [hx'] at h
+    rw [← h]
+    unfold normInv
+    rw [smul_mul_assoc']
+  · have h := mul_mul_star_of_le_three hk (star a) b
+    rw [star_star, dot_star_star] at h
+    change (dot k a a)⁻¹ • (b * star a) * a = b
+    rw [smul_mul_assoc', h, smul_smul, inv_mul_cancel₀ hd, one_smul]
+  · intro y hy
+    have hy' : y * a = b := hy
+    have h := mul_mul_normInv_of_le_three hk hd y
+    rw [hy'] at h
+    rw [← h]
+    unfold normInv
+    rw [mul_smul_comm']
+
+end Division
 
 end Tower
 
