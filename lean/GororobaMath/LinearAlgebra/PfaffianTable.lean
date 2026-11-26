@@ -16,7 +16,7 @@ only for the stored list itself, so a key collision never yields a wrong entry.
 
 `expand tbl l` computes the Pfaffian polynomial of `l` from the entries of the lists one index
 shorter than the tail of `l`. `checkTbl tbl` requires every stored entry to equal its own
-expansion over stored entries, a test over the keys below `2 ^ 16`. `build N` fills the table
+expansion over stored entries, a traversal of the trie. `build N` fills the table
 for the even-size subsets of the indices `1, ..., N` in increasing key order, so each entry
 finds its children already stored.
 
@@ -57,6 +57,39 @@ def Tr.ins {α : Type} : ℕ → ℕ → α → Tr α → Tr α
       else if k % 2 = 0 then .node (Tr.ins n (k / 2) a l) v r
       else .node l v (Tr.ins n (k / 2) a r)
 
+/-- Whether `f` holds on every stored value. -/
+def Tr.all {α : Type} (f : α → Bool) : Tr α → Bool
+  | .nil => true
+  | .node l v r => (match v with | none => true | some a => f a) && Tr.all f l && Tr.all f r
+
+/-- A value found in a trie satisfies every predicate that holds on the whole trie. -/
+theorem Tr.find_all {α : Type} (f : α → Bool) : ∀ (n : ℕ) (t : Tr α) (k : ℕ) (a : α),
+    t.find n k = some a → t.all f = true → f a = true := by
+  intro n
+  induction n with
+  | zero =>
+    intro t k a h hall
+    cases t with
+    | nil => simp [Tr.find] at h
+    | node l v r =>
+      simp only [Tr.find] at h
+      subst h
+      simp only [Tr.all, Bool.and_eq_true] at hall
+      simpa using hall.1.1
+  | succ n ih =>
+    intro t k a h hall
+    cases t with
+    | nil => simp [Tr.find] at h
+    | node l v r =>
+      simp only [Tr.all, Bool.and_eq_true] at hall
+      obtain ⟨⟨hv, hl⟩, hr⟩ := hall
+      simp only [Tr.find] at h
+      split_ifs at h with h1 h2
+      · subst h
+        simpa using hv
+      · exact ih l _ a h hl
+      · exact ih r _ a h hr
+
 /-- The key bound of a table. -/
 def keyBound : ℕ := 2 ^ 16
 
@@ -96,10 +129,7 @@ def expand : List ℕ → Option Poly
 
 /-- Every stored entry equals its own expansion. -/
 def checkTbl : Bool :=
-  (List.range keyBound).all fun m =>
-    match tbl.find 17 m with
-    | none => true
-    | some e => decide (expand A tbl e.1 = some e.2)
+  tbl.all fun e => decide (expand A tbl e.1 = some e.2)
 
 end Expansion
 
@@ -197,9 +227,7 @@ theorem expand_of_check {tbl : Tr (List ℕ × Poly)} (hc : checkTbl A tbl = tru
     {p : Poly} (hl : lookupP tbl l = some p) : expand A tbl l = some p := by
   obtain ⟨hm, hf⟩ := lookupP_spec hl
   unfold checkTbl at hc
-  rw [List.all_eq_true] at hc
-  have := hc (mask l) (List.mem_range.mpr hm)
-  rw [hf] at this
+  have := Tr.find_all _ 17 tbl (mask l) (l, p) hf hc
   simpa using this
 
 /-- A table that passes `checkTbl` is sound at every list length. -/
