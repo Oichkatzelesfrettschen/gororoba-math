@@ -78,14 +78,6 @@ jobs:
         env:
           ROCQ_SAVE_OBJECTS: ${{ (github.ref == 'refs/heads/main' || inputs.save_objects) && format('{0}/rocq-objects', runner.temp) || '' }}
         run: ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh
-      # The key follows the ports, the installer and the commit, so each green
-      # run adds an entry that the changed-source tier restores by prefix.
-      - name: Save the compiled objects
-        if: github.ref == 'refs/heads/main' || inputs.save_objects
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/rocq-objects
-          key: rocq-objects-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}-${{ github.sha }}
       # One issue per workflow holds its red runs of main; a later red run
       # adds a comment. The step follows the gate and precedes every later
       # step, so it reports a failed gate and nothing else.
@@ -104,3 +96,13 @@ jobs:
           else
             gh issue create --repo "$REPOSITORY" --title "$TITLE" --body "$body"
           fi
+      # The save follows the report and cannot fail the run: a cache error
+      # leaves the changed-source tier without a baseline, and a red run on
+      # main would hold every merge (the main-gate job of quick.yml).
+      - name: Save the compiled objects
+        if: (github.ref == 'refs/heads/main' || inputs.save_objects) && success()
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/rocq-objects
+          key: rocq-objects-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}-${{ github.sha }}

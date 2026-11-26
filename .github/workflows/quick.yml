@@ -15,9 +15,10 @@ name: quick
 # manual dispatch of this workflow runs the jobs quick, build and rocq-changed
 # on a ref. The job rocq-changed compiles the Rocq sources a pull request
 # changes, and those that import them, over the objects that the last green
-# rocq run on main saved (ci/check_rocq.sh --changed): no kernel check, and
-# a skip when no path under rocq/, ci/install_rocq.sh or the scripts of that
-# tier differs from the base. A dispatch compares with origin/main and takes
+# rocq run on main saved (ci/check_rocq.sh --changed), runs the admission scan
+# and the inventory checks, and holds no kernel check; it skips when no path
+# that the tier reads (ci/check_rocq_changed.sh lists them) differs from the
+# base. A dispatch compares with origin/main and takes
 # the input rocq_probe, a tracked source that the job treats as changed.
 on:
   pull_request:
