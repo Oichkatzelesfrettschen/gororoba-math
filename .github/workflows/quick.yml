@@ -121,11 +121,17 @@ jobs:
           sh ci/check_rocq.sh "$@"
         env:
           PROBE: ${{ inputs.rocq_probe }}
+      # A hosted runner stalled this step twice for more than ten minutes
+      # (2026-11-26, workflow_dispatch runs); the step timeout and the apt
+      # timeouts turn a stall into a failure of this job within minutes.
       - name: Install system packages
         if: steps.plan.outputs.touched == 'true'
+        timeout-minutes: 8
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update -qq
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
       # The key is that of rocq.yml, which saves the switch.
       - name: Restore the opam switch
         if: steps.plan.outputs.touched == 'true'
