@@ -39,12 +39,14 @@ Consequence: the floor of a Rocq check on a hosted runner is the system packages
 ## Design
 
 - Decision. `ci/check_rocq_changed.sh` compares the git blob of every path of `rocq/` and of `ci/install_rocq.sh` at HEAD with the manifest saved beside the objects.
-- Saved tree. After a green gate on `main` (push, nightly) or a dispatch with `save_objects`, `ci/check_rocq.sh` copies the `.vo`, `.glob` and `.aux` files, the manifest and the switch identity (Rocq version and the md5 of `ltac_plugin.cmxs`) into one directory; rocq.yml saves it under `rocq-objects-<hash of the ports and installer>-<sha>`, and the quick job restores the newest entry of that prefix.
-- Incremental compile. The saved objects are laid over an export of HEAD, every file but the changed sources is dated 2000-01-01, and `make` compiles the changed sources and the sources that import them, with the `_RocqProject` options, then the warning ratchet reads the logs with `--new-only`.
+- Saved tree. After a green gate on `main` (push, nightly) or a dispatch with `save_objects`, `ci/check_rocq.sh` copies the `.vo`, `.glob` and `.aux` files of the four project directories, the manifest and the switch identity (Rocq version and the md5 of `ltac_plugin.cmxs`) into one directory and checks the copy against its list; rocq.yml saves it, after its report step and without failing the run, under `rocq-objects-<hash of the ports and installer>-<sha>`, and the quick job restores the newest entry of that prefix.
+- Incremental compile. The saved objects are laid over an export of HEAD; every object is dated to the restore and every other file 2000-01-01, so that no saved clock matters (objects older than the library objects of the switch rebuild, measured locally); the objects of each changed source are deleted and the source touched; `make` compiles the changed sources and the sources that import them, with the `_RocqProject` options; each changed source's object must then be newer than a stamp taken before the build; the warning check reads the logs with `--new-only`.
 - Trees. rocq/open runs when one of its project sources changed; rocq/quantum when one of its sources or rocq/open changed; rocq/delegation when one of its sources changed.
-- Fail closed to a full compile: no saved tree, a different switch identity, a deleted path, a changed `_RocqProject`, `Makefile`, `rocq/open/opam/` path or `ci/install_rocq.sh`.
-- Skip: no path of `rocq/` and not `ci/install_rocq.sh` differs between the base and HEAD.
-- Left to the dispatched and nightly rocq workflow: the kernel check, the axiom ledgers, the sources outside the project files, the inventory checks, the evidence calibration and the plugin and extraction targets.
+- Sources outside the project files. A group of checkpoint, test or extraction sources compiles with the flags of its `make` target when a path of its directory changed or when it names a rebuilt module (a textual match); a full compile runs every group, so that the warning check without `--new-only` sees every source the allow-list names.
+- Checks of every run that the tier reads a path for: export equal to the tree (`.gitattributes`), the lists of sources outside the project files and the delegation inventory check (shared with the gate in `ci/rocq_inventory.sh`), the admission scan of the three trees, and the assumption scan of the changed sources against `kernel-assumptions.txt`.
+- Fail closed to a full compile: no saved tree, an empty, unreadable or different switch identity, a deleted path, a changed `_RocqProject`, `Makefile`, `rocq/open/opam/` path or `ci/install_rocq.sh`, or a changed warning parser or list.
+- Skip: none of the paths that the tier reads differs between the base and HEAD (`touched_paths` of the script lists them).
+- Left to the full rocq workflow (every push to main, nightly, dispatch): the kernel check and the axiom ledgers, the evidence calibration, the mutation harnesses and kernel check of check-schur-geometry, and the sources held uncompiled; `AGENTS.md` ("Landing") gives each with its worst-case time on main.
 
 ## Measured times of the tier
 
@@ -63,8 +65,8 @@ Reading.
 - Without a saved tree the job compiles every source: 786 s (jobs=4), plus 926 s to install the switch when no cache holds one.
 - The pull request run reads caches of `main` only. `main` held no opam switch entry at 2026-11-26 06:37 (the entry sat on lean/pfaffian-16), and `rocq-objects` entries are saved on main only by a rocq run there, so pull requests run the fallback until the first rocq run on main after the merge.
 - The skip path (no touched path) is checked locally and by the calibration case "HEAD against itself"; no hosted run of it is recorded.
-- The tier runs no `rocq check`, no admission scan, no inventory check and compiles no source outside the project files.
+- These three runs measured the first version of the tier, which ran no `rocq check`, no admission scan and no inventory check and compiled no source outside the project files; the version below adds the scans, the checks and the outside sources, and its times follow.
 
 ## Calibration
 
-Each run checks the decision on seven synthetic manifests, requires HEAD against itself to report skip, and compiles a two-source fixture: the known-good build passes, a broken proof in the dependent source fails, and the object of the unchanged source stays older than the edit.
+Each run checks the decision on seven synthetic manifests, an absent baseline, HEAD against itself and an assumption scan on a synthetic source, including the skip and `--plan` paths. A run that compiles also builds a three-source fixture, saves its objects with the save routine, dates them 2099 and restores them over a fresh export three times: a changed Base.v rebuilds Dependent.v and leaves Other.v, a Base.v change that breaks Dependent.v fails, and a broken proof fails; the admission scan must reject an `Admitted` fixture.

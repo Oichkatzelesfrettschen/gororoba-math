@@ -519,59 +519,79 @@ merges on the quick tier and the full gates catch the rest).
     the axiom audit runs; without a saved tree it compiles every module
     (342 s measured).
   - `rocq-changed` runs `sh ci/check_rocq.sh --changed` on a pull request
-    that changes a path under `rocq/`, `ci/install_rocq.sh` or a script of
-    the tier: it compiles the changed Rocq sources and the sources that
-    import them, with the `_RocqProject` options and the warning-pair
-    check, over the objects that the last green `rocq` run on `main`
-    saved: 11 s for a leaf source, 490 s for the root of `rocq/open`
-    with 236 dependents, 786 s for every source (measured 2026-11-26,
-    `docs/archive/measurements/rocq-changed-source-tier.md`). A pull
-    request that leaves those paths unchanged reports skip with its reason;
-    without a saved tree, or after a change to a project file, a Makefile,
-    the opam ports, a deleted source or `ci/install_rocq.sh`, the job
-    compiles every source.
+    that changes a path the tier reads (`rocq/`, `ci/install_rocq.sh`, the
+    Rocq gate scripts and warning lists, the evidence producer, the
+    generators of `ci/quantum-sources/` and `ci/delegation-sources/`, a
+    `.gitattributes` file). Every run checks the export of `HEAD` against
+    its tree, scans the three trees for `Admitted` and `admit`, checks
+    that a changed project source declares no `Axiom`, `Parameter`,
+    `Conjecture` or top-level `Hypothesis` that its tree's
+    `kernel-assumptions.txt` omits (a textual check, whose limits sit in
+    `ci/rocq-declared-axioms.awk`; `rocq check` stays the authority), runs
+    the inventory checks of `ci/check_rocq.sh` that need no compile, and
+    calibrates itself. It compiles the changed Rocq sources and the sources
+    that import them, with the `_RocqProject` options and the warning-pair
+    check, over the objects that the last green `rocq` run on `main` saved,
+    and compiles the checkpoints, tests and extraction sources outside the
+    project files that name a recompiled module. A change to the warning
+    parser or its lists, to a project file, a Makefile, the opam ports,
+    `ci/install_rocq.sh`, a deleted source, or a missing or foreign saved
+    tree compiles every source and runs the warning check without
+    `--new-only`. A pull request that changes no path the tier reads
+    reports skip with its reason (measured times:
+    `docs/archive/measurements/rocq-changed-source-tier.md`).
   - `main-gate` fails a pull request while the latest completed `lean` or
     `rocq` run on `main` is not a success (a cancelled or skipped run is
-    no verdict), so `main` is repaired before another merge; a pull
-    request whose own head is green in both full workflows passes it, which
-    lets the repair merge. `main` has no branch protection, so the red
-    check and this rule are what stops a merge.
-- The quick tier does not run the kernel replay of Lean (`leanchecker`),
-  the kernel re-check of Rocq (`rocq check`) and its axiom ledgers, the
-  admission scanner of `rocq/open`, the inventory checks of
-  `ci/check_rocq.sh`, or the compile of the Rocq sources outside the
-  project files (`rocq/open/checkpoints`, `extraction` and `tests`),
-  among them the checkpoints that import a changed `theories` source. A
-  Lean module outside the import closure of a changed module is not built,
-  since its object cannot change; a Rocq source outside the closure of a
-  changed source likewise. A change that only the omitted checks reject
-  reaches `main` and turns the next full run red.
+    no verdict); a pull request whose own head is green in both full
+    workflows passes it, which lets a repair merge. `main` has no branch
+    protection, so this check is the whole rule. It runs at pull-request
+    events and reads completed runs only: a merge can land while a push run
+    on `main` is still in progress, and a run that turns red later does
+    not re-evaluate the check of an open pull request until that check is
+    run again. Before `gh pr merge`, read the runs of `main` with
+    `gh run list --branch main --workflow lean.yml --limit 3` and the same
+    for `rocq.yml`, and wait for the repair when the newest run with a
+    verdict is red (a checklist line, chosen over a `workflow_run` job
+    because it adds no merge latency and no workflow).
 - The `lean` workflow runs `sh ci/check.sh` and the `rocq` workflow
   `sh ci/check_rocq.sh`, the full gate: nightly on `main`, on every push
   to `main`, and on manual dispatch (`gh workflow run lean.yml --ref
-  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is therefore
-  fully gated within one push run, which takes 15 to 49 minutes for `lean`
-  and 67 minutes for `rocq` (hosted runs of 2026-11-25, queue time
-  included); a push run that a newer push replaces while it waits reads
-  cancelled, so only the last commit of a burst of merges is gated. The
-  `rocq` runs of a push and of a dispatch set `ROCQ_CHECK_VM=1`, under
-  which `rocq check` converts with the bytecode machine the compiler used;
-  the nightly run, and a dispatch with `-f kernel=pure`, re-check with the
-  checker's own reduction (owner, 2026-11-23: one certificate re-checks in
-  73 s against 1,902 s). A source whose proof holds a new `vm_compute`
-  certificate is fully gated after a green nightly or pure dispatch. A red
-  run on `main` opens the issue "The lean gate is red on main" or "The rocq
-  gate is red on main", or adds a comment to it, and `main-gate` holds
-  further merges.
+  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is fully gated
+  within one push run, which took 15 to 49 minutes for `lean` and 67
+  minutes for `rocq` (hosted runs of 2026-11-25, queue time included); a
+  push run that a newer push replaces while it waits reads cancelled, so
+  only the last commit of a burst of merges is gated. The `rocq` runs of a
+  push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`
+  converts with the bytecode machine the compiler used; the nightly run, and
+  a dispatch with `-f kernel=pure`, re-check with the checker's own
+  reduction (owner, 2026-11-23: one certificate re-checks in 73 s against
+  1,902 s). A red run on `main` opens the issue "The lean gate is red on
+  main" or "The rocq gate is red on main", or adds a comment to it, and
+  `main-gate` holds further merges at the next pull-request event.
+- The quick tier leaves these checks to a later run. A change that only one
+  of them rejects reaches `main` and turns that run red.
+
+  | Check | Caught by | Stays on `main` at most |
+  |---|---|---|
+  | Lean kernel replay (`leanchecker`) | `lean` push run | 49 min |
+  | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 67 min |
+  | `vm_compute` certificate that only the pure kernel rejects | `rocq` nightly run | 24 h |
+  | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 67 min |
+  | Mutation harnesses and kernel check of `check-schur-geometry` | `rocq` push run | 67 min |
+  | Sources held uncompiled (CertiRocq targets) | no run compiles them | indefinitely |
+  | Generated-source drift (`ci/check_quantum_sources.sh`, `ci/check_delegation_sources.sh`, `hilbert_cell_certificate.py --check`) | no scheduled run; run them on demand | indefinitely |
+  | A stale row of `ci/rocq-warnings/allowed.tsv` after a source change | `rocq` push run | 67 min |
+  | An unchanged Lean module outside the import closure of a changed one | cannot change; no run is needed | none |
+
 - A pull request that adds a `vm_compute` certificate, or changes `ci/`, a
   workflow, the toolchain or a `_RocqProject`, may be dispatched by hand
   on its head (`lean.yml` for a change under `lean/`, `rocq.yml` for one
   under `rocq/`, both for the others) before the merge. The head of a pull
   request from a fork is pushed by a maintainer to a branch of this
   repository and dispatched there, so code from a fork runs with this
-  repository's caches only after a maintainer read it. The kernel replay of
-  Lean and the Rocq kernel re-check run only nightly, on a push to `main`
-  and on dispatch.
+  repository's caches only after a maintainer read it. A dispatch of
+  `rocq.yml` with `-f save_objects=true` saves the objects of its branch,
+  which a dispatch of `quick.yml` on that branch restores.
 - A commit of `main` is fully gated when its `lean` and `rocq` runs are
   green; a record that cites a proof by commit and digest names such a
   commit.
