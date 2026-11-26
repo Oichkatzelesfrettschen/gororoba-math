@@ -101,6 +101,11 @@ open ZeroEight in
 theorem genMat_transpose : ∀ i : Fin 8, (genMat i)ᵀ = -genMat i := by decide +kernel
 
 open ZeroEight in
+/-- Each table of the units `e_(k + 1)` squares to `-1`. -/
+theorem genMatR_sq (k : Fin 8) : genMatR R k * genMatR R k = -1 := by
+  simp only [genMatR, ← map_mul, genMat_sq k, map_neg, map_one]
+
+open ZeroEight in
 /-- The Gram operator of the sedenion unit pair `e_(i + 1) + ι e_(j + 1)`, `i ≠ j`. -/
 theorem genMat_gram (ι : R) (hι : ι * ι = -1) {i j : Fin 8} (h : i ≠ j) :
     ((genMatR R i)ᵀ - ι • (genMatR R j)ᵀ) * (genMatR R i + ι • genMatR R j) =
@@ -111,11 +116,16 @@ theorem genMat_gram (ι : R) (hι : ι * ι = -1) {i j : Fin 8} (h : i ≠ j) :
     simp only [genMatR, RingHom.mapMatrix_apply, Matrix.transpose_apply, Matrix.map_apply,
       Matrix.neg_apply] at hk ⊢
     rw [hk, map_neg]
-  have hsq : ∀ k : Fin 8, genMatR R k * genMatR R k = -1 := fun k => by
-    simp only [genMatR, ← map_mul, genMat_sq k, map_neg, map_one]
-  refine gram_eq _ _ ι hι (hsk i) (hsk j) (hsq i) (hsq j) ?_
+  refine gram_eq _ _ ι hι (hsk i) (hsk j) (genMatR_sq i) (genMatR_sq j) ?_
   have hanti := eq_neg_of_add_eq_zero_left (genMat_anti i j h)
   simp only [genMatR, ← map_mul]
   rw [hanti, map_neg]
+
+/-- The kernel of `e_(i + 1) + ι e_(j + 1)` on the coordinates of the sedenions is the fixed
+space of `ι L_i L_j`. -/
+theorem genMat_mulVec_eq_zero_iff (ι : R) (i j : Fin 8) (v : Fin 16 → R) :
+    (genMatR R i + ι • genMatR R j) *ᵥ v = 0 ↔
+      (ι • (genMatR R i * genMatR R j)) *ᵥ v = v :=
+  mulVec_eq_zero_iff _ _ ι (genMatR_sq i) v
 
 end Clifford.AnticommutingPair
