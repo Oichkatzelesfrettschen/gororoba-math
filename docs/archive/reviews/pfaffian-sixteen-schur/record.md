@@ -20,8 +20,9 @@ d01c104d8, then the Advisor.
 | 7 | agy, defect 2 | one commit body line exceeds 72 columns (d01c104d8) | Boundary: a pushed commit keeps its bytes |
 | 8 | agy, defect 3 | `pfaffianAux_eight_indices` expands the six-index Pfaffians before `ring` | Boundary: a cost of seconds at compile time, no effect on the statement |
 | 9 | agy, hygiene review | the rules on table mutation and on the exact pre-check are not enforced by a gate | Boundary: both ran for this pull request outside the tree; a gate for them is open work |
-| 10 | Advisor | `borderedA` and `rhsv` mirror `Amat` and `rhs` of the Rocq trees, and no comparison under `ci/` runs both | Boundary: both reviewers matched the definitions by reading; the comparison lands with the transport to `Tower.czMatrix` (issue 99 step 4), which `ci/compare_cz_matrix.sh` covers |
+| 10 | Advisor | `borderedA` and `rhsv` mirror `Amat` and `rhs` of the Rocq trees, and no comparison under `ci/` runs both | Fixed in 88a5f68a6: `ci/compare_bordered_matrix.sh` compares them on 24 seeded integer vectors and rejects two mutated Rocq references |
 | 11 | axiom tests | ledger row C-1128 quotes "Constructive proof" while its Lean theorems use `Classical.choice` | Fixed: the row's note states that the Lean proofs are classical and exhibit the witness |
+| 12 | hosted Codex at 059817e6e | P1: a definition that both provers hold lands with a comparison under `ci/` that runs both on the same inputs | Fixed in 88a5f68a6: `ci/compare_bordered_matrix.sh` (entry-by-entry equality of the 256 matrix entries and the right-hand side, and of `Matrix.pfaffian` with `P.pf` and `rhs` at three seeds) |
 
 ## Axioms
 
