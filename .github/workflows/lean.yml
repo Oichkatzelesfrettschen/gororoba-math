@@ -4,9 +4,9 @@ name: lean
 # warnings as errors, the axiom audit accepts it and rejects its known-bad
 # fixture, and leanchecker replays every module. It runs nightly on main, on every push to main and
 # on manual dispatch on a named ref (gh workflow run lean.yml --ref BRANCH),
-# which a pull request that touches lean/ or a gate script gets once on its
-# final head before the merge (AGENTS.md, "Landing"). The quick workflow runs
-# the checks without a build on every pull request.
+# which a pull request that changes the toolchain or a gate script may get by
+# hand (AGENTS.md, "Landing"). The quick workflow builds the changed modules
+# on every pull request.
 on:
   schedule:
     - cron: "17 9 * * *"

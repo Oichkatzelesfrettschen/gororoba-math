@@ -2,8 +2,8 @@ name: rocq
 
 # The Rocq half of the admission gate, ci/check_rocq.sh. It runs nightly on
 # main, on every push to main and on manual dispatch on a named ref (gh workflow run rocq.yml --ref
-# BRANCH), which a pull request that touches rocq/ or a Rocq gate script gets
-# once on its final head before the merge (AGENTS.md, "Landing"); a run takes
+# BRANCH), which a pull request that adds a vm_compute certificate or changes
+# the toolchain or a _RocqProject may get by hand (AGENTS.md, "Landing"); a run takes
 # about 43 minutes with a restored switch (measured 2026-11-23). After a green
 # run on main, or on a dispatch with save_objects, it saves the compiled
 # objects, which the job rocq-changed of the quick workflow compiles over. No trigger

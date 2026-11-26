@@ -469,56 +469,73 @@ Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
 commit, run `sh ci/check.sh`, and `sh ci/check_rocq.sh` when the change
 touches `rocq/` or the Rocq scripts, and land by pull request, merged by
 merge commit so that an imported history stays, with the review chain of
-the workspace guide ("Reviews and merges"). The gate runs in two tiers (owner, 2026-11-23: the checks of a push stay
-near ten seconds each and long checks run nightly, on `main` or by hand).
+the workspace guide ("Reviews and merges"). The gate runs in two tiers
+(owner, 2026-11-23: the checks of a push stay near ten seconds each and long
+checks run nightly, on `main` or by hand; owner, 2026-11-25: a pull request
+merges on the quick tier and the full gates catch the rest).
 
-- The `quick` workflow runs on every pull request and every push to
-  `main`. Its job `quick` runs `sh ci/check.sh --quick` (the lints, the
-  headline registry and the claims ledger, no build; 11 s measured). Its
-  job `build` restores the Lean build tree that the last green gate on
-  `main` saved and runs `sh ci/check.sh --build`: the changed modules and
-  the modules that import them compile with warnings as errors, the axiom
-  audit runs, and the kernel replay does not; without a saved tree it
-  compiles every module (342 s measured). Its job `rocq-changed` runs
-  `sh ci/check_rocq.sh --changed` on a pull request that changes a path
-  under `rocq/`, `ci/install_rocq.sh` or the scripts of the tier: it compiles the changed Rocq
-  sources and the sources that import them, with the `_RocqProject` options
-  and the warning-pair ratchet, over the objects that the last green `rocq`
-  run on `main` saved, and runs no kernel check (measured times:
-  `docs/archive/measurements/rocq-changed-source-tier.md`). A pull request
-  that leaves those paths unchanged reports skip with its reason; without a saved tree, or
-  after a change to a project file, a Makefile, the opam ports, a deleted
-  source or `ci/install_rocq.sh`, the job compiles every source. Its job
-  `main-gate` fails a pull request while the latest completed `lean` or `rocq` run on `main` is
-  not a success (a cancelled or skipped run is no verdict), so `main` is
-  repaired before another merge; a pull request whose own head is green in
-  both full workflows passes it, which lets the repair merge. `main` has
-  no branch protection, so the red check and this rule are what stops a
-  merge.
+- A pull request merges with the `quick` workflow green. The workflow runs
+  on every pull request and every push to `main`, in four jobs.
+  - `quick` runs `sh ci/check.sh --quick`: the lints, the headline
+    registry and the claims ledger, no build (11 s measured).
+  - `build` restores the Lean build tree that the last green gate on
+    `main` saved and runs `sh ci/check.sh --build`: the changed modules
+    and the modules that import them compile with warnings as errors and
+    the axiom audit runs; without a saved tree it compiles every module
+    (342 s measured).
+  - `rocq-changed` runs `sh ci/check_rocq.sh --changed` on a pull request
+    that changes a path under `rocq/`, `ci/install_rocq.sh` or a script of
+    the tier: it compiles the changed Rocq sources and the sources that
+    import them, with the `_RocqProject` options and the warning-pair
+    check, over the objects that the last green `rocq` run on `main`
+    saved (measured times:
+    `docs/archive/measurements/rocq-changed-source-tier.md`). A pull
+    request that leaves those paths unchanged reports skip with its reason;
+    without a saved tree, or after a change to a project file, a Makefile,
+    the opam ports, a deleted source or `ci/install_rocq.sh`, the job
+    compiles every source.
+  - `main-gate` fails a pull request while the latest completed `lean` or
+    `rocq` run on `main` is not a success (a cancelled or skipped run is
+    no verdict), so `main` is repaired before another merge; a pull
+    request whose own head is green in both full workflows passes it, which
+    lets the repair merge. `main` has no branch protection, so the red
+    check and this rule are what stops a merge.
+- The quick tier does not run the kernel replay of Lean (`leanchecker`),
+  the kernel re-check of Rocq (`rocq check`) and its axiom ledgers, the
+  admission scanner of `rocq/open`, the inventory checks of
+  `ci/check_rocq.sh`, or the compile of the Rocq sources outside the
+  project files (`rocq/open/checkpoints`, `extraction` and `tests`),
+  among them the checkpoints that import a changed `theories` source. A
+  Lean module outside the import closure of a changed module is not built,
+  since its object cannot change; a Rocq source outside the closure of a
+  changed source likewise. A change that only the omitted checks reject
+  reaches `main` and turns the next full run red.
 - The `lean` workflow runs `sh ci/check.sh` and the `rocq` workflow
   `sh ci/check_rocq.sh`, the full gate: nightly on `main`, on every push
   to `main`, and on manual dispatch (`gh workflow run lean.yml --ref
-  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). The `rocq` runs of a
-  push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`
-  converts with the bytecode machine the compiler used; the nightly run,
-  and a dispatch with `-f kernel=pure`, re-check with the checker's own
-  reduction (owner, 2026-11-23: one certificate re-checks in 73 s against
-  1,902 s). A source whose proof holds a new `vm_compute` certificate is
-  fully gated after a green nightly or pure dispatch. A red run on `main`
-  opens the issue "The lean gate is red on main" or "The rocq gate is red
-  on main", or adds a comment to it.
-- A pull request that touches `lean/`, `rocq/`, `ci/` or a workflow
-  stays a draft while it changes. On its final head `lean.yml` is
-  dispatched for a change under `lean/`, `rocq.yml` for one under
-  `rocq/` or of a `.gitattributes` file, and both for one under `ci/` or
-  a workflow, and it merges with those runs green. The head of a pull
+  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is therefore
+  fully gated within one push run, which takes 15 to 49 minutes for `lean`
+  and 67 minutes for `rocq` (hosted runs of 2026-11-25, queue time
+  included); a push run that a newer push replaces while it waits reads
+  cancelled, so only the last commit of a burst of merges is gated. The
+  `rocq` runs of a push and of a dispatch set `ROCQ_CHECK_VM=1`, under
+  which `rocq check` converts with the bytecode machine the compiler used;
+  the nightly run, and a dispatch with `-f kernel=pure`, re-check with the
+  checker's own reduction (owner, 2026-11-23: one certificate re-checks in
+  73 s against 1,902 s). A source whose proof holds a new `vm_compute`
+  certificate is fully gated after a green nightly or pure dispatch. A red
+  run on `main` opens the issue "The lean gate is red on main" or "The rocq
+  gate is red on main", or adds a comment to it, and `main-gate` holds
+  further merges.
+- A pull request that adds a `vm_compute` certificate, or changes `ci/`, a
+  workflow, the toolchain or a `_RocqProject`, may be dispatched by hand
+  on its head (`lean.yml` for a change under `lean/`, `rocq.yml` for one
+  under `rocq/`, both for the others) before the merge. The head of a pull
   request from a fork is pushed by a maintainer to a branch of this
-  repository and dispatched there. The job `head-gate` of the `quick` workflow holds the
-  rule: on a pull request that is not a draft it fails until
-  `gh run list --workflow lean.yml --commit SHA` (or `rocq.yml`) shows a
-  green run of each required workflow; re-run it when they finish. The kernel replay of Lean, every Rocq
-  re-check and the Rocq compile outside the changed-source tier run only
-  in that dispatch.
+  repository and dispatched there, so code from a fork runs with this
+  repository's caches only after a maintainer read it. The kernel replay of
+  Lean and the Rocq kernel re-check run only nightly, on a push to `main`
+  and on dispatch.
 - A commit of `main` is fully gated when its `lean` and `rocq` runs are
   green; a record that cites a proof by commit and digest names such a
   commit.
