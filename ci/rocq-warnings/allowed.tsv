@@ -841,6 +841,8 @@ quantum	SignBridge.v	disj-pattern-notation
 quantum	SplitDoublingTower.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	SplitDoublingTower.v	disj-pattern-notation
 quantum	SplitDoublingTower.v	using-fallback-loc
+quantum	SplitTowerStandardBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	SplitTowerStandardBridge.v	disj-pattern-notation
 quantum	StiefelA5Certificate.v	bad-template-constraint
 quantum	StiefelA5Certificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	StiefelA5Certificate.v	disj-pattern-notation
