@@ -23,8 +23,8 @@ the coordinates of `x`, and a unit-norm octonion is an element with `dot 3 x x =
 the operations is automatic. Mathlib v4.35.0 defines no loop.
 
 The Agda partner is `agda/src/GororobaMath/CayleyDickson/OctonionMoufangLoop.agda`, theorem
-`isMoufangLoop`, of draft pull request 137 (branch `agda/pilot-moufang-loop`), which proves the
-same packaging with agda-stdlib's structure.
+`isMoufangLoop`, which proves the same packaging with agda-stdlib's structure and runs on demand
+through `ci/check_agda.sh`.
 
 ## Main results
 
