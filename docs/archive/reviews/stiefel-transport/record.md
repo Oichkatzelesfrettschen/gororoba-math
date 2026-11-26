@@ -22,3 +22,14 @@ Branch lean/stiefel-transport. Heads: d69e83b09 under local review, b7f1115f5 af
 
 ## Validation on b7f1115f5
 - lake build --wfail of PureDoublingTransport and StiefelZeroDivisor: exit 0 (workstation, Lean 4.35.0, Mathlib v4.35.0); axioms within propext, Classical.choice, Quot.sound; leanchecker replay exit 0.
+
+## Hosted Codex round (head 3450fb102)
+| Finding | Class | Resolution |
+|---|---|---|
+| P1: Tower.phi duplicates StiefelTransport.phi of rocq/quantum/StiefelA5Transport.v (psi at -ι) with no cross-prover comparison under ci/, which AGENTS.md requires for a definition both provers hold | read from source (AGENTS.md) | Fixed in 500ae3e3c: ci/compare_transport.sh agrees on 1,536 coordinates over ZMod 998244353 on 24 seeded triples and rejects two mutated Rocq references |
+
+## Owner-approved guide change
+The owner approved the AGENTS.md entry for ci/compare_transport.sh and asked for the provers each on-demand check needs (Lean, Rocq, Agda); bef11c696 adds that table, read from each script's tool list.
+
+## Merge
+After the Advisor and the Codex round; main's latest lean and rocq runs read before the merge.
