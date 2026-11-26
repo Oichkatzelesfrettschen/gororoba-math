@@ -65,6 +65,7 @@ public import GororobaMath.LinearAlgebra.Pfaffian
 public import GororobaMath.LinearAlgebra.PfaffianForm
 public import GororobaMath.LinearAlgebra.PfaffianBlock
 public import GororobaMath.LinearAlgebra.BorderedKernel
+public import GororobaMath.LinearAlgebra.PfaffianSixteen
 public import GororobaMath.FiberCone.Basic
 public import GororobaMath.FiberCone.SeparatingOrder
 public import GororobaMath.CayleyDickson.ImaginarySquare
@@ -83,3 +84,7 @@ public import GororobaMath.CayleyDickson.E8ConjugationIdeal
 public import GororobaMath.CayleyDickson.E8ConjugationIdealEval
 public import GororobaMath.EisenbudGoto.MinimalMultiplicity
 public import GororobaMath.CayleyDickson.DivisionLevels
+public import GororobaMath.LinearAlgebra.PfaffianCross
+public import GororobaMath.LinearAlgebra.PfaffianSchur
+public import GororobaMath.LinearAlgebra.PfaffianSchurBlock
+public import GororobaMath.LinearAlgebra.PfaffianSixteenSchur

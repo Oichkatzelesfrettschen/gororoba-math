@@ -41,6 +41,8 @@ arguments: `hadd` and `hsmul` (linearity in the first argument) and `hskew` (`ω
   `l.Nodup` with `LinearIndepOn K id {x | x ∈ l}`.
 * `Matrix.pfaffianAux_reindex`: the Pfaffian of pulled-back entries is the Pfaffian on the image
   list.
+* `Matrix.pfaffianAux_congr`: the Pfaffian on a list depends only on the entries at pairs of its
+  members.
 * `Matrix.exists_vecMul_eq_zero_of_pfaffian_eq_zero`,
   `Matrix.exists_mulVec_eq_zero_of_pfaffian_eq_zero`: a skew matrix over a field with `2 ≠ 0`
   and zero Pfaffian has a nonzero kernel vector.
@@ -75,7 +77,7 @@ omit [AddCommGroup V] [Module R V] in
 private theorem move_head (ω : V → V → R) (hskew : ∀ x y, ω x y = -ω y x) (pre : List V)
     (y : V) (rest : List V) :
     pfaffianAux ω (pre ++ y :: rest) = (-1) ^ pre.length * pfaffianAux ω (y :: (pre ++ rest)) := by
-  simpa using pfaffianAux_move_left ω hskew [] pre y rest
+  simpa only [List.nil_append] using pfaffianAux_move_left ω hskew [] pre y rest
 
 omit [Module R V] in
 /-- The Pfaffian of a skew form is additive in the entry at any position. -/
@@ -127,16 +129,21 @@ private theorem map_transvect_aux (ω : V → V → R) (hadd : ∀ x y z, ω (x 
     pfaffianAux ω (v :: w :: (done.map (fun u => (u + α u • v) + β u • w) ++ todo)) =
       pfaffianAux ω (v :: w :: (done ++ todo)) := by
   induction done using List.reverseRecOn generalizing todo with
-  | nil => simp
+  | nil => simp only [List.map_nil, List.nil_append]
   | append_singleton done d ih =>
-    have hv : v ∈ (v :: w :: done.map (fun u => (u + α u • v) + β u • w)) ++ todo := by simp
-    have hw : w ∈ (v :: w :: done.map (fun u => (u + α u • v) + β u • w)) ++ todo := by simp
+    have hv : v ∈ (v :: w :: done.map (fun u => (u + α u • v) + β u • w)) ++ todo := by simp only [
+        List.cons_append, List.mem_cons, List.mem_append, List.mem_map, true_or]
+    have hw : w ∈ (v :: w :: done.map (fun u => (u + α u • v) + β u • w)) ++ todo := by simp only [
+        List.cons_append, List.mem_cons, List.mem_append, List.mem_map, true_or, or_true]
     have e1 : v :: w :: ((done ++ [d]).map (fun u => (u + α u • v) + β u • w) ++ todo) =
         (v :: w :: done.map (fun u => (u + α u • v) + β u • w)) ++
-          ((d + α d • v) + β d • w) :: todo := by simp
+          ((d + α d • v) + β d • w) :: todo := by simp only [List.map_append, List.map_cons,
+              List.map_nil, List.append_assoc, List.cons_append, List.nil_append]
     have e3 : v :: w :: (done.map (fun u => (u + α u • v) + β u • w) ++ d :: todo) =
-        (v :: w :: done.map (fun u => (u + α u • v) + β u • w)) ++ d :: todo := by simp
-    have e4 : v :: w :: (done ++ d :: todo) = v :: w :: ((done ++ [d]) ++ todo) := by simp
+        (v :: w :: done.map (fun u => (u + α u • v) + β u • w)) ++ d :: todo := by simp only [
+            List.cons_append]
+    have e4 : v :: w :: (done ++ d :: todo) = v :: w :: ((done ++ [d]) ++ todo) := by simp only [
+        List.append_assoc, List.cons_append, List.nil_append]
     rw [e1, pfaffianAux_append_add_smul_of_mem ω hadd hsmul hskew hreg _ _ w _ _ hw,
       pfaffianAux_append_add_smul_of_mem ω hadd hsmul hskew hreg _ _ v _ _ hv, ← e3, ih, e4]
 
@@ -148,7 +155,7 @@ theorem pfaffianAux_cons_cons_map_transvect (ω : V → V → R)
     (rest : List V) :
     pfaffianAux ω (v :: w :: rest.map (fun u => (u + α u • v) + β u • w)) =
       pfaffianAux ω (v :: w :: rest) := by
-  simpa using map_transvect_aux ω hadd hsmul hskew hreg v w α β rest []
+  simpa only [List.append_nil] using map_transvect_aux ω hadd hsmul hskew hreg v w α β rest []
 
 omit [AddCommGroup V] [Module R V] in
 /-- Reindexing: the Pfaffian of the pulled-back entries `A (g a) (g b)` on a list is the Pfaffian
@@ -164,14 +171,38 @@ theorem pfaffianAux_reindex {ι κ : Type*} (A : ι → ι → R) (g : κ → ι
   | nil => simp only [List.map_nil, pfaffianAux_nil]
   | cons i rest =>
     rw [pfaffianAux_cons, List.map_cons, pfaffianAux_cons]
-    refine Fintype.sum_equiv (finCongr (by simp)) _ _ (fun k => ?_)
+    refine Fintype.sum_equiv (finCongr (by simp only [List.length_map])) _ _ (fun k => ?_)
     have hlt : (rest.eraseIdx k).length < n := by
       have := List.length_eraseIdx_of_lt k.isLt
       simp only [List.length_cons] at hn
       omega
     simp only [finCongr_apply, Fin.val_cast]
     rw [List.eraseIdx_map, ← ih _ hlt (rest.eraseIdx k) rfl]
-    simp [List.getElem_map]
+    simp only [Fin.getElem_fin, Fin.val_cast, List.getElem_map]
+
+omit [AddCommGroup V] [Module R V] in
+/-- The Pfaffian on a list reads the matrix only at pairs of entries of the list. -/
+theorem pfaffianAux_congr {ι : Type*} (A B : ι → ι → R) :
+    ∀ (n : ℕ) (l : List ι), l.length = n → (∀ a ∈ l, ∀ b ∈ l, A a b = B a b) →
+      pfaffianAux A l = pfaffianAux B l := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro l hn h
+  cases l with
+  | nil => simp only [pfaffianAux_nil]
+  | cons i rest =>
+    rw [pfaffianAux_cons, pfaffianAux_cons]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    have hlt : (rest.eraseIdx k).length < n := by
+      have := List.length_eraseIdx_of_lt k.isLt
+      simp only [List.length_cons] at hn
+      omega
+    have hsub : ∀ a ∈ rest.eraseIdx k, a ∈ i :: rest := fun a ha =>
+      List.mem_cons_of_mem _ ((List.eraseIdx_sublist _ _).subset ha)
+    rw [h i List.mem_cons_self rest[k] (by simp only [Fin.getElem_fin, List.mem_cons,
+        List.getElem_mem, or_true]),
+      ih _ hlt (rest.eraseIdx k) rfl fun a ha b hb => h a (hsub a ha) b (hsub b hb)]
 
 section Field
 
@@ -279,8 +310,10 @@ theorem ker_decoupleₗ (ω : V → V → K) (hadd : ∀ x y z, ω (x + y) z = �
     have e := decouple_decomp ω v w u
     rw [h0, zero_add] at e
     rw [e]
-    exact Submodule.add_mem _ (Submodule.smul_mem _ _ (Submodule.subset_span (by simp)))
-      (Submodule.smul_mem _ _ (Submodule.subset_span (by simp)))
+    exact Submodule.add_mem _ (Submodule.smul_mem _ _ (Submodule.subset_span (by simp only [
+        Set.mem_insert_iff, Set.mem_singleton_iff, true_or])))
+      (Submodule.smul_mem _ _ (Submodule.subset_span (by simp only [Set.mem_insert_iff,
+          Set.mem_singleton_iff, or_true])))
   · refine Submodule.span_le.mpr ?_
     rintro x (rfl | rfl)
     · exact decouple_left ω hskew h2 x w ha
@@ -340,17 +373,17 @@ theorem orth_of_mem_span_map_decouple (ω : V → V → K)
     obtain ⟨y, _, rfl⟩ := List.mem_map.mp hx
     rw [hskew _ v, hskew _ w, decouple_pair_left ω hadd hsmul hskew h2 v w y ha,
       decouple_pair_right ω hadd hsmul hskew h2 v w y ha]
-    simp
+    simp only [neg_zero, and_self]
   | zero =>
     have h := hsmul 0 0
     simp only [zero_smul, zero_mul] at h
     exact ⟨h v, h w⟩
   | add x y _ _ hx hy =>
     rw [hadd, hadd, hx.1, hx.2, hy.1, hy.2]
-    simp
+    simp only [add_zero, and_self]
   | smul a x _ hx =>
     rw [hsmul, hsmul, hx.1, hx.2]
-    simp
+    simp only [mul_zero, and_self]
 
 private theorem exists_orth_aux (ω : V → V → K)
     (hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z) (hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z)
@@ -368,8 +401,9 @@ private theorem exists_orth_aux (ω : V → V → K)
     exact absurd hp one_ne_zero
   | cons v rest =>
     by_cases h : ∀ x ∈ rest, ω v x = 0
-    · refine ⟨v, Submodule.subset_span (by simp), ?_, ?_⟩
-      · exact hli.ne_zero (i := v) (by simp)
+    · refine ⟨v, Submodule.subset_span (by simp only [List.mem_cons, Set.mem_ofPred_eq,
+        true_or]), ?_, ?_⟩
+      · exact hli.ne_zero (i := v) (by simp only [List.mem_cons, Set.mem_ofPred_eq, true_or])
       · intro x hx
         rcases List.mem_cons.mp hx with rfl | hx
         · exact self_eq_zero_of ω hskew h2 x
@@ -388,8 +422,10 @@ private theorem exists_orth_aux (ω : V → V → K)
         exact hli
       have hreg : IsLeftRegular (2 : K) := mul_right_injective₀ h2
       have hmv := pfaffianAux_move_left ω hskew [v] r1 w r2
-      have e1 : [v] ++ r1 ++ w :: r2 = v :: (r1 ++ w :: r2) := by simp
-      have e2 : [v] ++ w :: (r1 ++ r2) = v :: w :: (r1 ++ r2) := by simp
+      have e1 : [v] ++ r1 ++ w :: r2 = v :: (r1 ++ w :: r2) := by simp only [List.cons_append,
+          List.nil_append]
+      have e2 : [v] ++ w :: (r1 ++ r2) = v :: w :: (r1 ++ r2) := by simp only [List.cons_append,
+          List.nil_append]
       rw [e1, e2, hp] at hmv
       have hX : pfaffianAux ω (v :: w :: (r1 ++ r2)) = 0 := by
         rcases mul_eq_zero.mp hmv.symm with h | h
@@ -413,8 +449,10 @@ private theorem exists_orth_aux (ω : V → V → K)
         have hxl : x ∈ v :: (r1 ++ w :: r2) := by
           simp only [List.mem_cons, List.mem_append] at hx ⊢
           tauto
-        have hvl : v ∈ v :: (r1 ++ w :: r2) := by simp
-        have hwl : w ∈ v :: (r1 ++ w :: r2) := by simp
+        have hvl : v ∈ v :: (r1 ++ w :: r2) := by simp only [List.mem_cons, List.mem_append,
+            true_or]
+        have hwl : w ∈ v :: (r1 ++ w :: r2) := by simp only [List.mem_cons, List.mem_append,
+            true_or, or_true]
         exact Submodule.add_mem _ (Submodule.add_mem _ (Submodule.subset_span hxl)
           (Submodule.smul_mem _ _ (Submodule.subset_span hvl)))
           (Submodule.smul_mem _ _ (Submodule.subset_span hwl))
@@ -427,7 +465,7 @@ private theorem exists_orth_aux (ω : V → V → K)
             rw [hd, add_right_of ω hadd hskew, add_right_of ω hadd hskew,
               smul_right_of ω hsmul hskew, smul_right_of ω hsmul hskew, huv, huw,
               hu1 _ (List.mem_map_of_mem hxr)]
-            simp
+            simp only [mul_zero, add_zero]
           · rcases List.mem_cons.mp hx with rfl | hx
             · exact huw
             · have hxr : x ∈ r1 ++ r2 := List.mem_append_right _ hx
@@ -435,7 +473,7 @@ private theorem exists_orth_aux (ω : V → V → K)
               rw [hd, add_right_of ω hadd hskew, add_right_of ω hadd hskew,
                 smul_right_of ω hsmul hskew, smul_right_of ω hsmul hskew, huv, huw,
                 hu1 _ (List.mem_map_of_mem hxr)]
-              simp
+              simp only [mul_zero, add_zero]
 
 /-- A repetition-free list of linearly independent vectors with zero Pfaffian has a nonzero vector
 in its span that pairs to zero under `ω` with every entry. -/
@@ -467,11 +505,13 @@ theorem exists_vecMul_eq_zero_of_pfaffian_eq_zero (h2 : (2 : K) ≠ 0) {n : ℕ}
   have hmb : ∀ j, A.mulVec (b j) = fun i => A i j := by
     intro j
     ext i
-    simp [b, Pi.basisFun_apply, Matrix.mulVec, dotProduct, Pi.single_apply]
+    simp only [mulVec, dotProduct, Pi.basisFun_apply, Pi.single_apply, mul_ite, mul_one, mul_zero,
+        Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, b]
   have gram : ∀ i j, ω (b i) (b j) = A i j := by
     intro i j
     simp only [ω, hmb]
-    simp [b, Pi.basisFun_apply, dotProduct, Pi.single_apply]
+    simp only [dotProduct, Pi.basisFun_apply, Pi.single_apply, ite_mul, one_mul, zero_mul,
+        Finset.sum_ite_eq', Finset.mem_univ, ↓reduceIte, b]
   have hadd : ∀ x y z, ω (x + y) z = ω x z + ω y z := fun x y z => add_dotProduct _ _ _
   have hsmul : ∀ (c : K) x z, ω (c • x) z = c * ω x z := fun c x z => by
     simp only [ω, smul_dotProduct, smul_eq_mul]
@@ -485,7 +525,7 @@ theorem exists_vecMul_eq_zero_of_pfaffian_eq_zero (h2 : (2 : K) ≠ 0) {n : ℕ}
   have hli : LinearIndepOn K id {x | x ∈ (List.finRange n).map b} := by
     have e : {x | x ∈ (List.finRange n).map b} = Set.range b := by
       ext x
-      simp [List.mem_map, Set.mem_range]
+      simp only [List.mem_map, List.mem_finRange, true_and, Set.mem_ofPred_eq, Set.mem_range]
     rw [e]
     exact b.linearIndependent.linearIndepOn_id
   obtain ⟨u, _, hu0, hu⟩ := exists_orth_of_pfaffianAux_eq_zero ω hadd hsmul hskew h2 _ hnd hli hpf
