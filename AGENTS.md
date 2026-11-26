@@ -488,7 +488,8 @@ merges on the quick tier and the full gates catch the rest).
     the tier: it compiles the changed Rocq sources and the sources that
     import them, with the `_RocqProject` options and the warning-pair
     check, over the objects that the last green `rocq` run on `main`
-    saved (measured times:
+    saved: 11 s for a leaf source, 490 s for the root of `rocq/open`
+    with 236 dependents, 786 s for every source (measured 2026-11-26,
     `docs/archive/measurements/rocq-changed-source-tier.md`). A pull
     request that leaves those paths unchanged reports skip with its reason;
     without a saved tree, or after a change to a project file, a Makefile,
