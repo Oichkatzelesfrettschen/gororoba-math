@@ -479,8 +479,17 @@ near ten seconds each and long checks run nightly, on `main` or by hand).
   `main` saved and runs `sh ci/check.sh --build`: the changed modules and
   the modules that import them compile with warnings as errors, the axiom
   audit runs, and the kernel replay does not; without a saved tree it
-  compiles every module (342 s measured). Its job `main-gate` fails a pull
-  request while the latest completed `lean` or `rocq` run on `main` is
+  compiles every module (342 s measured). Its job `rocq-changed` runs
+  `sh ci/check_rocq.sh --changed` on a pull request that changes a path
+  under `rocq/`, `ci/install_rocq.sh` or the scripts of the tier: it compiles the changed Rocq
+  sources and the sources that import them, with the `_RocqProject` options
+  and the warning-pair ratchet, over the objects that the last green `rocq`
+  run on `main` saved, and runs no kernel check (measured times:
+  `docs/archive/measurements/rocq-changed-source-tier.md`). A pull request
+  that leaves those paths unchanged reports skip with its reason; without a saved tree, or
+  after a change to a project file, a Makefile, the opam ports, a deleted
+  source or `ci/install_rocq.sh`, the job compiles every source. Its job
+  `main-gate` fails a pull request while the latest completed `lean` or `rocq` run on `main` is
   not a success (a cancelled or skipped run is no verdict), so `main` is
   repaired before another merge; a pull request whose own head is green in
   both full workflows passes it, which lets the repair merge. `main` has
@@ -507,8 +516,9 @@ near ten seconds each and long checks run nightly, on `main` or by hand).
   repository and dispatched there. The job `head-gate` of the `quick` workflow holds the
   rule: on a pull request that is not a draft it fails until
   `gh run list --workflow lean.yml --commit SHA` (or `rocq.yml`) shows a
-  green run of each required workflow; re-run it when they finish. The kernel replay of Lean and every Rocq compile and re-check
-  run only in that dispatch.
+  green run of each required workflow; re-run it when they finish. The kernel replay of Lean, every Rocq
+  re-check and the Rocq compile outside the changed-source tier run only
+  in that dispatch.
 - A commit of `main` is fully gated when its `lean` and `rocq` runs are
   green; a record that cites a proof by commit and digest names such a
   commit.
