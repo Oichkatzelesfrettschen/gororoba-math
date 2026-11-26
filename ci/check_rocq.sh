@@ -1,6 +1,10 @@
 #!/bin/sh
 # Usage: sh ci/check_rocq.sh
-# The Rocq half of the admission gate. It exports the tracked rocq/ tree of
+#        sh ci/check_rocq.sh --changed [--plan] [--base REV] [--probe PATH]
+# The Rocq half of the admission gate. With --changed it runs the
+# changed-source tier of ci/check_rocq_changed.sh (a compile of the changed
+# sources and their dependents from a saved build tree, no kernel check) and
+# nothing below. The full gate exports the tracked rocq/ tree of
 # HEAD into a scratch directory outside the checkout and, under the opam
 # switch of ci/install_rocq.sh:
 #   0. inventory: the export holds every path of HEAD's rocq/ tree; every
@@ -52,6 +56,9 @@
 # every source that fails to compile.
 # The switch is named rocq-9.3, the name the mutation harnesses of
 # check-schur-geometry pass to their own subprocesses.
+# ROCQ_SAVE_OBJECTS, when set, names a directory that receives the compiled
+# objects, the manifest of HEAD and the identity of the switch after a passing
+# run (ci/check_rocq_changed.sh --save), the baseline of the changed-source tier.
 # Environment: ROCQ_CHECK_VM (0, the default, or 1: the checker converts
 # with the bytecode machine), ROCQ_JOBS (default the online
 # processor count), ROCQ_BUILD_DIR (parent of the scratch directory, default
@@ -65,6 +72,10 @@
 set -eu
 PYTHON=${PYTHON:-python3}
 export PYTHON
+
+case ${1:-} in
+  --changed) exec sh "$(dirname "$0")/check_rocq_changed.sh" "$@" ;;
+esac
 
 for tool in git opam tar make rustc getconf "$PYTHON"; do
   command -v "$tool" >/dev/null || {
@@ -525,4 +536,7 @@ echo "check_rocq: rocq/open kernel check passed on $(grep -c . "$work/open-modul
   exit 1
 }
 echo "check_rocq: warnings match the allow-list ($(($(grep -c . "$work/ci/rocq-warnings/allowed.tsv") - 1)) pairs)"
+if [ -n "${ROCQ_SAVE_OBJECTS:-}" ]; then
+  sh "$root/ci/check_rocq_changed.sh" --save "$ROCQ_SAVE_OBJECTS" "$work"
+fi
 echo "check_rocq: passed"

@@ -4,7 +4,9 @@ name: rocq
 # main, on every push to main and on manual dispatch on a named ref (gh workflow run rocq.yml --ref
 # BRANCH), which a pull request that touches rocq/ or a Rocq gate script gets
 # once on its final head before the merge (AGENTS.md, "Landing"); a run takes
-# about 43 minutes with a restored switch (measured 2026-11-23). No trigger
+# about 43 minutes with a restored switch (measured 2026-11-23). After a green
+# run on main, or on a dispatch with save_objects, it saves the compiled
+# objects, which the job rocq-changed of the quick workflow compiles over. No trigger
 # carries a path filter: a filter reads a bounded prefix of a large diff, and
 # a change to a .gitattributes file alters the export the gate builds from.
 on:
@@ -19,6 +21,10 @@ on:
         type: choice
         options: [vm, pure]
         default: vm
+      save_objects:
+        description: "Save the compiled objects on this ref (a run on main always saves them)"
+        type: boolean
+        default: false
 
 concurrency:
   group: rocq-${{ github.ref }}
@@ -69,7 +75,17 @@ jobs:
           path: .opam
           key: ${{ steps.opam.outputs.cache-primary-key }}
       - name: Run the Rocq gate
+        env:
+          ROCQ_SAVE_OBJECTS: ${{ (github.ref == 'refs/heads/main' || inputs.save_objects) && format('{0}/rocq-objects', runner.temp) || '' }}
         run: ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh
+      # The key follows the ports, the installer and the commit, so each green
+      # run adds an entry that the changed-source tier restores by prefix.
+      - name: Save the compiled objects
+        if: github.ref == 'refs/heads/main' || inputs.save_objects
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/rocq-objects
+          key: rocq-objects-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}-${{ github.sha }}
       # One issue per workflow holds its red runs of main; a later red run
       # adds a comment. The step follows the gate and precedes every later
       # step, so it reports a failed gate and nothing else.

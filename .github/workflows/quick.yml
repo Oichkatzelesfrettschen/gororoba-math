@@ -17,13 +17,24 @@ name: quick
 # runs are those of this repository: a maintainer pushes the head of a pull
 # request from a fork to a branch here and dispatches on it, so code from a
 # fork runs with this repository's caches only after a maintainer read it. A
-# manual dispatch of this workflow runs the jobs quick and build on a ref.
+# manual dispatch of this workflow runs the jobs quick, build and rocq-changed
+# on a ref. The job rocq-changed compiles the Rocq sources a pull request
+# changes, and those that import them, over the objects that the last green
+# rocq run on main saved (ci/check_rocq.sh --changed): no kernel check, and
+# a skip when no path under rocq/, ci/install_rocq.sh or the scripts of that
+# tier differs from the base. A dispatch compares with origin/main and takes the input rocq_probe, a
+# tracked source that the job treats as changed.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      rocq_probe:
+        description: "rocq-changed: a tracked rocq/**/*.v source to treat as changed (a measurement aid)"
+        type: string
+        default: ""
 
 concurrency:
   group: quick-${{ github.event.pull_request.number || github.ref }}
@@ -82,6 +93,73 @@ jobs:
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
       - name: Build the changed modules and audit the axioms
         run: sh ci/check.sh --build
+
+  rocq-changed:
+    name: rocq-changed
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    # A saved build tree and switch make the job a few minutes; without them
+    # it installs the switch (about 21 minutes) and compiles every source
+    # (about 20 minutes, measured 2026-11-26).
+    timeout-minutes: 120
+    env:
+      OPAMROOT: ${{ github.workspace }}/.opam
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+      - name: Decide whether a Rocq source changed
+        id: plan
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            base=HEAD^1
+          else
+            git fetch --no-tags --depth=1 origin main
+            base=FETCH_HEAD
+          fi
+          echo "base=$base" >>"$GITHUB_OUTPUT"
+          set -- --changed --plan --base "$base"
+          if [ -n "$PROBE" ]; then
+            set -- "$@" --probe "$PROBE"
+          fi
+          sh ci/check_rocq.sh "$@"
+        env:
+          PROBE: ${{ inputs.rocq_probe }}
+      - name: Install system packages
+        if: steps.plan.outputs.touched == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+      # The key is that of rocq.yml, which saves the switch.
+      - name: Restore the opam switch
+        if: steps.plan.outputs.touched == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: opam-rocq-v2-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}
+      - name: Install the Rocq toolchain
+        if: steps.plan.outputs.touched == 'true'
+        run: sh ci/install_rocq.sh
+      # The rocq workflow saves this tree after a green gate on main. Without
+      # one the job compiles every source.
+      - name: Restore the Rocq build tree of main
+        if: steps.plan.outputs.touched == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/rocq-objects
+          key: rocq-objects-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}-${{ github.sha }}
+          restore-keys: rocq-objects-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}-
+      - name: Compile the changed Rocq sources
+        if: steps.plan.outputs.touched == 'true'
+        env:
+          BASE: ${{ steps.plan.outputs.base }}
+          PROBE: ${{ inputs.rocq_probe }}
+        run: |
+          set -- --changed --base "$BASE"
+          if [ -n "$PROBE" ]; then
+            set -- "$@" --probe "$PROBE"
+          fi
+          ROCQ_OBJECTS="$RUNNER_TEMP/rocq-objects" ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh "$@"
 
   main-gate:
     name: main-gate
