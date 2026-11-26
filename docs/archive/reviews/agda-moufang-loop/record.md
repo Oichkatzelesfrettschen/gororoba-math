@@ -33,6 +33,13 @@ Advisor follow on the final head.
 | The Agda executable is version-constrained, not pinned | codex | Boundary: the README states the constraint and the measured digest (7539cc7c7) |
 | Issue counts without a retained response | codex (nit) | Fixed in 7539cc7c7: stated as not retained |
 
+## Hosted Codex round (head a4574f289)
+
+| Finding | Disposition |
+|---|---|
+| P1: the C-578 proof column names the structure `CayleyDickson.IsMoufangLoop`, which `ci/check_claims_ledger.py` rejects as a proof entry (the hosted `quick` and `build` checks failed on it) | Fixed in 041116e06; `quick`, `build`, `rocq-changed` and `main-gate` pass on that head |
+| P2: a relative `AGDA` path resolves inside the temporary copy | Fixed in 041116e06: a path with a slash resolves against the caller directory first; `AGDA=tools/agda` (relative link) runs the check to exit 0 (measured) |
+
 ## Measurements on the reviewed heads
 
 - Lean, module `GororobaMath.CayleyDickson.OctonionMoufangLoop` at 4fe2a9be2: `lake build --wfail` exit 0; the eight new theorems depend on `propext`, `Classical.choice`, `Quot.sound` only; `leanchecker` replay exit 0 (Lean 4.35.0, Mathlib v4.35.0).
