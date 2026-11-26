@@ -83,7 +83,9 @@ public import GororobaMath.CayleyDickson.BorderedLeftMul
 public import GororobaMath.CayleyDickson.E8ConjugationIdeal
 public import GororobaMath.CayleyDickson.E8ConjugationIdealEval
 public import GororobaMath.EisenbudGoto.MinimalMultiplicity
+public import GororobaMath.CayleyDickson.DivisionLevels
 public import GororobaMath.LinearAlgebra.PfaffianCross
 public import GororobaMath.LinearAlgebra.PfaffianSchur
 public import GororobaMath.LinearAlgebra.PfaffianSchurBlock
 public import GororobaMath.LinearAlgebra.PfaffianSixteenSchur
+||||||| 796aa5c1f
