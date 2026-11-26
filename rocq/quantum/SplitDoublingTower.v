@@ -33,7 +33,7 @@
     not invariant under reordering it; 128 = 52 + 52 + 24 relates it to the
     ordered count. *)
 
-From Stdlib Require Import Ring ZArith List.
+From Stdlib Require Import Ring ZArith List Lia.
 Import ListNotations.
 
 (** The Axiom fields of CommRingNZ are parameters of the module type, not
@@ -352,13 +352,25 @@ Open Scope Z_scope.
 
 Definition gs : nat -> Z := fun _ => 1.
 
+(** The basis vector e_p of level n for p < 2^n. An index p >= 2^n lies outside
+    the domain and gives the zero vector (basis_out_of_range). *)
 Fixpoint basis (n p : nat) : ZT.V n :=
   match n return ZT.V n with
-  | O => 1
+  | O => if Nat.eqb p 0 then 1 else 0
   | S k => if Nat.ltb p (Nat.pow 2 k)
            then (basis k p, ZT.zero k)
            else (ZT.zero k, basis k (p - Nat.pow 2 k))
   end.
+
+Lemma basis_out_of_range : forall n p, (Nat.pow 2 n <= p)%nat -> basis n p = ZT.zero n.
+Proof.
+  induction n as [|k IH]; intros p H.
+  - destruct p as [|p]; [simpl in H; lia|reflexivity].
+  - cbn [basis ZT.zero].
+    destruct (Nat.ltb p (Nat.pow 2 k)) eqn:E.
+    + apply Nat.ltb_lt in E. simpl in H. lia.
+    + rewrite (IH (p - Nat.pow 2 k)%nat); [reflexivity|simpl in H; lia].
+Qed.
 
 Fixpoint flat (n : nat) : ZT.V n -> list Z :=
   match n return ZT.V n -> list Z with
