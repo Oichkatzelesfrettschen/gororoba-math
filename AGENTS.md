@@ -164,6 +164,9 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/CdImaginarySumConference.v` at levels 1 to 6, and `ci/compare_am_exponent.sh` compares
   `Tower.amExponent` with `am_exponent` of `rocq/quantum/CdTowerBasisSign.v` at levels 1 to 6; each
   rejects a mutated Rocq reference, reads no other repository, and runs on demand.
+  `ci/compare_split_tower.sh` compares `ZT.mul` of `rocq/quantum/SplitDoublingTower.v` with
+  `cd_multiply_split` of gororoba-open over the 12 signatures of levels 2 and 3, rejects a negated
+  signature, and needs `GOROROBA_OPEN`, cargo and `rocq-9.3`.
   `ci/compare_anf.sh` compares `Tower.anfCoeff`, `Tower.anfEval` and `Tower.anfDegree` with
   `anf_coef` and `anf_eval` of `rocq/quantum/CdSignRowAnf.v`, `anf_degree` of
   `rocq/quantum/CdAssociatorCensus.v` and with `boolean_anf.anf_coefficients`,
