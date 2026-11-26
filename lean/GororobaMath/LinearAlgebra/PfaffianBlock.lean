@@ -21,7 +21,8 @@ Pfaffian on `List.finRange n`.
 * `Matrix.pfaffianAux_append_of_zero`: if `A x y = 0` for every `x` in `l₁` and `y` in
   `l₂`, then `pfaffianAux A (l₁ ++ l₂) = pfaffianAux A l₁ * pfaffianAux A l₂`; no skewness and no
   parity hypothesis enters.
-* `Matrix.pfaffianAux_six`: the fifteen-term expansion of the Pfaffian on six indices.
+* `Matrix.pfaffianAux_six`, `Matrix.pfaffianAux_six_indices`: the fifteen-term expansion of the
+  Pfaffian on six indices, of `Fin 6` and of any index type.
 * `Matrix.det_eq_pfaffian_sq_fin_two`, `Matrix.det_eq_pfaffian_sq_fin_four`,
   `Matrix.det_eq_pfaffian_sq_fin_six`: `det A = pfaffian A ^ 2` for an alternating `2 × 2`,
   `4 × 4` and `6 × 6` matrix over a commutative ring.
@@ -121,6 +122,19 @@ theorem pfaffianAux_six (A : Fin 6 → Fin 6 → R) :
       A 0 3 * (A 1 2 * A 4 5 - A 1 4 * A 2 5 + A 1 5 * A 2 4) -
       A 0 4 * (A 1 2 * A 3 5 - A 1 3 * A 2 5 + A 1 5 * A 2 3) +
       A 0 5 * (A 1 2 * A 3 4 - A 1 3 * A 2 4 + A 1 4 * A 2 3) := by
+  rw [pfaffianAux_cons_dite]
+  simp [Finset.sum_range_succ, pfaffianAux_four]
+  ring
+
+/-- The Pfaffian on six indices of any type is the fifteen-term sum over the matchings of the
+first index, from two expansions along the head. -/
+theorem pfaffianAux_six_indices (A : ι → ι → R) (i₀ i₁ i₂ i₃ i₄ i₅ : ι) :
+    pfaffianAux A [i₀, i₁, i₂, i₃, i₄, i₅] =
+      A i₀ i₁ * (A i₂ i₃ * A i₄ i₅ - A i₂ i₄ * A i₃ i₅ + A i₂ i₅ * A i₃ i₄) -
+      A i₀ i₂ * (A i₁ i₃ * A i₄ i₅ - A i₁ i₄ * A i₃ i₅ + A i₁ i₅ * A i₃ i₄) +
+      A i₀ i₃ * (A i₁ i₂ * A i₄ i₅ - A i₁ i₄ * A i₂ i₅ + A i₁ i₅ * A i₂ i₄) -
+      A i₀ i₄ * (A i₁ i₂ * A i₃ i₅ - A i₁ i₃ * A i₂ i₅ + A i₁ i₅ * A i₂ i₃) +
+      A i₀ i₅ * (A i₁ i₂ * A i₃ i₄ - A i₁ i₃ * A i₂ i₄ + A i₁ i₄ * A i₂ i₃) := by
   rw [pfaffianAux_cons_dite]
   simp [Finset.sum_range_succ, pfaffianAux_four]
   ring
