@@ -39,9 +39,9 @@ Verdict codes: F is Fixed in the named commit, Rf is Refuted with the reason fro
 | R20 | agy 132, break 5 (c) | ledger text of C-1760 is truncated; the full claim may add statements | the registry statement ends "e_1+e_9 has parallel imaginary halves and trivial left annihilator"; it asserts equal norms of the four vectors and nothing about zero divisors of the other three | Rf: full statement read |
 | R21 | agy 132, claim 4 | SplitDoublingTower.v is out of alphabetical order in _RocqProject | the gate requires a listing, and no sort order | Rf |
 | R22 | agy 132, claim 4 | docstring omits the blade-census convention | docstring states the 56 blades e_i +- e_j (i < j), the ordered and unordered counts and the status of 52 | F 82660baf2 |
-| R23 | agy 132, claim 4 | the product mirrors cd_multiply_split of gororoba-open (named in the docstring) with no comparison under ci/ and no bridge to the CdTowerDomain tower at gamma = -1 | the docstring still names cd_multiply_split; ci/ holds no script naming SplitDoublingTower; no theorem relates SplitTower at g = -1 to CdTowerDomain | U |
+| R23 | agy 132, claim 4 | the product mirrors cd_multiply_split of gororoba-open (named in the docstring) with no comparison under ci/ and no bridge to the CdTowerDomain tower at gamma = -1 | the docstring still names cd_multiply_split; the comparison ci/compare_split_tower.sh (Rust reference built through a temporary crate that depends on cd_kernel, 12 signatures, 1,152 products, a mutated-sign Rocq copy) built and ran the reference in one workstation run, and its mutated copy and the bridge theorems of the tower at gamma = -1 to ZTower.mul (levels 2 and 3, all elements) are not in the tree: neither built yet | U: open, blocker recorded |
 | R24 | agy 132, defect 1 | dead definition gq | definition removed | F 82660baf2 |
-| R25 | agy 132, defect 2 | basis n p silently saturates for p >= 2^n | basis is unchanged; every caller passes p in seq 0 8 at n = 3 | U |
+| R25 | agy 132, defect 2 | basis n p silently saturates for p >= 2^n | basis n p returns the zero vector for p >= 2^n and basis_out_of_range proves it | F 90a7e6fa0 |
 | R26 | agy 132, defect 3 | commit text of a41e0b0fa counts rows | agy confirms the eight rows match; C-1760 moved in its own commit ada1a9e8c | Rf |
 | R27 | codex 133, claim 1 | C-1794 reads proved with no declaration for the H_n and T_n formulas | row is partial; its note says no declaration evaluates the attributed formulas at n = 3 and 4 | F 09b4a020e |
 | R28 | codex 133, claim 2 | C-578 note leaves only the nucleus open; the loop packaging is also unstated | note lists the unit, the inverses, the closure of the unit-norm subtype, the unique solutions of a x = b and y a = b, and the nucleus | F 09b4a020e |
@@ -49,15 +49,15 @@ Verdict codes: F is Fixed in the named commit, Rf is Refuted with the reason fro
 | R30 | codex 133, claim 4 and agy 133, claim 4 (hypotheses) | warning-free build, axiom audit and replay unverified | hosted lean run green on 09b4a020e | Rf: gate run green; no defect |
 | R31 | agy 133, claim 1 (C-910, C-1794) | rows cite no DivisionLevels.lean declaration for C-910, and none for C-1794 | C-910 cites left_alternative_three of Alternative.lean, the declaration of its statement; C-1794 is a Rocq row | Rf: a row cites the declarations that state its claim |
 | R32 | agy 133, C-1794 break 1 | note recording the missing formulas was deleted | note restored, status partial | F 09b4a020e |
-| R33 | agy 133, C-1794 break 2 | sorted_triple_classes decides associativity on the integer tower tz_mul 4; no listed theorem carries it to the real tower (the C-1792 row lists associates_at_tower) | the C-1794 proof column omits associates_at_tower and the note does not mention the integer-to-real step | U |
+| R33 | agy 133, C-1794 break 2 | sorted_triple_classes decides associativity on the integer tower tz_mul 4; no listed theorem carries it to the real tower (the C-1792 row lists associates_at_tower) | the C-1794 proof column lists associates_at_tower and the note names the step from the integer tower tz_mul 4 to the real tower and the absence of a bridge to sed_mul | F b7152d2a7 |
 | R34 | agy 133, C-807 gap and C-811 | two-sided inverses hold at every level and do not state division | existsUnique_mul_eq_of_le_three (ordered field K, k <= 3, a != 0: exactly one x with a x = b and exactly one y with y a = b) with the inverse laws normInv_mul_mul_of_le_three and mul_mul_normInv_of_le_three; rows C-807 and C-811 list them, and the C-811 note states the definition used | F 09d28a825 (theorem), 09b4a020e (rows) |
-| R35 | agy 133, C-921 framing caveat | the parenthetical "property tower: second loss" (commutativity is the first loss, at dimension 4) is not stated by the listed theorems | row C-921 carries no note; no listed declaration states commutativity failure at dimension 4 | U |
+| R35 | agy 133, C-921 framing caveat | the parenthetical "property tower: second loss" (commutativity is the first loss, at dimension 4) is not stated by the listed theorems | the C-921 note and proof column carry mul_comm_of_le_one (levels 0 and 1) and exists_mul_comm_ne (level 2, 2 != 0) | F 3ed02c01d (theorems), b7152d2a7 (row) |
 | R36 | agy 133, C-578 break 1 | loop axioms of the unit sphere are not stated | see R28 | F 09b4a020e |
-| R37 | agy 133, C-578 break 2 | exists_mul_assoc_ne_iff does not restrict the triple to unit norm | the C-578 note says no declaration packages the unit-norm octonions as a loop, which covers the loop reading; the witness e_1, e_2, e_4 of octonion_e1_e2_e4_mul_assoc_ne is unit-norm by inspection and no theorem says so | B: ledger row C-578 (partial); the note does not name this clause separately |
-| R38 | agy 133, C-578 break 3 | middle Moufang parenthesization: the claim reads (a x)(y a) = (a(x y)) a, moufang_middle_three proves (x y)(z x) = x((y z) x) | the note states the proved form; flexible_three (x y x = x (y x), at y := x y) joins the two right sides and is not in the proof column | F 09b4a020e (the form is stated) |
+| R37 | agy 133, C-578 break 2 | exists_mul_assoc_ne_iff does not restrict the triple to unit norm | the C-578 note says no declaration packages the unit-norm octonions as a loop, which covers the loop reading; the witness e_1, e_2, e_4 of octonion_e1_e2_e4_mul_assoc_ne is unit-norm by inspection and no theorem says so; the C-578 note now names that clause (exists_mul_assoc_ne_iff does not restrict its triple to unit norm) | F b7152d2a7 |
+| R38 | agy 133, C-578 break 3 | middle Moufang parenthesization: the claim reads (a x)(y a) = (a(x y)) a, moufang_middle_three proves (x y)(z x) = x((y z) x) | the note states the proved form and the C-578 proof column lists flexible_three, which joins (a(x y)) a to a((x y) a) | F b7152d2a7 |
 | R39 | agy 133, claim 3 | C-582 note cites the count theorem for u <= 8, a predicate of C029_octonion_subalgebra_iff | C029_octonion_subalgebra_count states exactly 8 members for the 15 planes; the u <= 8 form is its witness list | Rf |
-| R40 | agy 133, defect 1 | public import of ZeroDivisors.lean is unused (named in prose only) | import unchanged; no declaration of that module is applied | U |
-| R41 | agy 133, defect 2 | eq_zero_or_eq_zero_of_mul_eq_zero_of_le_three of SedenionCriterion.lean duplicates mul_eq_zero_of_le_three | both stand; hypotheses differ (Field in one, a partially ordered commutative ring without zero divisors in the other) | U |
+| R40 | agy 133, defect 1 | public import of ZeroDivisors.lean is unused (named in prose only) | the public import of ZeroDivisors.lean is removed; the docstring names Tower.exists_zero_divisor as prose and the module builds with --wfail | F 3ed02c01d |
+| R41 | agy 133, defect 2 | eq_zero_or_eq_zero_of_mul_eq_zero_of_le_three of SedenionCriterion.lean duplicates mul_eq_zero_of_le_three | both lemmas stand: eq_zero_or_eq_zero_of_mul_eq_zero_of_le_three of SedenionCriterion.lean is stated over a Field, mul_eq_zero_of_le_three over a partially ordered commutative ring without zero divisors, and the generality rule keeps the wider statement; SedenionCriterion.lean could call the wider lemma, which edits a second module | B: the lemmas differ in hypothesis class |
 | R42 | agy 133, defect 3 | docstring says "ordered domain" for a weaker class | Main results states the exact class (partial order, ordered addition, no zero divisors, nonnegative squares); the intro prose keeps "ordered domain" | Rf: theorem hypotheses and the results list state the class |
 | R43 | agy 133, defect 4 | ledger edits of Rocq rows ride in a Lean commit | the pull request title names rocq and lean; the rows moved are C-1794, C-578, C-582 and the box-kite row | Rf: scope of the pull request |
 | R44 | agy 133, defect 5 | "nucleus equal to the real scalars" differs for the loop (nucleus {1, -1}) and the algebra | C-578 note: the nucleus clause is not stated; the loop-versus-algebra wording is not recorded | B: ledger row C-578 (partial) |
@@ -65,7 +65,7 @@ Verdict codes: F is Fixed in the named commit, Rf is Refuted with the reason fro
 | R46 | codex 133, conjecture 3; agy 133, conjecture 4 | box-kite frustration minimum 3 and the 8 triangles of sign -1 | row octonion_structure_checks.md:15 kite frustration is partial and names both as not stated | B: that ledger row (partial) |
 | R47 | agy 133, conjecture 1 | direct unique solvability for k <= 3 | existsUnique_mul_eq_of_le_three | F 09d28a825 |
 
-Totals: 23 Fixed, 11 Refuted, 7 Boundary, 6 Unaddressed.
+Totals: 26 Fixed, 11 Refuted, 8 Boundary, 1 Unaddressed.
 
 ## Readings of the points checked with care
 
@@ -88,7 +88,7 @@ The rocq dispatch ran with ROCQ_CHECK_VM=1, the bytecode check, so the new vm_co
 
 ## Open items
 
-- Unaddressed: R23, R25, R33, R35, R40, R41.
+- Unaddressed: R23 (comparison script and bridge theorem, blocker in the row).
 - Boundary rows: C-631, C-809, C-810, C-578, the box-kite frustration row (R10, R16, R17, R37, R44 to R46).
 - Pure re-check of SplitDoublingTower.v: owed.
 - Conjectures that no ledger row or theorem records:
