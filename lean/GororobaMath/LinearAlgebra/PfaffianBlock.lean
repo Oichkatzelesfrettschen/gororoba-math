@@ -23,6 +23,9 @@ Pfaffian on `List.finRange n`.
   parity hypothesis enters.
 * `Matrix.pfaffianAux_six`, `Matrix.pfaffianAux_six_indices`: the fifteen-term expansion of the
   Pfaffian on six indices, of `Fin 6` and of any index type.
+* `Matrix.pfaffianAux_eight_indices`: the expansion on eight indices into six-index Pfaffians.
+* `Matrix.pfaffianAux_append_swap_blocks`: swapping two blocks of a list multiplies the Pfaffian
+  of a skew matrix by `(-1) ^ (|blk| * |l|)`.
 * `Matrix.det_eq_pfaffian_sq_fin_two`, `Matrix.det_eq_pfaffian_sq_fin_four`,
   `Matrix.det_eq_pfaffian_sq_fin_six`: `det A = pfaffian A ^ 2` for an alternating `2 × 2`,
   `4 × 4` and `6 × 6` matrix over a commutative ring.
@@ -138,6 +141,40 @@ theorem pfaffianAux_six_indices (A : ι → ι → R) (i₀ i₁ i₂ i₃ i₄ 
   rw [pfaffianAux_cons_dite]
   simp [Finset.sum_range_succ, pfaffianAux_four]
   ring
+
+/-- The Pfaffian on eight indices of any type, expanded along the first index into six-index
+Pfaffians. -/
+theorem pfaffianAux_eight_indices (A : ι → ι → R) (i₀ i₁ i₂ i₃ i₄ i₅ i₆ i₇ : ι) :
+    pfaffianAux A [i₀, i₁, i₂, i₃, i₄, i₅, i₆, i₇] =
+      A i₀ i₁ * pfaffianAux A [i₂, i₃, i₄, i₅, i₆, i₇] -
+      A i₀ i₂ * pfaffianAux A [i₁, i₃, i₄, i₅, i₆, i₇] +
+      A i₀ i₃ * pfaffianAux A [i₁, i₂, i₄, i₅, i₆, i₇] -
+      A i₀ i₄ * pfaffianAux A [i₁, i₂, i₃, i₅, i₆, i₇] +
+      A i₀ i₅ * pfaffianAux A [i₁, i₂, i₃, i₄, i₆, i₇] -
+      A i₀ i₆ * pfaffianAux A [i₁, i₂, i₃, i₄, i₅, i₇] +
+      A i₀ i₇ * pfaffianAux A [i₁, i₂, i₃, i₄, i₅, i₆] := by
+  rw [pfaffianAux_cons_dite]
+  simp [Finset.sum_range_succ, pfaffianAux_six_indices]
+  ring
+
+/-- Swapping two blocks of a list multiplies the Pfaffian of a skew matrix by `(-1)` to the product
+of their lengths, one index moved past the first block at a time. -/
+theorem pfaffianAux_append_swap_blocks (A : ι → ι → R) (hA : ∀ a b, A a b = -A b a)
+    (blk l : List ι) :
+    pfaffianAux A (blk ++ l) = (-1) ^ (blk.length * l.length) * pfaffianAux A (l ++ blk) := by
+  suffices H : ∀ (l pre : List ι), pfaffianAux A (pre ++ blk ++ l) =
+      (-1) ^ (blk.length * l.length) * pfaffianAux A (pre ++ l ++ blk) by
+    simpa using H l []
+  intro l
+  induction l with
+  | nil => intro pre; simp
+  | cons y l ih =>
+    intro pre
+    rw [pfaffianAux_move_left A hA pre blk y l]
+    have e1 : pre ++ y :: (blk ++ l) = pre ++ [y] ++ blk ++ l := by simp
+    have e2 : pre ++ [y] ++ l ++ blk = pre ++ y :: l ++ blk := by simp
+    rw [e1, ih (pre ++ [y]), e2, List.length_cons]
+    ring
 
 /-- The determinant of an alternating `6 × 6` matrix is the square of its Pfaffian. -/
 theorem det_eq_pfaffian_sq_fin_six (A : Matrix (Fin 6) (Fin 6) R) (hA : ∀ i j, A i j = -A j i)
