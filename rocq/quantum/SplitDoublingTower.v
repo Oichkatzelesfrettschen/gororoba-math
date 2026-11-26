@@ -12,21 +12,34 @@
     is the tower of CdTowerDomain.v. A basis vector e_p of level n has index
     p < 2^n, with e_p in the left half when p < 2^(n-1).
 
-    Main results. Over every commutative ring with 1 <> 0 the level-2 tower
-    with gamma_1 = 1 and the level-3 tower with gamma_2 = 1 have nonzero
-    factors with product zero, and the level-3 tower is left and right
-    alternative for every signature, and the level-2 tower is associative
-    for every signature. Over the integer dual numbers and the Gaussian
-    integers the quaternion signature gamma = -1 has nonzero factors with
-    product zero. Over the integers the all-plus level-3
-    tower has the diagonal of basis squares [1,1,1,-1,1,-1,-1,1], 24 basis
-    products with a negative coordinate out of 64, and 52 zero-product pairs
-    among the 56 two-term blades e_i +- e_j, of which 24 pair two blades
-    that square to zero. *)
+    Main results. Over every commutative ring with 1 <> 0, the level-2 tower
+    with gamma_0 = 1 or gamma_1 = 1 and the level-3 tower with gamma_j = 1 for
+    some j < 3 have nonzero a, b with a b = 0 and b a = 0, so left and right
+    multiplication by a fixed nonzero element are not injective and the
+    algebra is not a division algebra. The level-3 tower is left and right
+    alternative for every signature, and the level-2 tower is associative for
+    every signature. Over the integer dual numbers and the Gaussian integers
+    the quaternion signature gamma = -1 has nonzero factors with product zero.
+    Over the integers the all-plus level-3 tower has the diagonal of basis
+    squares [1,1,1,-1,1,-1,-1,1], and each of its 64 basis products is one
+    basis vector with coefficient 1 or -1, 24 of them with coefficient -1
+    (the fraction 3/8). Over the 56 two-term blades e_i +- e_j (i < j) the
+    order-independent counts are 128 ordered pairs (x, y) with x y = 0, of
+    which 24 have x = y, and 76 unordered pairs {x, y}, x <> y, with x y = 0
+    or y x = 0 (4 with neither blade squaring to zero, 48 with exactly one,
+    24 with both); the standard signature has none. The count 52 of pairs
+    with i < j and x y = 0 (48 with a blade that squares to zero, 4 without)
+    tests one product direction in the generation order of the list and is
+    not invariant under reordering it; 128 = 52 + 52 + 24 relates it to the
+    ordered count. *)
 
 From Stdlib Require Import Ring ZArith List.
 Import ListNotations.
 
+(** The Axiom fields of CommRingNZ are parameters of the module type, not
+    assumptions of the development: a module that has this type must prove
+    them, as ZRing, ZEps and ZGauss below do, and each theorem of a
+    SplitTower instance rests on the proofs of that instance only. *)
 Module Type CommRingNZ.
   Parameter t : Type.
   Parameter zero one : t.
@@ -145,6 +158,112 @@ Proof.
   all: (change (V 0) with D.t in *; ring).
 Qed.
 
+Ltac ring_entries :=
+  split_pairs; (change (V 0) with D.t in *; ring).
+
+Theorem level2_split_zero_divisor : forall g : nat -> D.t,
+  (g 0 = D.one \/ g 1 = D.one) ->
+  exists a b : V 2, a <> zero 2 /\ b <> zero 2
+    /\ mul 2 g a b = zero 2 /\ mul 2 g b a = zero 2.
+Proof.
+  intros g [Hg|Hg].
+  - exists ((D.one, D.one), zero 1), ((D.one, D.opp D.one), zero 1).
+    repeat split.
+    + intro H. exact (D.one_neq_zero (f_equal fst (f_equal fst H))).
+    + intro H. exact (D.one_neq_zero (f_equal fst (f_equal fst H))).
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+  - exists (one 1, one 1), (one 1, neg 1 (one 1)).
+    repeat split.
+    + intro H. exact (one_ne_zero 1 (f_equal fst H)).
+    + intro H. exact (one_ne_zero 1 (f_equal fst H)).
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+Qed.
+
+Theorem level3_split_zero_divisor : forall g : nat -> D.t,
+  (g 0 = D.one \/ g 1 = D.one \/ g 2 = D.one) ->
+  exists a b : V 3, a <> zero 3 /\ b <> zero 3
+    /\ mul 3 g a b = zero 3 /\ mul 3 g b a = zero 3.
+Proof.
+  intros g [Hg|[Hg|Hg]].
+  - exists (((D.one, D.one), zero 1), zero 2),
+           (((D.one, D.opp D.one), zero 1), zero 2).
+    repeat split.
+    + intro H. exact (D.one_neq_zero (f_equal fst (f_equal fst (f_equal fst H)))).
+    + intro H. exact (D.one_neq_zero (f_equal fst (f_equal fst (f_equal fst H)))).
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+  - exists ((one 1, one 1), zero 2), ((one 1, neg 1 (one 1)), zero 2).
+    repeat split.
+    + intro H. exact (one_ne_zero 1 (f_equal fst (f_equal fst H))).
+    + intro H. exact (one_ne_zero 1 (f_equal fst (f_equal fst H))).
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+  - exists (one 2, one 2), (one 2, neg 2 (one 2)).
+    repeat split.
+    + intro H. exact (one_ne_zero 2 (f_equal fst H)).
+    + intro H. exact (one_ne_zero 2 (f_equal fst H)).
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+    + cbn [mul one neg conj smul add zero fst snd]. rewrite Hg. ring_entries.
+Qed.
+
+Lemma level2_mul_zero_right : forall (g : nat -> D.t) (a : V 2),
+  mul 2 g a (zero 2) = zero 2.
+Proof.
+  intros g [[a0 a1] [a2 a3]]. cbn. ring_entries.
+Qed.
+
+Lemma level2_mul_zero_left : forall (g : nat -> D.t) (a : V 2),
+  mul 2 g (zero 2) a = zero 2.
+Proof.
+  intros g [[a0 a1] [a2 a3]]. cbn. ring_entries.
+Qed.
+
+Lemma level3_mul_zero_right : forall (g : nat -> D.t) (a : V 3),
+  mul 3 g a (zero 3) = zero 3.
+Proof.
+  intros g [[[a0 a1] [a2 a3]] [[a4 a5] [a6 a7]]]. cbn. ring_entries.
+Qed.
+
+Lemma level3_mul_zero_left : forall (g : nat -> D.t) (a : V 3),
+  mul 3 g (zero 3) a = zero 3.
+Proof.
+  intros g [[[a0 a1] [a2 a3]] [[a4 a5] [a6 a7]]]. cbn. ring_entries.
+Qed.
+
+(** A nonzero zero divisor makes left and right multiplication by it
+    non-injective, so the level-2 tower is not a division algebra. *)
+Theorem level2_not_division : forall g : nat -> D.t,
+  (g 0 = D.one \/ g 1 = D.one) ->
+  ~ (forall a : V 2, a <> zero 2 -> forall x y : V 2,
+       mul 2 g a x = mul 2 g a y -> x = y)
+  /\ ~ (forall a : V 2, a <> zero 2 -> forall x y : V 2,
+       mul 2 g x a = mul 2 g y a -> x = y).
+Proof.
+  intros g H.
+  destruct (level2_split_zero_divisor g H) as [a [b [Ha [Hb [Hab Hba]]]]].
+  split; intro Hinj; apply Hb; apply (Hinj a Ha b (zero 2)).
+  - now rewrite Hab, level2_mul_zero_right.
+  - now rewrite Hba, level2_mul_zero_left.
+Qed.
+
+(** The same for the level-3 tower, for each of its seven signatures with a
+    positive entry. *)
+Theorem level3_not_division : forall g : nat -> D.t,
+  (g 0 = D.one \/ g 1 = D.one \/ g 2 = D.one) ->
+  ~ (forall a : V 3, a <> zero 3 -> forall x y : V 3,
+       mul 3 g a x = mul 3 g a y -> x = y)
+  /\ ~ (forall a : V 3, a <> zero 3 -> forall x y : V 3,
+       mul 3 g x a = mul 3 g y a -> x = y).
+Proof.
+  intros g H.
+  destruct (level3_split_zero_divisor g H) as [a [b [Ha [Hb [Hab Hba]]]]].
+  split; intro Hinj; apply Hb; apply (Hinj a Ha b (zero 3)).
+  - now rewrite Hab, level3_mul_zero_right.
+  - now rewrite Hba, level3_mul_zero_left.
+Qed.
+
 End SplitTower.
 
 Module ZRing <: CommRingNZ.
@@ -206,9 +325,6 @@ End ZGauss.
 
 Module DualT := SplitTower ZEps.
 Module GaussT := SplitTower ZGauss.
-
-(** The quaternion signature gamma_0 = gamma_1 = -1. *)
-Definition gq : nat -> Z := fun _ => (-1)%Z.
 
 (** eps times eps vanishes, so the dual quaternions have zero divisors. *)
 Theorem dual_quaternion_zero_divisor :
@@ -306,6 +422,102 @@ Proof. vm_compute. reflexivity. Qed.
 Theorem split_octonion_proper_pairs :
   length (filter (fun xy => negb (orb (null_square (fst xy)) (null_square (snd xy))))
                  zero_pairs) = 4%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+(** Each basis product of the all-plus level-3 tower is one basis vector with
+    coefficient 1 or -1. *)
+Definition single_signed_unit (l : list Z) : bool :=
+  andb (Nat.eqb (length (filter (fun z => negb (Z.eqb z 0)) l)) 1%nat)
+       (forallb (fun z => orb (Z.eqb z 0) (orb (Z.eqb z 1) (Z.eqb z (-1)))) l).
+
+Theorem split_octonion_products_signed_units :
+  forallb (fun pq => single_signed_unit (product (fst pq) (snd pq)))
+          (list_prod (seq 0 8) (seq 0 8)) = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_table_size :
+  length (list_prod (seq 0 8) (seq 0 8)) = 64%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+(** 24 of 64 is 3/8: 8 * 24 = 3 * 64. *)
+Theorem split_octonion_negative_fraction :
+  Nat.mul 8 negative_entries
+  = Nat.mul 3 (length (list_prod (seq 0 8) (seq 0 8))).
+Proof. vm_compute. reflexivity. Qed.
+
+(** Order-independent census of the 56 blades: the pairs are indexed by
+    positions of the list, and each count below is a sum over all positions,
+    or over unordered position pairs with a symmetric test. *)
+Definition blade_at (i : nat) : ZT.V 3 := nth i blades (ZT.zero 3).
+
+Definition blade_indices : list nat := seq 0 (length blades).
+
+Definition annihilates (g : nat -> Z) (i j : nat) : bool :=
+  is_zero (ZT.mul 3 g (blade_at i) (blade_at j)).
+
+Definition ordered_zero_count (g : nat -> Z) : nat :=
+  length (filter (fun ij => annihilates g (fst ij) (snd ij))
+                 (list_prod blade_indices blade_indices)).
+
+Definition diagonal_zero_count (g : nat -> Z) : nat :=
+  length (filter (fun i => annihilates g i i) blade_indices).
+
+Definition forward_zero_count (g : nat -> Z) : nat :=
+  length (filter (fun ij => andb (Nat.ltb (fst ij) (snd ij))
+                                 (annihilates g (fst ij) (snd ij)))
+                 (list_prod blade_indices blade_indices)).
+
+Definition reverse_zero_count (g : nat -> Z) : nat :=
+  length (filter (fun ij => andb (Nat.ltb (snd ij) (fst ij))
+                                 (annihilates g (fst ij) (snd ij)))
+                 (list_prod blade_indices blade_indices)).
+
+Definition unordered_zero_pairs (g : nat -> Z) : list (nat * nat) :=
+  filter (fun ij => andb (Nat.ltb (fst ij) (snd ij))
+                         (orb (annihilates g (fst ij) (snd ij))
+                              (annihilates g (snd ij) (fst ij))))
+         (list_prod blade_indices blade_indices).
+
+Definition squares_to_zero (g : nat -> Z) (i : nat) : bool := annihilates g i i.
+
+Theorem split_octonion_ordered_zero_pairs : ordered_zero_count gs = 128%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_diagonal_zero_pairs : diagonal_zero_count gs = 24%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_forward_zero_pairs : forward_zero_count gs = 52%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_reverse_zero_pairs : reverse_zero_count gs = 52%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_unordered_zero_pairs :
+  length (unordered_zero_pairs gs) = 76%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_unordered_null_null_pairs :
+  length (filter (fun ij => andb (squares_to_zero gs (fst ij))
+                                 (squares_to_zero gs (snd ij)))
+                 (unordered_zero_pairs gs)) = 24%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_unordered_mixed_pairs :
+  length (filter (fun ij => xorb (squares_to_zero gs (fst ij))
+                                 (squares_to_zero gs (snd ij)))
+                 (unordered_zero_pairs gs)) = 48%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem split_octonion_unordered_proper_pairs :
+  length (filter (fun ij => negb (orb (squares_to_zero gs (fst ij))
+                                      (squares_to_zero gs (snd ij))))
+                 (unordered_zero_pairs gs)) = 4%nat.
+Proof. vm_compute. reflexivity. Qed.
+
+(** The standard octonions (every gamma = -1) have no ordered pair of blades
+    with product zero. *)
+Theorem standard_octonion_ordered_zero_pairs :
+  ordered_zero_count (fun _ => -1) = 0%nat.
 Proof. vm_compute. reflexivity. Qed.
 
 End IntegerTables.
