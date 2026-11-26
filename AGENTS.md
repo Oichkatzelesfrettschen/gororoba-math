@@ -340,8 +340,9 @@ gororoba repository shares; this file governs where the two differ.
 - Use `decide +kernel` only on a finite table whose docstring states its
   size and measured cost (`PfaffianSchurBlock.sedSign_eq_sign`: 210 goals,
   0.54 s). A larger evaluation is a Rocq certificate under the evidence axis
-  above: a Pfaffian memo table took 9.7 GB at size 10 and passed 16 GiB at
-  size 12 (Lean 4.35.0).
+  above: a Pfaffian memo table check passed a 16 GiB cap before it reached
+  the needed size (single runs, Lean 4.35.0; the Rocq certificate of the
+  same identity compiles in 104 s at 549 MB).
 - Bind a literal table that mirrors a library definition to it by a theorem
   (`PfaffianCross.octSign_eq_sign`), and confirm that the kernel rejects a
   copy with one bound entry changed.
