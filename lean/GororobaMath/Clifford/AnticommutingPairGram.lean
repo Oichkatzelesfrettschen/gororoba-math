@@ -24,8 +24,9 @@ The instance fixes the sedenion units `e_1 .. e_8` of `Clifford.ZeroEight`. Row 
 further, and this file leaves unproved: that `ι • (A * B)` is a traceless Hermitian involution
 and that the kernel has half the dimension; the complement law
 `nullity (e_a + ι e_b) = D/2 - nullity (e_a + e_b)` for every two-term operand; the `A_5` slice
-kernel `ker K_1 ∩ ker (i L_1 J - I)` with the Gram multiplicities of 0, 2 and 4; and the other
-anticommuting pairs (63, 171 and 435 at dimensions 16, 32 and 64).
+kernel `ker K_1 ∩ ker (i L_1 J - I)` with the Gram multiplicities of 0, 2 and 4; and the
+anticommuting pairs of dimensions 16, 32 and 64 (63, 171 and 435 in all; the 28 pairs here are
+among the 63).
 
 ## Main results
 
