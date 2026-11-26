@@ -16,7 +16,8 @@ and `t` are functions `ℕ → R` read at `1, ..., 15`. With `Q = z.z`, `U = u.u
 the Pfaffian of `borderedA z t` on the indices `0, ..., 15` is `-(z.t) Q G`
 (`PfaffianSixteenSchur.pfaffian_sixteen`).
 
-The Rocq partner is `Amat`, `memo` and `check_table` of `rocq/quantum/StiefelA5Certificate.v`.
+The Rocq partners are `Amat` and `rhs` of `rocq/quantum/StiefelA5Certificate.v`, and
+`pf_A_eval` of `rocq/quantum/StiefelA5Pfaffian.v` states the identity there.
 
 ## Main definitions
 

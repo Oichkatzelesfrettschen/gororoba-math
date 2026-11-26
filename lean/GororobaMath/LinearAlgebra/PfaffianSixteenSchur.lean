@@ -19,8 +19,9 @@ The proof clears `Bm` in the Schur law (`Matrix.schur_cleared_of_mul`) with `c =
 `Pf S' = -U ^ 2 (z.t) Q G` from the Pfaffian adjugate of the Schur block
 (`PfaffianSchurBlock.adjPf_schurN`). Over the integer polynomial ring `U ^ 8` cancels, and
 evaluation carries the identity to every commutative ring. The proof evaluates only the 210
-sign-table cases of `PfaffianSchurBlock.sedSign_eq_sign` (by `decide +kernel`) and two index-list
-equalities (by `decide`); the Pfaffian identity itself is symbolic.
+sign-table cases of `PfaffianSchurBlock.sedSign_eq_sign` (by `decide +kernel`), the 210 cases of
+the skew symmetry of that table and four index-list equalities (by `decide`); the Pfaffian
+identity itself is symbolic.
 
 ## Main results
 
