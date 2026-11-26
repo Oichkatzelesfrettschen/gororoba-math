@@ -41,6 +41,8 @@ arguments: `hadd` and `hsmul` (linearity in the first argument) and `hskew` (`ω
   `l.Nodup` with `LinearIndepOn K id {x | x ∈ l}`.
 * `Matrix.pfaffianAux_reindex`: the Pfaffian of pulled-back entries is the Pfaffian on the image
   list.
+* `Matrix.pfaffianAux_congr`: the Pfaffian on a list depends only on the entries at pairs of its
+  members.
 * `Matrix.exists_vecMul_eq_zero_of_pfaffian_eq_zero`,
   `Matrix.exists_mulVec_eq_zero_of_pfaffian_eq_zero`: a skew matrix over a field with `2 ≠ 0`
   and zero Pfaffian has a nonzero kernel vector.
@@ -172,6 +174,29 @@ theorem pfaffianAux_reindex {ι κ : Type*} (A : ι → ι → R) (g : κ → ι
     simp only [finCongr_apply, Fin.val_cast]
     rw [List.eraseIdx_map, ← ih _ hlt (rest.eraseIdx k) rfl]
     simp [List.getElem_map]
+
+omit [AddCommGroup V] [Module R V] in
+/-- The Pfaffian on a list reads the matrix only at pairs of entries of the list. -/
+theorem pfaffianAux_congr {ι : Type*} (A B : ι → ι → R) :
+    ∀ (n : ℕ) (l : List ι), l.length = n → (∀ a ∈ l, ∀ b ∈ l, A a b = B a b) →
+      pfaffianAux A l = pfaffianAux B l := by
+  intro n
+  induction n using Nat.strong_induction_on with
+  | _ n ih =>
+  intro l hn h
+  cases l with
+  | nil => simp only [pfaffianAux_nil]
+  | cons i rest =>
+    rw [pfaffianAux_cons, pfaffianAux_cons]
+    refine Finset.sum_congr rfl fun k _ => ?_
+    have hlt : (rest.eraseIdx k).length < n := by
+      have := List.length_eraseIdx_of_lt k.isLt
+      simp only [List.length_cons] at hn
+      omega
+    have hsub : ∀ a ∈ rest.eraseIdx k, a ∈ i :: rest := fun a ha =>
+      List.mem_cons_of_mem _ ((List.eraseIdx_sublist _ _).subset ha)
+    rw [h i List.mem_cons_self rest[k] (by simp),
+      ih _ hlt (rest.eraseIdx k) rfl fun a ha b hb => h a (hsub a ha) b (hsub b hb)]
 
 section Field
 
