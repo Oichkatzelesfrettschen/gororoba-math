@@ -7,8 +7,10 @@
 # _RocqProject (-w all,+default), and compares the warnings of the recompiled
 # sources with ci/rocq-warnings/allowed.tsv. It also runs the admission scan of
 # the three trees, a textual check that a changed project source declares no
-# assumption that the tree's kernel-assumptions.txt omits
-# (ci/rocq-declared-axioms.awk), the inventory checks that need no compile
+# assumption that the tree's kernel-assumptions.txt omits and no switch-off of a
+# kernel check that ci/rocq-unchecked-allow.tsv omits
+# (ci/rocq-declared-axioms.awk), a search of rocq/, ci/ and .github/ for the flags of
+# ci/rocq-unchecked-patterns.txt against the same allow-list, the inventory checks that need no compile
 # (ci/rocq_inventory.sh), the compile of the sources outside the project files
 # that import a recompiled module, and its own calibration.
 # It runs no kernel check (rocq check): the full rocq workflow (every push to
@@ -311,14 +313,24 @@ git -C "$root" diff --name-only HEAD HEAD >"$cal/untouched.txt" || fail "git dif
 untouched=$(touched_paths HEAD)
 [ -z "$untouched" ] || fail "calibration: HEAD against itself reports a touched path"
 
-# The assumption scan on a synthetic source: top-level assumptions are named,
-# those inside a Module Type, a comment or (for Hypothesis) a Section are not.
+# The assumption scan on a synthetic source: every form of a top-level
+# assumption and of a kernel-check switch-off is named; the same forms inside a
+# Module Type, a comment or (for Hypothesis and Variable) a Section, and the
+# Set forms, are not.
 cat >"$cal/Assume.v" <<'ASSUME'
 (* Axiom in_comment : False. *)
 Axiom top_axiom : False.
-Parameters (p q : nat).
-Hypothesis top_hypothesis : False.
+#[local] Axiom attr_local : False.
+#[global] Parameter attr_global : nat.
+#[export,local] Axioms (x y : nat).
+Axioms a1 a2 : nat.
+Parameters (p1 p2 : nat).
+Hypotheses h1 h2 : True.
+Variables v1 v2 : nat.
+Conjectures c1 c2 : True.
+#[local] Hypothesis hl : True.
 Section S.
+Variables section_variable : nat.
 Hypothesis section_hypothesis : False.
 End S.
 Module Type T.
@@ -327,10 +339,95 @@ End T.
 Module M.
 Conjecture nested_conjecture : False.
 End M.
+#[bypass_check(guard)] Fixpoint loops (n : nat) : nat := loops n.
+#[bypass_check(universes)]
+Definition universe_cheat := 0.
+Unset Guard Checking.
+Local Unset Positivity Checking.
+#[local] Unset Universe Checking.
+Global Unset Guard Checking.
+Set Guard Checking.
+Set Typeclasses Debug.
 ASSUME
-printf '%s\n' top_axiom p q top_hypothesis M.nested_conjecture >"$cal/assume-expected.txt"
+cat >"$cal/assume-expected.txt" <<'EXPECTED'
+top_axiom
+attr_local
+attr_global
+x
+y
+a1
+a2
+p1
+p2
+h1
+h2
+v1
+v2
+c1
+c2
+hl
+M.nested_conjecture
+!bypass_check
+!bypass_check
+!Unset Guard Checking
+!Unset Positivity Checking
+!Unset Universe Checking
+!Unset Guard Checking
+EXPECTED
 awk -f "$root/ci/rocq-declared-axioms.awk" "$cal/Assume.v" >"$cal/assume-found.txt" || fail "the assumption scan failed"
 cmp -s "$cal/assume-expected.txt" "$cal/assume-found.txt" || fail "calibration: the assumption scan names $(tr '\n' ' ' <"$cal/assume-found.txt")"
+
+# The flag scan on a scratch repository: each pattern of
+# ci/rocq-unchecked-patterns.txt in a project file, a Makefile, a script and a
+# Python file is rejected, an allow-list row clears exactly its path and token,
+# and a row without a reason is a format error.
+scan_flags() {
+  # scan_flags REPOSITORY ALLOW-LIST: prints "path<TAB>token" of each hit that
+  # the allow-list does not clear, and fails when there is one.
+  flag_status=0
+  : >"$work/flag-violations.txt"
+  while IFS= read -r pattern; do
+    case $pattern in
+      '#'* | '') continue ;;
+    esac
+    hit_status=0
+    git -C "$1" grep -l -I -E -e "$pattern" -- rocq ci .github Makefile ':!ci/rocq-unchecked-allow.tsv' ':!ci/rocq-unchecked-patterns.txt' >"$work/flag-hits.txt" || hit_status=$?
+    [ "$hit_status" -le 1 ] || fail "git grep failed on the pattern $pattern"
+    while IFS= read -r hit; do
+      [ -n "$hit" ] || continue
+      if awk -F '\t' -v path="$hit" -v token="$pattern" '$1 == path && $2 == token && $3 != "" { found = 1 } END { exit found ? 0 : 1 }' "$2"; then
+        continue
+      fi
+      printf '%s\t%s\n' "$hit" "$pattern" >>"$work/flag-violations.txt"
+      flag_status=1
+    done <"$work/flag-hits.txt"
+  done <"$root/ci/rocq-unchecked-patterns.txt"
+  [ "$flag_status" -eq 0 ]
+}
+flagrepo="$cal/flagrepo"
+mkdir -p "$flagrepo/rocq/t" "$flagrepo/ci"
+git -C "$flagrepo" init -q || fail "git init failed"
+printf -- '-arg -type''-in-type\n' >"$flagrepo/rocq/t/_RocqProject"
+printf 'FLAGS = -impredicative''-set\n' >"$flagrepo/rocq/t/Makefile"
+printf 'rocq compile -no''init x.v\n' >"$flagrepo/ci/run.sh"
+printf 'args = ["-no''is"]\n' >"$flagrepo/rocq/t/run.py"
+printf 'rocq compile -noisy x.v\n' >"$flagrepo/ci/word.txt"
+git -C "$flagrepo" add -A || fail "git add failed"
+printf 'path\ttoken\treason\n' >"$cal/allow-empty.tsv"
+if scan_flags "$flagrepo" "$cal/allow-empty.tsv"; then
+  fail "calibration: the flag scan accepted the flags of the scratch repository"
+fi
+awk 'END { print NR }' "$work/flag-violations.txt" >"$cal/flag-count.txt"
+[ "$(cat "$cal/flag-count.txt")" -eq 4 ] || fail "calibration: the flag scan named $(cat "$cal/flag-count.txt") hits, expected 4 (the word -noisy is outside the pattern)"
+printf 'path\ttoken\treason\nci/run.sh\t-no''init\ta scratch reason\nrocq/t/_RocqProject\t-type''-in-type\t\n' >"$cal/allow-partial.tsv"
+if scan_flags "$flagrepo" "$cal/allow-partial.tsv"; then
+  fail "calibration: the flag scan accepted a row with no reason or the other flags"
+fi
+[ "$(awk 'END { print NR }' "$work/flag-violations.txt")" -eq 3 ] || fail "calibration: an allow-list row did not clear exactly its hit"
+scan_flags "$root" "$root/ci/rocq-unchecked-allow.tsv" || {
+  cat "$work/flag-violations.txt" >&2
+  fail "a tracked file holds a flag that switches a kernel check or the library off and the allow-list does not name it"
+}
 
 git -C "$root" rev-parse --verify -q "$base^{commit}" >/dev/null || {
   echo "check_rocq --changed: the revision $base is absent from the checkout (a shallow clone needs fetch-depth 2 for HEAD^1)" >&2
@@ -557,16 +654,21 @@ elif [ -n "$reason" ]; then
   echo "check_rocq --changed: full compile: $reason"
   incremental=0
   cp "$work/tracked-sources.txt" "$work/changed-v.txt"
-  cp "$work/tracked-sources.txt" "$work/changed-project.txt"
+  grep -E '^rocq/(open/(theories|verified)|quantum|delegation)/.*\.v$' "$work/tracked-sources.txt" >"$work/changed-project.txt" || fail "HEAD tracks no project source"
 else
   incremental=1
 fi
 
-# The assumption scan of the changed project sources.
+# The assumption and switch-off scan of the changed sources (every source on a
+# full compile): a project source's assumptions must be named by its tree's
+# kernel-assumptions.txt, and a switch-off of a kernel check in any source must
+# be named by path and token in ci/rocq-unchecked-allow.tsv.
 check_declared_axioms() {
   scan_status=0
   while IFS= read -r source; do
     [ -n "$source" ] || continue
+    ledger=
+    module=
     case $source in
       rocq/open/theories/*)
         ledger=rocq/open/kernel-assumptions.txt
@@ -580,25 +682,39 @@ check_declared_axioms() {
         ledger=rocq/quantum/kernel-assumptions.txt
         module=${source#rocq/quantum/}
         ;;
-      *)
+      rocq/delegation/*)
         ledger=rocq/delegation/kernel-assumptions.txt
         module=GororobaDelegation.${source#rocq/delegation/}
         ;;
     esac
-    module=${module%.v}
-    module=$(printf '%s' "$module" | tr / .)
+    if [ -n "$module" ]; then
+      module=${module%.v}
+      module=$(printf '%s' "$module" | tr / .)
+    fi
     awk -f "$root/ci/rocq-declared-axioms.awk" "$work/$source" >"$work/declared.txt" || fail "the assumption scan failed on $source"
     while IFS= read -r name; do
       [ -n "$name" ] || continue
-      if ! grep -F -x -q -- "$module.$name" "$work/$ledger"; then
-        echo "check_rocq --changed: $source declares the assumption $module.$name that $ledger does not list" >&2
-        scan_status=1
-      fi
+      case $name in
+        '!'*)
+          token=${name#!}
+          if ! awk -F '\t' -v path="$source" -v token="$token" '$1 == path && $2 == token && $3 != "" { found = 1 } END { exit found ? 0 : 1 }' "$root/ci/rocq-unchecked-allow.tsv"; then
+            echo "check_rocq --changed: $source switches a kernel check off ($token) and ci/rocq-unchecked-allow.tsv does not name it" >&2
+            scan_status=1
+          fi
+          ;;
+        *)
+          [ -n "$ledger" ] || continue
+          if ! grep -F -x -q -- "$module.$name" "$work/$ledger"; then
+            echo "check_rocq --changed: $source declares the assumption $module.$name that $ledger does not list" >&2
+            scan_status=1
+          fi
+          ;;
+      esac
     done <"$work/declared.txt"
   done <"$1"
   [ "$scan_status" -eq 0 ]
 }
-check_declared_axioms "$work/changed-project.txt" || fail "an assumption is declared outside the kernel assumption ledgers (a textual check; rocq check stays the authority)"
+check_declared_axioms "$work/changed-v.txt" || fail "an assumption or a kernel-check switch-off is not named in the ledgers or the allow-list (a textual check; rocq check stays the authority)"
 
 if [ "$incremental" -eq 1 ] && [ "$compile_trees" -eq 1 ]; then
   cp -p "$saved_objects/objects.txt" "$work/saved-objects.txt" || fail "cannot read the saved object list"

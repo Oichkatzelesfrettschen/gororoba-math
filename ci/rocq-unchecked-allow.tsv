@@ -1,0 +1,2 @@
+path	token	reason
+rocq/open/opam/qualified-rocq-9.3.export	-noinit	a package description in the opam export, "-noinit options, as will otherwise fail to find the regular Rocq prelude"; prose of a dependency, no argument list

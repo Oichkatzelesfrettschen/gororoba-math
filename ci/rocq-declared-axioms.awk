@@ -2,8 +2,15 @@
 # Prints one line "NESTED.MODULE.PATH.NAME" (the name alone at file level) for each top-level declaration
 # of an assumption in a Rocq source: Axiom, Axioms, Parameter, Parameters,
 # Conjecture, Conjectures at any depth outside a Module Type, and Hypothesis,
-# Hypotheses outside a Section as well. Comments (nested) are removed first.
-# Limits, a textual reading: a declaration that continues over several lines
+# Hypotheses, Variable, Variables outside a Section as well; an attribute block
+# (#[local], #[global], #[export,local]) and Local or Global before the keyword
+# are skipped. It prints "!TOKEN" for each switch-off of a kernel check: the
+# attribute bypass_check in any form (one line per line that names it) and the
+# commands Unset Guard Checking, Unset Positivity Checking and Unset Universe
+# Checking, with their Local, Global and attribute forms; Set forms and other
+# options are out of scope. Comments (nested) are removed first.
+# Limits, a textual reading: an attribute block that continues over several lines
+# is read only from its first line (bypass_check is found on any line); a declaration that continues over several lines
 # contributes its first line's names; a Module that opens with a body after
 # ":=" on a later line, and a keyword inside a string literal, are misread. The
 # kernel check (rocq check -o) stays the authority on a tree's assumptions.
@@ -33,9 +40,19 @@ function emit(rest, i, count, tokens, token) {
     if (comment == 0) clean = clean substr(line, position, 1)
   }
   line = clean
+  if (index(line, "bypass_check") > 0) print "!bypass_check"
+  while (line ~ /^[ \t]*#\[/) {
+    if (!sub(/^[ \t]*#\[[^]]*\][ \t]*/, "", line)) break
+  }
   sub(/^[ \t]*Local[ \t]+/, "", line)
   sub(/^[ \t]*Global[ \t]+/, "", line)
   sub(/^[ \t]+/, "", line)
+  if (match(line, /^Unset[ \t]+(Guard|Positivity|Universe)[ \t]+Checking/)) {
+    token = substr(line, RSTART, RLENGTH)
+    gsub(/[ \t]+/, " ", token)
+    print "!" token
+    next
+  }
   if (match(line, /^Section[ \t]+[A-Za-z0-9_']+[ \t]*\./)) { push("S", ""); next }
   if (match(line, /^Module[ \t]+Type[ \t]+[A-Za-z0-9_']+/) && line !~ /:=/) { push("T", ""); next }
   if (match(line, /^Module[ \t]+[A-Za-z0-9_']+/) && line !~ /:=/ && line ~ /\.[ \t]*$/) {
@@ -53,7 +70,7 @@ function emit(rest, i, count, tokens, token) {
     emit(rest)
     next
   }
-  if (!in_section() && match(line, /^Hypothes[ie]s[ \t]/)) {
+  if (!in_section() && match(line, /^(Hypothes[ie]s|Variables?)[ \t]/)) {
     rest = line
     sub(/^[A-Za-z]+[ \t]+/, "", rest)
     emit(rest)

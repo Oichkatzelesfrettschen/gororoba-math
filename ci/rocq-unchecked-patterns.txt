@@ -1,0 +1,9 @@
+# One extended regular expression per line: a flag that switches a kernel
+# check or a library off. ci/check_rocq_changed.sh searches every tracked file
+# of rocq/, ci/, .github/ and the root Makefile for each (except this file and
+# ci/rocq-unchecked-allow.tsv) and rejects a hit that the allow-list does not
+# name by path and by this exact line.
+-type-in-type
+-impredicative-set
+-noinit
+-nois([^a-zA-Z]|$)
