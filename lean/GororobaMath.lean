@@ -90,3 +90,4 @@ public import GororobaMath.LinearAlgebra.PfaffianSchurBlock
 public import GororobaMath.LinearAlgebra.PfaffianSixteenSchur
 public import GororobaMath.CayleyDickson.OctonionMoufangLoop
 public import GororobaMath.Clifford.AnticommutingPairGram
+public import GororobaMath.CayleyDickson.CzComplexKernel
