@@ -334,14 +334,14 @@ gororoba repository shares; this file governs where the two differ.
 - Write each `simp` that is not the last tactic of its goal as the
   `simp only [...]` that `simp?` prints, so a change of Mathlib's simp set
   cannot move the proof, and build the result with `--wfail`: `simp?` can
-  omit a simproc (`↓reduceIte`, one of 145 calls pinned on 2026-11-25).
+  omit a simproc (`↓reduceIte`, one of 145 calls pinned on 2026-11-26).
 - Set no option for a whole file. Scope a raised `maxHeartbeats` to one
   declaration with `set_option ... in` and state its measured count there.
 - Use `decide +kernel` only on a finite table whose docstring states its
   size and measured cost (`PfaffianSchurBlock.sedSign_eq_sign`: 210 goals,
   0.54 s). A larger evaluation is a Rocq certificate under the evidence axis
   above: a Pfaffian memo table took 9.7 GB at size 10 and passed 16 GiB at
-  size 12 (Lean 4.35.0, 2026-11-25).
+  size 12 (Lean 4.35.0).
 - Bind a literal table that mirrors a library definition to it by a theorem
   (`PfaffianCross.octSign_eq_sign`), and confirm that the kernel rejects a
   copy with one bound entry changed.
