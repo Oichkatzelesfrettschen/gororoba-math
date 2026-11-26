@@ -524,10 +524,16 @@ merges on the quick tier and the full gates catch the rest).
     generators of `ci/quantum-sources/` and `ci/delegation-sources/`, a
     `.gitattributes` file). Every run checks the export of `HEAD` against
     its tree, scans the three trees for `Admitted` and `admit`, checks
-    that a changed project source declares no `Axiom`, `Parameter`,
-    `Conjecture` or top-level `Hypothesis` that its tree's
-    `kernel-assumptions.txt` omits (a textual check, whose limits sit in
-    `ci/rocq-declared-axioms.awk`; `rocq check` stays the authority), runs
+    that a changed project source (every project source on a full compile)
+    declares no `Axiom`, `Parameter`, `Conjecture`, plural or
+    attribute-prefixed form of them, or top-level `Hypothesis` or `Variable`
+    that its tree's `kernel-assumptions.txt` omits, and that no changed
+    source switches a kernel check off (`bypass_check`, `Unset Guard
+    Checking`, `Unset Positivity Checking`, `Unset Universe Checking`) or
+    carries a flag of `ci/rocq-unchecked-patterns.txt` unless
+    `ci/rocq-unchecked-allow.tsv` names its path, token and reason (a
+    textual check, whose limits sit in `ci/rocq-declared-axioms.awk`;
+    `rocq check` stays the authority), runs
     the inventory checks of `ci/check_rocq.sh` that need no compile, and
     calibrates itself. It compiles the changed Rocq sources and the sources
     that import them, with the `_RocqProject` options and the warning-pair
