@@ -53,7 +53,9 @@ theorem dot_four_eq (u v : Tower K 4) (hu : (basis K 4).repr u 0#4 = 0) :
     (basis K 4).repr v (BitVec.ofNat 4 n)) 16, Finset.sum_range_succ']
   simp only [hu, zero_mul, add_zero]
 
-/-- The zero-divisor theorem at level `5`. -/
+/-- The zero-divisor theorem at level `5`: for pure `p`, `q` of equal norm and zero dot product the
+bordered quadratic vanishes, `pfaffian_sixteen` gives the Pfaffian `0`, a kernel vector `v` of the
+skew bordered matrix exists, and `x = mk (v/2) (ι • star (v/2))` is annihilated by `mk p q`. -/
 theorem stiefel_zero_divisor (h2 : (2 : K) ≠ 0) (ι : K) (hι : ι * ι = -1) {p q : Tower K 4}
     (hp : re 4 p = 0) (hq : re 4 q = 0) (hpp : dot 4 p p = dot 4 q q) (hpq : dot 4 p q = 0) :
     ∃ x : Tower K 5, x ≠ 0 ∧ mk p q * x = 0 := by
@@ -138,8 +140,6 @@ theorem stiefel_zero_divisor (h2 : (2 : K) ≠ 0) (ι : K) (hι : ι * ι = -1) 
   set B' : Tower K 4 := s * p + q * star r
   have hB : star B' = 0 := by
     have : (2 * ι) • star B' = 0 := by
-      have := congrArg₂ (· - ·) h1 h2'
-      simp only [sub_zero] at this
       rw [show (2 * ι) • star B' = (A' + ι • star B') - (A' + (-ι) • star B') by module]
       rw [h1, h2', sub_zero]
     rcases smul_eq_zero.mp this with h | h
