@@ -33,25 +33,6 @@ namespace PfaffianSchur
 
 open PfaffianCross PfaffianSixteen
 
-attribute [local simp]
-  PfaffianCross.octSign_1_1 PfaffianCross.octSign_1_2 PfaffianCross.octSign_1_3
-  PfaffianCross.octSign_1_4 PfaffianCross.octSign_1_5 PfaffianCross.octSign_1_6
-  PfaffianCross.octSign_1_7 PfaffianCross.octSign_2_1 PfaffianCross.octSign_2_2
-  PfaffianCross.octSign_2_3 PfaffianCross.octSign_2_4 PfaffianCross.octSign_2_5
-  PfaffianCross.octSign_2_6 PfaffianCross.octSign_2_7 PfaffianCross.octSign_3_1
-  PfaffianCross.octSign_3_2 PfaffianCross.octSign_3_3 PfaffianCross.octSign_3_4
-  PfaffianCross.octSign_3_5 PfaffianCross.octSign_3_6 PfaffianCross.octSign_3_7
-  PfaffianCross.octSign_4_1 PfaffianCross.octSign_4_2 PfaffianCross.octSign_4_3
-  PfaffianCross.octSign_4_4 PfaffianCross.octSign_4_5 PfaffianCross.octSign_4_6
-  PfaffianCross.octSign_4_7 PfaffianCross.octSign_5_1 PfaffianCross.octSign_5_2
-  PfaffianCross.octSign_5_3 PfaffianCross.octSign_5_4 PfaffianCross.octSign_5_5
-  PfaffianCross.octSign_5_6 PfaffianCross.octSign_5_7 PfaffianCross.octSign_6_1
-  PfaffianCross.octSign_6_2 PfaffianCross.octSign_6_3 PfaffianCross.octSign_6_4
-  PfaffianCross.octSign_6_5 PfaffianCross.octSign_6_6 PfaffianCross.octSign_6_7
-  PfaffianCross.octSign_7_1 PfaffianCross.octSign_7_2 PfaffianCross.octSign_7_3
-  PfaffianCross.octSign_7_4 PfaffianCross.octSign_7_5 PfaffianCross.octSign_7_6
-  PfaffianCross.octSign_7_7
-
 variable {R : Type*} [CommRing R]
 
 /-- The second imaginary half `v = (z_9, ..., z_15)`, read at `1, ..., 7`. -/
@@ -72,7 +53,8 @@ def xV (z : ℕ → R) (i : ℕ) : R := 2 * mV z i - 2 * z 8 * z i
 
 /-- `Q = U + μ² + V`. -/
 theorem qv_split (z : ℕ → R) : qv z = uv z + z 8 ^ 2 + vv z := by
-  simp [qv, uv, vv, Finset.sum_range_succ]
+  simp only [qv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, uv, vv]
   ring
 
 /-- The bilinear sum of two combinations: `⟨u, m⟩ = ⟨v, m⟩ = 0` and `⟨m, m⟩ = U V - W²`. -/
@@ -80,20 +62,51 @@ theorem dot_comb_comb (z : ℕ → R) (α β γ α' β' γ' : R) :
     dot7 (comb α β γ z) (comb α' β' γ' z) =
       α * α' * uv z + (α * β' + β * α') * wv z + β * β' * vv z +
         γ * γ' * (uv z * vv z - wv z ^ 2) := by
-  simp [dot7, comb, mV, vV, cross, crossMat, uv, vv, wv, Finset.sum_range_succ]
+  simp only [dot7, comb, vV, mV, cross, crossMat, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add, Nat.reduceAdd, octSign_1_1, Int.cast_zero, LawfulXor.xor_self,
+      zero_mul, octSign_1_2, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul,
+      one_mul, octSign_1_3, octSign_1_4, octSign_1_5, octSign_1_6, octSign_1_7, octSign_2_1,
+      even_two, Nat.xor_one_of_even, octSign_2_2, add_zero, octSign_2_3, octSign_2_4, octSign_2_5,
+      octSign_2_6, octSign_2_7, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_4, octSign_3_5,
+      octSign_3_6, octSign_3_7, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5,
+      octSign_4_6, octSign_4_7, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5,
+      octSign_5_6, octSign_5_7, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5,
+      octSign_6_6, octSign_6_7, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5,
+      octSign_7_6, octSign_7_7, uv, wv, vv]
   ring
 
 /-- The bilinear sum of a combination with `v`. -/
 theorem dot_comb_v (z : ℕ → R) (α β γ : R) :
     dot7 (comb α β γ z) (vV z) = α * wv z + β * vv z := by
-  simp [dot7, comb, mV, vV, cross, crossMat, vv, wv, Finset.sum_range_succ]
+  simp only [dot7, comb, vV, mV, cross, crossMat, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add, Nat.reduceAdd, octSign_1_1, Int.cast_zero, LawfulXor.xor_self,
+      zero_mul, octSign_1_2, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul,
+      one_mul, octSign_1_3, octSign_1_4, octSign_1_5, octSign_1_6, octSign_1_7, octSign_2_1,
+      even_two, Nat.xor_one_of_even, octSign_2_2, add_zero, octSign_2_3, octSign_2_4, octSign_2_5,
+      octSign_2_6, octSign_2_7, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_4, octSign_3_5,
+      octSign_3_6, octSign_3_7, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5,
+      octSign_4_6, octSign_4_7, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5,
+      octSign_5_6, octSign_5_7, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5,
+      octSign_6_6, octSign_6_7, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5,
+      octSign_7_6, octSign_7_7, wv, vv]
   ring
 
 /-- The cross product of a combination with `v`: `u × v = m`, `v × v = 0` and
 `m × v = W v - V u`. -/
 theorem cross_comb_v (z : ℕ → R) (α β γ : R) {f : ℕ} (h1 : 1 ≤ f) (h7 : f ≤ 7) :
     cross (comb α β γ z) (vV z) f = α * mV z f + γ * (wv z * vV z f - vv z * z f) := by
-  interval_cases f <;> simp [comb, mV, vV, cross, crossMat, vv, wv, Finset.sum_range_succ] <;> ring
+  interval_cases f <;> simp only [cross, crossMat, comb, vV, mV, Finset.sum_range_succ,
+      Finset.range_one, Finset.sum_singleton, zero_add, xor_xor_cancel_comm, Nat.reduceAdd,
+      octSign_1_1, Int.cast_zero, LawfulXor.xor_self, zero_xor, zero_mul, octSign_1_2,
+      Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor, octSign_3_1, neg_mul, one_mul,
+      octSign_3_2, octSign_3_3, add_zero, octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7,
+      neg_add_rev, octSign_1_3, octSign_2_1, octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5,
+      octSign_2_6, octSign_2_7, octSign_1_4, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4,
+      octSign_5_5, octSign_5_6, octSign_5_7, octSign_1_5, octSign_4_1, octSign_4_2, octSign_4_3,
+      octSign_4_4, octSign_4_5, octSign_4_6, octSign_4_7, octSign_1_6, octSign_7_1, octSign_7_2,
+      octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7, octSign_1_7, octSign_6_1,
+      octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7, wv, vv,
+      even_two, Nat.xor_one_of_even] <;> ring
 
 /-- The cross product of a combination with `ε u + δ m`: `u × m = W u - U v`,
 `v × m = V u - W v`, `v × u = -m`, `m × u = U v - W u` and `m × m = 0`. -/
@@ -102,7 +115,18 @@ theorem cross_comb_comb (z : ℕ → R) (α β γ ε δ : R) {f : ℕ} (h1 : 1 �
       (α * δ * wv z + β * δ * vv z - γ * ε * wv z) * z f +
         (γ * ε * uv z - α * δ * uv z - β * δ * wv z) * vV z f - β * ε * mV z f := by
   interval_cases f <;>
-    simp [comb, mV, vV, cross, crossMat, uv, vv, wv, Finset.sum_range_succ] <;> ring
+    simp only [cross, crossMat, comb, vV, mV, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, zero_add, xor_xor_cancel_comm, Nat.reduceAdd, zero_mul, add_zero,
+        octSign_1_1, Int.cast_zero, LawfulXor.xor_self, zero_xor, octSign_1_2, Int.reduceNeg,
+        Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, octSign_1_3, octSign_1_4,
+        octSign_1_5, octSign_1_6, octSign_1_7, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_4,
+        octSign_3_5, octSign_3_6, octSign_3_7, neg_add_rev, octSign_2_1, even_two,
+        Nat.xor_one_of_even, octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6,
+        octSign_2_7, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, octSign_5_6,
+        octSign_5_7, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5, octSign_4_6,
+        octSign_4_7, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6,
+        octSign_7_7, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6,
+        octSign_6_7, wv, vv, uv] <;> ring
 
 /-- `dot7` reads its second argument only at `1, ..., 7`. -/
 theorem dot7_congr_right (y p q : ℕ → R) (h : ∀ i, 1 ≤ i → i ≤ 7 → p i = q i) :

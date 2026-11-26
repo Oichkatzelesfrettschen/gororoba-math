@@ -173,21 +173,22 @@ def wedge (x w : ℕ → R) (a b : ℕ) : R := x a * w b - w a * x b
 def adjRhs (y x w : ℕ → R) (f : ℕ) : R :=
   dot7 y y * y f - dot7 y x * cross y w f + dot7 y w * cross y x f - dot7 y (cross x w) * y f
 
-attribute [local simp]
-  octSign_1_1 octSign_1_2 octSign_1_3 octSign_1_4 octSign_1_5 octSign_1_6 octSign_1_7
-  octSign_2_1 octSign_2_2 octSign_2_3 octSign_2_4 octSign_2_5 octSign_2_6 octSign_2_7
-  octSign_3_1 octSign_3_2 octSign_3_3 octSign_3_4 octSign_3_5 octSign_3_6 octSign_3_7
-  octSign_4_1 octSign_4_2 octSign_4_3 octSign_4_4 octSign_4_5 octSign_4_6 octSign_4_7
-  octSign_5_1 octSign_5_2 octSign_5_3 octSign_5_4 octSign_5_5 octSign_5_6 octSign_5_7
-  octSign_6_1 octSign_6_2 octSign_6_3 octSign_6_4 octSign_6_5 octSign_6_6 octSign_6_7
-  octSign_7_1 octSign_7_2 octSign_7_3 octSign_7_4 octSign_7_5 octSign_7_6 octSign_7_7
-
 private theorem adjPf_1 (y x w : ℕ → R) :
     (-1) ^ (1 - 1) * Matrix.pfaffianAux (fun a b => crossMat y a b + wedge x w a b)
       ((List.range' 1 7).erase 1) = adjRhs y x w 1 := by
   rw [show (List.range' 1 7).erase 1 = [2, 3, 4, 5, 6, 7] from rfl,
     Matrix.pfaffianAux_six_indices]
-  simp [adjRhs, crossMat, wedge, cross, dot7, Finset.sum_range_succ]
+  simp only [tsub_self, pow_zero, crossMat, octSign_2_3, Int.reduceNeg, Int.cast_neg, Int.cast_one,
+      Nat.reduceXor, neg_mul, one_mul, wedge, octSign_4_5, octSign_6_7, octSign_4_6, octSign_5_7,
+      octSign_4_7, octSign_5_6, octSign_2_4, octSign_3_5, octSign_3_6, octSign_3_7, octSign_2_5,
+      octSign_3_4, octSign_2_6, octSign_2_7, adjRhs, dot7, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add, Nat.reduceAdd, cross, octSign_1_1, Int.cast_zero,
+      LawfulXor.xor_self, zero_mul, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5, octSign_1_6,
+      octSign_1_7, octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2, add_zero, octSign_3_1,
+      octSign_3_2, octSign_3_3, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_5_1,
+      octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, octSign_6_1, octSign_6_2, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem adjPf_2 (y x w : ℕ → R) :
@@ -195,7 +196,17 @@ private theorem adjPf_2 (y x w : ℕ → R) :
       ((List.range' 1 7).erase 2) = adjRhs y x w 2 := by
   rw [show (List.range' 1 7).erase 2 = [1, 3, 4, 5, 6, 7] from rfl,
     Matrix.pfaffianAux_six_indices]
-  simp [adjRhs, crossMat, wedge, cross, dot7, Finset.sum_range_succ]
+  simp only [Nat.add_one_sub_one, pow_one, crossMat, octSign_1_3, Int.cast_one, Nat.reduceXor,
+      one_mul, wedge, octSign_4_5, Int.reduceNeg, Int.cast_neg, neg_mul, octSign_6_7, octSign_4_6,
+      octSign_5_7, octSign_4_7, octSign_5_6, octSign_1_4, octSign_3_5, octSign_3_6, octSign_3_7,
+      octSign_1_5, octSign_3_4, octSign_1_6, octSign_1_7, neg_add_rev, neg_sub, adjRhs, dot7,
+      Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add, Nat.reduceAdd, cross,
+      octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2, Int.cast_zero, LawfulXor.xor_self,
+      zero_mul, add_zero, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7,
+      octSign_1_1, octSign_1_2, octSign_3_1, octSign_3_2, octSign_3_3, octSign_4_1, octSign_4_2,
+      octSign_4_3, octSign_4_4, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5,
+      octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6, octSign_7_1,
+      octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem adjPf_3 (y x w : ℕ → R) :
@@ -203,7 +214,18 @@ private theorem adjPf_3 (y x w : ℕ → R) :
       ((List.range' 1 7).erase 3) = adjRhs y x w 3 := by
   rw [show (List.range' 1 7).erase 3 = [1, 2, 4, 5, 6, 7] from rfl,
     Matrix.pfaffianAux_six_indices]
-  simp [adjRhs, crossMat, wedge, cross, dot7, Finset.sum_range_succ]
+  simp only [Nat.add_one_sub_one, even_two, Even.neg_pow, one_pow, crossMat, octSign_1_2,
+      Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, wedge,
+      octSign_4_5, octSign_6_7, octSign_4_6, octSign_5_7, octSign_4_7, octSign_5_6, octSign_1_4,
+      octSign_2_5, octSign_2_6, octSign_2_7, octSign_1_5, octSign_2_4, octSign_1_6, octSign_1_7,
+      adjRhs, dot7, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, cross, octSign_3_1, octSign_3_2, octSign_3_3, Int.cast_zero,
+      LawfulXor.xor_self, zero_mul, add_zero, octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7,
+      octSign_1_1, octSign_1_3, octSign_2_1, Nat.xor_one_of_even, octSign_2_2, octSign_2_3,
+      octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_5_1, octSign_5_2, octSign_5_3,
+      octSign_5_4, octSign_5_5, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5,
+      octSign_6_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6,
+      octSign_7_7]
   ring
 
 private theorem adjPf_4 (y x w : ℕ → R) :
@@ -211,7 +233,17 @@ private theorem adjPf_4 (y x w : ℕ → R) :
       ((List.range' 1 7).erase 4) = adjRhs y x w 4 := by
   rw [show (List.range' 1 7).erase 4 = [1, 2, 3, 5, 6, 7] from rfl,
     Matrix.pfaffianAux_six_indices]
-  simp [adjRhs, crossMat, wedge, cross, dot7, Finset.sum_range_succ]
+  simp only [Nat.add_one_sub_one, crossMat, octSign_1_2, Int.reduceNeg, Int.cast_neg, Int.cast_one,
+      Nat.reduceXor, neg_mul, one_mul, wedge, octSign_3_5, octSign_6_7, octSign_3_6, octSign_5_7,
+      octSign_3_7, octSign_5_6, octSign_1_3, octSign_2_5, octSign_2_6, octSign_2_7, octSign_1_5,
+      octSign_2_3, octSign_1_6, octSign_1_7, adjRhs, dot7, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add, Nat.reduceAdd, cross, octSign_4_1, octSign_4_2, octSign_4_3,
+      octSign_4_4, Int.cast_zero, LawfulXor.xor_self, zero_mul, add_zero, octSign_4_5, octSign_4_6,
+      octSign_4_7, octSign_1_1, octSign_1_4, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_4, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_4, octSign_5_1,
+      octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, octSign_6_1, octSign_6_2, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem adjPf_5 (y x w : ℕ → R) :
@@ -219,7 +251,17 @@ private theorem adjPf_5 (y x w : ℕ → R) :
       ((List.range' 1 7).erase 5) = adjRhs y x w 5 := by
   rw [show (List.range' 1 7).erase 5 = [1, 2, 3, 4, 6, 7] from rfl,
     Matrix.pfaffianAux_six_indices]
-  simp [adjRhs, crossMat, wedge, cross, dot7, Finset.sum_range_succ]
+  simp only [Nat.add_one_sub_one, crossMat, octSign_1_2, Int.reduceNeg, Int.cast_neg, Int.cast_one,
+      Nat.reduceXor, neg_mul, one_mul, wedge, octSign_3_4, octSign_6_7, octSign_3_6, octSign_4_7,
+      octSign_3_7, octSign_4_6, octSign_1_3, octSign_2_4, octSign_2_6, octSign_2_7, octSign_1_4,
+      octSign_2_3, octSign_1_6, octSign_1_7, adjRhs, dot7, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add, Nat.reduceAdd, cross, octSign_5_1, octSign_5_2, octSign_5_3,
+      octSign_5_4, octSign_5_5, Int.cast_zero, LawfulXor.xor_self, zero_mul, add_zero, octSign_5_6,
+      octSign_5_7, octSign_1_1, octSign_1_5, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_5, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_5, octSign_4_1,
+      octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5, octSign_6_1, octSign_6_2, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem adjPf_6 (y x w : ℕ → R) :
@@ -227,7 +269,17 @@ private theorem adjPf_6 (y x w : ℕ → R) :
       ((List.range' 1 7).erase 6) = adjRhs y x w 6 := by
   rw [show (List.range' 1 7).erase 6 = [1, 2, 3, 4, 5, 7] from rfl,
     Matrix.pfaffianAux_six_indices]
-  simp [adjRhs, crossMat, wedge, cross, dot7, Finset.sum_range_succ]
+  simp only [Nat.add_one_sub_one, crossMat, octSign_1_2, Int.reduceNeg, Int.cast_neg, Int.cast_one,
+      Nat.reduceXor, neg_mul, one_mul, wedge, octSign_3_4, octSign_5_7, octSign_3_5, octSign_4_7,
+      octSign_3_7, octSign_4_5, octSign_1_3, octSign_2_4, octSign_2_5, octSign_2_7, octSign_1_4,
+      octSign_2_3, octSign_1_5, octSign_1_7, adjRhs, dot7, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add, Nat.reduceAdd, cross, octSign_6_1, octSign_6_2, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, Int.cast_zero, LawfulXor.xor_self, zero_mul, add_zero,
+      octSign_6_7, octSign_1_1, octSign_1_6, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_6, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_6, octSign_4_1,
+      octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_6, octSign_5_1, octSign_5_2, octSign_5_3,
+      octSign_5_4, octSign_5_5, octSign_5_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem adjPf_7 (y x w : ℕ → R) :
@@ -235,7 +287,17 @@ private theorem adjPf_7 (y x w : ℕ → R) :
       ((List.range' 1 7).erase 7) = adjRhs y x w 7 := by
   rw [show (List.range' 1 7).erase 7 = [1, 2, 3, 4, 5, 6] from rfl,
     Matrix.pfaffianAux_six_indices]
-  simp [adjRhs, crossMat, wedge, cross, dot7, Finset.sum_range_succ]
+  simp only [Nat.add_one_sub_one, crossMat, octSign_1_2, Int.reduceNeg, Int.cast_neg, Int.cast_one,
+      Nat.reduceXor, neg_mul, one_mul, wedge, octSign_3_4, octSign_5_6, octSign_3_5, octSign_4_6,
+      octSign_3_6, octSign_4_5, octSign_1_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_1_4,
+      octSign_2_3, octSign_1_5, octSign_1_6, adjRhs, dot7, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add, Nat.reduceAdd, cross, octSign_7_1, octSign_7_2, octSign_7_3,
+      octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7, Int.cast_zero, LawfulXor.xor_self,
+      zero_mul, add_zero, octSign_1_1, octSign_1_7, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_7, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_7, octSign_4_1,
+      octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_7, octSign_5_1, octSign_5_2, octSign_5_3,
+      octSign_5_4, octSign_5_5, octSign_5_7, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4,
+      octSign_6_5, octSign_6_6, octSign_6_7]
   ring
 
 /-- The Pfaffian adjugate of the cross-product matrix plus a rank-two term: each six-index

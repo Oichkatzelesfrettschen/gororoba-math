@@ -35,83 +35,6 @@ open PfaffianCross PfaffianSixteen PfaffianSchur PfaffianSchurBlock
 
 open scoped Matrix
 
-attribute [local simp]
-  PfaffianSchurBlock.sedSign_1_1 PfaffianSchurBlock.sedSign_1_2 PfaffianSchurBlock.sedSign_1_3
-  PfaffianSchurBlock.sedSign_1_4 PfaffianSchurBlock.sedSign_1_5 PfaffianSchurBlock.sedSign_1_6
-  PfaffianSchurBlock.sedSign_1_7 PfaffianSchurBlock.sedSign_1_8 PfaffianSchurBlock.sedSign_1_9
-  PfaffianSchurBlock.sedSign_1_10 PfaffianSchurBlock.sedSign_1_11 PfaffianSchurBlock.sedSign_1_12
-  PfaffianSchurBlock.sedSign_1_13 PfaffianSchurBlock.sedSign_1_14 PfaffianSchurBlock.sedSign_1_15
-  PfaffianSchurBlock.sedSign_2_1 PfaffianSchurBlock.sedSign_2_2 PfaffianSchurBlock.sedSign_2_3
-  PfaffianSchurBlock.sedSign_2_4 PfaffianSchurBlock.sedSign_2_5 PfaffianSchurBlock.sedSign_2_6
-  PfaffianSchurBlock.sedSign_2_7 PfaffianSchurBlock.sedSign_2_8 PfaffianSchurBlock.sedSign_2_9
-  PfaffianSchurBlock.sedSign_2_10 PfaffianSchurBlock.sedSign_2_11 PfaffianSchurBlock.sedSign_2_12
-  PfaffianSchurBlock.sedSign_2_13 PfaffianSchurBlock.sedSign_2_14 PfaffianSchurBlock.sedSign_2_15
-  PfaffianSchurBlock.sedSign_3_1 PfaffianSchurBlock.sedSign_3_2 PfaffianSchurBlock.sedSign_3_3
-  PfaffianSchurBlock.sedSign_3_4 PfaffianSchurBlock.sedSign_3_5 PfaffianSchurBlock.sedSign_3_6
-  PfaffianSchurBlock.sedSign_3_7 PfaffianSchurBlock.sedSign_3_8 PfaffianSchurBlock.sedSign_3_9
-  PfaffianSchurBlock.sedSign_3_10 PfaffianSchurBlock.sedSign_3_11 PfaffianSchurBlock.sedSign_3_12
-  PfaffianSchurBlock.sedSign_3_13 PfaffianSchurBlock.sedSign_3_14 PfaffianSchurBlock.sedSign_3_15
-  PfaffianSchurBlock.sedSign_4_1 PfaffianSchurBlock.sedSign_4_2 PfaffianSchurBlock.sedSign_4_3
-  PfaffianSchurBlock.sedSign_4_4 PfaffianSchurBlock.sedSign_4_5 PfaffianSchurBlock.sedSign_4_6
-  PfaffianSchurBlock.sedSign_4_7 PfaffianSchurBlock.sedSign_4_8 PfaffianSchurBlock.sedSign_4_9
-  PfaffianSchurBlock.sedSign_4_10 PfaffianSchurBlock.sedSign_4_11 PfaffianSchurBlock.sedSign_4_12
-  PfaffianSchurBlock.sedSign_4_13 PfaffianSchurBlock.sedSign_4_14 PfaffianSchurBlock.sedSign_4_15
-  PfaffianSchurBlock.sedSign_5_1 PfaffianSchurBlock.sedSign_5_2 PfaffianSchurBlock.sedSign_5_3
-  PfaffianSchurBlock.sedSign_5_4 PfaffianSchurBlock.sedSign_5_5 PfaffianSchurBlock.sedSign_5_6
-  PfaffianSchurBlock.sedSign_5_7 PfaffianSchurBlock.sedSign_5_8 PfaffianSchurBlock.sedSign_5_9
-  PfaffianSchurBlock.sedSign_5_10 PfaffianSchurBlock.sedSign_5_11 PfaffianSchurBlock.sedSign_5_12
-  PfaffianSchurBlock.sedSign_5_13 PfaffianSchurBlock.sedSign_5_14 PfaffianSchurBlock.sedSign_5_15
-  PfaffianSchurBlock.sedSign_6_1 PfaffianSchurBlock.sedSign_6_2 PfaffianSchurBlock.sedSign_6_3
-  PfaffianSchurBlock.sedSign_6_4 PfaffianSchurBlock.sedSign_6_5 PfaffianSchurBlock.sedSign_6_6
-  PfaffianSchurBlock.sedSign_6_7 PfaffianSchurBlock.sedSign_6_8 PfaffianSchurBlock.sedSign_6_9
-  PfaffianSchurBlock.sedSign_6_10 PfaffianSchurBlock.sedSign_6_11 PfaffianSchurBlock.sedSign_6_12
-  PfaffianSchurBlock.sedSign_6_13 PfaffianSchurBlock.sedSign_6_14 PfaffianSchurBlock.sedSign_6_15
-  PfaffianSchurBlock.sedSign_7_1 PfaffianSchurBlock.sedSign_7_2 PfaffianSchurBlock.sedSign_7_3
-  PfaffianSchurBlock.sedSign_7_4 PfaffianSchurBlock.sedSign_7_5 PfaffianSchurBlock.sedSign_7_6
-  PfaffianSchurBlock.sedSign_7_7 PfaffianSchurBlock.sedSign_7_8 PfaffianSchurBlock.sedSign_7_9
-  PfaffianSchurBlock.sedSign_7_10 PfaffianSchurBlock.sedSign_7_11 PfaffianSchurBlock.sedSign_7_12
-  PfaffianSchurBlock.sedSign_7_13 PfaffianSchurBlock.sedSign_7_14 PfaffianSchurBlock.sedSign_7_15
-  PfaffianSchurBlock.sedSign_8_1 PfaffianSchurBlock.sedSign_8_2 PfaffianSchurBlock.sedSign_8_3
-  PfaffianSchurBlock.sedSign_8_4 PfaffianSchurBlock.sedSign_8_5 PfaffianSchurBlock.sedSign_8_6
-  PfaffianSchurBlock.sedSign_8_7 PfaffianSchurBlock.sedSign_8_8 PfaffianSchurBlock.sedSign_8_9
-  PfaffianSchurBlock.sedSign_8_10 PfaffianSchurBlock.sedSign_8_11 PfaffianSchurBlock.sedSign_8_12
-  PfaffianSchurBlock.sedSign_8_13 PfaffianSchurBlock.sedSign_8_14 PfaffianSchurBlock.sedSign_8_15
-  PfaffianSchurBlock.sedSign_9_1 PfaffianSchurBlock.sedSign_9_2 PfaffianSchurBlock.sedSign_9_3
-  PfaffianSchurBlock.sedSign_9_4 PfaffianSchurBlock.sedSign_9_5 PfaffianSchurBlock.sedSign_9_6
-  PfaffianSchurBlock.sedSign_9_7 PfaffianSchurBlock.sedSign_9_8 PfaffianSchurBlock.sedSign_9_9
-  PfaffianSchurBlock.sedSign_9_10 PfaffianSchurBlock.sedSign_9_11 PfaffianSchurBlock.sedSign_9_12
-  PfaffianSchurBlock.sedSign_9_13 PfaffianSchurBlock.sedSign_9_14 PfaffianSchurBlock.sedSign_9_15
-  PfaffianSchurBlock.sedSign_10_1 PfaffianSchurBlock.sedSign_10_2 PfaffianSchurBlock.sedSign_10_3
-  PfaffianSchurBlock.sedSign_10_4 PfaffianSchurBlock.sedSign_10_5 PfaffianSchurBlock.sedSign_10_6
-  PfaffianSchurBlock.sedSign_10_7 PfaffianSchurBlock.sedSign_10_8 PfaffianSchurBlock.sedSign_10_9
-  PfaffianSchurBlock.sedSign_10_10 PfaffianSchurBlock.sedSign_10_11 PfaffianSchurBlock.sedSign_10_12
-  PfaffianSchurBlock.sedSign_10_13 PfaffianSchurBlock.sedSign_10_14 PfaffianSchurBlock.sedSign_10_15
-  PfaffianSchurBlock.sedSign_11_1 PfaffianSchurBlock.sedSign_11_2 PfaffianSchurBlock.sedSign_11_3
-  PfaffianSchurBlock.sedSign_11_4 PfaffianSchurBlock.sedSign_11_5 PfaffianSchurBlock.sedSign_11_6
-  PfaffianSchurBlock.sedSign_11_7 PfaffianSchurBlock.sedSign_11_8 PfaffianSchurBlock.sedSign_11_9
-  PfaffianSchurBlock.sedSign_11_10 PfaffianSchurBlock.sedSign_11_11 PfaffianSchurBlock.sedSign_11_12
-  PfaffianSchurBlock.sedSign_11_13 PfaffianSchurBlock.sedSign_11_14 PfaffianSchurBlock.sedSign_11_15
-  PfaffianSchurBlock.sedSign_12_1 PfaffianSchurBlock.sedSign_12_2 PfaffianSchurBlock.sedSign_12_3
-  PfaffianSchurBlock.sedSign_12_4 PfaffianSchurBlock.sedSign_12_5 PfaffianSchurBlock.sedSign_12_6
-  PfaffianSchurBlock.sedSign_12_7 PfaffianSchurBlock.sedSign_12_8 PfaffianSchurBlock.sedSign_12_9
-  PfaffianSchurBlock.sedSign_12_10 PfaffianSchurBlock.sedSign_12_11 PfaffianSchurBlock.sedSign_12_12
-  PfaffianSchurBlock.sedSign_12_13 PfaffianSchurBlock.sedSign_12_14 PfaffianSchurBlock.sedSign_12_15
-  PfaffianSchurBlock.sedSign_13_1 PfaffianSchurBlock.sedSign_13_2 PfaffianSchurBlock.sedSign_13_3
-  PfaffianSchurBlock.sedSign_13_4 PfaffianSchurBlock.sedSign_13_5 PfaffianSchurBlock.sedSign_13_6
-  PfaffianSchurBlock.sedSign_13_7 PfaffianSchurBlock.sedSign_13_8 PfaffianSchurBlock.sedSign_13_9
-  PfaffianSchurBlock.sedSign_13_10 PfaffianSchurBlock.sedSign_13_11 PfaffianSchurBlock.sedSign_13_12
-  PfaffianSchurBlock.sedSign_13_13 PfaffianSchurBlock.sedSign_13_14 PfaffianSchurBlock.sedSign_13_15
-  PfaffianSchurBlock.sedSign_14_1 PfaffianSchurBlock.sedSign_14_2 PfaffianSchurBlock.sedSign_14_3
-  PfaffianSchurBlock.sedSign_14_4 PfaffianSchurBlock.sedSign_14_5 PfaffianSchurBlock.sedSign_14_6
-  PfaffianSchurBlock.sedSign_14_7 PfaffianSchurBlock.sedSign_14_8 PfaffianSchurBlock.sedSign_14_9
-  PfaffianSchurBlock.sedSign_14_10 PfaffianSchurBlock.sedSign_14_11 PfaffianSchurBlock.sedSign_14_12
-  PfaffianSchurBlock.sedSign_14_13 PfaffianSchurBlock.sedSign_14_14 PfaffianSchurBlock.sedSign_14_15
-  PfaffianSchurBlock.sedSign_15_1 PfaffianSchurBlock.sedSign_15_2 PfaffianSchurBlock.sedSign_15_3
-  PfaffianSchurBlock.sedSign_15_4 PfaffianSchurBlock.sedSign_15_5 PfaffianSchurBlock.sedSign_15_6
-  PfaffianSchurBlock.sedSign_15_7 PfaffianSchurBlock.sedSign_15_8 PfaffianSchurBlock.sedSign_15_9
-  PfaffianSchurBlock.sedSign_15_10 PfaffianSchurBlock.sedSign_15_11 PfaffianSchurBlock.sedSign_15_12
-  PfaffianSchurBlock.sedSign_15_13 PfaffianSchurBlock.sedSign_15_14 PfaffianSchurBlock.sedSign_15_15
-
 /-- The sedenion sign table is skew off the diagonal. -/
 theorem sedSign_skew {a b : ℕ} (ha : 1 ≤ a) (ha16 : a < 16) (hb : 1 ≤ b) (hb16 : b < 16)
     (hab : a ≠ b) : sedSign a b = -sedSign b a := by
@@ -121,18 +44,18 @@ variable {R : Type*} [CommRing R]
 
 /-- The first row of the bordered matrix is `-t`. -/
 theorem borderedA_zero_left (z t : ℕ → R) {b : ℕ} (hb : b ≠ 0) : borderedA z t 0 b = -t b := by
-  simp [borderedA, Ne.symm hb]
+  simp only [borderedA, Ne.symm hb, ↓reduceIte]
 
 /-- The first column of the bordered matrix is `t`. -/
 theorem borderedA_zero_right (z t : ℕ → R) {a : ℕ} (ha : a ≠ 0) : borderedA z t a 0 = t a := by
-  simp [borderedA, ha]
+  simp only [borderedA, ha, ↓reduceIte]
 
 /-- The bordered matrix is skew on `0, ..., 15`. -/
 theorem borderedA_skew (z t : ℕ → R) {a b : ℕ} (ha : a < 16) (hb : b < 16) :
     borderedA z t a b = -borderedA z t b a := by
   by_cases hab : a = b
   · subst hab
-    simp [borderedA_self]
+    simp only [borderedA_self, neg_zero]
   by_cases ha0 : a = 0
   · subst ha0
     rw [borderedA_zero_left z t (Ne.symm hab), borderedA_zero_right z t (Ne.symm hab)]
@@ -196,50 +119,179 @@ theorem fromBlocks_eq (z t : ℕ → R) :
 private theorem bb_0 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 0 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 0 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.zero_mod, add_zero, Nat.one_le_ofNat, Nat.reduceLT,
+        Fin.sum_univ_eight, borderedA_self, mul_zero, Nat.one_mod, Nat.reduceAdd, ne_eq,
+        Nat.reduceEqDiff, not_false_eq_true, borderedA_of_pos, sedSign_8_9, Int.reduceNeg,
+        Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, Nat.succ_ne_self, sedSign_9_8,
+        zero_add, Nat.reduceMod, sedSign_8_10, sedSign_10_8, sedSign_8_11, sedSign_11_8,
+        sedSign_8_12, sedSign_12_8, sedSign_8_13, sedSign_13_8, sedSign_8_14, sedSign_14_8,
+        Nat.mod_succ, Nat.lt_add_one, sedSign_8_15, sedSign_15_8, uv, Finset.sum_range_succ,
+        Finset.range_one, Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply,
+        Matrix.one_apply_eq, smul_eq_mul, mul_one, neg_add_rev, Fin.mk_one, mul_neg, zero_mul,
+        neg_zero, sedSign_10_9, neg_neg, sedSign_11_9, sedSign_12_9, sedSign_13_9, sedSign_14_9,
+        sedSign_15_9, zero_ne_one, Matrix.one_apply_ne, Fin.reduceFinMk, sedSign_9_10,
+        sedSign_11_10, sedSign_12_10, sedSign_13_10, sedSign_14_10, sedSign_15_10, Fin.reduceEq,
+        sedSign_9_11, sedSign_10_11, sedSign_12_11, sedSign_13_11, sedSign_14_11, sedSign_15_11,
+        sedSign_9_12, sedSign_10_12, sedSign_11_12, sedSign_13_12, sedSign_14_12, sedSign_15_12,
+        sedSign_9_13, sedSign_10_13, sedSign_11_13, sedSign_12_13, sedSign_14_13, sedSign_15_13,
+        sedSign_9_14, sedSign_10_14, sedSign_11_14, sedSign_12_14, sedSign_13_14, sedSign_15_14,
+        sedSign_9_15, sedSign_10_15, sedSign_11_15, sedSign_12_15, sedSign_13_15,
+        sedSign_14_15] <;> ring
 
 private theorem bb_1 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 1 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 1 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.one_mod, Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT,
+        Nat.zero_mod, add_zero, Fin.sum_univ_eight, ne_eq, Nat.succ_ne_self, not_false_eq_true,
+        borderedA_of_pos, sedSign_9_8, Int.cast_one, Nat.reduceXor, one_mul, borderedA_self,
+        mul_zero, zero_mul, Nat.reduceMod, Nat.reduceEqDiff, sedSign_9_10, sedSign_10_8, zero_add,
+        sedSign_9_11, Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_11_8, sedSign_9_12,
+        sedSign_12_8, sedSign_9_13, sedSign_13_8, sedSign_9_14, sedSign_14_8, Nat.mod_succ,
+        Nat.lt_add_one, sedSign_9_15, sedSign_15_8, uv, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply, one_ne_zero, Matrix.one_apply_ne,
+        smul_eq_mul, neg_zero, Fin.mk_one, sedSign_8_9, mul_neg, sedSign_10_9, sedSign_11_9,
+        sedSign_12_9, sedSign_13_9, sedSign_14_9, sedSign_15_9, Matrix.one_apply_eq, mul_one,
+        neg_add_rev, Fin.reduceFinMk, sedSign_8_10, sedSign_11_10, neg_neg, sedSign_12_10,
+        sedSign_13_10, sedSign_14_10, sedSign_15_10, Fin.reduceEq, sedSign_8_11, sedSign_10_11,
+        sedSign_12_11, sedSign_13_11, sedSign_14_11, sedSign_15_11, sedSign_8_12, sedSign_10_12,
+        sedSign_11_12, sedSign_13_12, sedSign_14_12, sedSign_15_12, sedSign_8_13, sedSign_10_13,
+        sedSign_11_13, sedSign_12_13, sedSign_14_13, sedSign_15_13, sedSign_8_14, sedSign_10_14,
+        sedSign_11_14, sedSign_12_14, sedSign_13_14, sedSign_15_14, sedSign_8_15, sedSign_10_15,
+        sedSign_11_15, sedSign_12_15, sedSign_13_15, sedSign_14_15] <;> ring
 
 private theorem bb_2 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 2 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 2 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.reduceMod, Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT,
+        Nat.zero_mod, add_zero, Fin.sum_univ_eight, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+        borderedA_of_pos, sedSign_10_8, Int.cast_one, Nat.reduceXor, one_mul, borderedA_self,
+        mul_zero, Nat.one_mod, Nat.succ_ne_self, sedSign_10_9, Int.reduceNeg, Int.cast_neg, neg_mul,
+        sedSign_9_8, zero_add, zero_mul, sedSign_10_11, sedSign_11_8, sedSign_10_12, sedSign_12_8,
+        sedSign_10_13, sedSign_13_8, sedSign_10_14, sedSign_14_8, Nat.mod_succ, Nat.lt_add_one,
+        sedSign_10_15, sedSign_15_8, uv, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply, Fin.reduceEq,
+        Matrix.one_apply_ne, smul_eq_mul, neg_zero, Fin.mk_one, sedSign_8_9, mul_neg, sedSign_11_9,
+        sedSign_12_9, sedSign_13_9, sedSign_14_9, sedSign_15_9, neg_neg, Fin.reduceFinMk,
+        sedSign_8_10, sedSign_9_10, sedSign_11_10, sedSign_12_10, sedSign_13_10, sedSign_14_10,
+        sedSign_15_10, Matrix.one_apply_eq, mul_one, neg_add_rev, sedSign_8_11, sedSign_9_11,
+        sedSign_12_11, sedSign_13_11, sedSign_14_11, sedSign_15_11, sedSign_8_12, sedSign_9_12,
+        sedSign_11_12, sedSign_13_12, sedSign_14_12, sedSign_15_12, sedSign_8_13, sedSign_9_13,
+        sedSign_11_13, sedSign_12_13, sedSign_14_13, sedSign_15_13, sedSign_8_14, sedSign_9_14,
+        sedSign_11_14, sedSign_12_14, sedSign_13_14, sedSign_15_14, sedSign_8_15, sedSign_9_15,
+        sedSign_11_15, sedSign_12_15, sedSign_13_15, sedSign_14_15] <;> ring
 
 private theorem bb_3 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 3 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 3 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.reduceMod, Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT,
+        Nat.zero_mod, add_zero, Fin.sum_univ_eight, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+        borderedA_of_pos, sedSign_11_8, Int.cast_one, Nat.reduceXor, one_mul, borderedA_self,
+        mul_zero, Nat.one_mod, sedSign_11_9, Nat.succ_ne_self, sedSign_9_8, zero_add, sedSign_11_10,
+        Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_10_8, zero_mul, sedSign_11_12, sedSign_12_8,
+        sedSign_11_13, sedSign_13_8, sedSign_11_14, sedSign_14_8, Nat.mod_succ, Nat.lt_add_one,
+        sedSign_11_15, sedSign_15_8, uv, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply, Fin.reduceEq,
+        Matrix.one_apply_ne, smul_eq_mul, neg_zero, Fin.mk_one, sedSign_8_9, mul_neg, sedSign_10_9,
+        neg_neg, sedSign_12_9, sedSign_13_9, sedSign_14_9, sedSign_15_9, Fin.reduceFinMk,
+        sedSign_8_10, sedSign_9_10, sedSign_12_10, sedSign_13_10, sedSign_14_10, sedSign_15_10,
+        sedSign_8_11, sedSign_9_11, sedSign_10_11, sedSign_12_11, sedSign_13_11, sedSign_14_11,
+        sedSign_15_11, Matrix.one_apply_eq, mul_one, neg_add_rev, sedSign_8_12, sedSign_9_12,
+        sedSign_10_12, sedSign_13_12, sedSign_14_12, sedSign_15_12, sedSign_8_13, sedSign_9_13,
+        sedSign_10_13, sedSign_12_13, sedSign_14_13, sedSign_15_13, sedSign_8_14, sedSign_9_14,
+        sedSign_10_14, sedSign_12_14, sedSign_13_14, sedSign_15_14, sedSign_8_15, sedSign_9_15,
+        sedSign_10_15, sedSign_12_15, sedSign_13_15, sedSign_14_15] <;> ring
 
 private theorem bb_4 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 4 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 4 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.reduceMod, Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT,
+        Nat.zero_mod, add_zero, Fin.sum_univ_eight, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+        borderedA_of_pos, sedSign_12_8, Int.cast_one, Nat.reduceXor, one_mul, borderedA_self,
+        mul_zero, Nat.one_mod, sedSign_12_9, Int.reduceNeg, Int.cast_neg, neg_mul, Nat.succ_ne_self,
+        sedSign_9_8, zero_add, sedSign_12_10, sedSign_10_8, sedSign_12_11, sedSign_11_8, zero_mul,
+        sedSign_12_13, sedSign_13_8, sedSign_12_14, sedSign_14_8, Nat.mod_succ, Nat.lt_add_one,
+        sedSign_12_15, sedSign_15_8, uv, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply, Fin.reduceEq,
+        Matrix.one_apply_ne, smul_eq_mul, neg_zero, Fin.mk_one, sedSign_8_9, mul_neg, sedSign_10_9,
+        neg_neg, sedSign_11_9, sedSign_13_9, sedSign_14_9, sedSign_15_9, Fin.reduceFinMk,
+        sedSign_8_10, sedSign_9_10, sedSign_11_10, sedSign_13_10, sedSign_14_10, sedSign_15_10,
+        sedSign_8_11, sedSign_9_11, sedSign_10_11, sedSign_13_11, sedSign_14_11, sedSign_15_11,
+        sedSign_8_12, sedSign_9_12, sedSign_10_12, sedSign_11_12, sedSign_13_12, sedSign_14_12,
+        sedSign_15_12, Matrix.one_apply_eq, mul_one, neg_add_rev, sedSign_8_13, sedSign_9_13,
+        sedSign_10_13, sedSign_11_13, sedSign_14_13, sedSign_15_13, sedSign_8_14, sedSign_9_14,
+        sedSign_10_14, sedSign_11_14, sedSign_13_14, sedSign_15_14, sedSign_8_15, sedSign_9_15,
+        sedSign_10_15, sedSign_11_15, sedSign_13_15, sedSign_14_15] <;> ring
 
 private theorem bb_5 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 5 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 5 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.reduceMod, Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT,
+        Nat.zero_mod, add_zero, Fin.sum_univ_eight, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+        borderedA_of_pos, sedSign_13_8, Int.cast_one, Nat.reduceXor, one_mul, borderedA_self,
+        mul_zero, Nat.one_mod, sedSign_13_9, Nat.succ_ne_self, sedSign_9_8, zero_add, sedSign_13_10,
+        Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_10_8, sedSign_13_11, sedSign_11_8,
+        sedSign_13_12, sedSign_12_8, zero_mul, sedSign_13_14, sedSign_14_8, Nat.mod_succ,
+        Nat.lt_add_one, sedSign_13_15, sedSign_15_8, uv, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply, Fin.reduceEq,
+        Matrix.one_apply_ne, smul_eq_mul, neg_zero, Fin.mk_one, sedSign_8_9, mul_neg, sedSign_10_9,
+        neg_neg, sedSign_11_9, sedSign_12_9, sedSign_14_9, sedSign_15_9, Fin.reduceFinMk,
+        sedSign_8_10, sedSign_9_10, sedSign_11_10, sedSign_12_10, sedSign_14_10, sedSign_15_10,
+        sedSign_8_11, sedSign_9_11, sedSign_10_11, sedSign_12_11, sedSign_14_11, sedSign_15_11,
+        sedSign_8_12, sedSign_9_12, sedSign_10_12, sedSign_11_12, sedSign_14_12, sedSign_15_12,
+        sedSign_8_13, sedSign_9_13, sedSign_10_13, sedSign_11_13, sedSign_12_13, sedSign_14_13,
+        sedSign_15_13, Matrix.one_apply_eq, mul_one, neg_add_rev, sedSign_8_14, sedSign_9_14,
+        sedSign_10_14, sedSign_11_14, sedSign_12_14, sedSign_15_14, sedSign_8_15, sedSign_9_15,
+        sedSign_10_15, sedSign_11_15, sedSign_12_15, sedSign_14_15] <;> ring
 
 private theorem bb_6 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 6 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 6 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.reduceMod, Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT,
+        Nat.zero_mod, add_zero, Fin.sum_univ_eight, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+        borderedA_of_pos, sedSign_14_8, Int.cast_one, Nat.reduceXor, one_mul, borderedA_self,
+        mul_zero, Nat.one_mod, sedSign_14_9, Nat.succ_ne_self, sedSign_9_8, zero_add, sedSign_14_10,
+        sedSign_10_8, sedSign_14_11, Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_11_8,
+        sedSign_14_12, sedSign_12_8, sedSign_14_13, sedSign_13_8, zero_mul, Nat.mod_succ,
+        Nat.lt_add_one, sedSign_14_15, sedSign_15_8, uv, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply, Fin.reduceEq,
+        Matrix.one_apply_ne, smul_eq_mul, neg_zero, Fin.mk_one, sedSign_8_9, mul_neg, sedSign_10_9,
+        sedSign_11_9, sedSign_12_9, neg_neg, sedSign_13_9, sedSign_15_9, Fin.reduceFinMk,
+        sedSign_8_10, sedSign_9_10, sedSign_11_10, sedSign_12_10, sedSign_13_10, sedSign_15_10,
+        sedSign_8_11, sedSign_9_11, sedSign_10_11, sedSign_12_11, sedSign_13_11, sedSign_15_11,
+        sedSign_8_12, sedSign_9_12, sedSign_10_12, sedSign_11_12, sedSign_13_12, sedSign_15_12,
+        sedSign_8_13, sedSign_9_13, sedSign_10_13, sedSign_11_13, sedSign_12_13, sedSign_15_13,
+        sedSign_8_14, sedSign_9_14, sedSign_10_14, sedSign_11_14, sedSign_12_14, sedSign_13_14,
+        sedSign_15_14, Matrix.one_apply_eq, mul_one, neg_add_rev, sedSign_8_15, sedSign_9_15,
+        sedSign_10_15, sedSign_11_15, sedSign_12_15, sedSign_13_15] <;> ring
 
 private theorem bb_7 (z t : ℕ → R) (j : Fin 8) :
     (Bm z t * Bm z t) 7 j = (-(uv z • (1 : Matrix (Fin 8) (Fin 8) R))) 7 j := by
   fin_cases j <;>
-    simp [Matrix.mul_apply, Fin.sum_univ_eight, Bm, borderedA_self,
-      borderedA_of_pos, uv, Finset.sum_range_succ] <;> ring
+    simp only [Bm, Fin.isValue, Fin.zero_eta, Matrix.mul_apply, Matrix.of_apply,
+        Fin.coe_ofNat_eq_mod, Nat.mod_succ, Nat.reduceAdd, Nat.one_le_ofNat, Nat.lt_add_one,
+        Nat.zero_mod, add_zero, Fin.sum_univ_eight, Nat.reduceLT, ne_eq, Nat.reduceEqDiff,
+        not_false_eq_true, borderedA_of_pos, sedSign_15_8, Int.cast_one, Nat.reduceXor, one_mul,
+        borderedA_self, mul_zero, Nat.one_mod, sedSign_15_9, Int.reduceNeg, Int.cast_neg, neg_mul,
+        Nat.succ_ne_self, sedSign_9_8, zero_add, Nat.reduceMod, sedSign_15_10, sedSign_10_8,
+        sedSign_15_11, sedSign_11_8, sedSign_15_12, sedSign_12_8, sedSign_15_13, sedSign_13_8,
+        sedSign_15_14, sedSign_14_8, zero_mul, uv, Finset.sum_range_succ, Finset.range_one,
+        Finset.sum_singleton, Matrix.neg_apply, Matrix.smul_apply, Fin.reduceEq,
+        Matrix.one_apply_ne, smul_eq_mul, neg_zero, Fin.mk_one, sedSign_8_9, mul_neg, sedSign_10_9,
+        sedSign_11_9, sedSign_12_9, neg_neg, sedSign_13_9, sedSign_14_9, Fin.reduceFinMk,
+        sedSign_8_10, sedSign_9_10, sedSign_11_10, sedSign_12_10, sedSign_13_10, sedSign_14_10,
+        sedSign_8_11, sedSign_9_11, sedSign_10_11, sedSign_12_11, sedSign_13_11, sedSign_14_11,
+        sedSign_8_12, sedSign_9_12, sedSign_10_12, sedSign_11_12, sedSign_13_12, sedSign_14_12,
+        sedSign_8_13, sedSign_9_13, sedSign_10_13, sedSign_11_13, sedSign_12_13, sedSign_14_13,
+        sedSign_8_14, sedSign_9_14, sedSign_10_14, sedSign_11_14, sedSign_12_14, sedSign_13_14,
+        sedSign_8_15, sedSign_9_15, sedSign_10_15, sedSign_11_15, sedSign_12_15, sedSign_13_15,
+        sedSign_14_15, Matrix.one_apply_eq, mul_one, neg_add_rev] <;> ring
 
 /-- The block on `S` squares to `-U`: right multiplication by a pure octonion. -/
 theorem Bm_mul_self (z t : ℕ → R) : Bm z t * Bm z t = -(uv z • (1 : Matrix (Fin 8) (Fin 8) R)) := by
@@ -257,20 +309,32 @@ theorem Bm_mul_self (z t : ℕ → R) : Bm z t * Bm z t = -(uv z • (1 : Matrix
 /-- The Pfaffian of the block on `S` is `U ^ 2`. -/
 theorem pfaffian_Bm (z t : ℕ → R) : Matrix.pfaffian (Bm z t) = uv z ^ 2 := by
   have h := Matrix.pfaffianAux_reindex (borderedA z t) (fun i : Fin 8 => 8 + (i : ℕ)) 8
-    (List.finRange 8) (by simp)
+    (List.finRange 8) (by simp only [List.length_finRange])
   have hl : (List.finRange 8).map (fun i : Fin 8 => 8 + (i : ℕ)) =
       [8, 9, 10, 11, 12, 13, 14, 15] := by decide
   unfold Matrix.pfaffian
   change Matrix.pfaffianAux (fun a b : Fin 8 => borderedA z t (8 + (a : ℕ)) (8 + (b : ℕ)))
     (List.finRange 8) = _
   rw [h, hl, Matrix.pfaffianAux_eight_indices]
-  simp [Matrix.pfaffianAux_six_indices, borderedA_of_pos, uv, Finset.sum_range_succ]
+  simp only [Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_8_9, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, Matrix.pfaffianAux_six_indices, sedSign_10_11, sedSign_12_13,
+      Nat.lt_add_one, sedSign_14_15, mul_neg, sedSign_12_14, sedSign_13_15, sedSign_12_15,
+      sedSign_13_14, sedSign_10_12, sedSign_11_13, neg_neg, sedSign_11_14, sedSign_11_15,
+      sedSign_10_13, sedSign_11_12, sedSign_10_14, sub_neg_eq_add, sedSign_10_15, sedSign_8_10,
+      sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_8_11,
+      sedSign_9_10, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, uv,
+      Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add, Nat.reduceAdd]
   ring
 
 /-- The cleared Schur complement `U Dm - Xmᵀ Bm Xm` is `schurN`. -/
 theorem schurS_eq (z t : ℕ → R) (i j : Fin 8) :
     (uv z • Dm z t + (Xm z t)ᵀ * -(Bm z t * Xm z t)) i j = schurN z t i j := by
-  simp [Matrix.mul_apply, Fin.sum_univ_eight, Finset.sum_range_succ, schurN, Dm, Xm, Bm]
+  simp only [Dm, Matrix.smul_of, Xm, Bm, mul_neg, Matrix.add_apply, Matrix.of_apply, Pi.smul_apply,
+      smul_eq_mul, Matrix.neg_apply, Matrix.mul_apply, Matrix.transpose_apply, Fin.sum_univ_eight,
+      Fin.isValue, Fin.coe_ofNat_eq_mod, Nat.zero_mod, add_zero, Nat.one_mod, Nat.reduceAdd,
+      Nat.reduceMod, Nat.mod_succ, neg_add_rev, schurN, Finset.sum_range_succ, Finset.range_one,
+      Finset.sum_singleton, zero_add]
   ring
 
 /-- The Pfaffian of the cleared Schur complement is that of `schurN` on `0, ..., 7`. -/
@@ -279,7 +343,8 @@ theorem pfaffian_schurS (z t : ℕ → R) :
       Matrix.pfaffianAux (schurN z t) [0, 1, 2, 3, 4, 5, 6, 7] := by
   rw [Matrix.pfaffianAux_congr _ (fun a b : Fin 8 => schurN z t a b) _ _ rfl
     (fun a _ b _ => schurS_eq z t a b),
-    Matrix.pfaffianAux_reindex (schurN z t) (fun a : Fin 8 => (a : ℕ)) 8 _ (by simp)]
+    Matrix.pfaffianAux_reindex (schurN z t) (fun a : Fin 8 => (a : ℕ)) 8 _ (by simp only [
+        List.length_finRange])]
   exact congrArg _ (by decide)
 
 private theorem row_1 (z t : ℕ → R) :
@@ -299,8 +364,23 @@ private theorem row_1 (z t : ℕ → R) :
       - z 2 * z 13 * t 14 - z 3 * z 12 * t 14 - z 1 * z 14 * t 14 - z 7 * z 9 * t 15
       - z 6 * z 8 * t 15 + z 5 * z 11 * t 15 - z 4 * z 10 * t 15 - z 3 * z 13 * t 15
       + z 2 * z 12 * t 15 - z 1 * z 15 * t 15 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, borderedA_zero_left,
-    borderedA_zero_right, uv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, ne_eq, one_ne_zero, not_false_eq_true, borderedA_zero_left, mul_neg,
+      le_add_iff_nonneg_left, zero_le, Nat.add_eq_zero_iff, OfNat.ofNat_ne_zero, and_false,
+      borderedA_zero_right, Nat.one_le_ofNat, Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat,
+      OfNat.ofNat_ne_one, borderedA_of_pos, sedSign_8_1, Int.cast_one, Nat.reduceXor, one_mul,
+      sedSign_9_1, Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_10_1, sedSign_11_1, sedSign_12_1,
+      sedSign_13_1, sedSign_14_1, Nat.lt_add_one, sedSign_15_1, borderedA_self, mul_zero, zero_mul,
+      Nat.reduceEqDiff, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14,
+      sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_8,
+      sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14]
   ring
 
 private theorem row_2 (z t : ℕ → R) :
@@ -320,8 +400,23 @@ private theorem row_2 (z t : ℕ → R) :
       - z 2 * z 14 * t 14 + z 3 * z 15 * t 14 + z 1 * z 13 * t 14 - z 7 * z 10 * t 15
       + z 6 * z 11 * t 15 + z 5 * z 8 * t 15 + z 4 * z 9 * t 15 - z 3 * z 14 * t 15
       - z 2 * z 15 * t 15 - z 1 * z 12 * t 15 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, borderedA_zero_left,
-    borderedA_zero_right, uv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, borderedA_zero_left, mul_neg,
+      le_add_iff_nonneg_left, zero_le, Nat.add_eq_zero_iff, and_false, borderedA_zero_right,
+      Nat.one_le_ofNat, Nat.reduceLT, Nat.reduceEqDiff, borderedA_of_pos, sedSign_8_2, Int.cast_one,
+      Nat.reduceXor, one_mul, sedSign_9_2, sedSign_10_2, Int.reduceNeg, Int.cast_neg, neg_mul,
+      sedSign_11_2, sedSign_12_2, sedSign_13_2, sedSign_14_2, Nat.lt_add_one, sedSign_15_2,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, neg_neg, sedSign_8_11,
+      sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8,
+      add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12,
+      sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14]
   ring
 
 private theorem row_3 (z t : ℕ → R) :
@@ -341,8 +436,23 @@ private theorem row_3 (z t : ℕ → R) :
       - z 2 * z 15 * t 14 - z 3 * z 14 * t 14 + z 1 * z 12 * t 14 - z 7 * z 11 * t 15
       - z 6 * z 10 * t 15 - z 5 * z 9 * t 15 + z 4 * z 8 * t 15 - z 3 * z 15 * t 15
       + z 2 * z 14 * t 15 + z 1 * z 13 * t 15 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, borderedA_zero_left,
-    borderedA_zero_right, uv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, borderedA_zero_left, mul_neg,
+      le_add_iff_nonneg_left, zero_le, Nat.add_eq_zero_iff, and_false, borderedA_zero_right,
+      Nat.one_le_ofNat, Nat.reduceLT, Nat.reduceEqDiff, borderedA_of_pos, sedSign_8_3, Int.cast_one,
+      Nat.reduceXor, one_mul, sedSign_9_3, Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_10_3,
+      sedSign_11_3, sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one, sedSign_15_3,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11,
+      sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8,
+      neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12,
+      sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14]
   ring
 
 private theorem row_4 (z t : ℕ → R) :
@@ -362,8 +472,23 @@ private theorem row_4 (z t : ℕ → R) :
       - z 2 * z 8 * t 14 + z 3 * z 9 * t 14 - z 1 * z 11 * t 14 - z 7 * z 12 * t 15
       + z 6 * z 13 * t 15 - z 5 * z 14 * t 15 - z 4 * z 15 * t 15 - z 3 * z 8 * t 15
       - z 2 * z 9 * t 15 + z 1 * z 10 * t 15 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, borderedA_zero_left,
-    borderedA_zero_right, uv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, borderedA_zero_left, mul_neg,
+      le_add_iff_nonneg_left, zero_le, Nat.add_eq_zero_iff, and_false, borderedA_zero_right,
+      Nat.one_le_ofNat, Nat.reduceLT, Nat.reduceEqDiff, borderedA_of_pos, sedSign_8_4, Int.cast_one,
+      Nat.reduceXor, one_mul, sedSign_9_4, sedSign_10_4, sedSign_11_4, sedSign_12_4, Int.reduceNeg,
+      Int.cast_neg, neg_mul, sedSign_13_4, sedSign_14_4, Nat.lt_add_one, sedSign_15_4,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      neg_neg, sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14,
+      sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      neg_zero, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14]
   ring
 
 private theorem row_5 (z t : ℕ → R) :
@@ -383,8 +508,23 @@ private theorem row_5 (z t : ℕ → R) :
       + z 2 * z 9 * t 14 + z 3 * z 8 * t 14 - z 1 * z 10 * t 14 - z 7 * z 13 * t 15
       - z 6 * z 12 * t 15 - z 5 * z 15 * t 15 + z 4 * z 14 * t 15 + z 3 * z 9 * t 15
       - z 2 * z 8 * t 15 - z 1 * z 11 * t 15 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, borderedA_zero_left,
-    borderedA_zero_right, uv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, borderedA_zero_left, mul_neg,
+      le_add_iff_nonneg_left, zero_le, Nat.add_eq_zero_iff, and_false, borderedA_zero_right,
+      Nat.one_le_ofNat, Nat.reduceLT, Nat.reduceEqDiff, borderedA_of_pos, sedSign_8_5, Int.cast_one,
+      Nat.reduceXor, one_mul, sedSign_9_5, Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_10_5,
+      sedSign_11_5, sedSign_12_5, sedSign_13_5, sedSign_14_5, Nat.lt_add_one, sedSign_15_5,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11,
+      sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8,
+      neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12,
+      sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14]
   ring
 
 private theorem row_6 (z t : ℕ → R) :
@@ -404,8 +544,23 @@ private theorem row_6 (z t : ℕ → R) :
       + z 2 * z 10 * t 14 + z 3 * z 11 * t 14 + z 1 * z 9 * t 14 - z 7 * z 14 * t 15
       - z 6 * z 15 * t 15 + z 5 * z 12 * t 15 - z 4 * z 13 * t 15 + z 3 * z 10 * t 15
       - z 2 * z 11 * t 15 + z 1 * z 8 * t 15 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, borderedA_zero_left,
-    borderedA_zero_right, uv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, borderedA_zero_left, mul_neg,
+      le_add_iff_nonneg_left, zero_le, Nat.add_eq_zero_iff, and_false, borderedA_zero_right,
+      Nat.one_le_ofNat, Nat.reduceLT, Nat.reduceEqDiff, borderedA_of_pos, sedSign_8_6, Int.cast_one,
+      Nat.reduceXor, one_mul, sedSign_9_6, Int.reduceNeg, Int.cast_neg, neg_mul, sedSign_10_6,
+      sedSign_11_6, sedSign_12_6, sedSign_13_6, sedSign_14_6, Nat.lt_add_one, sedSign_15_6,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11,
+      sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8,
+      neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12,
+      sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14]
   ring
 
 private theorem row_7 (z t : ℕ → R) :
@@ -425,8 +580,23 @@ private theorem row_7 (z t : ℕ → R) :
       + z 2 * z 11 * t 14 - z 3 * z 10 * t 14 - z 1 * z 8 * t 14 - z 7 * z 15 * t 15
       + z 6 * z 14 * t 15 + z 5 * z 13 * t 15 + z 4 * z 12 * t 15 + z 3 * z 11 * t 15
       + z 2 * z 10 * t 15 + z 1 * z 9 * t 15 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, borderedA_zero_left,
-    borderedA_zero_right, uv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, borderedA_zero_left, mul_neg,
+      le_add_iff_nonneg_left, zero_le, Nat.add_eq_zero_iff, and_false, borderedA_zero_right,
+      Nat.one_le_ofNat, Nat.reduceLT, Nat.succ_ne_self, borderedA_of_pos, sedSign_8_7, Int.cast_one,
+      Nat.reduceXor, one_mul, Nat.reduceEqDiff, sedSign_9_7, sedSign_10_7, Int.reduceNeg,
+      Int.cast_neg, neg_mul, sedSign_11_7, sedSign_12_7, sedSign_13_7, sedSign_14_7, Nat.lt_add_one,
+      sedSign_15_7, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, neg_neg,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_8, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12,
+      sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14]
   ring
 
 /-- The border row of the Schur block against `u`: `∑ S'(0, f) z_f = -U (z.t)`. -/
@@ -435,7 +605,8 @@ theorem schurN_row (z t : ℕ → R) :
         schurN z t 0 5 * z 5 + schurN z t 0 6 * z 6 + schurN z t 0 7 * z 7 =
       -uv z * ∑ k ∈ Finset.range 15, z (k + 1) * t (k + 1) := by
   rw [row_1, row_2, row_3, row_4, row_5, row_6, row_7]
-  simp [uv, Finset.sum_range_succ]
+  simp only [neg_mul, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, neg_add_rev]
   ring
 
 /-- The Pfaffian of the Schur block, by expansion along its border row. -/
@@ -480,11 +651,13 @@ theorem pow_mul_pfaffian (h2 : IsLeftRegular (2 : R)) (z t : ℕ → R) :
     rw [Matrix.mul_neg, ← Matrix.mul_assoc, Bm_mul_self, Matrix.neg_mul, neg_neg, Matrix.smul_mul,
       Matrix.one_mul]
   have hS := Matrix.schur_cleared_of_mul h2 (Bm z t) (Xm z t) (Dm z t) (Bm_transpose z t)
-    (Dm_transpose z t) (uv z) (-(Bm z t * Xm z t)) hBM (List.finRange 8) (by simp)
+    (Dm_transpose z t) (uv z) (-(Bm z t * Xm z t)) hBM (List.finRange 8) (by simp only [
+        List.length_finRange, Nat.reduceMod])
   have hL : ((List.finRange 8).map Sum.inl ++ (List.finRange 8).map Sum.inr).map e16 =
       ([8, 9, 10, 11, 12, 13, 14, 15] ++ [0, 1, 2, 3, 4, 5, 6, 7] : List (Fin 16)) := by decide
   rw [fromBlocks_eq, Matrix.pfaffianAux_reindex (A16 z t) e16 16
-    ((List.finRange 8).map Sum.inl ++ (List.finRange 8).map Sum.inr) (by simp), hL,
+    ((List.finRange 8).map Sum.inl ++ (List.finRange 8).map Sum.inr) (by simp only [
+        List.length_append, List.length_map, List.length_finRange, Nat.reduceAdd]), hL,
     pfaffian_A16_swap, pfaffian_Bm, pfaffian_schurS, pfaffian_schurN, List.length_finRange,
     show (8 : ℕ) / 2 = 4 from rfl] at hS
   unfold rhsv
@@ -502,21 +675,24 @@ theorem pfaffian_A16_poly : Matrix.pfaffian (A16 Zp Tp) = rhsv Zp Tp := by
   have hU : uv Zp ≠ 0 := by
     intro h
     have := congrArg (MvPolynomial.eval fun _ => (1 : ℤ)) h
-    simp [uv, Zp, Finset.sum_range_succ] at this
+    simp only [uv, Zp, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+        Nat.reduceAdd, map_add, map_mul, MvPolynomial.eval_X, mul_one, Int.reduceAdd, map_zero,
+        OfNat.ofNat_ne_zero] at this
   exact mul_left_cancel₀ (pow_ne_zero 8 hU) (pow_mul_pfaffian h2 Zp Tp)
 
 /-- The bordered matrix is natural under ring homomorphisms. -/
 theorem map_borderedA {S : Type*} [CommRing S] (f : S →+* R) (z t : ℕ → S) (a b : ℕ) :
     f (borderedA z t a b) = borderedA (f ∘ z) (f ∘ t) a b := by
   unfold borderedA
-  split_ifs <;> simp
+  split_ifs <;> simp only [map_zero, map_neg, Function.comp_apply, BitVec.ofNat_xor, map_mul,
+      map_intCast]
 
 /-- The bordered matrix on `0, ..., 15` reads `z` only below `16`. -/
 theorem borderedA_congr {z z' t t' : ℕ → R} (hz : ∀ k < 16, z' k = z k) (ht : ∀ k, t' k = t k)
     {a b : ℕ} (ha : a < 16) (hb : b < 16) : borderedA z' t' a b = borderedA z t a b := by
   have hx : a ^^^ b < 16 := Nat.xor_lt_two_pow (n := 4) (by omega) (by omega)
   unfold borderedA
-  split_ifs <;> simp [ht, hz _ hx]
+  split_ifs <;> simp only [ht, BitVec.ofNat_xor, hz _ hx]
 
 /-- The right-hand side is natural under ring homomorphisms. -/
 theorem map_rhsv {S : Type*} [CommRing S] (f : S →+* R) (z t : ℕ → S) :
@@ -527,7 +703,9 @@ theorem map_rhsv {S : Type*} [CommRing S] (f : S →+* R) (z t : ℕ → S) :
 /-- The right-hand side reads `z` only below `16`. -/
 theorem rhsv_congr {z z' t t' : ℕ → R} (hz : ∀ k < 16, z' k = z k) (ht : ∀ k, t' k = t k) :
     rhsv z' t' = rhsv z t := by
-  simp [rhsv, qv, gv, uv, vv, wv, Finset.sum_range_succ, hz, ht]
+  simp only [rhsv, ht, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.one_lt_ofNat, hz, Nat.reduceAdd, Nat.reduceLT, Nat.lt_add_one, neg_add_rev, qv, gv, uv,
+      vv, wv]
 
 /-- The identity `Pf A(z, t) = -(z.t) Q G` over every commutative ring, by evaluation of the integer
 polynomial identity. -/
@@ -537,10 +715,12 @@ theorem pfaffian_sixteen (z t : ℕ → R) :
     MvPolynomial.eval₂Hom (Int.castRingHom R) fun n => if n < 16 then z n else t (n - 16)
   have hz : ∀ k < 16, (φ ∘ Zp) k = z k := by
     intro k hk
-    simp [φ, Zp, hk]
+    simp only [MvPolynomial.coe_eval₂Hom, Function.comp_apply, Zp, MvPolynomial.eval₂_X, hk,
+        ↓reduceIte, φ]
   have ht : ∀ k, (φ ∘ Tp) k = t k := by
     intro k
-    simp [φ, Tp]
+    simp only [MvPolynomial.coe_eval₂Hom, Function.comp_apply, Tp, MvPolynomial.eval₂_X,
+        add_lt_iff_neg_right, not_lt_zero, ↓reduceIte, add_tsub_cancel_right, φ]
   have h := congrArg φ pfaffian_A16_poly
   rw [map_rhsv, rhsv_congr hz ht] at h
   rw [← h]

@@ -524,387 +524,1234 @@ variable {R : Type*} [CommRing R]
 
 /-- The diagonal of the bordered matrix is `0`. -/
 theorem borderedA_self (z t : ℕ → R) (a : ℕ) : borderedA z t a a = 0 := by
-  simp [borderedA]
+  simp only [borderedA, ↓reduceIte]
 
 /-- Off the diagonal and away from the border the entry is the table sign times `z (a ^^^ b)`. -/
 theorem borderedA_of_pos (z t : ℕ → R) {a b : ℕ} (ha : 1 ≤ a) (ha16 : a < 16) (hb : 1 ≤ b)
     (hb16 : b < 16) (hab : a ≠ b) : borderedA z t a b = (sedSign a b : R) * z (a ^^^ b) := by
   rw [sedSign_eq_sign ha ha16 hb hb16 hab]
-  simp [borderedA, hab, show a ≠ 0 by omega, show b ≠ 0 by omega]
+  simp only [borderedA, hab, ↓reduceIte, show a ≠ 0 by omega, show b ≠ 0 by omega, BitVec.ofNat_xor]
 
 /-- The Schur complement `U D - Xᵀ B X` of the block on `8, ..., 15`. -/
 def schurN (z t : ℕ → R) (f g : ℕ) : R :=
   uv z * borderedA z t f g - ∑ i ∈ Finset.range 8, ∑ j ∈ Finset.range 8,
     borderedA z t (i + 8) f * borderedA z t (i + 8) (j + 8) * borderedA z t (j + 8) g
 
-attribute [local simp]
-  sedSign_1_1 sedSign_1_2 sedSign_1_3 sedSign_1_4
-  sedSign_1_5 sedSign_1_6 sedSign_1_7 sedSign_1_8
-  sedSign_1_9 sedSign_1_10 sedSign_1_11 sedSign_1_12
-  sedSign_1_13 sedSign_1_14 sedSign_1_15 sedSign_2_1
-  sedSign_2_2 sedSign_2_3 sedSign_2_4 sedSign_2_5
-  sedSign_2_6 sedSign_2_7 sedSign_2_8 sedSign_2_9
-  sedSign_2_10 sedSign_2_11 sedSign_2_12 sedSign_2_13
-  sedSign_2_14 sedSign_2_15 sedSign_3_1 sedSign_3_2
-  sedSign_3_3 sedSign_3_4 sedSign_3_5 sedSign_3_6
-  sedSign_3_7 sedSign_3_8 sedSign_3_9 sedSign_3_10
-  sedSign_3_11 sedSign_3_12 sedSign_3_13 sedSign_3_14
-  sedSign_3_15 sedSign_4_1 sedSign_4_2 sedSign_4_3
-  sedSign_4_4 sedSign_4_5 sedSign_4_6 sedSign_4_7
-  sedSign_4_8 sedSign_4_9 sedSign_4_10 sedSign_4_11
-  sedSign_4_12 sedSign_4_13 sedSign_4_14 sedSign_4_15
-  sedSign_5_1 sedSign_5_2 sedSign_5_3 sedSign_5_4
-  sedSign_5_5 sedSign_5_6 sedSign_5_7 sedSign_5_8
-  sedSign_5_9 sedSign_5_10 sedSign_5_11 sedSign_5_12
-  sedSign_5_13 sedSign_5_14 sedSign_5_15 sedSign_6_1
-  sedSign_6_2 sedSign_6_3 sedSign_6_4 sedSign_6_5
-  sedSign_6_6 sedSign_6_7 sedSign_6_8 sedSign_6_9
-  sedSign_6_10 sedSign_6_11 sedSign_6_12 sedSign_6_13
-  sedSign_6_14 sedSign_6_15 sedSign_7_1 sedSign_7_2
-  sedSign_7_3 sedSign_7_4 sedSign_7_5 sedSign_7_6
-  sedSign_7_7 sedSign_7_8 sedSign_7_9 sedSign_7_10
-  sedSign_7_11 sedSign_7_12 sedSign_7_13 sedSign_7_14
-  sedSign_7_15 sedSign_8_1 sedSign_8_2 sedSign_8_3
-  sedSign_8_4 sedSign_8_5 sedSign_8_6 sedSign_8_7
-  sedSign_8_8 sedSign_8_9 sedSign_8_10 sedSign_8_11
-  sedSign_8_12 sedSign_8_13 sedSign_8_14 sedSign_8_15
-  sedSign_9_1 sedSign_9_2 sedSign_9_3 sedSign_9_4
-  sedSign_9_5 sedSign_9_6 sedSign_9_7 sedSign_9_8
-  sedSign_9_9 sedSign_9_10 sedSign_9_11 sedSign_9_12
-  sedSign_9_13 sedSign_9_14 sedSign_9_15 sedSign_10_1
-  sedSign_10_2 sedSign_10_3 sedSign_10_4 sedSign_10_5
-  sedSign_10_6 sedSign_10_7 sedSign_10_8 sedSign_10_9
-  sedSign_10_10 sedSign_10_11 sedSign_10_12 sedSign_10_13
-  sedSign_10_14 sedSign_10_15 sedSign_11_1 sedSign_11_2
-  sedSign_11_3 sedSign_11_4 sedSign_11_5 sedSign_11_6
-  sedSign_11_7 sedSign_11_8 sedSign_11_9 sedSign_11_10
-  sedSign_11_11 sedSign_11_12 sedSign_11_13 sedSign_11_14
-  sedSign_11_15 sedSign_12_1 sedSign_12_2 sedSign_12_3
-  sedSign_12_4 sedSign_12_5 sedSign_12_6 sedSign_12_7
-  sedSign_12_8 sedSign_12_9 sedSign_12_10 sedSign_12_11
-  sedSign_12_12 sedSign_12_13 sedSign_12_14 sedSign_12_15
-  sedSign_13_1 sedSign_13_2 sedSign_13_3 sedSign_13_4
-  sedSign_13_5 sedSign_13_6 sedSign_13_7 sedSign_13_8
-  sedSign_13_9 sedSign_13_10 sedSign_13_11 sedSign_13_12
-  sedSign_13_13 sedSign_13_14 sedSign_13_15 sedSign_14_1
-  sedSign_14_2 sedSign_14_3 sedSign_14_4 sedSign_14_5
-  sedSign_14_6 sedSign_14_7 sedSign_14_8 sedSign_14_9
-  sedSign_14_10 sedSign_14_11 sedSign_14_12 sedSign_14_13
-  sedSign_14_14 sedSign_14_15 sedSign_15_1 sedSign_15_2
-  sedSign_15_3 sedSign_15_4 sedSign_15_5 sedSign_15_6
-  sedSign_15_7 sedSign_15_8 sedSign_15_9 sedSign_15_10
-  sedSign_15_11 sedSign_15_12 sedSign_15_13 sedSign_15_14
-  sedSign_15_15
-  PfaffianCross.octSign_1_1 PfaffianCross.octSign_1_2 PfaffianCross.octSign_1_3
-  PfaffianCross.octSign_1_4 PfaffianCross.octSign_1_5 PfaffianCross.octSign_1_6
-  PfaffianCross.octSign_1_7 PfaffianCross.octSign_2_1 PfaffianCross.octSign_2_2
-  PfaffianCross.octSign_2_3 PfaffianCross.octSign_2_4 PfaffianCross.octSign_2_5
-  PfaffianCross.octSign_2_6 PfaffianCross.octSign_2_7 PfaffianCross.octSign_3_1
-  PfaffianCross.octSign_3_2 PfaffianCross.octSign_3_3 PfaffianCross.octSign_3_4
-  PfaffianCross.octSign_3_5 PfaffianCross.octSign_3_6 PfaffianCross.octSign_3_7
-  PfaffianCross.octSign_4_1 PfaffianCross.octSign_4_2 PfaffianCross.octSign_4_3
-  PfaffianCross.octSign_4_4 PfaffianCross.octSign_4_5 PfaffianCross.octSign_4_6
-  PfaffianCross.octSign_4_7 PfaffianCross.octSign_5_1 PfaffianCross.octSign_5_2
-  PfaffianCross.octSign_5_3 PfaffianCross.octSign_5_4 PfaffianCross.octSign_5_5
-  PfaffianCross.octSign_5_6 PfaffianCross.octSign_5_7 PfaffianCross.octSign_6_1
-  PfaffianCross.octSign_6_2 PfaffianCross.octSign_6_3 PfaffianCross.octSign_6_4
-  PfaffianCross.octSign_6_5 PfaffianCross.octSign_6_6 PfaffianCross.octSign_6_7
-  PfaffianCross.octSign_7_1 PfaffianCross.octSign_7_2 PfaffianCross.octSign_7_3
-  PfaffianCross.octSign_7_4 PfaffianCross.octSign_7_5 PfaffianCross.octSign_7_6
-  PfaffianCross.octSign_7_7
-
 private theorem schurN_1_1 (z t : ℕ → R) :
     schurN z t 1 1 = crossMat (aV z) 1 1 + wedge (xV z) (vV z) 1 1 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, borderedA_self, mul_zero, le_add_iff_nonneg_left, zero_le, Nat.one_le_ofNat,
+      Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat, ne_eq, OfNat.ofNat_ne_one, not_false_eq_true,
+      borderedA_of_pos, sedSign_8_1, Int.cast_one, Nat.reduceXor, one_mul, sedSign_9_1,
+      Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_10_1, sedSign_11_1, sedSign_12_1,
+      sedSign_13_1, sedSign_14_1, Nat.lt_add_one, sedSign_15_1, zero_mul, Nat.reduceEqDiff,
+      sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14,
+      sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13, sedSign_12_14,
+      sedSign_12_15, sedSign_13_8, sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12,
+      sedSign_13_14, sedSign_13_15, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11,
+      sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, zero_sub, neg_add_rev, crossMat,
+      octSign_1_1, Int.cast_zero, aV, vv, LawfulXor.xor_self, wv, vV, mV, cross, zero_xor, wedge,
+      xV, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5, octSign_1_6, octSign_1_7]
   ring
 
 private theorem schurN_1_2 (z t : ℕ → R) :
     schurN z t 1 2 = crossMat (aV z) 1 2 + wedge (xV z) (vV z) 1 2 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Std.le_refl, Nat.one_lt_ofNat, Nat.one_le_ofNat, Nat.reduceLT, ne_eq,
+      OfNat.one_ne_ofNat, not_false_eq_true, borderedA_of_pos, sedSign_1_2, Int.reduceNeg,
+      Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left,
+      zero_le, Nat.reduceEqDiff, sedSign_8_2, sedSign_9_2, sedSign_10_2, sedSign_11_2, sedSign_12_2,
+      sedSign_13_2, sedSign_14_2, Nat.lt_add_one, sedSign_15_2, OfNat.ofNat_ne_one, sedSign_8_1,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, neg_neg, sedSign_8_11,
+      sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_1, Nat.succ_ne_self,
+      sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_1, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_1, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_1, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_1, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_1, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_1, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_1_2, aV, vv, wv, vV, mV, cross, octSign_3_1,
+      octSign_3_2, octSign_3_3, Int.cast_zero, LawfulXor.xor_self, octSign_3_4, octSign_3_5,
+      octSign_3_6, octSign_3_7, neg_sub, wedge, xV, octSign_1_1, octSign_1_3, octSign_1_4,
+      octSign_1_5, octSign_1_6, octSign_1_7, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7]
   ring
 
 private theorem schurN_1_3 (z t : ℕ → R) :
     schurN z t 1 3 = crossMat (aV z) 1 3 + wedge (xV z) (vV z) 1 3 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Std.le_refl, Nat.one_lt_ofNat, Nat.one_le_ofNat, Nat.reduceLT, ne_eq,
+      OfNat.one_ne_ofNat, not_false_eq_true, borderedA_of_pos, sedSign_1_3, Int.cast_one,
+      Nat.reduceXor, one_mul, le_add_iff_nonneg_left, zero_le, Nat.reduceEqDiff, sedSign_8_3,
+      sedSign_9_3, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_10_3, sedSign_11_3,
+      sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one, sedSign_15_3, OfNat.ofNat_ne_one,
+      sedSign_8_1, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_1,
+      Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_1, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_1,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_1, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_1, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_1,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_1, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_1_3, aV, vv, wv, vV, mV, cross,
+      octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2, Int.cast_zero, LawfulXor.xor_self,
+      octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7, wedge, xV, octSign_1_1,
+      octSign_1_2, octSign_1_4, octSign_1_5, octSign_1_6, octSign_1_7, octSign_3_1, octSign_3_2,
+      octSign_3_3, octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7]
   ring
 
 private theorem schurN_1_4 (z t : ℕ → R) :
     schurN z t 1 4 = crossMat (aV z) 1 4 + wedge (xV z) (vV z) 1 4 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Std.le_refl, Nat.one_lt_ofNat, Nat.one_le_ofNat, Nat.reduceLT, ne_eq,
+      OfNat.one_ne_ofNat, not_false_eq_true, borderedA_of_pos, sedSign_1_4, Int.reduceNeg,
+      Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left,
+      zero_le, Nat.reduceEqDiff, sedSign_8_4, sedSign_9_4, sedSign_10_4, sedSign_11_4, sedSign_12_4,
+      sedSign_13_4, sedSign_14_4, Nat.lt_add_one, sedSign_15_4, OfNat.ofNat_ne_one, sedSign_8_1,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      neg_neg, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_1, Nat.succ_ne_self, sedSign_9_8,
+      add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_1, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_1, sedSign_11_8, sedSign_11_9, sedSign_11_10,
+      sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_1, sedSign_12_8,
+      sedSign_12_9, sedSign_12_10, sedSign_12_11, neg_zero, sedSign_12_13, sedSign_12_14,
+      sedSign_12_15, sedSign_13_1, sedSign_13_8, sedSign_13_9, sedSign_13_10, sedSign_13_11,
+      sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_1, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_1,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14, crossMat, octSign_1_4, aV, vv, wv, vV, mV, cross, octSign_5_1, octSign_5_2,
+      octSign_5_3, octSign_5_4, octSign_5_5, Int.cast_zero, LawfulXor.xor_self, octSign_5_6,
+      octSign_5_7, neg_sub, wedge, xV, octSign_1_1, octSign_1_2, octSign_1_3, octSign_1_5,
+      octSign_1_6, octSign_1_7, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5,
+      octSign_4_6, octSign_4_7]
   ring
 
 private theorem schurN_1_5 (z t : ℕ → R) :
     schurN z t 1 5 = crossMat (aV z) 1 5 + wedge (xV z) (vV z) 1 5 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Std.le_refl, Nat.one_lt_ofNat, Nat.one_le_ofNat, Nat.reduceLT, ne_eq,
+      OfNat.one_ne_ofNat, not_false_eq_true, borderedA_of_pos, sedSign_1_5, Int.cast_one,
+      Nat.reduceXor, one_mul, le_add_iff_nonneg_left, zero_le, Nat.reduceEqDiff, sedSign_8_5,
+      sedSign_9_5, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_10_5, sedSign_11_5,
+      sedSign_12_5, sedSign_13_5, sedSign_14_5, Nat.lt_add_one, sedSign_15_5, OfNat.ofNat_ne_one,
+      sedSign_8_1, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_1,
+      Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_1, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_1,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_1, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_1, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_1,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_1, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_1_5, aV, vv, wv, vV, mV, cross,
+      octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, Int.cast_zero, LawfulXor.xor_self,
+      octSign_4_5, octSign_4_6, octSign_4_7, wedge, xV, octSign_1_1, octSign_1_2, octSign_1_3,
+      octSign_1_4, octSign_1_6, octSign_1_7, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4,
+      octSign_5_5, octSign_5_6, octSign_5_7]
   ring
 
 private theorem schurN_1_6 (z t : ℕ → R) :
     schurN z t 1 6 = crossMat (aV z) 1 6 + wedge (xV z) (vV z) 1 6 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Std.le_refl, Nat.one_lt_ofNat, Nat.one_le_ofNat, Nat.reduceLT, ne_eq,
+      OfNat.one_ne_ofNat, not_false_eq_true, borderedA_of_pos, sedSign_1_6, Int.cast_one,
+      Nat.reduceXor, one_mul, le_add_iff_nonneg_left, zero_le, Nat.reduceEqDiff, sedSign_8_6,
+      sedSign_9_6, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_10_6, sedSign_11_6,
+      sedSign_12_6, sedSign_13_6, sedSign_14_6, Nat.lt_add_one, sedSign_15_6, OfNat.ofNat_ne_one,
+      sedSign_8_1, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_1,
+      Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_1, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_1,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_1, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_1, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_1,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_1, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_1_6, aV, vv, wv, vV, mV, cross,
+      octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7,
+      Int.cast_zero, LawfulXor.xor_self, wedge, xV, octSign_1_1, octSign_1_2, octSign_1_3,
+      octSign_1_4, octSign_1_5, octSign_1_7, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4,
+      octSign_6_5, octSign_6_6, octSign_6_7]
   ring
 
 private theorem schurN_1_7 (z t : ℕ → R) :
     schurN z t 1 7 = crossMat (aV z) 1 7 + wedge (xV z) (vV z) 1 7 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Std.le_refl, Nat.one_lt_ofNat, Nat.one_le_ofNat, Nat.reduceLT, ne_eq,
+      OfNat.one_ne_ofNat, not_false_eq_true, borderedA_of_pos, sedSign_1_7, Int.reduceNeg,
+      Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left,
+      zero_le, Nat.succ_ne_self, sedSign_8_7, Nat.reduceEqDiff, sedSign_9_7, sedSign_10_7,
+      sedSign_11_7, sedSign_12_7, sedSign_13_7, sedSign_14_7, Nat.lt_add_one, sedSign_15_7,
+      OfNat.ofNat_ne_one, sedSign_8_1, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_1, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_1, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_1, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_1, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_1, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_1, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_1, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_1_7, aV, vv, wv, vV, mV, cross, octSign_6_1,
+      octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6, Int.cast_zero,
+      LawfulXor.xor_self, octSign_6_7, neg_sub, wedge, xV, octSign_1_1, octSign_1_2, octSign_1_3,
+      octSign_1_4, octSign_1_5, octSign_1_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem schurN_2_1 (z t : ℕ → R) :
     schurN z t 2 1 = crossMat (aV z) 2 1 + wedge (xV z) (vV z) 2 1 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat, ne_eq,
+      OfNat.ofNat_ne_one, not_false_eq_true, borderedA_of_pos, sedSign_2_1, Int.cast_one, even_two,
+      Nat.xor_one_of_even, one_mul, le_add_iff_nonneg_left, zero_le, sedSign_8_1, Nat.reduceXor,
+      sedSign_9_1, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_10_1, sedSign_11_1,
+      sedSign_12_1, sedSign_13_1, sedSign_14_1, Nat.lt_add_one, sedSign_15_1, Nat.reduceEqDiff,
+      sedSign_8_2, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_2,
+      Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_2, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_2,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_2, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_2, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_2,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_2, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_2_1, aV, vv, wv, vV, mV, cross,
+      octSign_3_1, octSign_3_2, octSign_3_3, Int.cast_zero, LawfulXor.xor_self, octSign_3_4,
+      octSign_3_5, octSign_3_6, octSign_3_7, wedge, xV, octSign_2_2, octSign_2_3, octSign_2_4,
+      octSign_2_5, octSign_2_6, octSign_2_7, octSign_1_1, octSign_1_2, octSign_1_3, octSign_1_4,
+      octSign_1_5, octSign_1_6, octSign_1_7]
   ring
 
 private theorem schurN_2_2 (z t : ℕ → R) :
     schurN z t 2 2 = crossMat (aV z) 2 2 + wedge (xV z) (vV z) 2 2 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, borderedA_self, mul_zero, le_add_iff_nonneg_left, zero_le, Nat.one_le_ofNat,
+      Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true, borderedA_of_pos, sedSign_8_2,
+      Int.cast_one, Nat.reduceXor, one_mul, sedSign_9_2, sedSign_10_2, Int.reduceNeg, Int.cast_neg,
+      neg_mul, mul_neg, sedSign_11_2, sedSign_12_2, sedSign_13_2, sedSign_14_2, Nat.lt_add_one,
+      sedSign_15_2, zero_mul, sedSign_8_9, sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12,
+      sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14, zero_sub, neg_add_rev, crossMat, octSign_2_2, Int.cast_zero, aV, vv,
+      LawfulXor.xor_self, wv, vV, mV, cross, zero_xor, wedge, xV, octSign_2_1, even_two,
+      Nat.xor_one_of_even, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7]
   ring
 
 private theorem schurN_2_3 (z t : ℕ → R) :
     schurN z t 2 3 = crossMat (aV z) 2 3 + wedge (xV z) (vV z) 2 3 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_2_3, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_3, sedSign_9_3,
+      sedSign_10_3, sedSign_11_3, sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one,
+      sedSign_15_3, sedSign_8_2, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_2, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_2, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_2, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_2, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_2, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_2, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_2, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_2_3, aV, vv, wv,
+      vV, mV, cross, octSign_1_1, Int.cast_zero, LawfulXor.xor_self, octSign_1_2, octSign_1_3,
+      octSign_1_4, octSign_1_5, octSign_1_6, octSign_1_7, neg_sub, wedge, xV, octSign_2_1, even_two,
+      Nat.xor_one_of_even, octSign_2_2, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7,
+      octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7]
   ring
 
 private theorem schurN_2_4 (z t : ℕ → R) :
     schurN z t 2 4 = crossMat (aV z) 2 4 + wedge (xV z) (vV z) 2 4 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_2_4, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_4, sedSign_9_4,
+      sedSign_10_4, sedSign_11_4, sedSign_12_4, sedSign_13_4, sedSign_14_4, Nat.lt_add_one,
+      sedSign_15_4, sedSign_8_2, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, neg_neg, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_2,
+      Nat.succ_ne_self, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_2, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_2,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_2, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      neg_zero, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_2, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_2, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_2, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_2_4, aV, vv, wv,
+      vV, mV, cross, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6,
+      Int.cast_zero, LawfulXor.xor_self, octSign_6_7, neg_sub, wedge, xV, octSign_2_1, even_two,
+      Nat.xor_one_of_even, octSign_2_2, octSign_2_3, octSign_2_5, octSign_2_6, octSign_2_7,
+      octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5, octSign_4_6, octSign_4_7]
   ring
 
 private theorem schurN_2_5 (z t : ℕ → R) :
     schurN z t 2 5 = crossMat (aV z) 2 5 + wedge (xV z) (vV z) 2 5 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_2_5, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_5, sedSign_9_5,
+      sedSign_10_5, sedSign_11_5, sedSign_12_5, sedSign_13_5, sedSign_14_5, Nat.lt_add_one,
+      sedSign_15_5, sedSign_8_2, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_2, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_2, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_2, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_2, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_2, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_2, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_2, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_2_5, aV, vv, wv,
+      vV, mV, cross, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6,
+      octSign_7_7, Int.cast_zero, LawfulXor.xor_self, neg_sub, wedge, xV, octSign_2_1, even_two,
+      Nat.xor_one_of_even, octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_6, octSign_2_7,
+      octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, octSign_5_6, octSign_5_7]
   ring
 
 private theorem schurN_2_6 (z t : ℕ → R) :
     schurN z t 2 6 = crossMat (aV z) 2 6 + wedge (xV z) (vV z) 2 6 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_2_6, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_6, sedSign_9_6, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg,
+      sedSign_10_6, sedSign_11_6, sedSign_12_6, sedSign_13_6, sedSign_14_6, Nat.lt_add_one,
+      sedSign_15_6, sedSign_8_2, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_2, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_2, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_2, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_2, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_2, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_2, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_2, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_2_6, aV, vv, wv,
+      vV, mV, cross, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, Int.cast_zero,
+      LawfulXor.xor_self, octSign_4_5, octSign_4_6, octSign_4_7, wedge, xV, octSign_2_1, even_two,
+      Nat.xor_one_of_even, octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_7,
+      octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7]
   ring
 
 private theorem schurN_2_7 (z t : ℕ → R) :
     schurN z t 2 7 = crossMat (aV z) 2 7 + wedge (xV z) (vV z) 2 7 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_2_7, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, Nat.succ_ne_self, sedSign_8_7, sedSign_9_7, sedSign_10_7, Int.reduceNeg,
+      Int.cast_neg, neg_mul, mul_neg, sedSign_11_7, sedSign_12_7, sedSign_13_7, sedSign_14_7,
+      Nat.lt_add_one, sedSign_15_7, sedSign_8_2, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_2, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_2, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_2, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_2, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_2, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_2, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_2, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_2_7, aV, vv, wv, vV, mV, cross, octSign_5_1,
+      octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, Int.cast_zero, LawfulXor.xor_self,
+      octSign_5_6, octSign_5_7, wedge, xV, octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2,
+      octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_7_1, octSign_7_2, octSign_7_3,
+      octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem schurN_3_1 (z t : ℕ → R) :
     schurN z t 3 1 = crossMat (aV z) 3 1 + wedge (xV z) (vV z) 3 1 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat, ne_eq,
+      OfNat.ofNat_ne_one, not_false_eq_true, borderedA_of_pos, sedSign_3_1, Int.reduceNeg,
+      Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_1, sedSign_9_1, sedSign_10_1, sedSign_11_1, sedSign_12_1, sedSign_13_1,
+      sedSign_14_1, Nat.lt_add_one, sedSign_15_1, Nat.reduceEqDiff, sedSign_8_3, borderedA_self,
+      mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_3, Nat.succ_ne_self, sedSign_9_8,
+      neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_3, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12,
+      sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_3, sedSign_11_8, sedSign_11_9,
+      sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_3,
+      sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13, sedSign_12_14,
+      sedSign_12_15, sedSign_13_3, sedSign_13_8, sedSign_13_9, sedSign_13_10, sedSign_13_11,
+      sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_3, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_3,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14, crossMat, octSign_3_1, aV, vv, wv, vV, mV, cross, octSign_2_1, even_two,
+      Nat.xor_one_of_even, octSign_2_2, Int.cast_zero, LawfulXor.xor_self, octSign_2_3, octSign_2_4,
+      octSign_2_5, octSign_2_6, octSign_2_7, neg_sub, wedge, xV, octSign_3_2, octSign_3_3,
+      octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7, octSign_1_1, octSign_1_2, octSign_1_3,
+      octSign_1_4, octSign_1_5, octSign_1_6, octSign_1_7]
   ring
 
 private theorem schurN_3_2 (z t : ℕ → R) :
     schurN z t 3 2 = crossMat (aV z) 3 2 + wedge (xV z) (vV z) 3 2 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.succ_ne_self, not_false_eq_true,
+      borderedA_of_pos, sedSign_3_2, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, Nat.reduceEqDiff, sedSign_8_2, sedSign_9_2, sedSign_10_2, Int.reduceNeg,
+      Int.cast_neg, neg_mul, mul_neg, sedSign_11_2, sedSign_12_2, sedSign_13_2, sedSign_14_2,
+      Nat.lt_add_one, sedSign_15_2, sedSign_8_3, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_3, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_3, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_3, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_3, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_3, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_3, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_3, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_3_2, aV, vv, wv, vV, mV, cross, octSign_1_1,
+      Int.cast_zero, LawfulXor.xor_self, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5,
+      octSign_1_6, octSign_1_7, wedge, xV, octSign_3_1, octSign_3_3, octSign_3_4, octSign_3_5,
+      octSign_3_6, octSign_3_7, octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2,
+      octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7]
   ring
 
 private theorem schurN_3_3 (z t : ℕ → R) :
     schurN z t 3 3 = crossMat (aV z) 3 3 + wedge (xV z) (vV z) 3 3 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, borderedA_self, mul_zero, le_add_iff_nonneg_left, zero_le, Nat.one_le_ofNat,
+      Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true, borderedA_of_pos, sedSign_8_3,
+      Int.cast_one, Nat.reduceXor, one_mul, sedSign_9_3, Int.reduceNeg, Int.cast_neg, neg_mul,
+      mul_neg, sedSign_10_3, sedSign_11_3, sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one,
+      sedSign_15_3, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14,
+      sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_8,
+      sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14,
+      zero_sub, neg_add_rev, crossMat, octSign_3_3, Int.cast_zero, aV, vv, LawfulXor.xor_self, wv,
+      vV, mV, cross, zero_xor, wedge, xV, octSign_3_1, octSign_3_2, octSign_3_4, octSign_3_5,
+      octSign_3_6, octSign_3_7]
   ring
 
 private theorem schurN_3_4 (z t : ℕ → R) :
     schurN z t 3 4 = crossMat (aV z) 3 4 + wedge (xV z) (vV z) 3 4 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_3_4, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_4, sedSign_9_4,
+      sedSign_10_4, sedSign_11_4, sedSign_12_4, sedSign_13_4, sedSign_14_4, Nat.lt_add_one,
+      sedSign_15_4, sedSign_8_3, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, neg_neg, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_3,
+      Nat.succ_ne_self, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_3, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_3,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_3, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      neg_zero, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_3, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_3, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_3, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_3_4, aV, vv, wv,
+      vV, mV, cross, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6,
+      octSign_7_7, Int.cast_zero, LawfulXor.xor_self, neg_sub, wedge, xV, octSign_3_1, octSign_3_2,
+      octSign_3_3, octSign_3_5, octSign_3_6, octSign_3_7, octSign_4_1, octSign_4_2, octSign_4_3,
+      octSign_4_4, octSign_4_5, octSign_4_6, octSign_4_7]
   ring
 
 private theorem schurN_3_5 (z t : ℕ → R) :
     schurN z t 3 5 = crossMat (aV z) 3 5 + wedge (xV z) (vV z) 3 5 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_3_5, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_5, sedSign_9_5, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg,
+      sedSign_10_5, sedSign_11_5, sedSign_12_5, sedSign_13_5, sedSign_14_5, Nat.lt_add_one,
+      sedSign_15_5, sedSign_8_3, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_3, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_3, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_3, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_3, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_3, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_3, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_3, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_3_5, aV, vv, wv,
+      vV, mV, cross, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6,
+      Int.cast_zero, LawfulXor.xor_self, octSign_6_7, wedge, xV, octSign_3_1, octSign_3_2,
+      octSign_3_3, octSign_3_4, octSign_3_6, octSign_3_7, octSign_5_1, octSign_5_2, octSign_5_3,
+      octSign_5_4, octSign_5_5, octSign_5_6, octSign_5_7]
   ring
 
 private theorem schurN_3_6 (z t : ℕ → R) :
     schurN z t 3 6 = crossMat (aV z) 3 6 + wedge (xV z) (vV z) 3 6 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_3_6, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_6, sedSign_9_6,
+      sedSign_10_6, sedSign_11_6, sedSign_12_6, sedSign_13_6, sedSign_14_6, Nat.lt_add_one,
+      sedSign_15_6, sedSign_8_3, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_3, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_3, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_3, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_3, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_3, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_3, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_3, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_3_6, aV, vv, wv,
+      vV, mV, cross, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, Int.cast_zero,
+      LawfulXor.xor_self, octSign_5_6, octSign_5_7, neg_sub, wedge, xV, octSign_3_1, octSign_3_2,
+      octSign_3_3, octSign_3_4, octSign_3_5, octSign_3_7, octSign_6_1, octSign_6_2, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7]
   ring
 
 private theorem schurN_3_7 (z t : ℕ → R) :
     schurN z t 3 7 = crossMat (aV z) 3 7 + wedge (xV z) (vV z) 3 7 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_3_7, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, Nat.succ_ne_self, sedSign_8_7, sedSign_9_7, sedSign_10_7, Int.reduceNeg,
+      Int.cast_neg, neg_mul, mul_neg, sedSign_11_7, sedSign_12_7, sedSign_13_7, sedSign_14_7,
+      Nat.lt_add_one, sedSign_15_7, sedSign_8_3, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_3, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_3, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_3, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_3, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_3, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_3, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_3, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_3_7, aV, vv, wv, vV, mV, cross, octSign_4_1,
+      octSign_4_2, octSign_4_3, octSign_4_4, Int.cast_zero, LawfulXor.xor_self, octSign_4_5,
+      octSign_4_6, octSign_4_7, wedge, xV, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_4,
+      octSign_3_5, octSign_3_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5,
+      octSign_7_6, octSign_7_7]
   ring
 
 private theorem schurN_4_1 (z t : ℕ → R) :
     schurN z t 4 1 = crossMat (aV z) 4 1 + wedge (xV z) (vV z) 4 1 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat, ne_eq,
+      OfNat.ofNat_ne_one, not_false_eq_true, borderedA_of_pos, sedSign_4_1, Int.cast_one,
+      Nat.reduceXor, one_mul, le_add_iff_nonneg_left, zero_le, sedSign_8_1, sedSign_9_1,
+      Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_10_1, sedSign_11_1, sedSign_12_1,
+      sedSign_13_1, sedSign_14_1, Nat.lt_add_one, sedSign_15_1, Nat.reduceEqDiff, sedSign_8_4,
+      borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11,
+      sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_4, Nat.succ_ne_self,
+      sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_4, sedSign_10_8, sedSign_10_9, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_4, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_4, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_4, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_4, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_4, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_4_1, aV, vv, wv, vV, mV, cross, octSign_5_1,
+      octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, Int.cast_zero, LawfulXor.xor_self,
+      octSign_5_6, octSign_5_7, wedge, xV, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5,
+      octSign_4_6, octSign_4_7, octSign_1_1, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5,
+      octSign_1_6, octSign_1_7]
   ring
 
 private theorem schurN_4_2 (z t : ℕ → R) :
     schurN z t 4 2 = crossMat (aV z) 4 2 + wedge (xV z) (vV z) 4 2 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_4_2, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_2, sedSign_9_2, sedSign_10_2, Int.reduceNeg, Int.cast_neg, neg_mul,
+      mul_neg, sedSign_11_2, sedSign_12_2, sedSign_13_2, sedSign_14_2, Nat.lt_add_one, sedSign_15_2,
+      sedSign_8_4, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, neg_neg,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_4,
+      Nat.succ_ne_self, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_4, sedSign_10_8, sedSign_10_9, neg_zero,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_4,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_4, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_4, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_4,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_4, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_4_2, aV, vv, wv, vV, mV, cross,
+      octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6, Int.cast_zero,
+      LawfulXor.xor_self, octSign_6_7, wedge, xV, octSign_4_1, octSign_4_3, octSign_4_4,
+      octSign_4_5, octSign_4_6, octSign_4_7, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7]
   ring
 
 private theorem schurN_4_3 (z t : ℕ → R) :
     schurN z t 4 3 = crossMat (aV z) 4 3 + wedge (xV z) (vV z) 4 3 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.succ_ne_self, not_false_eq_true,
+      borderedA_of_pos, sedSign_4_3, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, Nat.reduceEqDiff, sedSign_8_3, sedSign_9_3, Int.reduceNeg, Int.cast_neg, neg_mul,
+      mul_neg, sedSign_10_3, sedSign_11_3, sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one,
+      sedSign_15_3, sedSign_8_4, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_4, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_4, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_4,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_4, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_4, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_4,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_4, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_4_3, aV, vv, wv, vV, mV, cross,
+      octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7,
+      Int.cast_zero, LawfulXor.xor_self, wedge, xV, octSign_4_1, octSign_4_2, octSign_4_4,
+      octSign_4_5, octSign_4_6, octSign_4_7, octSign_3_1, octSign_3_2, octSign_3_3, octSign_3_4,
+      octSign_3_5, octSign_3_6, octSign_3_7]
   ring
 
 private theorem schurN_4_4 (z t : ℕ → R) :
     schurN z t 4 4 = crossMat (aV z) 4 4 + wedge (xV z) (vV z) 4 4 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, borderedA_self, mul_zero, le_add_iff_nonneg_left, zero_le, Nat.one_le_ofNat,
+      Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true, borderedA_of_pos, sedSign_8_4,
+      Int.cast_one, Nat.reduceXor, one_mul, sedSign_9_4, sedSign_10_4, sedSign_11_4, sedSign_12_4,
+      Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_13_4, sedSign_14_4, Nat.lt_add_one,
+      sedSign_15_4, zero_mul, sedSign_8_9, sedSign_8_10, sedSign_8_11, sedSign_8_12, neg_neg,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14,
+      sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      neg_zero, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14, zero_sub, neg_add_rev, crossMat, octSign_4_4, Int.cast_zero, aV, vv,
+      LawfulXor.xor_self, wv, vV, mV, cross, zero_xor, wedge, xV, octSign_4_1, octSign_4_2,
+      octSign_4_3, octSign_4_5, octSign_4_6, octSign_4_7]
   ring
 
 private theorem schurN_4_5 (z t : ℕ → R) :
     schurN z t 4 5 = crossMat (aV z) 4 5 + wedge (xV z) (vV z) 4 5 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_4_5, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_5, sedSign_9_5,
+      sedSign_10_5, sedSign_11_5, sedSign_12_5, sedSign_13_5, sedSign_14_5, Nat.lt_add_one,
+      sedSign_15_5, sedSign_8_4, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_4, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_4, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_4, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_4, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_4, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_4, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_4, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_4_5, aV, vv, wv,
+      vV, mV, cross, octSign_1_1, Int.cast_zero, LawfulXor.xor_self, octSign_1_2, octSign_1_3,
+      octSign_1_4, octSign_1_5, octSign_1_6, octSign_1_7, neg_sub, wedge, xV, octSign_4_1,
+      octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_6, octSign_4_7, octSign_5_1, octSign_5_2,
+      octSign_5_3, octSign_5_4, octSign_5_5, octSign_5_6, octSign_5_7]
   ring
 
 private theorem schurN_4_6 (z t : ℕ → R) :
     schurN z t 4 6 = crossMat (aV z) 4 6 + wedge (xV z) (vV z) 4 6 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_4_6, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_6, sedSign_9_6,
+      sedSign_10_6, sedSign_11_6, sedSign_12_6, sedSign_13_6, sedSign_14_6, Nat.lt_add_one,
+      sedSign_15_6, sedSign_8_4, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_4, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_4, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_4, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_4, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_4, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_4, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_4, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_4_6, aV, vv, wv,
+      vV, mV, cross, octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2, Int.cast_zero,
+      LawfulXor.xor_self, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7, neg_sub,
+      wedge, xV, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5, octSign_4_7,
+      octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7]
   ring
 
 private theorem schurN_4_7 (z t : ℕ → R) :
     schurN z t 4 7 = crossMat (aV z) 4 7 + wedge (xV z) (vV z) 4 7 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_4_7, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, Nat.succ_ne_self, sedSign_8_7,
+      sedSign_9_7, sedSign_10_7, sedSign_11_7, sedSign_12_7, sedSign_13_7, sedSign_14_7,
+      Nat.lt_add_one, sedSign_15_7, sedSign_8_4, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_4, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_4, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_4, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_4, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_4, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_4, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_4, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_4_7, aV, vv, wv, vV, mV, cross, octSign_3_1,
+      octSign_3_2, octSign_3_3, Int.cast_zero, LawfulXor.xor_self, octSign_3_4, octSign_3_5,
+      octSign_3_6, octSign_3_7, neg_sub, wedge, xV, octSign_4_1, octSign_4_2, octSign_4_3,
+      octSign_4_4, octSign_4_5, octSign_4_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem schurN_5_1 (z t : ℕ → R) :
     schurN z t 5 1 = crossMat (aV z) 5 1 + wedge (xV z) (vV z) 5 1 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat, ne_eq,
+      OfNat.ofNat_ne_one, not_false_eq_true, borderedA_of_pos, sedSign_5_1, Int.reduceNeg,
+      Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_1, sedSign_9_1, sedSign_10_1, sedSign_11_1, sedSign_12_1, sedSign_13_1,
+      sedSign_14_1, Nat.lt_add_one, sedSign_15_1, Nat.reduceEqDiff, sedSign_8_5, borderedA_self,
+      mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_5, Nat.succ_ne_self, sedSign_9_8,
+      neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_5, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12,
+      sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_5, sedSign_11_8, sedSign_11_9,
+      sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_5,
+      sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13, sedSign_12_14,
+      sedSign_12_15, sedSign_13_5, sedSign_13_8, sedSign_13_9, sedSign_13_10, sedSign_13_11,
+      sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_5, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_5,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14, crossMat, octSign_5_1, aV, vv, wv, vV, mV, cross, octSign_4_1, octSign_4_2,
+      octSign_4_3, octSign_4_4, Int.cast_zero, LawfulXor.xor_self, octSign_4_5, octSign_4_6,
+      octSign_4_7, neg_sub, wedge, xV, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5,
+      octSign_5_6, octSign_5_7, octSign_1_1, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5,
+      octSign_1_6, octSign_1_7]
   ring
 
 private theorem schurN_5_2 (z t : ℕ → R) :
     schurN z t 5 2 = crossMat (aV z) 5 2 + wedge (xV z) (vV z) 5 2 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_5_2, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_2, sedSign_9_2, sedSign_10_2, Int.reduceNeg, Int.cast_neg, neg_mul,
+      mul_neg, sedSign_11_2, sedSign_12_2, sedSign_13_2, sedSign_14_2, Nat.lt_add_one, sedSign_15_2,
+      sedSign_8_5, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, neg_neg,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_5,
+      Nat.succ_ne_self, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_5, sedSign_10_8, sedSign_10_9, neg_zero,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_5,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_5, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_5, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_5,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_5, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_5_2, aV, vv, wv, vV, mV, cross,
+      octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7,
+      Int.cast_zero, LawfulXor.xor_self, wedge, xV, octSign_5_1, octSign_5_3, octSign_5_4,
+      octSign_5_5, octSign_5_6, octSign_5_7, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7]
   ring
 
 private theorem schurN_5_3 (z t : ℕ → R) :
     schurN z t 5 3 = crossMat (aV z) 5 3 + wedge (xV z) (vV z) 5 3 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_5_3, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_3, sedSign_9_3,
+      sedSign_10_3, sedSign_11_3, sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one,
+      sedSign_15_3, sedSign_8_5, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_5, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_5, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_5, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_5, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_5, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_5, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_5, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_5_3, aV, vv, wv,
+      vV, mV, cross, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6,
+      Int.cast_zero, LawfulXor.xor_self, octSign_6_7, neg_sub, wedge, xV, octSign_5_1, octSign_5_2,
+      octSign_5_4, octSign_5_5, octSign_5_6, octSign_5_7, octSign_3_1, octSign_3_2, octSign_3_3,
+      octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7]
   ring
 
 private theorem schurN_5_4 (z t : ℕ → R) :
     schurN z t 5 4 = crossMat (aV z) 5 4 + wedge (xV z) (vV z) 5 4 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.succ_ne_self, not_false_eq_true,
+      borderedA_of_pos, sedSign_5_4, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, Nat.reduceEqDiff, sedSign_8_4, sedSign_9_4, sedSign_10_4, sedSign_11_4, sedSign_12_4,
+      Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_13_4, sedSign_14_4, Nat.lt_add_one,
+      sedSign_15_4, sedSign_8_5, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, neg_neg, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_5,
+      sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_5, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12,
+      sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_5, sedSign_11_8, sedSign_11_9,
+      sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_5,
+      sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, neg_zero, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_5, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_5, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_5, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_5_4, aV, vv, wv, vV, mV, cross, octSign_1_1,
+      Int.cast_zero, LawfulXor.xor_self, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5,
+      octSign_1_6, octSign_1_7, wedge, xV, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_5,
+      octSign_5_6, octSign_5_7, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5,
+      octSign_4_6, octSign_4_7]
   ring
 
 private theorem schurN_5_5 (z t : ℕ → R) :
     schurN z t 5 5 = crossMat (aV z) 5 5 + wedge (xV z) (vV z) 5 5 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, borderedA_self, mul_zero, le_add_iff_nonneg_left, zero_le, Nat.one_le_ofNat,
+      Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true, borderedA_of_pos, sedSign_8_5,
+      Int.cast_one, Nat.reduceXor, one_mul, sedSign_9_5, Int.reduceNeg, Int.cast_neg, neg_mul,
+      mul_neg, sedSign_10_5, sedSign_11_5, sedSign_12_5, sedSign_13_5, sedSign_14_5, Nat.lt_add_one,
+      sedSign_15_5, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14,
+      sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_8,
+      sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14,
+      zero_sub, neg_add_rev, crossMat, octSign_5_5, Int.cast_zero, aV, vv, LawfulXor.xor_self, wv,
+      vV, mV, cross, zero_xor, wedge, xV, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4,
+      octSign_5_6, octSign_5_7]
   ring
 
 private theorem schurN_5_6 (z t : ℕ → R) :
     schurN z t 5 6 = crossMat (aV z) 5 6 + wedge (xV z) (vV z) 5 6 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_5_6, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_6, sedSign_9_6, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg,
+      sedSign_10_6, sedSign_11_6, sedSign_12_6, sedSign_13_6, sedSign_14_6, Nat.lt_add_one,
+      sedSign_15_6, sedSign_8_5, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_5, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_5, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_5, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_5, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_5, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_5, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_5, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_5_6, aV, vv, wv,
+      vV, mV, cross, octSign_3_1, octSign_3_2, octSign_3_3, Int.cast_zero, LawfulXor.xor_self,
+      octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7, wedge, xV, octSign_5_1, octSign_5_2,
+      octSign_5_3, octSign_5_4, octSign_5_5, octSign_5_7, octSign_6_1, octSign_6_2, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7]
   ring
 
 private theorem schurN_5_7 (z t : ℕ → R) :
     schurN z t 5 7 = crossMat (aV z) 5 7 + wedge (xV z) (vV z) 5 7 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_5_7, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, Nat.succ_ne_self, sedSign_8_7,
+      sedSign_9_7, sedSign_10_7, sedSign_11_7, sedSign_12_7, sedSign_13_7, sedSign_14_7,
+      Nat.lt_add_one, sedSign_15_7, sedSign_8_5, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_5, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_5, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_5, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_5, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_5, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_5, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_5, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_5_7, aV, vv, wv, vV, mV, cross, octSign_2_1,
+      even_two, Nat.xor_one_of_even, octSign_2_2, Int.cast_zero, LawfulXor.xor_self, octSign_2_3,
+      octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7, neg_sub, wedge, xV, octSign_5_1,
+      octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, octSign_5_6, octSign_7_1, octSign_7_2,
+      octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7]
   ring
 
 private theorem schurN_6_1 (z t : ℕ → R) :
     schurN z t 6 1 = crossMat (aV z) 6 1 + wedge (xV z) (vV z) 6 1 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat, ne_eq,
+      OfNat.ofNat_ne_one, not_false_eq_true, borderedA_of_pos, sedSign_6_1, Int.reduceNeg,
+      Int.cast_neg, Int.cast_one, Nat.reduceXor, neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_1, sedSign_9_1, sedSign_10_1, sedSign_11_1, sedSign_12_1, sedSign_13_1,
+      sedSign_14_1, Nat.lt_add_one, sedSign_15_1, Nat.reduceEqDiff, sedSign_8_6, borderedA_self,
+      mul_zero, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_6, Nat.succ_ne_self, sedSign_9_8,
+      neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_6, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12,
+      sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_6, sedSign_11_8, sedSign_11_9,
+      sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_6,
+      sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13, sedSign_12_14,
+      sedSign_12_15, sedSign_13_6, sedSign_13_8, sedSign_13_9, sedSign_13_10, sedSign_13_11,
+      sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_6, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_6,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14, crossMat, octSign_6_1, aV, vv, wv, vV, mV, cross, octSign_7_1, octSign_7_2,
+      octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7, Int.cast_zero,
+      LawfulXor.xor_self, neg_sub, wedge, xV, octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5,
+      octSign_6_6, octSign_6_7, octSign_1_1, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5,
+      octSign_1_6, octSign_1_7]
   ring
 
 private theorem schurN_6_2 (z t : ℕ → R) :
     schurN z t 6 2 = crossMat (aV z) 6 2 + wedge (xV z) (vV z) 6 2 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_6_2, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_2, sedSign_9_2,
+      sedSign_10_2, sedSign_11_2, sedSign_12_2, sedSign_13_2, sedSign_14_2, Nat.lt_add_one,
+      sedSign_15_2, sedSign_8_6, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10,
+      neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_6,
+      Nat.succ_ne_self, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_6, sedSign_10_8, sedSign_10_9, neg_zero,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_6,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_6, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_6, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_6,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_6, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_6_2, aV, vv, wv, vV, mV, cross,
+      octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, Int.cast_zero, LawfulXor.xor_self,
+      octSign_4_5, octSign_4_6, octSign_4_7, neg_sub, wedge, xV, octSign_6_1, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7, octSign_2_1, even_two,
+      Nat.xor_one_of_even, octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6,
+      octSign_2_7]
   ring
 
 private theorem schurN_6_3 (z t : ℕ → R) :
     schurN z t 6 3 = crossMat (aV z) 6 3 + wedge (xV z) (vV z) 6 3 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_6_3, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_3, sedSign_9_3, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg,
+      sedSign_10_3, sedSign_11_3, sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one,
+      sedSign_15_3, sedSign_8_6, borderedA_self, mul_zero, zero_mul, sedSign_8_9, neg_neg,
+      sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_6, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11,
+      sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_6, sedSign_10_8,
+      sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15,
+      sedSign_11_6, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_6, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_6, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_6, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_6, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_6_3, aV, vv, wv,
+      vV, mV, cross, octSign_5_1, octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, Int.cast_zero,
+      LawfulXor.xor_self, octSign_5_6, octSign_5_7, wedge, xV, octSign_6_1, octSign_6_2,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7, octSign_3_1, octSign_3_2, octSign_3_3,
+      octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7]
   ring
 
 private theorem schurN_6_4 (z t : ℕ → R) :
     schurN z t 6 4 = crossMat (aV z) 6 4 + wedge (xV z) (vV z) 6 4 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_6_4, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_4, sedSign_9_4, sedSign_10_4, sedSign_11_4, sedSign_12_4, Int.reduceNeg,
+      Int.cast_neg, neg_mul, mul_neg, sedSign_13_4, sedSign_14_4, Nat.lt_add_one, sedSign_15_4,
+      sedSign_8_6, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10, sedSign_8_11,
+      sedSign_8_12, neg_neg, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_6,
+      Nat.succ_ne_self, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_6, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_6,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_6, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      neg_zero, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_6, sedSign_13_8,
+      sedSign_13_9, sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15,
+      sedSign_14_6, sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12,
+      sedSign_14_13, sedSign_14_15, sedSign_15_6, sedSign_15_8, sedSign_15_9, sedSign_15_10,
+      sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_6_4, aV, vv, wv,
+      vV, mV, cross, octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2, Int.cast_zero,
+      LawfulXor.xor_self, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7, wedge,
+      xV, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_5, octSign_6_6, octSign_6_7, octSign_4_1,
+      octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5, octSign_4_6, octSign_4_7]
   ring
 
 private theorem schurN_6_5 (z t : ℕ → R) :
     schurN z t 6 5 = crossMat (aV z) 6 5 + wedge (xV z) (vV z) 6 5 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.succ_ne_self, not_false_eq_true,
+      borderedA_of_pos, sedSign_6_5, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, Nat.reduceEqDiff, sedSign_8_5,
+      sedSign_9_5, sedSign_10_5, sedSign_11_5, sedSign_12_5, sedSign_13_5, sedSign_14_5,
+      Nat.lt_add_one, sedSign_15_5, sedSign_8_6, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_6, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_6, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_6,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_6, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_6, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_6,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_6, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_6_5, aV, vv, wv, vV, mV, cross,
+      octSign_3_1, octSign_3_2, octSign_3_3, Int.cast_zero, LawfulXor.xor_self, octSign_3_4,
+      octSign_3_5, octSign_3_6, octSign_3_7, neg_sub, wedge, xV, octSign_6_1, octSign_6_2,
+      octSign_6_3, octSign_6_4, octSign_6_6, octSign_6_7, octSign_5_1, octSign_5_2, octSign_5_3,
+      octSign_5_4, octSign_5_5, octSign_5_6, octSign_5_7]
   ring
 
 private theorem schurN_6_6 (z t : ℕ → R) :
     schurN z t 6 6 = crossMat (aV z) 6 6 + wedge (xV z) (vV z) 6 6 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, borderedA_self, mul_zero, le_add_iff_nonneg_left, zero_le, Nat.one_le_ofNat,
+      Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true, borderedA_of_pos, sedSign_8_6,
+      Int.cast_one, Nat.reduceXor, one_mul, sedSign_9_6, Int.reduceNeg, Int.cast_neg, neg_mul,
+      mul_neg, sedSign_10_6, sedSign_11_6, sedSign_12_6, sedSign_13_6, sedSign_14_6, Nat.lt_add_one,
+      sedSign_15_6, zero_mul, sedSign_8_9, neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12,
+      sedSign_8_13, sedSign_8_14, sedSign_8_15, Nat.succ_ne_self, sedSign_9_8, neg_zero, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14,
+      sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13,
+      sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8, sedSign_14_9,
+      sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15, sedSign_15_8,
+      sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13, sedSign_15_14,
+      zero_sub, neg_add_rev, crossMat, octSign_6_6, Int.cast_zero, aV, vv, LawfulXor.xor_self, wv,
+      vV, mV, cross, zero_xor, wedge, xV, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4,
+      octSign_6_5, octSign_6_7]
   ring
 
 private theorem schurN_6_7 (z t : ℕ → R) :
     schurN z t 6 7 = crossMat (aV z) 6 7 + wedge (xV z) (vV z) 6 7 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_6_7, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, Nat.succ_ne_self, sedSign_8_7, sedSign_9_7, sedSign_10_7, Int.reduceNeg,
+      Int.cast_neg, neg_mul, mul_neg, sedSign_11_7, sedSign_12_7, sedSign_13_7, sedSign_14_7,
+      Nat.lt_add_one, sedSign_15_7, sedSign_8_6, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_6, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_6, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_6, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_6, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_6, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_6, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_6, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_6_7, aV, vv, wv, vV, mV, cross, octSign_1_1,
+      Int.cast_zero, LawfulXor.xor_self, octSign_1_2, octSign_1_3, octSign_1_4, octSign_1_5,
+      octSign_1_6, octSign_1_7, wedge, xV, octSign_6_1, octSign_6_2, octSign_6_3, octSign_6_4,
+      octSign_6_5, octSign_6_6, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_5,
+      octSign_7_6, octSign_7_7]
   ring
 
 private theorem schurN_7_1 (z t : ℕ → R) :
     schurN z t 7 1 = crossMat (aV z) 7 1 + wedge (xV z) (vV z) 7 1 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, Std.le_refl, Nat.one_lt_ofNat, ne_eq,
+      OfNat.ofNat_ne_one, not_false_eq_true, borderedA_of_pos, sedSign_7_1, Int.cast_one,
+      Nat.reduceXor, one_mul, le_add_iff_nonneg_left, zero_le, sedSign_8_1, sedSign_9_1,
+      Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_10_1, sedSign_11_1, sedSign_12_1,
+      sedSign_13_1, sedSign_14_1, Nat.lt_add_one, sedSign_15_1, Nat.succ_ne_self, sedSign_8_7,
+      borderedA_self, mul_zero, zero_mul, Nat.reduceEqDiff, sedSign_8_9, neg_neg, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_7,
+      sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_7, sedSign_10_8, sedSign_10_9, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_7, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_7, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_7, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_7, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_7, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_7_1, aV, vv, wv, vV, mV, cross, octSign_6_1,
+      octSign_6_2, octSign_6_3, octSign_6_4, octSign_6_5, octSign_6_6, Int.cast_zero,
+      LawfulXor.xor_self, octSign_6_7, wedge, xV, octSign_7_2, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7, octSign_1_1, octSign_1_2, octSign_1_3, octSign_1_4,
+      octSign_1_5, octSign_1_6, octSign_1_7]
   ring
 
 private theorem schurN_7_2 (z t : ℕ → R) :
     schurN z t 7 2 = crossMat (aV z) 7 2 + wedge (xV z) (vV z) 7 2 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_7_2, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_2, sedSign_9_2,
+      sedSign_10_2, sedSign_11_2, sedSign_12_2, sedSign_13_2, sedSign_14_2, Nat.lt_add_one,
+      sedSign_15_2, Nat.succ_ne_self, sedSign_8_7, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      sedSign_8_10, neg_neg, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_7, sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13,
+      sedSign_9_14, sedSign_9_15, sedSign_10_7, sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11,
+      sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_7, sedSign_11_8,
+      sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15,
+      sedSign_12_7, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_7, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_7, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_7, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_7_2, aV, vv, wv, vV, mV, cross, octSign_5_1,
+      octSign_5_2, octSign_5_3, octSign_5_4, octSign_5_5, Int.cast_zero, LawfulXor.xor_self,
+      octSign_5_6, octSign_5_7, neg_sub, wedge, xV, octSign_7_1, octSign_7_3, octSign_7_4,
+      octSign_7_5, octSign_7_6, octSign_7_7, octSign_2_1, even_two, Nat.xor_one_of_even,
+      octSign_2_2, octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7]
   ring
 
 private theorem schurN_7_3 (z t : ℕ → R) :
     schurN z t 7 3 = crossMat (aV z) 7 3 + wedge (xV z) (vV z) 7 3 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_7_3, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, sedSign_8_3, sedSign_9_3,
+      sedSign_10_3, sedSign_11_3, sedSign_12_3, sedSign_13_3, sedSign_14_3, Nat.lt_add_one,
+      sedSign_15_3, Nat.succ_ne_self, sedSign_8_7, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_7, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_7, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_7,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_7, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_7, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_7,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_7, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_7_3, aV, vv, wv, vV, mV, cross,
+      octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, Int.cast_zero, LawfulXor.xor_self,
+      octSign_4_5, octSign_4_6, octSign_4_7, neg_sub, wedge, xV, octSign_7_1, octSign_7_2,
+      octSign_7_4, octSign_7_5, octSign_7_6, octSign_7_7, octSign_3_1, octSign_3_2, octSign_3_3,
+      octSign_3_4, octSign_3_5, octSign_3_6, octSign_3_7]
   ring
 
 private theorem schurN_7_4 (z t : ℕ → R) :
     schurN z t 7 4 = crossMat (aV z) 7 4 + wedge (xV z) (vV z) 7 4 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_7_4, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_4, sedSign_9_4, sedSign_10_4, sedSign_11_4, sedSign_12_4, Int.reduceNeg,
+      Int.cast_neg, neg_mul, mul_neg, sedSign_13_4, sedSign_14_4, Nat.lt_add_one, sedSign_15_4,
+      Nat.succ_ne_self, sedSign_8_7, borderedA_self, mul_zero, zero_mul, sedSign_8_9, sedSign_8_10,
+      sedSign_8_11, sedSign_8_12, neg_neg, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_7,
+      sedSign_9_8, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14,
+      sedSign_9_15, sedSign_10_7, sedSign_10_8, sedSign_10_9, sedSign_10_11, sedSign_10_12,
+      sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_7, sedSign_11_8, sedSign_11_9,
+      sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_7,
+      sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11, neg_zero, sedSign_12_13,
+      sedSign_12_14, sedSign_12_15, sedSign_13_7, sedSign_13_8, sedSign_13_9, sedSign_13_10,
+      sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_7, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_7, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12,
+      sedSign_15_13, sedSign_15_14, crossMat, octSign_7_4, aV, vv, wv, vV, mV, cross, octSign_3_1,
+      octSign_3_2, octSign_3_3, Int.cast_zero, LawfulXor.xor_self, octSign_3_4, octSign_3_5,
+      octSign_3_6, octSign_3_7, wedge, xV, octSign_7_1, octSign_7_2, octSign_7_3, octSign_7_5,
+      octSign_7_6, octSign_7_7, octSign_4_1, octSign_4_2, octSign_4_3, octSign_4_4, octSign_4_5,
+      octSign_4_6, octSign_4_7]
   ring
 
 private theorem schurN_7_5 (z t : ℕ → R) :
     schurN z t 7 5 = crossMat (aV z) 7 5 + wedge (xV z) (vV z) 7 5 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.reduceEqDiff, not_false_eq_true,
+      borderedA_of_pos, sedSign_7_5, Int.cast_one, Nat.reduceXor, one_mul, le_add_iff_nonneg_left,
+      zero_le, sedSign_8_5, sedSign_9_5, Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg,
+      sedSign_10_5, sedSign_11_5, sedSign_12_5, sedSign_13_5, sedSign_14_5, Nat.lt_add_one,
+      sedSign_15_5, Nat.succ_ne_self, sedSign_8_7, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_7, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_7, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_7,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_7, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_7, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_7,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_7, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_7_5, aV, vv, wv, vV, mV, cross,
+      octSign_2_1, even_two, Nat.xor_one_of_even, octSign_2_2, Int.cast_zero, LawfulXor.xor_self,
+      octSign_2_3, octSign_2_4, octSign_2_5, octSign_2_6, octSign_2_7, wedge, xV, octSign_7_1,
+      octSign_7_2, octSign_7_3, octSign_7_4, octSign_7_6, octSign_7_7, octSign_5_1, octSign_5_2,
+      octSign_5_3, octSign_5_4, octSign_5_5, octSign_5_6, octSign_5_7]
   ring
 
 private theorem schurN_7_6 (z t : ℕ → R) :
     schurN z t 7 6 = crossMat (aV z) 7 6 + wedge (xV z) (vV z) 7 6 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, Nat.one_le_ofNat, Nat.reduceLT, ne_eq, Nat.succ_ne_self, not_false_eq_true,
+      borderedA_of_pos, sedSign_7_6, Int.reduceNeg, Int.cast_neg, Int.cast_one, Nat.reduceXor,
+      neg_mul, one_mul, mul_neg, le_add_iff_nonneg_left, zero_le, Nat.reduceEqDiff, sedSign_8_6,
+      sedSign_9_6, sedSign_10_6, sedSign_11_6, sedSign_12_6, sedSign_13_6, sedSign_14_6,
+      Nat.lt_add_one, sedSign_15_6, sedSign_8_7, borderedA_self, mul_zero, zero_mul, sedSign_8_9,
+      neg_neg, sedSign_8_10, sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15,
+      sedSign_9_7, sedSign_9_8, neg_zero, add_zero, sedSign_9_10, sedSign_9_11, sedSign_9_12,
+      sedSign_9_13, sedSign_9_14, sedSign_9_15, sedSign_10_7, sedSign_10_8, sedSign_10_9,
+      sedSign_10_11, sedSign_10_12, sedSign_10_13, sedSign_10_14, sedSign_10_15, sedSign_11_7,
+      sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12, sedSign_11_13, sedSign_11_14,
+      sedSign_11_15, sedSign_12_7, sedSign_12_8, sedSign_12_9, sedSign_12_10, sedSign_12_11,
+      sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_7, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_7,
+      sedSign_14_8, sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13,
+      sedSign_14_15, sedSign_15_7, sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11,
+      sedSign_15_12, sedSign_15_13, sedSign_15_14, crossMat, octSign_7_6, aV, vv, wv, vV, mV, cross,
+      octSign_1_1, Int.cast_zero, LawfulXor.xor_self, octSign_1_2, octSign_1_3, octSign_1_4,
+      octSign_1_5, octSign_1_6, octSign_1_7, neg_sub, wedge, xV, octSign_7_1, octSign_7_2,
+      octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_7, octSign_6_1, octSign_6_2, octSign_6_3,
+      octSign_6_4, octSign_6_5, octSign_6_6, octSign_6_7]
   ring
 
 private theorem schurN_7_7 (z t : ℕ → R) :
     schurN z t 7 7 = crossMat (aV z) 7 7 + wedge (xV z) (vV z) 7 7 := by
-  simp [schurN, Finset.sum_range_succ, borderedA_self, borderedA_of_pos, crossMat, wedge, aV, xV,
-    mV, vV, cross, uv, vv, wv]
+  simp only [schurN, uv, Finset.sum_range_succ, Finset.range_one, Finset.sum_singleton, zero_add,
+      Nat.reduceAdd, borderedA_self, mul_zero, le_add_iff_nonneg_left, zero_le, Nat.one_le_ofNat,
+      Nat.reduceLT, ne_eq, Nat.succ_ne_self, not_false_eq_true, borderedA_of_pos, sedSign_8_7,
+      Int.cast_one, Nat.reduceXor, one_mul, Nat.reduceEqDiff, sedSign_9_7, sedSign_10_7,
+      Int.reduceNeg, Int.cast_neg, neg_mul, mul_neg, sedSign_11_7, sedSign_12_7, sedSign_13_7,
+      sedSign_14_7, Nat.lt_add_one, sedSign_15_7, zero_mul, sedSign_8_9, sedSign_8_10, neg_neg,
+      sedSign_8_11, sedSign_8_12, sedSign_8_13, sedSign_8_14, sedSign_8_15, sedSign_9_8, add_zero,
+      sedSign_9_10, sedSign_9_11, sedSign_9_12, sedSign_9_13, sedSign_9_14, sedSign_9_15,
+      sedSign_10_8, sedSign_10_9, neg_zero, sedSign_10_11, sedSign_10_12, sedSign_10_13,
+      sedSign_10_14, sedSign_10_15, sedSign_11_8, sedSign_11_9, sedSign_11_10, sedSign_11_12,
+      sedSign_11_13, sedSign_11_14, sedSign_11_15, sedSign_12_8, sedSign_12_9, sedSign_12_10,
+      sedSign_12_11, sedSign_12_13, sedSign_12_14, sedSign_12_15, sedSign_13_8, sedSign_13_9,
+      sedSign_13_10, sedSign_13_11, sedSign_13_12, sedSign_13_14, sedSign_13_15, sedSign_14_8,
+      sedSign_14_9, sedSign_14_10, sedSign_14_11, sedSign_14_12, sedSign_14_13, sedSign_14_15,
+      sedSign_15_8, sedSign_15_9, sedSign_15_10, sedSign_15_11, sedSign_15_12, sedSign_15_13,
+      sedSign_15_14, zero_sub, neg_add_rev, crossMat, octSign_7_7, Int.cast_zero, aV, vv,
+      LawfulXor.xor_self, wv, vV, mV, cross, zero_xor, wedge, xV, octSign_7_1, octSign_7_2,
+      octSign_7_3, octSign_7_4, octSign_7_5, octSign_7_6]
   ring
 
 /-- On `1, ..., 7` the Schur block is `crossMat a + wedge x v`, entry by entry. -/
