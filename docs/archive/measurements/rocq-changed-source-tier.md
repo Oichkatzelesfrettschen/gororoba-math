@@ -67,6 +67,22 @@ Reading.
 - The skip path (no touched path) is checked locally and by the calibration case "HEAD against itself"; no hosted run of it is recorded.
 - These three runs measured the first version of the tier, which ran no `rocq check`, no admission scan and no inventory check and compiled no source outside the project files; the version below adds the scans, the checks and the outside sources, and its times follow.
 
+## Measured times with the admission, assumption and inventory checks
+
+Run 45791312742 (quick.yml dispatch with probe rocq/quantum/E8RootExchange.v, a leaf), restored switch and objects of run 45781246662 (rocq.yml dispatch with `save_objects`: 1404 objects, 555 manifest paths, gate step about 41 min that day):
+
+```tsv
+run	case	apt_s	switch_restore_s	objects_restore_s	compile_step_s	rebuilt	job_s
+45788085671	leaf probe, objects dated by separate touch calls	15	12	1	309	58	about 340
+45791312742	leaf probe, objects dated to one instant	24	17	2	27	1	77
+45781267449	pull request, only tier scripts changed (no tree compiled)	17	15	0	13	0	50
+```
+
+- The compile step of run 45791312742 holds the calibration (8 s), the admission scan (2 s), the assumption and inventory checks, the compile of the one changed object and the warning check: 27 s, 1 object rebuilt.
+- Run 45788085671 measured a defect: dating each saved object by its own touch call put a quantum object before the open object it imports, and make rebuilt 58 objects; dating all objects from one reference file fixed it (run 45791312742).
+- Two dispatched runs stalled in the apt step for more than ten minutes (one of them cancelled after 17 minutes); the step now has a timeout.
+- The hub probe (rocq/open/theories/Prelude.v, 236 objects, 490 s) was measured with the first version only.
+
 ## Calibration
 
 Each run checks the decision on seven synthetic manifests, an absent baseline, HEAD against itself and an assumption scan on a synthetic source, including the skip and `--plan` paths. A run that compiles also builds a three-source fixture, saves its objects with the save routine, dates them 2099 and restores them over a fresh export three times: a changed Base.v rebuilds Dependent.v and leaves Other.v, a Base.v change that breaks Dependent.v fails, and a broken proof fails; the admission scan must reject an `Admitted` fixture.
