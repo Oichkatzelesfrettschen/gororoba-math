@@ -25,6 +25,10 @@ Pfaffian on `List.finRange n`.
 * `Matrix.det_eq_pfaffian_sq_fin_two`, `Matrix.det_eq_pfaffian_sq_fin_four`,
   `Matrix.det_eq_pfaffian_sq_fin_six`: `det A = pfaffian A ^ 2` for an alternating `2 × 2`,
   `4 × 4` and `6 × 6` matrix over a commutative ring.
+* `Matrix.schur_cleared_of_mul`: for `T = [[B, X], [-Xᵀ, D]]` with `B`, `D` skew, `2`
+  left-regular and any `M` with `B * M = c • X`,
+  `c ^ |q| * Pf T = Pf B * c ^ (|q| / 2) * Pf (c • D + Xᵀ * M) q` for even `|q|`; a block whose
+  square is a scalar, `B * B = -s • 1`, clears with `c = s` and `M = -(B * X)`.
 * `Matrix.schur_cleared`: for `T = [[B, X], [-Xᵀ, D]]` with `B` of size `n`, `B`, `D` skew and `2`
   left-regular, the Pfaffian of `T` on the `n` leading indices followed by a list `q` of
   complement indices satisfies
@@ -227,19 +231,19 @@ private theorem skewForm_single {ι : Type*} [Fintype ι] [DecidableEq ι] (T : 
     (i j : ι) : skewForm T (Pi.single i 1) (Pi.single j 1) = T i j := by
   simp [skewForm, dotProduct, Matrix.mulVec, Pi.single_apply]
 
-/-- The cleared Schur-complement law of the Pfaffian: no inverse of `B` and no cancellation. -/
-theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R)
-    (X : Matrix (Fin n) κ R) (D : Matrix κ κ R) (hB : Bᵀ = -B) (hD : Dᵀ = -D) (q : List κ)
-    (hq : q.length % 2 = 0) :
-    B.det ^ q.length * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
+/-- The cleared Schur-complement law of the Pfaffian with a chosen clearing matrix: if
+`B * M = c • X`, replacing each tail generator by `c` times itself minus the combination `M` of the
+leading generators makes it pair to zero with them, so the tail Pfaffian becomes that of
+`c • D + Xᵀ * M`. -/
+theorem schur_cleared_of_mul (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R)
+    (X : Matrix (Fin n) κ R) (D : Matrix κ κ R) (hB : Bᵀ = -B) (hD : Dᵀ = -D) (c : R)
+    (M : Matrix (Fin n) κ R) (hBM : B * M = c • X) (q : List κ) (hq : q.length % 2 = 0) :
+    c ^ q.length * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
         ((List.finRange n).map Sum.inl ++ q.map Sum.inr) =
-      pfaffian B * B.det ^ (q.length / 2) *
-        pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) q := by
+      pfaffian B * c ^ (q.length / 2) * pfaffianAux (c • D + Xᵀ * M) q := by
   classical
   have : Fintype κ := Fintype.ofFinite κ
   set T : Matrix (Fin n ⊕ κ) (Fin n ⊕ κ) R := Matrix.fromBlocks B X (-Xᵀ) D with hTdef
-  set c : R := B.det with hc
-  set M : Matrix (Fin n) κ R := B.adjugate * X with hM
   have hT : Tᵀ = -T := by
     rw [hTdef, Matrix.fromBlocks_transpose, Matrix.fromBlocks_neg, hB, hD]
     simp
@@ -251,7 +255,7 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
   set vl : List (Fin n ⊕ κ → R) := (List.finRange n).map fun a => g (Sum.inl a) with hvl
   set u : κ → (Fin n ⊕ κ → R) := fun j =>
     Sum.elim (fun a => -(M a j)) (c • Pi.single j (1 : R)) with hu
-  set W : Matrix κ κ R := c • D + Xᵀ * B.adjugate * X with hW
+  set W : Matrix κ κ R := c • D + Xᵀ * M with hW
   -- the Pfaffian of T on the index list is the Pfaffian of the form on the basis vectors
   have hPT : pfaffianAux T ((List.finRange n).map Sum.inl ++ q.map Sum.inr) =
       pfaffianAux ω (vl ++ q.map fun j => g (Sum.inr j)) := by
@@ -277,8 +281,6 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
     rcases x with a | i
     · simp [hu, hg, Finset.sum_apply, Pi.single_apply]
     · simp [hu, hg, Finset.sum_apply, Pi.single_apply]
-  have hBM : B * M = c • X := by
-    rw [hM, ← Matrix.mul_assoc, Matrix.mul_adjugate, smul_mul, Matrix.one_mul]
   -- the product of T with each tail generator
   have hdot : ∀ (z : Fin n ⊕ κ → R) (i : Fin n ⊕ κ), dotProduct (Pi.single i (1 : R)) z = z i := by
     intro z i
@@ -297,12 +299,10 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
     rw [show u j = Sum.elim (fun a => -(M a j)) (c • Pi.single j (1 : R)) from rfl, hTdef,
       Matrix.fromBlocks_mulVec]
     simp only [Sum.elim_inr, Pi.add_apply]
-    simp only [Matrix.mulVec, dotProduct, Matrix.neg_apply, Matrix.transpose_apply, hM,
-      Matrix.mul_apply, Function.comp_apply, Sum.elim_inl, mul_neg, neg_mul, neg_neg, Sum.elim_inr,
-      Pi.smul_apply, Pi.single_apply, smul_eq_mul, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
-      Finset.mem_univ, ↓reduceIte, hW, Matrix.add_apply, Matrix.smul_apply]
-    simp only [Finset.mul_sum, Finset.sum_mul, mul_assoc]
-    rw [Finset.sum_comm]
+    simp only [Matrix.mulVec, dotProduct, Matrix.neg_apply, Matrix.transpose_apply,
+      Function.comp_apply, Sum.elim_inl, mul_neg, neg_mul, neg_neg, Sum.elim_inr, Pi.smul_apply,
+      Pi.single_apply, smul_eq_mul, mul_ite, mul_one, mul_zero, Finset.sum_ite_eq',
+      Finset.mem_univ, ↓reduceIte, hW, Matrix.add_apply, Matrix.smul_apply, Matrix.mul_apply]
     ring
   have hcross : ∀ x ∈ vl, ∀ y ∈ q.map u, ω x y = 0 := by
     intro x hx y hy
@@ -329,6 +329,18 @@ theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R
   rw [e4, pfaffianAux_smul_of_even c W q hq] at s4
   rw [hPT, ← s1, s2, s3, hPB, ← s4]
   ring
+
+/-- The cleared Schur-complement law of the Pfaffian: no inverse of `B` and no cancellation. -/
+theorem schur_cleared (h2 : IsLeftRegular (2 : R)) (B : Matrix (Fin n) (Fin n) R)
+    (X : Matrix (Fin n) κ R) (D : Matrix κ κ R) (hB : Bᵀ = -B) (hD : Dᵀ = -D) (q : List κ)
+    (hq : q.length % 2 = 0) :
+    B.det ^ q.length * pfaffianAux (Matrix.fromBlocks B X (-Xᵀ) D)
+        ((List.finRange n).map Sum.inl ++ q.map Sum.inr) =
+      pfaffian B * B.det ^ (q.length / 2) *
+        pfaffianAux (B.det • D + Xᵀ * B.adjugate * X) q := by
+  have h := schur_cleared_of_mul h2 B X D hB hD B.det (B.adjugate * X)
+    (by rw [← Matrix.mul_assoc, Matrix.mul_adjugate, smul_mul, Matrix.one_mul]) q hq
+  rwa [← Matrix.mul_assoc] at h
 
 /-- Over a domain with `2 ≠ 0`, for an alternating `6 × 6` block `B` with nonzero Pfaffian, the
 Pfaffian on four complement indices of `det B • D + Xᵀ * adjugate B * X` is `Pf B ^ 3` times the
