@@ -81,6 +81,7 @@ run	case	apt_s	switch_restore_s	objects_restore_s	compile_step_s	rebuilt	job_s
 - The compile step of run 45791312742 holds the calibration (8 s), the admission scan (2 s), the assumption and inventory checks, the compile of the one changed object and the warning check: 27 s, 1 object rebuilt.
 - Run 45788085671 measured a defect: dating each saved object by its own touch call put a quantum object before the open object it imports, and make rebuilt 58 objects; dating all objects from one reference file fixed it (run 45791312742).
 - Two dispatched runs stalled in the apt step for more than ten minutes (one of them cancelled after 17 minutes); the step now has a timeout.
+- Run 45793361765 (leaf of rocq/open that the nullity certificate imports, with the switch-off scan and the flag search): 1 open object and the schur-geometry group (38 s of the compile step) compiled; compile step 56 s, job 90 s.
 - The hub probe (rocq/open/theories/Prelude.v, 236 objects, 490 s) was measured with the first version only.
 
 ## Calibration
