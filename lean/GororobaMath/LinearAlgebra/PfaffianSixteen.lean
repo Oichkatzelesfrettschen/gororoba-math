@@ -18,6 +18,8 @@ the Pfaffian of `borderedA z t` on the indices `0, ..., 15` is `-(z.t) Q G`
 
 The Rocq partners are `Amat` and `rhs` of `rocq/quantum/StiefelA5Certificate.v`, and
 `pf_A_eval` of `rocq/quantum/StiefelA5Pfaffian.v` states the identity there.
+`ci/compare_bordered_matrix.sh` evaluates `borderedA` and `rhsv` here and `Amat` and `rhs` there on
+the same seeded integer vectors and rejects a mutated Rocq reference.
 
 ## Main definitions
 

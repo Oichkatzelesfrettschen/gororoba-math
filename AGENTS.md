@@ -200,13 +200,17 @@ gororoba repository shares; this file governs where the two differ.
   `nhat_spectral.py` as exact fractions; `ci/compare_pfaffian.sh` compares
   `Matrix.pfaffianAux` with `pf` of `rocq/quantum/Pfaffian.v` over the integers on
   skew and general matrices and permuted, reversed and repeated index lists;
+  `ci/compare_bordered_matrix.sh` compares `PfaffianSixteen.borderedA` and `PfaffianSixteen.rhsv` with `Amat` and `rhs` of
+  `rocq/quantum/StiefelA5Certificate.v`, evaluated through `ev` of `StiefelA5Pfaffian.v`, on 24 seeded integer vectors,
+  and `Matrix.pfaffian` of `PfaffianSixteenSchur.A16` with `P.pf` over the evaluated matrix at three of them;
   `ci/compare_box_kite_census.sh` compares `sed_sign` of
   `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
   pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
   the 4096 ordered triples. Each runs on demand and rejects a mutated reference; the Walsh
   and C_z comparisons need `GOROROBA_QUANTUM` and a built `lean/.lake`, the box-kite and
   header comparisons `GOROROBA_QUANTUM` and the `rocq-9.3` switch, and the Pfaffian
-  comparison, which reads no other repository, both a built `lean/.lake` and `rocq-9.3`.
+  comparisons of the Pfaffian and of the bordered matrix, which read no other repository, both a built `lean/.lake`
+  and `rocq-9.3`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
