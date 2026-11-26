@@ -83,7 +83,7 @@ ring it cannot cancel: `x + y - y ≈ x` fails there (measured).
 
 | Item | Pin |
 |---|---|
-| Agda | 2.8.0.2, the release binary `Agda-v2.8.0.2-linux.tar.xz` (sha256 `2bcf24bb561b1be859bba841e5d67962d1616b3251bc147f878e4f60a2fbd9f7`), statically linked; `ci/check_agda.sh` checks the version string, since an unpacked binary cannot be compared with the tarball digest |
+| Agda | 2.8.0.2, the release binary `Agda-v2.8.0.2-linux.tar.xz` (sha256 `2bcf24bb561b1be859bba841e5d67962d1616b3251bc147f878e4f60a2fbd9f7`), statically linked; the unpacked Linux executable has sha256 `3fe070780fa370f5b74e5716ebe42fb60ec6b0ad90d13f8ab45d2903abf39b84`. `ci/check_agda.sh` constrains the version string only, so another build that reports 2.8.0.2 passes it |
 | agda-stdlib | v2.4, commit `2a5a0dec0a3cb5c87468ce101388a513d39dbf10` (its changelog: tested with Agda 2.8.0); `ci/check_agda.sh` requires a git checkout at that commit whose tracked files are unmodified |
 | Options | `--safe --without-K` in every source, `-Werror` on the command line |
 
