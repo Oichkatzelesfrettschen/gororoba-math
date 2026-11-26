@@ -68,7 +68,7 @@ ring it cannot cancel: `x + y - y ≈ x` fails there (measured).
 - Open: the nucleus is not stated. The carrier is a setoid over an arbitrary
   commutative ring, and agda-stdlib has no real numbers, so the real sphere S^7 is
   the instance at the reals and is not built here. Non-associativity is stated as
-  "associative implies 1# + 1# ≈ 0#".
+  `(∀ u v w → (u ∙ v) ∙ w ≈₁ u ∙ (v ∙ w)) → 1# + 1# ≈ 0#`.
 - Residual risk: no comparison under `ci/` binds `Doubling.agda` to `Tower.lean`.
   The convention above is read from both sources, and an independent evaluation
   of the formula agreed on `(e₁ e₂) e₄ = e₇` and on the left Bol identity at
@@ -98,7 +98,7 @@ in a scope capped at 16 GiB:
 | Release binary download and unpack | 1 s | - |
 | Root module, agda-stdlib interfaces already built | 154.5 s (root module 151.4 s) | 0.70 GB |
 | Root module with agda-stdlib cold (162 interface files, 33 MB) | 191.6 s | 1.18 GB |
-| `ci/check_agda.sh` (library and both planted copies) | 312.9 s | 0.70 GB |
+| `ci/check_agda.sh` on an export of the commit (library and both planted copies) | 309.6 s | 0.68 GB |
 
 Disk: 55 MB binary, 1 MB of primitive modules unpacked into the user data
 directory, 14 MB agda-stdlib checkout, 33 MB of its interface files.

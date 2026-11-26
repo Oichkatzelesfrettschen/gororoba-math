@@ -19,13 +19,18 @@ default branch on 2026-11-26.
 
 ### Foundations
 
+Lean paths are under `src/lean/` of the v4.35.0 toolchain; Rocq paths are under
+`theories/` and `user-contrib/` of the `rocq-9.3` switch; Agda primitive
+modules are those the 2.8.0.2 binary unpacks.
+
 | Row | Lean 4 + Mathlib | Rocq 9.3 + MathComp, Stdlib | Agda 2.8 + agda-stdlib, cubical | Reading |
 |---|---|---|---|---|
-| Axioms the libraries assume | `propext`, `Classical.choice`, `Quot.sound`; the gate admits only these (`AGENTS.md`, "Statements and proofs") | none in the kernel; a tree's axioms are listed per tree (`rocq/*/kernel-assumptions.txt`) | none: every module the pilot imports checks under `--safe` (measured), which refuses postulates (measured, planted copy of `ci/check_agda.sh`) | overlap: all three can work axiom-free; only Lean's library needs choice |
-| Impredicativity | impredicative `Prop` (documented) | impredicative `Prop` (documented) | none; `--prop` gives a predicative `Prop` (documented) | Lean and Rocq share it; Agda lacks it |
-| Proof irrelevance | definitional for `Prop` (documented) | `SProp` definitional, `Prop` propositional (documented) | irrelevant arguments and `--prop` (documented) | overlap |
-| Function extensionality, quotients | quotients primitive, funext a theorem (documented) | funext an axiom of the Stdlib; quotients by setoids or MathComp `quotType` (documented) | funext and set quotients are theorems and HITs under `--cubical` (documented) | cubical Agda proves funext with no axiom: unique, but no claim here needs it |
-| Univalence, higher inductive types | inconsistent with definitional irrelevance; absent | consistent only in the Coq-HoTT setting, which MathComp cannot share (documented) | built in under `--cubical`: spheres `S₊ n`, joins, suspensions (`Cubical/HITs/Sn`, `Cubical/HITs/Join`) | unique to cubical Agda among the three set-ups of this repository |
+| Axioms the libraries assume | `propext` (`Init/Core.lean:1612`), `Classical.choice` (`Init/Prelude.lean:865`), `Quot.sound`; the gate admits only these (`AGENTS.md`, "Statements and proofs") | none in the kernel; each tree lists its axioms (`rocq/*/kernel-assumptions.txt`) | none: every module the pilot imports checks under `--safe`, which refuses a postulate (measured, planted copy of `ci/check_agda.sh`) | all three can work axiom-free; only Lean's library needs choice |
+| Function extensionality | a theorem derived from `Quot.sound` (`Init/Core.lean:1976`) | an axiom of the Stdlib (`Stdlib/Logic/FunctionalExtensionality.v:26`) | a definition under `--cubical` (`Cubical/Foundations/Prelude.agda:327`, `funExt`) | Lean and cubical Agda prove it; Rocq assumes it |
+| Quotients | primitive `Quot`, with `Quot.sound` as an axiom (`Init/Core.lean:1976`) | MathComp quotients by choice types (`mathcomp/algebra/ring_quotient.v`) | the set-quotient higher inductive type (`Cubical/HITs/SetQuotients.agda`) | overlap |
+| Proof irrelevance | built in for `Prop` (`Init/Core.lean:843`) | the sort `SProp` (`Init/Logic.v:460`) | the `Prop` builtin (`Agda/Primitive.agda:13`) | overlap; the definitional rules of each were not re-read |
+| Impredicativity | not examined | not examined | not examined | - |
+| Univalence, higher inductive types | none | none in MathComp or the Stdlib; Coq-HoTT, outside this repository's switch | `univalence` is a theorem (`Cubical/Foundations/Univalence.agda:240`); spheres, joins and suspensions are higher inductive types (`Cubical/HITs/Sn`, `Cubical/HITs/Join`) | unique to cubical Agda among the set-ups of this repository |
 
 ### Computation
 
@@ -33,7 +38,7 @@ default branch on 2026-11-26.
 |---|---|---|---|---|
 | Evaluation inside a proof | `decide +kernel`; a 210-goal table at 0.54 s and a Pfaffian memo table that exceeded 16 GiB (`AGENTS.md`, "Proof hygiene") | `vm_compute`, 3.4 to 8.5 times faster than `decide +kernel` on the sign tables (`docs/archive/measurements/h1-vm-compute-decide-kernel.md`); the Stiefel Pfaffian certificate in 104 s | the type checker's evaluator; the pilot normalises 24 octonion coordinate identities of degree 4 in 24 variables, with the rest of the module, in 151 s at 0.70 GB (measured) | Rocq's `vm_compute` stays the certificate engine; Agda's evaluator suffices for polynomial identities of this size |
 | Code tied to proofs | compiled code, not tied (`AGENTS.md`, evidence axis) | built-in `Extraction`; CertiRocq and verified extraction on Rocq 9.1 (skill `extract-verified-rocq-code`) | GHC and JavaScript back ends, unverified; `agda2lambox` into Peregrine, unverified (Peregrine README, "Frontends") | unique to Rocq |
-| Independent checkers | `leanchecker` and three external kernels (`ci/check_external_kernels.sh`) | `rocq check` (`ci/check_rocq.sh`) | none ships with Agda 2.8; the type checker is the whole trusted base. 103 issues labelled `false` in agda/agda, 11 open, 27 opened since 2025-01-01 (GitHub search, 2026-11-26) | Lean and Rocq have independent checkers; Agda has none |
+| Independent checkers | `leanchecker` and three external kernels (`ci/check_external_kernels.sh`) | `rocq check` (`ci/check_rocq.sh`) | none ships with Agda 2.8; the type checker is the whole trusted base. agda/agda labels 103 issues `false`, "Proof of the empty type which checks without known-unsafe flags", 11 open and 27 opened since 2025-01-01 (GitHub search and label description, 2026-11-26) | Lean and Rocq have independent checkers; Agda has none |
 
 ### Proof style and safety switches
 
@@ -51,10 +56,10 @@ default branch on 2026-11-26.
 | Alternative, flexible and non-associative rings | `NonUnitalNonAssocRing` and the classes this repository's tower uses; alternativity is a theorem of the tower (`lean/GororobaMath/CayleyDickson/Alternative.lean`) | rings are associative (`AGENTS.md`, "Statements and proofs") | `IsAlternativeMagma`, `IsFlexibleMagma` (`src/Algebra/Structures.agda:75`, `:88`), `IsNonAssociativeRing` (`:844`) | Lean and Agda overlap; Agda names the predicates, Lean holds the theorems |
 | Cayley-Dickson algebras, octonions | none in Mathlib beyond Degen's eight-square identity (`Mathlib/Algebra/Ring/Identities.lean`); this repository's `Tower` | none in MathComp; this repository's `rocq/open` and `rocq/quantum` towers | none in agda-stdlib or cubical (no source match); Coq-HoTT has a synthetic construction, below | the repository's own towers are the only ones |
 | Quaternions | `Mathlib/Algebra/Quaternion.lean` | the quaternion group only (`mathcomp/solvable/extremal.v:19`), no quaternion algebra | none | Lean |
-| Linear algebra, matrices | extensive (`Matrix`, determinants, rank) | `mxalgebra`, rank and kernels, computable | agda-stdlib minimal; cubical has integer matrices with Smith normal form (`Cubical/Algebra/IntegerMatrix/Smith.agda`) | Lean and Rocq |
-| Polynomials, ideals | `Polynomial`, `MvPolynomial`, `Ideal` | `poly`, ideals | cubical: `Cubical/Algebra/Polynomials/Multivariate`, commutative-ring ideals; agda-stdlib none | Lean and Rocq |
-| Finite fields | `GaloisField`, `ZMod` | `finfield` | cubical: a field structure (`Cubical/Algebra/Field/Base.agda`); no finite-field theory found | Lean and Rocq |
-| Spheres, H-spaces, Hopf fibrations, homotopy groups of spheres | topological spheres, `Mathlib/Topology/Homotopy/HSpaces.lean` (H-spaces; its TODO names the H-space spheres S^0, S^1, S^3, S^7 as unproved), `HomotopyGroup.lean`, fiber and vector bundles; no K-theory (the ledger's bundle rows say so) | MathComp none; Coq-HoTT, outside this repository's switch: `theories/Homotopy/HSpace.v`, `Hopf.v`, `PiSpheres.v`, and `CayleyDickson.v` (the Buchholtz-Rijke construction: an H-space on the join of two suspensions, giving the quaternionic Hopf fibration) | cubical: `Cubical/Homotopy/HSpace.agda:20` (`HSpace`), `:128` (`S1-HSpace`), the Hopf construction from any H-space (`Cubical/Homotopy/Hopf.agda:194`, `IsoTotalSpaceJoin`), π3(S2) ≅ ℤ (`Cubical/Homotopy/Group/Pi3S2.agda:166`), π4(S3) ≅ ℤ/2 (`Cubical/Homotopy/Group/Pi4S3/Summary.agda`), the Hopf invariant of the Hopf map (`Cubical/Homotopy/HopfInvariant/HopfMap.agda:561`); no H-space structure on S^3 or S^7 and no Stiefel manifold (no source match) | synthetic homotopy is strong in cubical Agda and in Coq-HoTT; neither holds Stiefel manifolds, G_2 or K-theory |
+| Linear algebra, matrices | determinants and rank (`Mathlib/LinearAlgebra/Matrix/Determinant/Basic.lean`, `Mathlib/LinearAlgebra/Matrix/Rank.lean`) | `mathcomp/algebra/matrix.v`, rank in `mathcomp/algebra/mxalgebra.v:26` | agda-stdlib: no source match for a matrix module; cubical: integer matrices with Smith normal form (`Cubical/Algebra/IntegerMatrix/Smith.agda`) | Lean and Rocq |
+| Polynomials, ideals | `Mathlib/Algebra/Polynomial/Basic.lean`, `Mathlib/Algebra/MvPolynomial/Basic.lean`, `Mathlib/RingTheory/Ideal/Basic.lean` | `mathcomp/algebra/poly.v`, ideals in `mathcomp/algebra/ring_quotient.v` | cubical: `Cubical/Algebra/Polynomials/Multivariate`, `Cubical/Algebra/CommRing/Ideal.agda`, `FGIdeal.agda`; agda-stdlib: only the solver's Horner forms | Lean and Rocq |
+| Finite fields | `Mathlib/FieldTheory/Finite/GaloisField.lean`, `Mathlib/Data/ZMod/Basic.lean` | `mathcomp/field/finfield.v` | cubical: a field structure (`Cubical/Algebra/Field/Base.agda`); no finite-field theory found | Lean and Rocq |
+| Spheres, H-spaces, Hopf fibrations, homotopy groups of spheres | topological spheres, `Mathlib/Topology/Homotopy/HSpaces.lean` (H-spaces; its TODO names the H-space spheres S^0, S^1, S^3, S^7 as unproved), `Mathlib/Topology/Homotopy/HomotopyGroup.lean`, `Mathlib/Topology/FiberBundle/`, `Mathlib/Topology/VectorBundle/`; no K-theory (the ledger's bundle rows say so) | MathComp none; Coq-HoTT, outside this repository's switch: `theories/Homotopy/HSpace.v`, `Hopf.v`, `PiSpheres.v`, and `CayleyDickson.v` (the Buchholtz-Rijke construction: an H-space on the join of two suspensions, giving the quaternionic Hopf fibration) | cubical: `Cubical/Homotopy/HSpace.agda:20` (`HSpace`), `:128` (`S1-HSpace`), the Hopf construction from any H-space (`Cubical/Homotopy/Hopf.agda:194`, `IsoTotalSpaceJoin`), pi_3(S^2) = Z (`Cubical/Homotopy/Group/Pi3S2.agda:166`), pi_4(S^3) = Z/2 (`Cubical/Homotopy/Group/Pi4S3/Summary.agda`), the Hopf invariant of the Hopf map (`Cubical/Homotopy/HopfInvariant/HopfMap.agda:561`); no H-space structure on S^3 or S^7 and no Stiefel manifold (no source match) | synthetic homotopy is strong in cubical Agda and in Coq-HoTT; neither holds Stiefel manifolds, G_2 or K-theory |
 | Hopf invariant one, division algebras | none | none | the Hopf invariant is defined (`Cubical/Homotopy/HopfInvariant/Base.agda:278`); the Hopf invariant one theorem is not formalized (no source match for Adams or invariant one) | none of the three |
 
 ### Build and gate cost
@@ -77,7 +82,7 @@ prover states, or adds assurance that the existing checks lack.
   nor Rocq here holds either. The pilot proves the packaging over every
   commutative ring, and the claim's three identities and the unique solutions
   follow from the library (`agda/README.md`). It also states
-  non-associativity inside the unit set, conditional on `1 + 1 ≠ 0`. The
+  non-associativity inside the unit set, conditional on `1 + 1` being nonzero. The
   nucleus and the real instance stay open.
 - (b) Rejected. The Cayley-Dickson doubling on agda-stdlib bundles, with the
   laws that survive each doubling: the Lean tower already states those laws at
@@ -85,7 +90,7 @@ prover states, or adds assurance that the existing checks lack.
   `FlexibleLaw.lean`, `DivisionLevels.lean`), so the Agda version would
   restate them. The pilot's `Doubling.agda` serves only as a computing device.
 - (c) Rejected. Synthetic S^1, S^3, S^7 and the Hopf fibrations. Cubical holds
-  the H-space on S^1, the Hopf construction and π3(S2), π4(S3), but no
+  the H-space on S^1, the Hopf construction and pi_3(S^2), pi_4(S^3), but no
   H-space on S^3 or S^7. Coq-HoTT, a Rocq library, holds the Buchholtz-Rijke
   construction that the octonionic case needs. The topology rows of the
   ledger (A5-381, A5-383, A5-385, A5-386, A5-394, A5-396, the kernel-bundle
@@ -96,9 +101,10 @@ prover states, or adds assurance that the existing checks lack.
 - (d) Rejected. A `--safe --without-K` proof as an axiom-free third check of
   a small headline theorem. The Rocq partners already depend on no axiom, and
   Lean's theorems are re-checked by three external kernels. Agda has no
-  independent checker, and 103 issues labelled `false` mark inconsistencies
-  found in its type checker, so a third proof adds implementation diversity
-  and less assurance than `rocq check` or an external Lean kernel.
+  independent checker, and agda/agda labels 103 issues `false`
+  (the label's description: a proof of the empty type that checks without
+  known-unsafe flags), so a third proof adds implementation diversity and less
+  assurance than `rocq check` or an external Lean kernel.
 
 ## 3. Peregrine
 
@@ -117,7 +123,10 @@ prover states, or adds assurance that the existing checks lack.
   - Two documents of the project disagree on the OCaml back end. The README
     says its glue assumes the axiom `trust_coq_kernel`, and `doc/dependencies.md`
     says the pinned fork of verified extraction removes that axiom.
-- Papers: OpenAlex lists no paper on Peregrine (search of 2026-11-26). The
+- Papers: one OpenAlex keyword query ("Peregrine lambda box code extraction
+  proof assistants", 2026-11-26) returned no work. arXiv 2602.19973 cites "the
+  Peregrine framework (Chapman et al., 2026)"; its bibliography entry was not
+  read. The
   verified OCaml route rests on Forster, Sozeau and Tabareau, "Verified
   Extraction from Coq to OCaml", PACMPL 2024 (doi 10.1145/3656379).
 - Relation to the routes of the skill `extract-verified-rocq-code`: Peregrine
@@ -136,8 +145,9 @@ prover states, or adds assurance that the existing checks lack.
 - Install: not attempted. The build needs MetaRocq, CertiRocq with CompCert
   3.17, Vellvm, WasmCert, the typed-extraction and CakeML back ends and
   verified extraction, from unreleased pins. MetaRocq alone took 35 min at 3
-  jobs (skill `extract-verified-rocq-code`, `references/pipelines.md`), so
-  the one-hour bound fails. The steps, in a switch of its own:
+  jobs (skill `extract-verified-rocq-code`, `references/pipelines.md`); the
+  estimate for the whole set exceeds the one-hour bound (an inference from
+  that figure, not a measurement). The steps, not run, in a switch of its own:
   `opam switch create peregrine ocaml-variants.4.14.2+options ocaml-option-flambda`,
   then `opam repo add rocq-released https://rocq-prover.org/opam/released`, a
   clone of peregrine-tool at a recorded commit, `opam install ./rocq-peregrine.opam`
