@@ -14,14 +14,18 @@ matrix product, `Aᵀ` is the transpose, and `ι : R` is a fixed element of a co
 ring with a star that sends `ι` to `-ι` and fixes the entries of `A` and `B`
 (`conjTranspose_mul_self_eq`). The matrices are the left multiplications of two imaginary
 units of a Cayley-Dickson algebra whose left tables are skew (`L_aᵀ = -L_a`), square to `-1`
-and anticommute; this is the content of the gororoba-quantum findings ledger row A5-629.
+and anticommute; the Gram identity and the kernel characterization below are the first part of
+the gororoba-quantum findings ledger row A5-629.
 
 The kernel statement needs only `A * A = -1`: both inclusions are one multiplication by `A`, so
 neither a field nor an invertible `2` enters.
 
-The instance fixes the sedenion units `e_1 .. e_8` of `Clifford.ZeroEight` (28 pairs). The 63
-anticommuting pairs of dimension 16 that row A5-629 lists, and the trace argument that halves the
-kernel, are not stated here.
+The instance fixes the sedenion units `e_1 .. e_8` of `Clifford.ZeroEight`. Row A5-629 states
+further, and this file leaves unproved: that `ι • (A * B)` is a traceless Hermitian involution
+and that the kernel has half the dimension; the complement law
+`nullity (e_a + ι e_b) = D/2 - nullity (e_a + e_b)` for every two-term operand; the `A_5` slice
+kernel `ker K_1 ∩ ker (i L_1 J - I)` with the Gram multiplicities of 0, 2 and 4; and the other
+anticommuting pairs (63, 171 and 435 at dimensions 16, 32 and 64).
 
 ## Main results
 
@@ -30,7 +34,8 @@ kernel, are not stated here.
 * `Clifford.AnticommutingPair.mulVec_eq_zero_iff`: `(A + ι • B) *ᵥ v = 0` exactly when
   `(ι • (A * B)) *ᵥ v = v`.
 * `Clifford.AnticommutingPair.genMat_gram`, `Clifford.AnticommutingPair.genMat_mulVec_eq_zero_iff`:
-  the two identities for the units `e_(i + 1)`, `e_(j + 1)`, `i ≠ j`, of the sedenions.
+  the Gram identity for the units `e_(i + 1)`, `e_(j + 1)`, `i ≠ j`, of the sedenions, and the
+  kernel characterization for all `i`, `j`.
 -/
 
 @[expose] public section
@@ -42,7 +47,8 @@ open Matrix
 variable {n R : Type*} [Fintype n] [DecidableEq n] [CommRing R]
 
 /-- The Gram operator of `A + ι B` is `2 (1 - ι A B)` for skew anticommuting `A`, `B` of square
-`-1`: the four-term expansion leaves `-A² + B² (ι²)` on the diagonal and `-ι A B + ι B A` off it. -/
+`-1`: the four-term expansion has the same-factor terms `-A² + ι² B²` and the cross terms
+`-ι A B + ι B A`. -/
 theorem gram_eq (A B : Matrix n n R) (ι : R) (hι : ι * ι = -1)
     (hAt : Aᵀ = -A) (hBt : Bᵀ = -B) (hAA : A * A = -1) (hBB : B * B = -1)
     (hAB : A * B = -(B * A)) :
@@ -57,7 +63,7 @@ theorem gram_eq (A B : Matrix n n R) (ι : R) (hι : ι * ι = -1)
   module
 
 /-- The Gram identity with the Hermitian adjoint of a ring with a star that conjugates `ι` and
-fixes the entries of `A` and `B`. -/
+fixes the entries of `A` and `B`: the adjoint equals `Aᵀ - ι • Bᵀ`, which is `gram_eq`. -/
 theorem conjTranspose_mul_self_eq [StarRing R] (A B : Matrix n n R) (ι : R) (hι : ι * ι = -1)
     (hstar : star ι = -ι) (hAs : A.map star = A) (hBs : B.map star = B)
     (hAt : Aᵀ = -A) (hBt : Bᵀ = -B) (hAA : A * A = -1) (hBB : B * B = -1)
@@ -71,7 +77,8 @@ theorem conjTranspose_mul_self_eq [StarRing R] (A B : Matrix n n R) (ι : R) (h�
     ← sub_eq_add_neg]
   exact gram_eq A B ι hι hAt hBt hAA hBB hAB
 
-/-- The kernel of `A + ι B` is the fixed space of `ι A B` whenever `A² = -1`. -/
+/-- The kernel of `A + ι B` is the fixed space of `ι A B` whenever `A² = -1`: multiplying by `A`
+sends `(A + ι B) v = 0` to `ι A B v = v`, and `A` inverts that step. -/
 theorem mulVec_eq_zero_iff (A B : Matrix n n R) (ι : R) (hAA : A * A = -1) (v : n → R) :
     (A + ι • B) *ᵥ v = 0 ↔ (ι • (A * B)) *ᵥ v = v := by
   have hL : A * (A + ι • B) = -1 + ι • (A * B) := by
@@ -101,12 +108,14 @@ open ZeroEight in
 theorem genMat_transpose : ∀ i : Fin 8, (genMat i)ᵀ = -genMat i := by decide +kernel
 
 open ZeroEight in
-/-- Each table of the units `e_(k + 1)` squares to `-1`. -/
+/-- Each table of the units `e_(k + 1)` squares to `-1`: the integer identity `genMat_sq` maps
+through the ring homomorphism `ℤ → R`. -/
 theorem genMatR_sq (k : Fin 8) : genMatR R k * genMatR R k = -1 := by
   simp only [genMatR, ← map_mul, genMat_sq k, map_neg, map_one]
 
 open ZeroEight in
-/-- The Gram operator of the sedenion unit pair `e_(i + 1) + ι e_(j + 1)`, `i ≠ j`. -/
+/-- The Gram operator of the sedenion unit pair `e_(i + 1) + ι e_(j + 1)`, `i ≠ j`: `gram_eq` with
+skew tables, squares `-1` and the anticommutation `genMat_anti`. -/
 theorem genMat_gram (ι : R) (hι : ι * ι = -1) {i j : Fin 8} (h : i ≠ j) :
     ((genMatR R i)ᵀ - ι • (genMatR R j)ᵀ) * (genMatR R i + ι • genMatR R j) =
       (2 : R) • (1 - ι • (genMatR R i * genMatR R j)) := by
@@ -122,7 +131,7 @@ theorem genMat_gram (ι : R) (hι : ι * ι = -1) {i j : Fin 8} (h : i ≠ j) :
   rw [hanti, map_neg]
 
 /-- The kernel of `e_(i + 1) + ι e_(j + 1)` on the coordinates of the sedenions is the fixed
-space of `ι L_i L_j`. -/
+space of `ι L_i L_j`, for all `i`, `j`: `mulVec_eq_zero_iff` needs only `L_i² = -1`. -/
 theorem genMat_mulVec_eq_zero_iff (ι : R) (i j : Fin 8) (v : Fin 16 → R) :
     (genMatR R i + ι • genMatR R j) *ᵥ v = 0 ↔
       (ι • (genMatR R i * genMatR R j)) *ᵥ v = v :=
