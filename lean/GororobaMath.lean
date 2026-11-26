@@ -89,3 +89,4 @@ public import GororobaMath.LinearAlgebra.PfaffianSchur
 public import GororobaMath.LinearAlgebra.PfaffianSchurBlock
 public import GororobaMath.LinearAlgebra.PfaffianSixteenSchur
 public import GororobaMath.CayleyDickson.OctonionMoufangLoop
+public import GororobaMath.CayleyDickson.PureDoublingTransport
