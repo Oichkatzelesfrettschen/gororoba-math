@@ -23,6 +23,11 @@ command -v "$AGDA" >/dev/null || {
   echo "check_agda: $AGDA is not on PATH" >&2
   exit 2
 }
+# A path with a slash resolves against the caller's directory before the
+# script changes directory.
+case $AGDA in
+*/*) AGDA=$(CDPATH='' cd -- "$(dirname -- "$AGDA")" && pwd)/$(basename -- "$AGDA") ;;
+esac
 : "${AGDA_STDLIB:?check_agda: AGDA_STDLIB names a checkout of agda-stdlib v2.4}"
 version=$("$AGDA" --version | sed -n 1p)
 [ "$version" = "Agda version 2.8.0.2" ] || {
