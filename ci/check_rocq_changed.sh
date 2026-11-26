@@ -587,17 +587,47 @@ for tree in open quantum delegation; do
 done
 check_delegation_stated "$work/rocq/delegation" || fail "the delegation inventory check failed"
 
-# The admission scan of the three trees, calibrated on a fixture that holds Admitted.
+# The admission scan of the three trees and of every source compiled outside the
+# project files (the scope of check-schur-geometry and the sources the tier
+# compiles beside it), calibrated on fixtures that hold Admitted.
 (cd "$work/rocq/open" && run_logged "$work/admission-build.log" opam exec --switch="$switch" -- make check-admissions)
 scanner="$work/rocq/.cache/proof-admission-check/admission-check"
+# scan_outside BASE LOG: the scanner over BASE/checkpoints/schur-geometry/ and
+# each source of target_compiled that BASE holds, relative to rocq/open.
+scan_outside() {
+  outside_base=$1
+  outside_log=$2
+  set -- "$outside_base/checkpoints/schur-geometry/"
+  for entry in $target_compiled; do
+    if [ -f "$outside_base/${entry#rocq/open/}" ]; then
+      set -- "$@" "$outside_base/${entry#rocq/open/}"
+    fi
+  done
+  "$scanner" "$@" >"$outside_log" 2>&1
+}
 mkdir "$work/admitted"
 printf 'Lemma not_proved : False.\nProof.\nAdmitted.\n' >"$work/admitted/Admitted.v"
 if "$scanner" "$work/admitted/" >"$work/admitted.log" 2>&1; then
   fail "calibration: the admission scan accepted an Admitted proof"
 fi
+mkdir -p "$work/admitted-outside/checkpoints/schur-geometry" "$work/admitted-outside/tests"
+printf 'Lemma not_proved : False.\nProof.\nAdmitted.\n' >"$work/admitted-outside/checkpoints/schur-geometry/Bad.v"
+if scan_outside "$work/admitted-outside" "$work/admitted-outside.log"; then
+  fail "calibration: the admission scan accepted a checkpoint with Admitted"
+fi
+printf 'Lemma not_proved : False.\nProof.\nAdmitted.\n' >"$work/admitted-outside/tests/SchurAccelerationBoundaries.v"
+rm "$work/admitted-outside/checkpoints/schur-geometry/Bad.v"
+printf 'Lemma proved : True.\nProof. exact I. Qed.\n' >"$work/admitted-outside/checkpoints/schur-geometry/Good.v"
+if scan_outside "$work/admitted-outside" "$work/admitted-outside.log"; then
+  fail "calibration: the admission scan accepted a compiled test with Admitted"
+fi
 run_logged "$work/quantum-admissions.log" "$scanner" "$work/rocq/quantum/"
 run_logged "$work/delegation-admissions.log" "$scanner" "$work/rocq/delegation/"
-echo "check_rocq --changed: admission scan passed on rocq/open, rocq/quantum and rocq/delegation"
+scan_outside "$work/rocq/open" "$work/outside-admissions.log" || {
+  cat "$work/outside-admissions.log" >&2
+  fail "the admission scan rejects a source compiled outside the project files"
+}
+echo "check_rocq --changed: admission scan passed on rocq/open, rocq/quantum, rocq/delegation and the sources compiled outside the project files"
 
 # The baseline decision.
 manifest_of_head "$work/current.tsv"
@@ -714,7 +744,11 @@ check_declared_axioms() {
   done <"$1"
   [ "$scan_status" -eq 0 ]
 }
-check_declared_axioms "$work/changed-v.txt" || fail "an assumption or a kernel-check switch-off is not named in the ledgers or the allow-list (a textual check; rocq check stays the authority)"
+{
+  cat "$work/changed-v.txt"
+  printf '%s\n' $target_compiled
+} | LC_ALL=C sort -u >"$work/scan-list.txt"
+check_declared_axioms "$work/scan-list.txt" || fail "an assumption or a kernel-check switch-off is not named in the ledgers or the allow-list (a textual check; rocq check stays the authority)"
 
 if [ "$incremental" -eq 1 ] && [ "$compile_trees" -eq 1 ]; then
   cp -p "$saved_objects/objects.txt" "$work/saved-objects.txt" || fail "cannot read the saved object list"
@@ -746,23 +780,56 @@ fi
 touch "$work/stamp" || fail "cannot stamp"
 sleep 1
 ratchet_failed=
+# ratchet TREE LOG...: compares the warnings of every log with the allow-list
+# (ratchet_allowed and ratchet_causes name the tables; --new-only on an
+# incremental run).
+ratchet_allowed="$work/ci/rocq-warnings/allowed.tsv"
+ratchet_causes="$work/ci/rocq-warnings/causes.tsv"
 ratchet() {
+  ratchet_tree=$1
+  shift
   ratchet_status=0
   if [ "$incremental" -eq 1 ]; then
-    "$PYTHON" -I "$work/ci/rocq_warning_pairs.py" --tree "$1" --new-only \
-      --allowed "$work/ci/rocq-warnings/allowed.tsv" --causes "$work/ci/rocq-warnings/causes.tsv" \
-      --observed "$work/warnings-$1.tsv" "$2" || ratchet_status=$?
+    "$PYTHON" -I "$work/ci/rocq_warning_pairs.py" --tree "$ratchet_tree" --new-only \
+      --allowed "$ratchet_allowed" --causes "$ratchet_causes" \
+      --observed "$work/warnings-$ratchet_tree.tsv" "$@" >"$work/ratchet.out" 2>&1 || ratchet_status=$?
   else
-    "$PYTHON" -I "$work/ci/rocq_warning_pairs.py" --tree "$1" \
-      --allowed "$work/ci/rocq-warnings/allowed.tsv" --causes "$work/ci/rocq-warnings/causes.tsv" \
-      --observed "$work/warnings-$1.tsv" "$2" || ratchet_status=$?
+    "$PYTHON" -I "$work/ci/rocq_warning_pairs.py" --tree "$ratchet_tree" \
+      --allowed "$ratchet_allowed" --causes "$ratchet_causes" \
+      --observed "$work/warnings-$ratchet_tree.tsv" "$@" >"$work/ratchet.out" 2>&1 || ratchet_status=$?
   fi
+  cat "$work/ratchet.out"
   case $ratchet_status in
     0) ;;
-    1) ratchet_failed="$ratchet_failed rocq/$1" ;;
-    *) fail "the warning ratchet could not read the log of rocq/$1" ;;
+    1) ratchet_failed="$ratchet_failed rocq/$ratchet_tree" ;;
+    *) fail "the warning ratchet could not read the logs of rocq/$ratchet_tree" ;;
   esac
 }
+# Calibration: two logs. An allowed warning that sits only in the second log is
+# not stale, a new warning only in the second log fails, and the first log alone
+# leaves the second's row stale on a full compile.
+printf 'tree\tpath\twarning\nquantum\tCalA.v\tcal-one\nquantum\tCalB.v\tcal-two\n' >"$cal/ratchet-allowed.tsv"
+printf 'warning\tcause\tremoval\ncal-one\ta calibration cause\tnone\ncal-two\ta calibration cause\tnone\n' >"$cal/ratchet-causes.tsv"
+printf 'File "./CalA.v", line 1, characters 0-1:\nWarning: calibration [cal-one,cal,default]\n' >"$cal/ratchet-log1.txt"
+printf 'File "./CalB.v", line 1, characters 0-1:\nWarning: calibration [cal-two,cal,default]\n' >"$cal/ratchet-log2.txt"
+printf 'File "./CalC.v", line 1, characters 0-1:\nWarning: calibration [cal-three,cal,default]\n' >"$cal/ratchet-log3.txt"
+ratchet_allowed="$cal/ratchet-allowed.tsv"
+ratchet_causes="$cal/ratchet-causes.tsv"
+incremental_saved=${incremental:-1}
+incremental=0
+ratchet_failed=
+ratchet quantum "$cal/ratchet-log1.txt" "$cal/ratchet-log2.txt" >/dev/null
+[ -z "$ratchet_failed" ] || fail "calibration: an allowed warning that only the second log holds read as stale"
+ratchet quantum "$cal/ratchet-log1.txt" >/dev/null
+[ -n "$ratchet_failed" ] || fail "calibration: the full-compile ratchet accepted a missing log whose allowed row is then stale"
+ratchet_failed=
+incremental=1
+ratchet quantum "$cal/ratchet-log1.txt" "$cal/ratchet-log3.txt" >/dev/null
+[ -n "$ratchet_failed" ] || fail "calibration: a new warning that only the second log holds passed"
+ratchet_failed=
+incremental=$incremental_saved
+ratchet_allowed="$work/ci/rocq-warnings/allowed.tsv"
+ratchet_causes="$work/ci/rocq-warnings/causes.tsv"
 # count_rebuilt TREE: the objects of the tree newer than the stamp.
 count_rebuilt() {
   find "$work/rocq/$1" -name '*.vo' -newer "$work/stamp" >"$work/rebuilt-$1.txt" || fail "find failed in rocq/$1"
