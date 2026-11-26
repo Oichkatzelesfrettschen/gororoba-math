@@ -65,7 +65,7 @@ Verdict codes: F is Fixed in the named commit, Rf is Refuted with the reason fro
 | R46 | codex 133, conjecture 3; agy 133, conjecture 4 | box-kite frustration minimum 3 and the 8 triangles of sign -1 | row octonion_structure_checks.md:15 kite frustration is partial and names both as not stated | B: that ledger row (partial) |
 | R47 | agy 133, conjecture 1 | direct unique solvability for k <= 3 | existsUnique_mul_eq_of_le_three | F 09d28a825 |
 
-Totals: 27 Fixed, 11 Refuted, 8 Boundary, 0 Unaddressed.
+Totals: 29 Fixed, 11 Refuted, 7 Boundary, 0 Unaddressed (47 findings).
 
 ## Readings of the points checked with care
 
