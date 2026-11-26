@@ -12,8 +12,9 @@ measurement (2026-11-26, a 32-core x86-64 Linux host, single runs), a project's
 own documentation, or "not examined". The pinned trees are agda-stdlib v2.4
 (commit `2a5a0dec0a3c`), cubical v0.9 (commit `b150186d2544`), Mathlib at the tag
 of `lean/lakefile.toml`, and the MathComp 2.6.0 and Stdlib 9.2.0 sources of
-the `rocq-9.3` switch of `ci/install_rocq.sh`. Coq-HoTT is read at its GitHub
-default branch on 2026-11-26.
+the `rocq-9.3` switch of `ci/install_rocq.sh`. Coq-HoTT is read at commit
+`44729ef6920c` (its default branch on 2026-11-26), and peregrine-tool at commit
+`386251fedf5f`.
 
 ## 1. Comparison
 
@@ -25,7 +26,7 @@ modules are those the 2.8.0.2 binary unpacks.
 
 | Row | Lean 4 + Mathlib | Rocq 9.3 + MathComp, Stdlib | Agda 2.8 + agda-stdlib, cubical | Reading |
 |---|---|---|---|---|
-| Axioms the libraries assume | `propext` (`Init/Core.lean:1612`), `Classical.choice` (`Init/Prelude.lean:865`), `Quot.sound`; the gate admits only these (`AGENTS.md`, "Statements and proofs") | none in the kernel; each tree lists its axioms (`rocq/*/kernel-assumptions.txt`) | none: every module the pilot imports checks under `--safe`, which refuses a postulate (measured, planted copy of `ci/check_agda.sh`) | all three can work axiom-free; only Lean's library needs choice |
+| Axioms the libraries assume | `propext` (`Init/Core.lean:1612`), `Classical.choice` (`Init/Prelude.lean:865`), `Quot.sound`; the gate admits only these (`AGENTS.md`, "Statements and proofs") | none in the kernel; each tree lists its axioms (`rocq/*/kernel-assumptions.txt`) | none: every module the pilot imports checks under `--safe`, which refuses a postulate (measured, planted copy of `ci/check_agda.sh`) | the Rocq trees and the Safe Agda pilot depend on no axiom; this repository's Lean library rests on `propext`, `Classical.choice` and `Quot.sound` |
 | Function extensionality | a theorem derived from `Quot.sound` (`Init/Core.lean:1976`) | an axiom of the Stdlib (`Stdlib/Logic/FunctionalExtensionality.v:26`) | a definition under `--cubical` (`Cubical/Foundations/Prelude.agda:327`, `funExt`) | Lean and cubical Agda prove it; Rocq assumes it |
 | Quotients | primitive `Quot`, with `Quot.sound` as an axiom (`Init/Core.lean:1976`) | MathComp quotients by choice types (`mathcomp/algebra/ring_quotient.v`) | the set-quotient higher inductive type (`Cubical/HITs/SetQuotients.agda`) | overlap |
 | Proof irrelevance | built in for `Prop` (`Init/Core.lean:843`) | the sort `SProp` (`Init/Logic.v:460`) | the `Prop` builtin (`Agda/Primitive.agda:13`) | overlap; the definitional rules of each were not re-read |
@@ -36,9 +37,9 @@ modules are those the 2.8.0.2 binary unpacks.
 
 | Row | Lean | Rocq | Agda | Reading |
 |---|---|---|---|---|
-| Evaluation inside a proof | `decide +kernel`; a 210-goal table at 0.54 s and a Pfaffian memo table that exceeded 16 GiB (`AGENTS.md`, "Proof hygiene") | `vm_compute`, 3.4 to 8.5 times faster than `decide +kernel` on the sign tables (`docs/archive/measurements/h1-vm-compute-decide-kernel.md`); the Stiefel Pfaffian certificate in 104 s | the type checker's evaluator; the pilot normalises 24 octonion coordinate identities of degree 4 in 24 variables, with the rest of the module, in 151 s at 0.70 GB (measured) | Rocq's `vm_compute` stays the certificate engine; Agda's evaluator suffices for polynomial identities of this size |
+| Evaluation inside a proof | `decide +kernel`; a 210-goal table at 0.54 s and a Pfaffian memo table that exceeded 16 GiB (`AGENTS.md`, "Proof hygiene") | `vm_compute`, 3.4 to 8.5 times faster than `decide +kernel` on the sign tables (`docs/archive/measurements/h1-vm-compute-decide-kernel.md`); the Stiefel Pfaffian certificate in 104 s | the type checker's evaluator; the pilot normalizes 24 octonion coordinate identities of degree 4 in 24 variables, with the rest of the module, in 151 s at 0.70 GB (measured) | Rocq's `vm_compute` stays the certificate engine; Agda's evaluator suffices for polynomial identities of this size |
 | Code tied to proofs | compiled code, not tied (`AGENTS.md`, evidence axis) | built-in `Extraction`; CertiRocq and verified extraction on Rocq 9.1 (skill `extract-verified-rocq-code`) | GHC and JavaScript back ends, unverified; `agda2lambox` into Peregrine, unverified (Peregrine README, "Frontends") | unique to Rocq |
-| Independent checkers | `leanchecker` and three external kernels (`ci/check_external_kernels.sh`) | `rocq check` (`ci/check_rocq.sh`) | none ships with Agda 2.8; the type checker is the whole trusted base. agda/agda labels 103 issues `false`, "Proof of the empty type which checks without known-unsafe flags", 11 open and 27 opened since 2025-01-01 (GitHub search and label description, 2026-11-26) | Lean and Rocq have independent checkers; Agda has none |
+| Independent checkers | `leanchecker` and three external kernels (`ci/check_external_kernels.sh`) | `rocq check` (`ci/check_rocq.sh`) | none ships with Agda 2.8; the type checker is the whole trusted base. agda/agda's bug history carries the label `false`, "Proof of the empty type which checks without known-unsafe flags": the GitHub search `repo:agda/agda label:false is:issue` returned 103 issues, 11 of them open and 27 created on or after 2025-01-01 (read twice on 2026-11-26) | Lean and Rocq have independent checkers; Agda has none. The issue count is bug history, not a measure that ranks Agda's present soundness against the other two |
 
 ### Proof style and safety switches
 
@@ -68,7 +69,7 @@ modules are those the 2.8.0.2 binary unpacks.
 |---|---|---|---|
 | Toolchain install | elan and the Mathlib cache, about 7 GB of build tree (`AGENTS.md`, "Toolchain and build tree") | opam switch of `ci/install_rocq.sh` | one static 55 MB binary, unpacked in 1 s (measured) |
 | Library | Mathlib cache download | MathComp from opam | agda-stdlib checkout 14 MB; its 162 interface files for the pilot, 33 MB, built in about 37 s (measured, cold run 191.6 s against warm 154.5 s); cubical `Cubical.Homotopy.Hopf` cold in 59.3 s at 0.88 GB, 185 interface files (measured) |
-| Gate | `quick` 11 s, `build` 342 s, hosted `lean` 15 to 49 min (`AGENTS.md`, "Landing") | hosted `rocq` 67 min | `ci/check_agda.sh` 312.9 s at 0.70 GB with both planted copies (measured) |
+| Gate | `quick` 11 s, `build` 342 s, hosted `lean` 15 to 49 min (`AGENTS.md`, "Landing") | hosted `rocq` 67 min | `ci/check_agda.sh` 309.6 s to 323.3 s at 0.68 to 0.70 GB with both planted copies (three measured runs) |
 
 ## 2. What Agda would add here
 
@@ -101,16 +102,16 @@ prover states, or adds assurance that the existing checks lack.
 - (d) Rejected. A `--safe --without-K` proof as an axiom-free third check of
   a small headline theorem. The Rocq partners already depend on no axiom, and
   Lean's theorems are re-checked by three external kernels. Agda has no
-  independent checker, and agda/agda labels 103 issues `false`
-  (the label's description: a proof of the empty type that checks without
-  known-unsafe flags), so a third proof adds implementation diversity and less
-  assurance than `rocq check` or an external Lean kernel.
+  independent checker, so a third proof adds implementation diversity and less
+  assurance than `rocq check` or an external Lean kernel; the `false` label of
+  agda/agda's issue tracker (the comparison table) records past checker
+  defects of the kind an independent checker would catch.
 
 ## 3. Peregrine
 
 - What it is: a middle end for code generation from proof assistants, on the
   untyped `λ□` (LambdaBox) of MetaRocq's verified erasure
-  (github.com/peregrine-project/peregrine-tool, README, read 2026-11-26).
+  (github.com/peregrine-project/peregrine-tool at commit `386251fedf5f`, README).
   - Front ends: Rocq through verified erasure; Agda through `agda2lambox`,
     unverified, which needs Agda 2.8.x built with `+debug` and GHC 9.10.1;
     Lean through `lean-to-lambdabox`, partially verified.
@@ -165,14 +166,25 @@ prover states, or adds assurance that the existing checks lack.
 | built-in `Extraction` to OCaml | Rocq 9.3.0, OCaml 5.5.1, `ocamlfind ocamlopt` | 12.7 s | 85 MB | `true` | `false`, 12.8 s |
 | verified extraction to Malfunction | Rocq 9.1.1, OCaml 5.3.0, `malfunction cmx` | 19.9 s | 142 MB | `true` | `false`, 19.9 s |
 
-The verified route moves the checker's trusted base to the verified-extraction
-pipeline theorem, its declared axioms, Malfunction and the OCaml compiler. It
+The two extraction timings are single runs whose logs were not retained. The
+verified route moves the checker's trusted base to the verified-extraction
+pipeline theorem and the axioms it declares, the admitted pipeline
+preconditions the Peregrine README names, any unverified printer on the route,
+Malfunction and the OCaml compiler; whether the axiom `trust_coq_kernel`
+belongs to it depends on the fork in use, which the Peregrine documents
+disagree on (above), and the run did not settle. It
 needs the source to compile on Rocq 9.1, which this Stdlib-only file does.
 Lean compiled code has no proof tie (`AGENTS.md`, evidence axis), so a Lean
 run of the same table sets a cost expectation of the same class as built-in
 extraction (not run).
 
 ## Decision for the owner
+
+The owner chose, on 2026-11-26, both routes below: the packaging is ported to
+Lean (`lean/GororobaMath/CayleyDickson/OctonionMoufangLoop.lean`, cited by the
+claims ledger for C-578), and `agda/` with `ci/check_agda.sh` lands as an
+on-demand cross-check outside the admission gates. The recommendation as
+written before the decision follows.
 
 Keep Agda out of the admission gates. Its one gain here is a community-reviewed
 Moufang loop interface for C-578. Two routes deliver it with no third gated

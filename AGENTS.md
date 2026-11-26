@@ -2,7 +2,8 @@
 
 This repository is public. It holds the workspace's machine-checked
 mathematics: Lean 4 under `lean/` and Rocq under `rocq/`, with `ci/check.sh`
-and `ci/check_rocq.sh` as the admission gate.
+and `ci/check_rocq.sh` as the admission gate, and an on-demand Agda cross-check
+under `agda/`.
 The workspace guide (`workspace/AGENTS.md` in gororoba-infrastructure, linked
 as `AGENTS.md` in the directory above this checkout) holds the rules every
 gororoba repository shares; this file governs where the two differ.
@@ -44,6 +45,10 @@ gororoba repository shares; this file governs where the two differ.
   confine_theorems_N.v`); a rendered source changes through the generator,
   and `ci/check_delegation_sources.sh` renders them again from the checkout
   `GOROROBA_OPEN` names, on demand.
+- `agda/` is an Agda library (Agda 2.8.0.2, agda-stdlib v2.4, `--safe --without-K`)
+  that checks the Lean packaging of the unit-norm octonions as a Moufang loop
+  against agda-stdlib's `IsMoufangLoop`. No gate reads it; `ci/check_agda.sh`
+  type-checks it on demand and rejects two planted copies (`agda/README.md`).
 - `cuda/` is a Lake package of device kernels on a toolchain of its own
   (`cuda/lean-toolchain`, an experimental Lean with a CUDA backend). No
   library module imports it and the admission gate builds none of it;
