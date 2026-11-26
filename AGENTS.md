@@ -213,11 +213,8 @@ gororoba repository shares; this file governs where the two differ.
   `ci/compare_box_kite_census.sh` compares `sed_sign` of
   `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
   pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
-  the 4096 ordered triples. Each runs on demand and rejects a mutated reference; the Walsh
-  and C_z comparisons need `GOROROBA_QUANTUM` and a built `lean/.lake`, the box-kite and
-  header comparisons `GOROROBA_QUANTUM` and the `rocq-9.3` switch, and the Pfaffian
-  comparisons of the Pfaffian, of the bordered matrix and of the transport, which read no other repository, all a built `lean/.lake`
-  and `rocq-9.3`.
+  the 4096 ordered triples. Each runs on demand and rejects a mutated reference; the table
+  after this item names the provers and checkouts each one needs.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
@@ -231,6 +228,20 @@ gororoba repository shares; this file governs where the two differ.
   requires each to reject `ReplayFixture.bogus`, the export check to refuse
   `AuditFixture.declaredAxiom`, and each to accept a known-good theorem, and
   runs on demand (`docs/archive/measurements/external-kernels.md`).
+- The on-demand checks need these provers, read from each script's tool list (`ci/install_rocq.sh`
+  makes the `rocq-9.3` switch; a Lean check runs `lake build --no-build` or `lake env` on a built
+  `lean/.lake`; `agda/README.md` pins Agda 2.8.0.2 and agda-stdlib v2.4):
+
+  | Provers | Checks (`ci/compare_*.sh` unless named) |
+  |---|---|
+  | Lean and Rocq | `aligned_pair_count`, `aligned_pair_forms`, `alignment`, `am_exponent`, `anf`, `assoc_phase`, `bordered_matrix`, `dot`, `estimator_rocq`, `isum`, `open_tree`, `order_three`, `pfaffian`, `schreier`, `signs`, `transport` |
+  | Lean | `cz_matrix`, `estimator`, `kernel_map_bins`, `walsh`, `ci/check_external_kernels.sh`; `cuda_signs` on the `cuda/` package's own toolchain and CUDA 13 |
+  | Rocq | `box_kite_census`, `hilbert_cell_header`, `split_tower` (also cargo), `ci/check_flocq_manifest.sh` |
+  | Agda | `ci/check_agda.sh` |
+  | none | `e8_conjugation` (Python against the gororoba-quantum file) |
+
+  `GOROROBA_QUANTUM` is read by `anf`, `assoc_phase`, `box_kite_census`, `cz_matrix`, `e8_conjugation`,
+  `estimator`, `hilbert_cell_header`, `kernel_map_bins`, `signs` and `walsh`; `GOROROBA_OPEN` by `split_tower`.
 - A new result, a statement that the README or a record cites, is placed
   on two axes, checked in this order; a helper lemma goes where its result
   is.
