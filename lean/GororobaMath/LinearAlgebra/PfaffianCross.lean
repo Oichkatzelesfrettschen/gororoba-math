@@ -16,6 +16,10 @@ units, `cross y x a` its product with `x` (the cross product `y × x`), `dot7 y 
 sum `y_1 x_1 + ... + y_7 x_7` with no conjugation, and `wedge x w a b = x a * w b - w a * x b`.
 The Pfaffian adjugate of a skew matrix `C` on `1, ..., 7` is the vector whose entry `f` is
 `(-1) ^ (f - 1)` times the Pfaffian of `C` on the six indices other than `f`.
+`octSign_eq_sign` binds the literal table to `Tower.sign 3` by `decide +kernel`, one finite
+evaluation for each of the 42 pairs `a ≠ b` in `1, ..., 7` (measured: 0.09 s of tactic and kernel
+time for all 42, Lean 4.35.0); the adjugate identity itself is symbolic, proved by `ring` over
+every commutative ring.
 
 ## Main results
 
