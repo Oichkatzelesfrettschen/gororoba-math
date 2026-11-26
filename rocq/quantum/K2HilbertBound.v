@@ -22,13 +22,24 @@
     The entry (mu, mult, std) stands for the identity y^mu = sum_{(i,m,a) in mult} a y^m q_i + sum_{(s,c) in std}
     c y^s over F_p; q_i is the i-th quadric (a list of (coefficient, exponent list)), m an exponent list of
     length k and sum d - 2, and each s a standard monomial. The standard monomials S are a duplicate-free list
-    of exponent lists of length k and sum d. [check_bound] accepts a bound certificate when it also contains the
-    cofactor certificates of all quadrics, and [hilbert_upper_bound] concludes
-    [spans_mod p n (J ++ m_products n G d) (products n G d) (map (ymono n G) S)].
+    of exponent lists of length k and sum d. [check_entry] also requires the exponent sum of mu to be d and each
+    quadric index to be below the number of quadrics; these checks fix the format and the proofs do not use them.
 
-    Main results: [hilbert_upper_bound] (the spanning statement), [hilbert_upper_sel] (the spanning statement
-    for products selected by index), [hilbert_cell_of_bound] (the cell statement from an independent selection
-    aligned with S), and the toy calibration [toy_bound_accepted] with four [_rejected] lemmas. *)
+    The checker splits in two. [check_red] checks the reduction data alone: the degree, the generators, the
+    quadrics as data, S, every entry and the coverage of all monomials of degree d. The membership of each quadric
+    in the local ideal of J + m (G)^2 is a hypothesis of the [_of_red] theorems, [forall q, In q Q -> LI p n
+    (J ++ m_products n G 2) (subst_q n G q)], the form [entry_sound] consumes; any certificate that proves it for
+    one quadric at a time supplies it (the cofactor checker of K2CofactorCertificate.v, a factored or
+    basis-changed route, a chunked check). [check_bound] is [check_red] together with the unfactored cofactor
+    certificate of every quadric, and its theorems are corollaries of the [_of_red] ones through
+    [check_bound_red] and [check_bound_members].
+
+    Main results: [hilbert_upper_bound_of_red] (the spanning statement
+    [spans_mod p n (J ++ m_products n G d) (products n G d) (map (ymono n G) S)] from [check_red] and the
+    membership hypothesis), [hilbert_upper_sel_of_red] (the statement for products selected by index),
+    [hilbert_cell_of_red] (the cell statement from an independent selection aligned with S); the monolithic
+    corollaries [hilbert_upper_bound], [hilbert_upper_sel] and [hilbert_cell_of_bound] from [check_bound]; and the
+    toy calibration [toy_bound_accepted] with five [_rejected] lemmas. *)
 
 From Stdlib Require Import ZArith Lia List Bool PeanoNat NArith Znumtheory Setoid Morphisms.
 Require Import HilbertCellCertificate K2CofactorCertificate.
@@ -752,11 +763,11 @@ Qed.
 
 (** * Multiples of the quadrics *)
 
-Lemma LI_mult_transport p n J G e m f : prime p -> Forall (wf_poly n) G -> length m = length G ->
+Lemma LI_mult_transport p n J G e m f : Forall (wf_poly n) G -> length m = length G ->
   LI p n (J ++ m_products n G e) f ->
   LI p n (J ++ m_products n G (msum m + e)) (pmul (ymono n G m) f).
 Proof.
-  intros Hp HG Hm [u [Hu [Hn HI]]].
+  intros HG Hm [u [Hu [Hn HI]]].
   exists u. split; [exact Hu|]. split; [exact Hn|].
   assert (Hpi : wf_poly n (ymono n G m)) by (apply wf_ymono; exact HG).
   apply (Idl_se p n _ (pmul u (pmul (ymono n G m) f)) (pmul (ymono n G m) (pmul u f))).
@@ -877,7 +888,7 @@ Proof.
     apply LI_scalec.
     assert (Hdd : d = (msum (snd (fst x)) + 2)%nat) by lia.
     rewrite Hdd.
-    apply LI_mult_transport; [exact Hp | exact HG | exact Hl |].
+    apply LI_mult_transport; [exact HG | exact Hl |].
     apply LI_nthq; assumption.
 Qed.
 
@@ -1016,17 +1027,34 @@ Definition std_entries (S : list mono) : list red_entry := map (fun s => mk_red 
 
 Definition check_entry (p : Z) (ny : nat) (Q : list (list (Z * list nat))) (d : nat) (S : list mono)
   (e : red_entry) : bool :=
-  Nat.eqb (length (r_mu e)) ny &&
-  forallb (fun x => Nat.eqb (length (snd (fst x))) ny && Nat.eqb (msum (snd (fst x))) (d - 2)%nat) (r_mult e) &&
+  Nat.eqb (length (r_mu e)) ny && Nat.eqb (msum (r_mu e)) d &&
+  forallb (fun x => Nat.ltb (fst (fst x)) (length Q) &&
+    (Nat.eqb (length (snd (fst x))) ny && Nat.eqb (msum (snd (fst x))) (d - 2)%nat)) (r_mult e) &&
   forallb (fun t => existsb (mono_eqb (fst t)) S) (r_std e) &&
   tall p (ident_tr Q e).
 
-Definition check_bound (p : Z) (n : nat) (J G : list poly) (d : nat) (Q : list (list (Z * list nat)))
-  (cs : list kcert) (S : list mono) (red : list red_entry) : bool :=
+Lemma check_entry_facts p ny Q d S e : check_entry p ny Q d S e = true ->
+  (forall x, In x (r_mult e) -> length (snd (fst x)) = ny /\ msum (snd (fst x)) = (d - 2)%nat) /\
+  (forall t, In t (r_std e) -> In (fst t) S) /\
+  tall p (ident_tr Q e) = true.
+Proof.
+  unfold check_entry. intros H.
+  apply andb_prop in H as [H Ed]. apply andb_prop in H as [H Ec]. apply andb_prop in H as [_ Eb].
+  split; [|split; [|exact Ed]].
+  - intros x Hx. rewrite forallb_forall in Eb. pose proof (Eb x Hx) as Eb'.
+    apply andb_true_iff in Eb' as [_ Eb'].
+    apply andb_true_iff in Eb' as [Eb1 Eb2]. split; apply Nat.eqb_eq; assumption.
+  - intros t Ht. rewrite forallb_forall in Ec. pose proof (Ec t Ht) as Ec'.
+    apply existsb_exists in Ec' as [s [Hs Hes]]. apply mono_eqb_true in Hes. rewrite Hes. exact Hs.
+Qed.
+
+(** The reduction checker: the degree, the generators, the quadrics as data, the standard monomials, every
+    reduction entry and the coverage of all monomials of degree d. It checks no membership of a quadric in the
+    local ideal: [hilbert_upper_bound_of_red] takes that as a hypothesis, which any certificate can supply. *)
+Definition check_red (p : Z) (n : nat) (G : list poly) (d : nat) (Q : list (list (Z * list nat)))
+  (S : list mono) (red : list red_entry) : bool :=
   Nat.leb 2 d &&
   forallb (wf_b n) G &&
-  Nat.eqb (length cs) (length Q) &&
-  forallb (fun qc => check_cofactor p n J G 2 (fst qc) (snd qc)) (combine Q cs) &&
   forallb (fun q => forallb (fun t => Nat.eqb (length (snd t)) (length G)) q) Q &&
   forallb (fun s => Nat.eqb (length s) (length G) && Nat.eqb (msum s) d) S &&
   nodup_b S &&
@@ -1034,8 +1062,16 @@ Definition check_bound (p : Z) (n : nat) (J G : list poly) (d : nat) (Q : list (
   forallb (fun mu => existsb (fun e => mono_eqb (r_mu e) mu) (std_entries S ++ red))
     (all_monos (length G) d).
 
+(** The monolithic checker: the reduction checker and the unfactored cofactor certificate of every quadric. *)
+Definition check_bound (p : Z) (n : nat) (J G : list poly) (d : nat) (Q : list (list (Z * list nat)))
+  (cs : list kcert) (S : list mono) (red : list red_entry) : bool :=
+  check_red p n G d Q S red &&
+  Nat.eqb (length cs) (length Q) &&
+  forallb (fun qc => check_cofactor p n J G 2 (fst qc) (snd qc)) (combine Q cs).
+
 Lemma in_combine_ex {A B : Type} (l : list A) (l' : list B) x :
-  length l' = length l -> In x l -> exists y, In (x, y) (combine l l').
+  length l' = length l ->
+  In x l -> exists y, In (x, y) (combine l l').
 Proof.
   revert l'. induction l as [|a l IH]; intros l' Hl Hin.
   - destruct Hin.
@@ -1045,22 +1081,50 @@ Proof.
     + injection Hl as Hl. destruct (IH l' Hl Hin) as [y Hy]. exists y. right. exact Hy.
 Qed.
 
-Theorem hilbert_upper_bound p n J G d Q cs S red : prime p ->
-  check_bound p n J G d Q cs S red = true ->
+Lemma check_bound_red p n J G d Q cs S red : check_bound p n J G d Q cs S red = true ->
+  check_red p n G d Q S red = true.
+Proof.
+  unfold check_bound. intros H. apply andb_prop in H as [H _]. apply andb_prop in H as [H _]. exact H.
+Qed.
+
+Lemma check_bound_members p n J G d Q cs S red : check_bound p n J G d Q cs S red = true ->
+  forall q, In q Q -> LI p n (J ++ m_products n G 2) (subst_q n G q).
+Proof.
+  unfold check_bound. intros H q Hq.
+  apply andb_prop in H as [H H4]. apply andb_prop in H as [_ H3].
+  destruct (in_combine_ex Q cs q (proj1 (Nat.eqb_eq _ _) H3) Hq) as [c Hqc].
+  rewrite forallb_forall in H4. pose proof (H4 (q, c) Hqc) as H4'. cbn [fst snd] in H4'.
+  apply LI_of_ili. exact (check_cofactor_sound _ _ _ _ _ _ _ H4').
+Qed.
+
+Lemma check_red_facts p n G d Q S red : check_red p n G d Q S red = true ->
+  Forall (wf_poly n) G /\ (forall s, In s S -> length s = length G /\ msum s = d).
+Proof.
+  intros H. unfold check_red in H.
+  apply andb_prop in H as [H H9]. apply andb_prop in H as [H H8]. apply andb_prop in H as [H H7].
+  apply andb_prop in H as [H H6]. apply andb_prop in H as [H H5]. apply andb_prop in H as [H1 H2].
+  split.
+  - apply Forall_forall. intros g Hg. rewrite forallb_forall in H2. apply wf_b_sound. exact (H2 g Hg).
+  - intros s Hs. rewrite forallb_forall in H6. pose proof (H6 s Hs) as H6'.
+    apply andb_prop in H6' as [Ha Hb]. split; apply Nat.eqb_eq; assumption.
+Qed.
+
+Lemma check_bound_facts p n J G d Q cs S red : check_bound p n J G d Q cs S red = true ->
+  Forall (wf_poly n) G /\ (forall s, In s S -> length s = length G /\ msum s = d).
+Proof. intros H. exact (check_red_facts p n G d Q S red (check_bound_red _ _ _ _ _ _ _ _ _ H)). Qed.
+
+(** Spanning from the reduction checker and an external membership hypothesis for each quadric. *)
+Theorem hilbert_upper_bound_of_red p n J G d Q S red : prime p ->
+  check_red p n G d Q S red = true ->
+  (forall q, In q Q -> LI p n (J ++ m_products n G 2) (subst_q n G q)) ->
   spans_mod p n (J ++ m_products n G d) (products n G d) (map (ymono n G) S).
 Proof.
-  intros Hp H. unfold check_bound in H.
+  intros Hp H HQ. unfold check_red in H.
   apply andb_prop in H as [H H9]. apply andb_prop in H as [H H8]. apply andb_prop in H as [H H7].
-  apply andb_prop in H as [H H6]. apply andb_prop in H as [H H5]. apply andb_prop in H as [H H4].
-  apply andb_prop in H as [H H3]. apply andb_prop in H as [H1 H2].
+  apply andb_prop in H as [H H6]. apply andb_prop in H as [H H5]. apply andb_prop in H as [H1 H2].
   assert (Hd : (2 <= d)%nat) by (apply Nat.leb_le; exact H1).
   assert (HG : Forall (wf_poly n) G).
   { apply Forall_forall. intros g Hg. rewrite forallb_forall in H2. apply wf_b_sound. exact (H2 g Hg). }
-  assert (HQ : forall q, In q Q -> LI p n (J ++ m_products n G 2) (subst_q n G q)).
-  { intros q Hq.
-    destruct (in_combine_ex Q cs q (proj1 (Nat.eqb_eq _ _) H3) Hq) as [c Hqc].
-    rewrite forallb_forall in H4. pose proof (H4 (q, c) Hqc) as H4'. cbn [fst snd] in H4'.
-    apply LI_of_ili. exact (check_cofactor_sound _ _ _ _ _ _ _ H4'). }
   assert (HQl : Forall (fun q => forall t, In t q -> length (snd t) = length G) Q).
   { apply Forall_forall. intros q Hq t Ht. rewrite forallb_forall in H5.
     pose proof (H5 q Hq) as H5'. rewrite forallb_forall in H5'.
@@ -1072,15 +1136,7 @@ Proof.
   rewrite forallb_forall in H9. pose proof (H9 mu Hmu) as H9'.
   apply existsb_exists in H9' as [e [He Hme]]. apply mono_eqb_true in Hme. subst mu.
   rewrite forallb_forall in H8. pose proof (H8 e He) as H8'.
-  unfold check_entry in H8'.
-  apply andb_prop in H8' as [H8' Ed]. apply andb_prop in H8' as [H8' Ec]. apply andb_prop in H8' as [Ea Eb].
-  assert (Hmult : forall x, In x (r_mult e) ->
-    length (snd (fst x)) = length G /\ msum (snd (fst x)) = (d - 2)%nat).
-  { intros x Hx. rewrite forallb_forall in Eb. pose proof (Eb x Hx) as Eb'.
-    apply andb_true_iff in Eb' as [Eb1 Eb2]. split; apply Nat.eqb_eq; assumption. }
-  assert (Hstd : forall t, In t (r_std e) -> In (fst t) S).
-  { intros t Ht. rewrite forallb_forall in Ec. pose proof (Ec t Ht) as Ec'.
-    apply existsb_exists in Ec' as [s [Hs Hes]]. apply mono_eqb_true in Hes. rewrite Hes. exact Hs. }
+  destruct (check_entry_facts _ _ _ _ _ _ H8') as [Hmult [Hstd Ed]].
   pose proof (entry_sound p n J G d Q S e Hp HG Hd HQ HQl Hnd Hmult Hstd Ed) as HL.
   exists (std_cs S (r_std e)). split; [unfold std_cs; rewrite !length_map; reflexivity|].
   apply ili_of_LI.
@@ -1088,20 +1144,15 @@ Proof.
   intros F. unfold padd, pneg. rewrite !ksum_app, !ksum_neg_list, (Hserho F). apply cg_refl.
 Qed.
 
-(** * Spanning by selected products *)
-
-Lemma check_bound_facts p n J G d Q cs S red : check_bound p n J G d Q cs S red = true ->
-  Forall (wf_poly n) G /\ (forall s, In s S -> length s = length G /\ msum s = d).
+Theorem hilbert_upper_bound p n J G d Q cs S red : prime p ->
+  check_bound p n J G d Q cs S red = true ->
+  spans_mod p n (J ++ m_products n G d) (products n G d) (map (ymono n G) S).
 Proof.
-  intros H. unfold check_bound in H.
-  apply andb_prop in H as [H H9]. apply andb_prop in H as [H H8]. apply andb_prop in H as [H H7].
-  apply andb_prop in H as [H H6]. apply andb_prop in H as [H H5]. apply andb_prop in H as [H H4].
-  apply andb_prop in H as [H H3]. apply andb_prop in H as [H1 H2].
-  split.
-  - apply Forall_forall. intros g Hg. rewrite forallb_forall in H2. apply wf_b_sound. exact (H2 g Hg).
-  - intros s Hs. rewrite forallb_forall in H6. pose proof (H6 s Hs) as H6'.
-    apply andb_prop in H6' as [Ha Hb]. split; apply Nat.eqb_eq; assumption.
+  intros Hp H. exact (hilbert_upper_bound_of_red p n J G d Q S red Hp (check_bound_red _ _ _ _ _ _ _ _ _ H)
+    (check_bound_members _ _ _ _ _ _ _ _ _ H)).
 Qed.
+
+(** * Spanning by selected products *)
 
 Lemma ksum_lincomb_se : forall r r', Forall2 se r r' -> forall cs F,
   ksum (lincomb cs r) F = ksum (lincomb cs r') F.
@@ -1140,15 +1191,37 @@ Proof.
       * exact Hf.
 Qed.
 
+Theorem hilbert_upper_sel_of_red p n J G d Q S red : prime p ->
+  check_red p n G d Q S red = true ->
+  (forall q, In q Q -> LI p n (J ++ m_products n G 2) (subst_q n G q)) ->
+  exists sel, length sel = length S /\ (forall i, In i sel -> (i < length (products n G d))%nat) /\
+    spans_mod p n (J ++ m_products n G d) (products n G d) (select_products n G d sel).
+Proof.
+  intros Hp H HQ. destruct (check_red_facts p n G d Q S red H) as [HG HS].
+  destruct (exists_sel n G d S HS HG) as [sel [Hl [Hr Hf]]].
+  exists sel. split; [exact Hl|]. split; [exact Hr|].
+  exact (spans_mod_se p n _ _ _ _ Hf (hilbert_upper_bound_of_red p n J G d Q S red Hp H HQ)).
+Qed.
+
+Theorem hilbert_cell_of_red p n J G d Q S red sel : prime p ->
+  check_red p n G d Q S red = true ->
+  (forall q, In q Q -> LI p n (J ++ m_products n G 2) (subst_q n G q)) ->
+  (forall i, In i sel -> (i < length (products n G d))%nat) ->
+  Forall2 se (select_products n G d sel) (map (ymono n G) S) ->
+  independent_mod p n (J ++ m_products n G d) (select_products n G d sel) ->
+  hilbert_cell p n J G d (length sel).
+Proof.
+  intros Hp H HQ Hr Hse Hind. exists sel. split; [reflexivity|]. split; [exact Hr|]. split; [exact Hind|].
+  exact (spans_mod_se p n _ _ _ _ Hse (hilbert_upper_bound_of_red p n J G d Q S red Hp H HQ)).
+Qed.
+
 Theorem hilbert_upper_sel p n J G d Q cs S red : prime p ->
   check_bound p n J G d Q cs S red = true ->
   exists sel, length sel = length S /\ (forall i, In i sel -> (i < length (products n G d))%nat) /\
     spans_mod p n (J ++ m_products n G d) (products n G d) (select_products n G d sel).
 Proof.
-  intros Hp H. destruct (check_bound_facts p n J G d Q cs S red H) as [HG HS].
-  destruct (exists_sel n G d S HS HG) as [sel [Hl [Hr Hf]]].
-  exists sel. split; [exact Hl|]. split; [exact Hr|].
-  exact (spans_mod_se p n _ _ _ _ Hf (hilbert_upper_bound p n J G d Q cs S red Hp H)).
+  intros Hp H. exact (hilbert_upper_sel_of_red p n J G d Q S red Hp (check_bound_red _ _ _ _ _ _ _ _ _ H)
+    (check_bound_members _ _ _ _ _ _ _ _ _ H)).
 Qed.
 
 Theorem hilbert_cell_of_bound p n J G d Q cs S red sel : prime p ->
@@ -1158,8 +1231,8 @@ Theorem hilbert_cell_of_bound p n J G d Q cs S red sel : prime p ->
   independent_mod p n (J ++ m_products n G d) (select_products n G d sel) ->
   hilbert_cell p n J G d (length sel).
 Proof.
-  intros Hp H Hr Hse Hind. exists sel. split; [reflexivity|]. split; [exact Hr|]. split; [exact Hind|].
-  exact (spans_mod_se p n _ _ _ _ Hse (hilbert_upper_bound p n J G d Q cs S red Hp H)).
+  intros Hp H Hr Hse Hind. exact (hilbert_cell_of_red p n J G d Q S red sel Hp (check_bound_red _ _ _ _ _ _ _ _ _ H)
+    (check_bound_members _ _ _ _ _ _ _ _ _ H) Hr Hse Hind).
 Qed.
 
 (** * Calibration over F_7 *)
@@ -1199,12 +1272,32 @@ Lemma toy_missing_rejected :
   kb_toy_check [ mk_red [3%nat; 0%nat] [ ((0%nat, [1%nat; 0%nat]), 2) ] [ ([1%nat; 2%nat], 2) ] ] = false.
 Proof. vm_compute. reflexivity. Qed.
 
+Lemma toy_index_rejected :
+  kb_toy_check [ mk_red [3%nat; 0%nat] [ ((0%nat, [1%nat; 0%nat]), 2); ((1%nat, [1%nat; 0%nat]), 0) ] [ ([1%nat; 2%nat], 2) ];
+                 mk_red [2%nat; 1%nat] [ ((0%nat, [0%nat; 1%nat]), 2) ] [ ([0%nat; 3%nat], 2) ] ] = false.
+Proof. vm_compute. reflexivity. Qed.
+
 Theorem toy_bound :
   spans_mod 7 1 (kb_toy_J ++ m_products 1 kb_toy_G 3) (products 1 kb_toy_G 3)
     (map (ymono 1 kb_toy_G) kb_toy_S).
 Proof. exact (hilbert_upper_bound 7 1 _ _ 3 _ _ _ _ prime_7 toy_bound_accepted). Qed.
 
+(** The split form: [check_red] on its own, with the membership of the quadric supplied separately (here by
+    the cofactor checker, but any proof of [LI] serves). *)
+Lemma toy_red_accepted : check_red 7 1 kb_toy_G 3 kb_toy_Q kb_toy_S kb_toy_red = true.
+Proof. vm_compute. reflexivity. Qed.
+
+Theorem toy_bound_split :
+  (forall q, In q kb_toy_Q -> LI 7 1 (kb_toy_J ++ m_products 1 kb_toy_G 2) (subst_q 1 kb_toy_G q)) ->
+  spans_mod 7 1 (kb_toy_J ++ m_products 1 kb_toy_G 3) (products 1 kb_toy_G 3)
+    (map (ymono 1 kb_toy_G) kb_toy_S).
+Proof. intros HQ. exact (hilbert_upper_bound_of_red 7 1 _ _ 3 _ _ _ prime_7 toy_red_accepted HQ). Qed.
+
+Print Assumptions hilbert_upper_bound_of_red.
+Print Assumptions hilbert_upper_sel_of_red.
+Print Assumptions hilbert_cell_of_red.
 Print Assumptions hilbert_upper_bound.
 Print Assumptions hilbert_upper_sel.
 Print Assumptions hilbert_cell_of_bound.
 Print Assumptions toy_bound.
+Print Assumptions toy_bound_split.
