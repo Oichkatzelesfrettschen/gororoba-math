@@ -137,47 +137,16 @@ if [ "$replay_status" -ne 0 ]; then
 fi
 echo "check_rocq: kernel replay evidence producer calibrated: $(tail -n 1 "$work/replay-calibration.log")"
 
-# Sources outside the four project-listed directories. A make target of
-# rocq/open compiles each source of the first list (check-schur-geometry the
-# four Schur sources, extract ExtractQuaternion.v, check-plugins the two
-# plugin fixtures), except the nullity certificate: check-schur-geometry
-# scans it for admissions only, so this script compiles it under that
-# recipe's flags. Nothing this script runs compiles a source of the second
-# list: ExtractFP24Admit.v and ExtractR2VBDP4.v belong to the CertiRocq
-# recipes extract-c and extract-r2vb-c, which need a rocq-certirocq switch,
-# and no recipe names RustExtractSpike.v.
-target_compiled='rocq/open/checkpoints/schur-geometry/CDTowerOperatorCorrespondence.v
-rocq/open/checkpoints/schur-geometry/CDUnconditionalDoublingNullity.v
-rocq/open/checkpoints/schur-geometry/NullityTwelveCoefficientCertificate.v
-rocq/open/checkpoints/schur-geometry/SchurAccelerationObstruction.v
-rocq/open/extraction/ExtractQuaternion.v
-rocq/open/tests/MathCompMatrixCompatibility.v
-rocq/open/tests/PluginCompatibility.v
-rocq/open/tests/SchurAccelerationBoundaries.v'
-held_uncompiled='rocq/open/extraction/ExtractFP24Admit.v
-rocq/open/extraction/ExtractR2VBDP4.v
-rocq/open/extraction/RustExtractSpike.v'
+# The lists of sources outside the project files and the inventory checks
+# that this script shares with ci/check_rocq_changed.sh.
+inventory="$root/ci/rocq_inventory.sh"
+[ -r "$inventory" ] || {
+  echo "check_rocq: $inventory is unreadable" >&2
+  exit 2
+}
+# shellcheck source=ci/rocq_inventory.sh
+. "$inventory"
 
-# Fails unless the sources of the list $1 that lie outside the four
-# project-listed directories are exactly the two lists above, printing the
-# difference.
-outside_sources_match() {
-  grep -v -E '^rocq/(open/(theories|verified)|quantum|delegation)/' "$1" | LC_ALL=C sort >"$work/outside.txt"
-  printf '%s\n%s\n' "$target_compiled" "$held_uncompiled" | LC_ALL=C sort >"$work/outside-named.txt"
-  diff "$work/outside-named.txt" "$work/outside.txt"
-}
-# Fails when a line of the newline-separated source list $2 is absent, as a
-# whole line, from the project file $1, printing each absent one. An empty
-# project file lists nothing, so every source is absent from it.
-unlisted_sources() {
-  status=0
-  grep -F -x -v -f "$1" "$2" || status=$?
-  case $status in
-    0) return 1 ;;
-    1) return 0 ;;
-    *) return 2 ;;
-  esac
-}
 # Succeeds only when unlisted_sources rejects the list $2 against the
 # project file $1 with status 1; a grep error (status 2) is no rejection.
 listing_rejects() {
@@ -212,11 +181,6 @@ kernel_context_matches() {
 }
 log_holds_warning() {
   grep -n '[Ww]arning' "$@"
-}
-# Fails unless the project file $1 carries the option lines of the warning
-# set: -arg -w, then -arg all,+default.
-warning_options_set() {
-  grep -A 1 -x -F -- '-arg -w' "$1" | grep -q -x -F -- '-arg all,+default'
 }
 # Compares the (source, warning) pairs that the logs $2... of the tree $1
 # print with the allow-list. A difference is printed and recorded, and the
@@ -468,33 +432,10 @@ warning_options_set _RocqProject || {
   echo "check_rocq: rocq/delegation/_RocqProject lacks the option lines -arg -w and -arg all,+default" >&2
   exit 1
 }
-# Succeeds when the source $1 holds as many Theorem lines as entries of
-# its list stated, and at least one. The generator spells every other
-# result of a rendered source Lemma.
-stated_covers() {
-  theorems=$(grep -c '^Theorem ' "$1" || true)
-  entries=$(grep -c '^  *\[\{0,1\}exist Stated ' "$1" || true)
-  [ "$theorems" -gt 0 ] && [ "$theorems" -eq "$entries" ]
-}
-grep -l '^Definition stated ' ./*.v >"$work/delegation-rendered.txt" || true
-[ "$(grep -c . "$work/delegation-rendered.txt")" -eq 3 ] || {
-  echo "check_rocq: rocq/delegation holds other than three sources with a list stated" >&2
+check_delegation_stated "$work/rocq/delegation" || {
+  echo "check_rocq: the delegation inventory check failed" >&2
   exit 1
 }
-while IFS= read -r source; do
-  stated_covers "$source" || {
-    echo "check_rocq: $source states a theorem that its list stated omits, or the reverse" >&2
-    exit 1
-  }
-  {
-    cat "$source"
-    echo 'Theorem unlisted_calibration : True.'
-  } >"$work/stated-calibration.v"
-  if stated_covers "$work/stated-calibration.v"; then
-    echo "check_rocq: the stated-list check accepted a source with an unlisted theorem" >&2
-    exit 1
-  fi
-done <"$work/delegation-rendered.txt"
 run_logged "$work/delegation-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
 run_logged "$work/delegation-all.log" opam exec --switch="$switch" -- make --keep-going --output-sync=target -f Makefile.rocq --jobs="$jobs"
 if log_holds_warning "$work/delegation-makefile.log" >&2; then
@@ -537,6 +478,6 @@ echo "check_rocq: rocq/open kernel check passed on $(grep -c . "$work/open-modul
 }
 echo "check_rocq: warnings match the allow-list ($(($(grep -c . "$work/ci/rocq-warnings/allowed.tsv") - 1)) pairs)"
 if [ -n "${ROCQ_SAVE_OBJECTS:-}" ]; then
-  sh "$root/ci/check_rocq_changed.sh" --save "$ROCQ_SAVE_OBJECTS" "$work"
+  ROCQ_EXPORT="$work" sh "$root/ci/check_rocq_changed.sh" --save "$ROCQ_SAVE_OBJECTS"
 fi
 echo "check_rocq: passed"
