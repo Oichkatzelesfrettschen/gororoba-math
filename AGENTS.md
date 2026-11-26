@@ -354,7 +354,8 @@ gororoba repository shares; this file governs where the two differ.
 - Replay one module per `leanchecker` call ("Statements and proofs"), and
   confirm the axiom report of a headline theorem with
   `ci/check_external_kernels.sh` before `README.md` cites it.
-- Give a commit body one sentence of evidence: the build, audit or replay.
+- Give the body of a commit that changes a proof one sentence of evidence:
+  the build, audit or replay.
 
 ## Rocq sources
 
