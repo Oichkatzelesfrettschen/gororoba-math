@@ -10,20 +10,27 @@ name: quick
 # main-gate fails a pull request while the latest completed lean or rocq run
 # on main is not a success, so a red main stops merges. The lean and rocq
 # workflows hold the full gate; they run nightly, on every push to main and
-# on manual dispatch (AGENTS.md, "Landing"). The job head-gate holds the
-# merge rule: once a pull request that touches lean/, rocq/, ci/ or a
-# workflow leaves the draft state, it fails until the dispatched lean and
-# rocq runs of the head commit are green; re-run it after they finish. The
-# runs are those of this repository: a maintainer pushes the head of a pull
-# request from a fork to a branch here and dispatches on it, so code from a
-# fork runs with this repository's caches only after a maintainer read it. A
-# manual dispatch of this workflow runs the jobs quick and build on a ref.
+# on manual dispatch (AGENTS.md, "Landing"). A pull request merges when this
+# workflow is green; the full gates then run on the push to main. A
+# manual dispatch of this workflow runs the jobs quick, build and rocq-changed
+# on a ref. The job rocq-changed compiles the Rocq sources a pull request
+# changes, and those that import them, over the objects that the last green
+# rocq run on main saved (ci/check_rocq.sh --changed), runs the admission scan
+# and the inventory checks, and holds no kernel check; it skips when no path
+# that the tier reads (ci/check_rocq_changed.sh lists them) differs from the
+# base. A dispatch compares with origin/main and takes
+# the input rocq_probe, a tracked source that the job treats as changed.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      rocq_probe:
+        description: "rocq-changed: a tracked rocq/**/*.v source to treat as changed (a measurement aid)"
+        type: string
+        default: ""
 
 concurrency:
   group: quick-${{ github.event.pull_request.number || github.ref }}
@@ -83,6 +90,79 @@ jobs:
       - name: Build the changed modules and audit the axioms
         run: sh ci/check.sh --build
 
+  rocq-changed:
+    name: rocq-changed
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-26.04
+    # A saved build tree and switch make the job a few minutes; without them
+    # it installs the switch (about 21 minutes) and compiles every source
+    # (about 20 minutes, measured 2026-11-26).
+    timeout-minutes: 120
+    env:
+      OPAMROOT: ${{ github.workspace }}/.opam
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+      - name: Decide whether a Rocq source changed
+        id: plan
+        run: |
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            base=HEAD^1
+          else
+            git fetch --no-tags --depth=1 origin main
+            base=FETCH_HEAD
+          fi
+          echo "base=$base" >>"$GITHUB_OUTPUT"
+          set -- --changed --plan --base "$base"
+          if [ -n "$PROBE" ]; then
+            set -- "$@" --probe "$PROBE"
+          fi
+          sh ci/check_rocq.sh "$@"
+        env:
+          PROBE: ${{ inputs.rocq_probe }}
+      # A hosted runner stalled this step twice for more than ten minutes
+      # (2026-11-26, workflow_dispatch runs); the step timeout and the apt
+      # timeouts turn a stall into a failure of this job within minutes.
+      - name: Install system packages
+        if: steps.plan.outputs.touched == 'true'
+        timeout-minutes: 8
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 update -qq
+          sudo apt-get -o Acquire::Retries=3 -o Acquire::http::Timeout=30 install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+      # The key is that of rocq.yml, which saves the switch.
+      - name: Restore the opam switch
+        if: steps.plan.outputs.touched == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: opam-rocq-v2-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}
+      - name: Install the Rocq toolchain
+        if: steps.plan.outputs.touched == 'true'
+        run: sh ci/install_rocq.sh
+      # The rocq workflow saves this tree after a green gate on main. Without
+      # one the job compiles every source.
+      - name: Restore the Rocq build tree of main
+        if: steps.plan.outputs.touched == 'true'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/rocq-objects
+          key: rocq-objects-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}-${{ github.sha }}
+          restore-keys: rocq-objects-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}-
+      - name: Compile the changed Rocq sources
+        if: steps.plan.outputs.touched == 'true'
+        env:
+          BASE: ${{ steps.plan.outputs.base }}
+          PROBE: ${{ inputs.rocq_probe }}
+        run: |
+          set -- --changed --base "$BASE"
+          if [ -n "$PROBE" ]; then
+            set -- "$@" --probe "$PROBE"
+          fi
+          ROCQ_OBJECTS="$RUNNER_TEMP/rocq-objects" ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_rocq.sh "$@"
+
   main-gate:
     name: main-gate
     if: github.event_name == 'pull_request'
@@ -123,50 +203,3 @@ jobs:
           fi
           echo "main-gate: the latest full gate on main with a verdict is not a success; main is repaired before another merge" >&2
           exit 1
-
-  head-gate:
-    name: head-gate
-    if: github.event_name == 'pull_request' && !github.event.pull_request.draft
-    runs-on: ubuntu-26.04
-    timeout-minutes: 5
-    permissions:
-      actions: read
-      pull-requests: read
-    steps:
-      - name: Require the full gate on the head of a proof or gate change
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          NUMBER: ${{ github.event.pull_request.number }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          gh api --paginate "repos/$REPOSITORY/pulls/$NUMBER/files" --jq '.[].filename' >"$RUNNER_TEMP/files.txt"
-          [ -s "$RUNNER_TEMP/files.txt" ] || {
-            echo "head-gate: the file list of the pull request is empty" >&2
-            exit 1
-          }
-          required=
-          if grep -q -E '^(lean/|ci/|\.github/workflows/)' "$RUNNER_TEMP/files.txt"; then
-            required="$required lean.yml"
-          fi
-          # A .gitattributes file can remove a path from the export that
-          # ci/check_rocq.sh builds from.
-          if grep -q -E '^(rocq/|ci/|\.github/workflows/)|(^|/)\.gitattributes$' "$RUNNER_TEMP/files.txt"; then
-            required="$required rocq.yml"
-          fi
-          [ -n "$required" ] || {
-            echo "head-gate: no file under lean/, rocq/, ci/ or .github/workflows/ and no .gitattributes changed; the full gate is not required"
-            exit 0
-          }
-          status=0
-          for workflow in $required; do
-            green=$(gh run list --repo "$REPOSITORY" --workflow "$workflow" --commit "$HEAD_SHA" --status completed --json conclusion --jq 'map(select(.conclusion == "success")) | length')
-            echo "$workflow at $HEAD_SHA: $green green run(s)"
-            case $green in
-            "" | 0) status=1 ;;
-            esac
-          done
-          [ "$status" -eq 0 ] || {
-            echo "head-gate: dispatch$required on the head (gh workflow run WORKFLOW --ref BRANCH) and re-run this job when green" >&2
-            exit 1
-          }

@@ -514,6 +514,8 @@ open	verified/C1637_R300SedenionZeroDivisor.v	deprecated-transitive-library-file
 open	verified/C1637_R300SedenionZeroDivisor.v	disj-pattern-notation
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C1638_OctonionDowncastNoZeroDivisors.v	disj-pattern-notation
+open	verified/C1760_ParallelHalvesBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+open	verified/C1760_ParallelHalvesBridge.v	disj-pattern-notation
 open	verified/C468_EmanationTable.v	deprecated-transitive-library-file-since-Stdlib-9.0
 open	verified/C468_EmanationTable.v	disj-pattern-notation
 open	verified/C582_IndexPlaneIncidence.v	deprecated-transitive-library-file-since-Stdlib-9.0
@@ -804,9 +806,15 @@ quantum	CdTwistedProductBridge.v	deprecated-transitive-library-file-since-Stdlib
 quantum	E8ConjugationIdeal.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	E8ConjugationIdeal.v	disj-pattern-notation
 quantum	E8ConjugationIdeal.v	using-fallback-loc
+quantum	E8ConjugationIdealBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	E8ConjugationIdealBridge.v	disj-pattern-notation
+quantum	E8ConjugationIdealBridge.v	using-fallback-loc
 quantum	E8ConjugationMap.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	E8ConjugationMap.v	disj-pattern-notation
 quantum	E8ConjugationMap.v	using-fallback-loc
+quantum	E8RootExchange.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	E8RootExchange.v	disj-pattern-notation
+quantum	E8RootExchange.v	using-fallback-loc
 quantum	GaussianIntegerHom.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	GaussianIntegerHom.v	disj-pattern-notation
 quantum	GaussianIntegerHom.v	using-fallback-loc
@@ -834,6 +842,11 @@ quantum	QuantumChannelFromOpen.v	deprecated-transitive-library-file-since-Stdlib
 quantum	QuantumChannelFromOpen.v	disj-pattern-notation
 quantum	SignBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	SignBridge.v	disj-pattern-notation
+quantum	SplitDoublingTower.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	SplitDoublingTower.v	disj-pattern-notation
+quantum	SplitDoublingTower.v	using-fallback-loc
+quantum	SplitTowerStandardBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	SplitTowerStandardBridge.v	disj-pattern-notation
 quantum	StiefelA5Certificate.v	bad-template-constraint
 quantum	StiefelA5Certificate.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	StiefelA5Certificate.v	disj-pattern-notation

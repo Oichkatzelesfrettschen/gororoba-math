@@ -2,7 +2,8 @@
 
 This repository is public. It holds the workspace's machine-checked
 mathematics: Lean 4 under `lean/` and Rocq under `rocq/`, with `ci/check.sh`
-and `ci/check_rocq.sh` as the admission gate.
+and `ci/check_rocq.sh` as the admission gate, and an on-demand Agda cross-check
+under `agda/`.
 The workspace guide (`workspace/AGENTS.md` in gororoba-infrastructure, linked
 as `AGENTS.md` in the directory above this checkout) holds the rules every
 gororoba repository shares; this file governs where the two differ.
@@ -44,6 +45,10 @@ gororoba repository shares; this file governs where the two differ.
   confine_theorems_N.v`); a rendered source changes through the generator,
   and `ci/check_delegation_sources.sh` renders them again from the checkout
   `GOROROBA_OPEN` names, on demand.
+- `agda/` is an Agda library (Agda 2.8.0.2, agda-stdlib v2.4, `--safe --without-K`)
+  that checks the Lean packaging of the unit-norm octonions as a Moufang loop
+  against agda-stdlib's `IsMoufangLoop`. No gate reads it; `ci/check_agda.sh`
+  type-checks it on demand and rejects two planted copies (`agda/README.md`).
 - `cuda/` is a Lake package of device kernels on a toolchain of its own
   (`cuda/lean-toolchain`, an experimental Lean with a CUDA backend). No
   library module imports it and the admission gate builds none of it;
@@ -76,13 +81,18 @@ gororoba repository shares; this file governs where the two differ.
   gororoba-open ingests for a theorem receipt, and
   `ci/check_kernel_replay_evidence.sh` calibrates it; `ci/check_rocq.sh` runs
   that calibration from its export of `HEAD`.
-- `ci/quantum-sources/` holds the generators of eight `rocq/quantum` sources
+- `ci/quantum-sources/` holds the generators of ten `rocq/quantum` sources
   (`CdSignPythonSemantics.v`, `CdSignSourceCertificate.v`, `TargetFlipN21.v`,
   `CdTowerCanonicalKernels.v`, `CdTowerG2Derivations.v`,
-  `A5W8ArcMatrixRanks.v`, `CdTowerG2DerivationSpan.v` and
-  `StiefelWitnessInvertible.v`), the JSON records three of them render
-  (`certificates.json`, `left-inverses.json`, `span.json`), and the helpers of
-  the span certificate. A generator reads `gororoba_quantum/cd_core.py`,
+  `A5W8ArcMatrixRanks.v`, `CdTowerG2DerivationSpan.v`,
+  `StiefelWitnessInvertible.v`, `E8ConjugationMap.v` from
+  `conjugation_map_certificate.py` and `E8ConjugationIdeal.v` from
+  `e8_conjugation_ideal.py`), the JSON records three of them render
+  (`certificates.json`, `left-inverses.json`, `span.json`), the helpers of
+  the span certificate, and `hilbert_cell_certificate.py`, which renders
+  `HilbertCellA5_108.v` and `HilbertCellA5_111.v` from the pinned cell
+  certificate export named on its command line (its `--check` compares the
+  rendering with the tracked source, outside `ci/check_quantum_sources.sh`). A generator reads `gororoba_quantum/cd_core.py`,
   `parallel.py` and evidence records of the checkout `GOROROBA_QUANTUM`
   names, so no admission check runs it. `ci/check_quantum_sources.sh` renders
   each source again, requires it to equal the tracked file, rejects a copy
@@ -159,6 +169,9 @@ gororoba repository shares; this file governs where the two differ.
   `rocq/quantum/CdImaginarySumConference.v` at levels 1 to 6, and `ci/compare_am_exponent.sh` compares
   `Tower.amExponent` with `am_exponent` of `rocq/quantum/CdTowerBasisSign.v` at levels 1 to 6; each
   rejects a mutated Rocq reference, reads no other repository, and runs on demand.
+  `ci/compare_split_tower.sh` compares `ZT.mul` of `rocq/quantum/SplitDoublingTower.v` with
+  `cd_multiply_split` of gororoba-open over the 12 signatures of levels 2 and 3, rejects a negated
+  signature, and needs `GOROROBA_OPEN`, cargo and `rocq-9.3`.
   `ci/compare_anf.sh` compares `Tower.anfCoeff`, `Tower.anfEval` and `Tower.anfDegree` with
   `anf_coef` and `anf_eval` of `rocq/quantum/CdSignRowAnf.v`, `anf_degree` of
   `rocq/quantum/CdAssociatorCensus.v` and with `boolean_anf.anf_coefficients`,
@@ -175,6 +188,34 @@ gororoba repository shares; this file governs where the two differ.
   `ci/compare_schreier.sh` compares `Tower.schreier` with `schreier` of
   `rocq/open/theories/SchreierSignCode.v` on every triple at orders 1 to 5; both reject a
   mutated Rocq reference and need `rocq-9.3`.
+  `ci/compare_e8_conjugation.sh` renders
+  `lean/GororobaMath/CayleyDickson/E8ConjugationIdeal.lean` again from the `ideal J=` lines of
+  gororoba-quantum's `conjugation_map.sing` (pinned by sha256) through
+  `ci/quantum-sources/e8_conjugation_ideal_lean.py`, requires the tracked module to equal the rendering,
+  rejects a copy with one changed digit and a `conjugation_map.sing` with one changed digit (refused by its
+  pinned sha256), needs `GOROROBA_QUANTUM`, and runs on demand.
+  `ci/compare_cz_matrix.sh` compares the entries of `Tower.czMatrix` (through
+  `Tower.czMatrix_apply`, since the matrix is noncomputable) with `_c_matrix` of
+  gororoba-quantum's `holomorphic_kernel_lemma.py` on seeded integer vectors at levels 4
+  and 5, and rejects a reference with one negated sign; `ci/compare_hilbert_cell_header.sh`
+  binds the J and G tables of `HilbertCellA5_108.v` and `HilbertCellA5_111.v` to the
+  canonical header of those cells with its own header reader, and rejects a header copy
+  with one changed coefficient. `ci/compare_walsh.sh` compares `KernelMap.walshChar` and
+  `KernelMap.coeff` with `walsh_matrix` and `coefficients` of gororoba-quantum's
+  `nhat_spectral.py` as exact fractions; `ci/compare_pfaffian.sh` compares
+  `Matrix.pfaffianAux` with `pf` of `rocq/quantum/Pfaffian.v` over the integers on
+  skew and general matrices and permuted, reversed and repeated index lists;
+  `ci/compare_bordered_matrix.sh` compares `PfaffianSixteen.borderedA` and `PfaffianSixteen.rhsv` with `Amat` and `rhs` of
+  `rocq/quantum/StiefelA5Certificate.v`, evaluated through `ev` of `StiefelA5Pfaffian.v`, on 24 seeded integer vectors,
+  and `Matrix.pfaffian` of `PfaffianSixteenSchur.A16` with `P.pf` over the evaluated matrix at three of them;
+  `ci/compare_box_kite_census.sh` compares `sed_sign` of
+  `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
+  pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
+  the 4096 ordered triples. Each runs on demand and rejects a mutated reference; the Walsh
+  and C_z comparisons need `GOROROBA_QUANTUM` and a built `lean/.lake`, the box-kite and
+  header comparisons `GOROROBA_QUANTUM` and the `rocq-9.3` switch, and the Pfaffian
+  comparisons of the Pfaffian and of the bordered matrix, which read no other repository, both a built `lean/.lake`
+  and `rocq-9.3`.
   `ci/compare_kernel_map_bins.sh` evaluates `KernelMap.binContract`,
   the hypothesis of `KernelMap.nullity_eq_alignedPairCount_of_binContract`,
   on `pathion_kernel_map.kernel_map_circuit` for every two-term operand at
@@ -299,6 +340,34 @@ gororoba repository shares; this file governs where the two differ.
   Mathlib's standard linter set on (`lean/lakefile.toml`); its header
   linter, which checks Mathlib's copyright and authors header, is off,
   since each file here carries one SPDX line.
+
+## Proof hygiene
+
+- Write each `simp` that is not the last tactic of its goal as the
+  `simp only [...]` that `simp?` prints, so a change of Mathlib's simp set
+  cannot move the proof, and build the result with `--wfail`: `simp?` can
+  omit a simproc (`↓reduceIte`, one of 145 calls pinned on 2026-11-26).
+- Set no option for a whole file. Scope a raised `maxHeartbeats` to one
+  declaration with `set_option ... in` and state its measured count there.
+- Use `decide +kernel` only on a finite table whose docstring states its
+  size and measured cost (`PfaffianSchurBlock.sedSign_eq_sign`: 210 goals,
+  0.54 s). A larger evaluation is a Rocq certificate under the evidence axis
+  above: a Pfaffian memo table check passed a 16 GiB cap before it reached
+  the needed size (single runs, Lean 4.35.0; the Rocq certificate of the
+  same identity compiles in 104 s at 549 MB).
+- Bind a literal table that mirrors a library definition to it by a theorem
+  (`PfaffianCross.octSign_eq_sign`), and confirm that the kernel rejects a
+  copy with one bound entry changed.
+- Prove an identity over every commutative ring in the polynomial ring over
+  `ℤ` and carry it by evaluation, proving each cancelled factor nonzero
+  there (`PfaffianSixteenSchur.pfaffian_A16_poly`).
+- Check an identity by exact computation first and keep the prediction: the
+  bordered sign convention held at 10 of 10 points, its swap at 0 of 9.
+- Replay one module per `leanchecker` call ("Statements and proofs"), and
+  confirm the axiom report of a headline theorem with
+  `ci/check_external_kernels.sh` before `README.md` cites it.
+- Give the body of a commit that changes a proof one sentence of evidence:
+  the build, audit or replay.
 
 ## Rocq sources
 
@@ -440,46 +509,100 @@ Edit in a session worktree under `~/worktrees/gororoba-math/<branch>`,
 commit, run `sh ci/check.sh`, and `sh ci/check_rocq.sh` when the change
 touches `rocq/` or the Rocq scripts, and land by pull request, merged by
 merge commit so that an imported history stays, with the review chain of
-the workspace guide ("Reviews and merges"). The gate runs in two tiers (owner, 2026-11-23: the checks of a push stay
-near ten seconds each and long checks run nightly, on `main` or by hand).
+the workspace guide ("Reviews and merges"). The gate runs in two tiers
+(owner, 2026-11-23: the checks of a push stay near ten seconds each and long
+checks run nightly, on `main` or by hand; owner, 2026-11-25: a pull request
+merges on the quick tier and the full gates catch the rest).
 
-- The `quick` workflow runs on every pull request and every push to
-  `main`. Its job `quick` runs `sh ci/check.sh --quick` (the lints, the
-  headline registry and the claims ledger, no build; 11 s measured). Its
-  job `build` restores the Lean build tree that the last green gate on
-  `main` saved and runs `sh ci/check.sh --build`: the changed modules and
-  the modules that import them compile with warnings as errors, the axiom
-  audit runs, and the kernel replay does not; without a saved tree it
-  compiles every module (342 s measured). Its job `main-gate` fails a pull
-  request while the latest completed `lean` or `rocq` run on `main` is
-  not a success (a cancelled or skipped run is no verdict), so `main` is
-  repaired before another merge; a pull request whose own head is green in
-  both full workflows passes it, which lets the repair merge. `main` has
-  no branch protection, so the red check and this rule are what stops a
-  merge.
+- A pull request merges with the `quick` workflow green. The workflow runs
+  on every pull request and every push to `main`, in four jobs.
+  - `quick` runs `sh ci/check.sh --quick`: the lints, the headline
+    registry and the claims ledger, no build (11 s measured).
+  - `build` restores the Lean build tree that the last green gate on
+    `main` saved and runs `sh ci/check.sh --build`: the changed modules
+    and the modules that import them compile with warnings as errors and
+    the axiom audit runs; without a saved tree it compiles every module
+    (342 s measured).
+  - `rocq-changed` runs `sh ci/check_rocq.sh --changed` on a pull request
+    that changes a path the tier reads (`rocq/`, `ci/install_rocq.sh`, the
+    Rocq gate scripts and warning lists, the evidence producer, the
+    generators of `ci/quantum-sources/` and `ci/delegation-sources/`, a
+    `.gitattributes` file). Every run checks the export of `HEAD` against
+    its tree, scans the three trees for `Admitted` and `admit`, checks
+    that a changed project source (every project source on a full compile)
+    declares no `Axiom`, `Parameter`, `Conjecture`, plural or
+    attribute-prefixed form of them, or top-level `Hypothesis` or `Variable`
+    that its tree's `kernel-assumptions.txt` omits, and that no changed
+    source switches a kernel check off (`bypass_check`, `Unset Guard
+    Checking`, `Unset Positivity Checking`, `Unset Universe Checking`) or
+    carries a flag of `ci/rocq-unchecked-patterns.txt` unless
+    `ci/rocq-unchecked-allow.tsv` names its path, token and reason (a
+    textual check, whose limits sit in `ci/rocq-declared-axioms.awk`;
+    `rocq check` stays the authority), runs
+    the inventory checks of `ci/check_rocq.sh` that need no compile, and
+    calibrates itself. It compiles the changed Rocq sources and the sources
+    that import them, with the `_RocqProject` options and the warning-pair
+    check, over the objects that the last green `rocq` run on `main` saved,
+    and compiles the checkpoints, tests and extraction sources outside the
+    project files that name a recompiled module. A change to the warning
+    parser or its lists, to a project file, a Makefile, the opam ports,
+    `ci/install_rocq.sh`, a deleted source, or a missing or foreign saved
+    tree compiles every source and runs the warning check without
+    `--new-only`. A pull request that changes no path the tier reads
+    reports skip with its reason (measured times:
+    `docs/archive/measurements/rocq-changed-source-tier.md`).
+  - `main-gate` fails a pull request while the latest completed `lean` or
+    `rocq` run on `main` is not a success (a cancelled or skipped run is
+    no verdict); a pull request whose own head is green in both full
+    workflows passes it, which lets a repair merge. `main` has no branch
+    protection, so this check is the whole rule. It runs at pull-request
+    events and reads completed runs only: a merge can land while a push run
+    on `main` is still in progress, and a run that turns red later does
+    not re-evaluate the check of an open pull request until that check is
+    run again. Before `gh pr merge`, read the runs of `main` with
+    `gh run list --branch main --workflow lean.yml --limit 3` and the same
+    for `rocq.yml`, and wait for the repair when the newest run with a
+    verdict is red (a checklist line, chosen over a `workflow_run` job
+    because it adds no merge latency and no workflow).
 - The `lean` workflow runs `sh ci/check.sh` and the `rocq` workflow
   `sh ci/check_rocq.sh`, the full gate: nightly on `main`, on every push
   to `main`, and on manual dispatch (`gh workflow run lean.yml --ref
-  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). The `rocq` runs of a
+  BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is fully gated
+  within one push run, which took 15 to 49 minutes for `lean` and 67
+  minutes for `rocq` (hosted runs of 2026-11-25, queue time included); a
+  push run that a newer push replaces while it waits reads cancelled, so
+  only the last commit of a burst of merges is gated. The `rocq` runs of a
   push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`
-  converts with the bytecode machine the compiler used; the nightly run,
-  and a dispatch with `-f kernel=pure`, re-check with the checker's own
+  converts with the bytecode machine the compiler used; the nightly run, and
+  a dispatch with `-f kernel=pure`, re-check with the checker's own
   reduction (owner, 2026-11-23: one certificate re-checks in 73 s against
-  1,902 s). A source whose proof holds a new `vm_compute` certificate is
-  fully gated after a green nightly or pure dispatch. A red run on `main`
-  opens the issue "The lean gate is red on main" or "The rocq gate is red
-  on main", or adds a comment to it.
-- A pull request that touches `lean/`, `rocq/`, `ci/` or a workflow
-  stays a draft while it changes. On its final head `lean.yml` is
-  dispatched for a change under `lean/`, `rocq.yml` for one under
-  `rocq/` or of a `.gitattributes` file, and both for one under `ci/` or
-  a workflow, and it merges with those runs green. The head of a pull
+  1,902 s). A red run on `main` opens the issue "The lean gate is red on
+  main" or "The rocq gate is red on main", or adds a comment to it, and
+  `main-gate` holds further merges at the next pull-request event.
+- The quick tier leaves these checks to a later run. A change that only one
+  of them rejects reaches `main` and turns that run red.
+
+  | Check | Caught by | Stays on `main` at most |
+  |---|---|---|
+  | Lean kernel replay (`leanchecker`) | `lean` push run | 49 min |
+  | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 67 min |
+  | `vm_compute` certificate that only the pure kernel rejects | `rocq` nightly run | 24 h |
+  | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 67 min |
+  | Mutation harnesses and kernel check of `check-schur-geometry` | `rocq` push run | 67 min |
+  | Sources held uncompiled (CertiRocq targets) | no run compiles them | indefinitely |
+  | Generated-source drift (`ci/check_quantum_sources.sh`, `ci/check_delegation_sources.sh`, `hilbert_cell_certificate.py --check`) | no scheduled run; run them on demand | indefinitely |
+  | A stale row of `ci/rocq-warnings/allowed.tsv` after a source change | `rocq` push run | 67 min |
+  | An unchanged Lean module outside the import closure of a changed one | cannot change; no run is needed | none |
+
+- A pull request that adds a `vm_compute` certificate, or changes `ci/`, a
+  workflow, the toolchain or a `_RocqProject`, may be dispatched by hand
+  on its head (`lean.yml` for a change under `lean/`, `rocq.yml` for one
+  under `rocq/`, both for the others) before the merge. The head of a pull
   request from a fork is pushed by a maintainer to a branch of this
-  repository and dispatched there. The job `head-gate` of the `quick` workflow holds the
-  rule: on a pull request that is not a draft it fails until
-  `gh run list --workflow lean.yml --commit SHA` (or `rocq.yml`) shows a
-  green run of each required workflow; re-run it when they finish. The kernel replay of Lean and every Rocq compile and re-check
-  run only in that dispatch.
+  repository and dispatched there, so code from a fork runs with this
+  repository's caches only after a maintainer read it. A dispatch of
+  `rocq.yml` with `-f save_objects=true` saves the objects of its branch,
+  which a dispatch of `quick.yml` on that branch restores.
 - A commit of `main` is fully gated when its `lean` and `rocq` runs are
   green; a record that cites a proof by commit and digest names such a
   commit.

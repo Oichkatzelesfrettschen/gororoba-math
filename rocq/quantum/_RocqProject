@@ -59,7 +59,9 @@ CdTowerTwoTermRecursion.v
 CdTwistedProduct.v
 CdTwistedProductBridge.v
 E8ConjugationIdeal.v
+E8ConjugationIdealBridge.v
 E8ConjugationMap.v
+E8RootExchange.v
 FoldAverageDescent.v
 GaussianIntegerHom.v
 HilbertCellA5_108.v
@@ -82,4 +84,6 @@ StiefelWitnessInvertible.v
 TargetFlipN21.v
 TerminalChannelSeparation.v
 TerminalChannelSeparationReal.v
+SplitDoublingTower.v
+SplitTowerStandardBridge.v
 TowerBridge.v
