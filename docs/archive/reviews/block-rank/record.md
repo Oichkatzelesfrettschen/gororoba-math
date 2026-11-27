@@ -8,7 +8,7 @@ Branch lean/block-rank. Heads: 96cd03e80 under local review, 53c9c26a1 after the
 ## Findings and resolutions
 | Finding | Class | Resolution |
 |---|---|---|
-| Apache-2.0 section 4(b): the ported and modified lemmas carry no notice of modification | read from source (math/LICENSE) | Fixed in 53c9c26a1: the module docstring names the two source files, the changes (namespace Matrix, Finite rows) and the date |
+| Apache-2.0 section 4(b): the ported and modified lemmas carry no notice of modification | read from source (math/LICENSE) | Fixed in 53c9c26a1, corrected after the Advisor: the notice names https://github.com/openai/math at 3344da599, the two source files and the date; rank_fromBlocks_diagonal keeps the upstream hypotheses, rank_kronecker takes Finite in place of Fintype on m and p (both read against the upstream statements) |
 | Non-terminal simp in rank_fromBlocks_diagonal | read from source | Fixed in 53c9c26a1: two simp only lists from simp? |
 | Redundant finiteness hypotheses | read from source | Fixed in 53c9c26a1: Module.Finite K (ψ k) dropped from finrank_range_piMap, Finite (m' k) from rank_blockDiagonal', Finite m from rank_eq_sum_rank_gradedBlock; rank_kronecker keeps Finite m and Finite p, which Pi.basisFun needs |
 | Docstrings: finrank_range_piMap missing from Main results, D for B, mechanisms, "characters" | read from source | Fixed in 53c9c26a1 |

@@ -11,9 +11,10 @@ public import Mathlib.Data.Matrix.Block
 
 Notice of modification (Apache-2.0 section 4(b)): `rank_fromBlocks_diagonal` and
 `rank_kronecker` are adapted from `lean/OAI/LinearAlgebra/SpectralBooks/BlockDiagRank.lean` and
-`KroneckerRank.lean` of the `math` repository (Apache-2.0). This file modifies them for Lean 4.35.0
-and Mathlib v4.35.0: the declarations sit in `namespace Matrix` and the row index types are
-`Finite` in place of `Fintype`. Date of the change: 2026-11-26.
+`KroneckerRank.lean` of https://github.com/openai/math (Apache-2.0) at commit 3344da599. This file
+modifies them for Lean 4.35.0 and Mathlib v4.35.0: both declarations sit in `namespace Matrix`, and
+`rank_kronecker` takes `Finite` in place of `Fintype` on its row types `m` and `p`;
+`rank_fromBlocks_diagonal` keeps the upstream hypotheses. Date of the change: 2026-11-26.
 
 Convention: a matrix `A : Matrix m n K` over a field `K` has `Matrix.rank A` the dimension of the
 range of `A.mulVecLin`, with rows indexed by `m` and columns by `n`. `Matrix.fromBlocks A 0 0 B`
