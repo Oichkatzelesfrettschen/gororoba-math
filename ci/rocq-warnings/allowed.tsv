@@ -861,6 +861,8 @@ quantum	StiefelA5Pfaffian.v	disj-pattern-notation
 quantum	StiefelA5Pfaffian.v	using-fallback-loc
 quantum	StiefelA5Real.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	StiefelA5Real.v	disj-pattern-notation
+quantum	StiefelA5RealBridge.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	StiefelA5RealBridge.v	disj-pattern-notation
 quantum	StiefelA5Transport.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	StiefelA5Transport.v	disj-pattern-notation
 quantum	StiefelA5Transport.v	using-fallback-loc

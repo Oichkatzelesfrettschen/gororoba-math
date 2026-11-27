@@ -81,6 +81,7 @@ SignBridge.v
 StiefelA5Certificate.v
 StiefelA5Pfaffian.v
 StiefelA5Real.v
+StiefelA5RealBridge.v
 StiefelA5Transport.v
 StiefelA5ZeroDivisor.v
 StiefelWitnessInvertible.v

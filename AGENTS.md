@@ -212,6 +212,11 @@ gororoba repository shares; this file governs where the two differ.
   and `Matrix.pfaffian` of `PfaffianSixteenSchur.A16` with `P.pf` over the evaluated matrix at three of them;
   `ci/compare_transport.sh` compares `Tower.phi` at `ι` and at `-ι` (Rocq `phi` and `psi` of `StiefelTransport` in
   `rocq/quantum/StiefelA5Transport.v`) at level 5, on 24 seeded triples `u`, `y`, `x` and on `y * x`, over `ZMod 998244353`;
+  `ci/compare_complexification.sh` compares `Tower.map` along `Int.castRingHom` into the Gaussian integers (a wrapper with
+  the identity star, standing in for the noncomputable `TrivStarComplex` of `StiefelRealZeroDivisor.lean`) and the real and
+  imaginary coordinates with `emb`, `re` and `im` of `rocq/quantum/StiefelA5Real.v`, and the tower products `map y * x` and
+  `map (y * xr) + I • map (y * xi)` with the two sides of `mul_emb` there, at levels 4 and 5 on 24 seeded cases; its mutated
+  references change `re`, `im` and `emb`, not the products;
   `ci/compare_box_kite_census.sh` compares `sed_sign` of
   `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
   pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
@@ -236,7 +241,7 @@ gororoba repository shares; this file governs where the two differ.
 
   | Provers | Checks (`ci/compare_*.sh` unless named) |
   |---|---|
-  | Lean and Rocq | `aligned_pair_count`, `aligned_pair_forms`, `alignment`, `am_exponent`, `anf`, `assoc_phase`, `bordered_matrix`, `dot`, `estimator_rocq`, `isum`, `open_tree`, `order_three`, `pfaffian`, `schreier`, `signs`, `transport` |
+  | Lean and Rocq | `aligned_pair_count`, `aligned_pair_forms`, `alignment`, `am_exponent`, `anf`, `assoc_phase`, `bordered_matrix`, `complexification`, `dot`, `estimator_rocq`, `isum`, `open_tree`, `order_three`, `pfaffian`, `schreier`, `signs`, `transport` |
   | Lean | `cz_matrix`, `estimator`, `kernel_map_bins`, `walsh`, `ci/check_external_kernels.sh`; `cuda_signs` on the `cuda/` package's own toolchain and CUDA 13 |
   | Rocq | `box_kite_census`, `hilbert_cell_header`, `split_tower` (also cargo), `ci/check_flocq_manifest.sh` |
   | Agda | `ci/check_agda.sh` |
@@ -584,8 +589,9 @@ merges on the quick tier and the full gates catch the rest).
   `sh ci/check_rocq.sh`, the full gate: nightly on `main`, on every push
   to `main`, and on manual dispatch (`gh workflow run lean.yml --ref
   BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is fully gated
-  within one push run, which took 15 to 49 minutes for `lean` and 67
-  minutes for `rocq` (hosted runs of 2026-11-25, queue time included); a
+  within one push run, which took 16 minutes for `lean` (hosted run of
+  2026-11-27, after the replay driver) and 67 minutes for `rocq` (hosted
+  runs of 2026-11-25), queue time included; a
   push run that a newer push replaces while it waits reads cancelled, so
   only the last commit of a burst of merges is gated. The `rocq` runs of a
   push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`
@@ -600,7 +606,7 @@ merges on the quick tier and the full gates catch the rest).
 
   | Check | Caught by | Stays on `main` at most |
   |---|---|---|
-  | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 49 min |
+  | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 16 min (one run) |
   | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 67 min |
   | `vm_compute` certificate that only the pure kernel rejects | `rocq` nightly run | 24 h |
   | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 67 min |
