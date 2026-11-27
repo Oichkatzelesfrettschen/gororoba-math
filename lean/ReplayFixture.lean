@@ -9,8 +9,8 @@ value `True.intro`, under `debug.skipKernelTC`, the option that adds a
 declaration without the kernel. The module then builds with warnings as
 errors, and `collectAxioms` reports no axiom for `ReplayFixture.derived`
 (measured under Lean 4.35.0), so neither the build nor the axiom audit
-sees it. `ci/check.sh` builds this module and requires `leanchecker`,
-which type-checks the compiled declarations again in a second process, to
+sees it. `ci/check.sh` builds this module and requires `ci/replay_modules.lean`,
+which runs the replay of `leanchecker` and type-checks the compiled declarations again in a second process, to
 reject it naming `ReplayFixture.bogus`. No library module imports this
 file.
 -/

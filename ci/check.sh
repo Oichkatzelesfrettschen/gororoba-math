@@ -33,10 +33,12 @@
 #      object of another library of this package, so the replay of step 7
 #      assumes only the package's dependencies (Mathlib and what it
 #      requires); each rule rejects a known-bad input;
-#   7. leanchecker, which reads the compiled objects in a second process
+#   7. ci/replay_modules.lean, which runs the replay function of
+#      leanchecker: it reads the compiled objects in another process
 #      and type-checks their theorems and definitions in the kernel again
 #      (it skips unsafe and partial declarations; the kernel rejects a
-#      theorem that uses one, measured under Lean 4.35.0), accepts each tracked module, one call per module, and rejects
+#      theorem that uses one, measured under Lean 4.35.0), accepts each
+#      tracked module, eight to a process, and rejects
 #      lean/ReplayFixture.lean, whose declaration of type False was added
 #      with the kernel switched off and which the build and the axiom
 #      audit (lean/audit/ReplayFixture.lean) both accept. The root module
@@ -324,19 +326,17 @@ done <"$work/sources.txt"
 }
 echo "check: $(wc -l <"$work/sources.txt") library source(s) import only the library and its dependencies"
 
-# leanchecker replays the modules it is given and assumes their imports, so
-# every library module is named; Mathlib's objects are assumed, as its
-# prebuilt cache already is. One module per call keeps the peak at 6.9 GB
-# (measured, Lean 4.35.0 with Mathlib v4.35.0, each of the seven modules
-# under a 14 GB limit). The root module is left out: leanchecker reads its
-# argument as a module-name prefix (checkOlean in LeanChecker.lean, Lean
-# 4.35.0) and replays every matching module at once, so a call on
-# GororobaMath replays the whole library concurrently, 30.5 to 32.1 GB
-# (measured on the eight-module library of an earlier commit; the peak
-# grows with the module count), while a copy of the root under another
-# name replays in 6.4 GB. The check below keeps the root free of declarations, and no
-# module name is a component prefix of another, so each call replays one
-# module.
+# ci/replay_modules.lean replays each module it is given from its imports with
+# the kernel, by the function `replayFromImports` that leanchecker runs (copied
+# verbatim from Lean v4.35.0), and assumes their imports, so every library
+# module is named; Mathlib's objects are assumed, as its prebuilt cache already
+# is. leanchecker resolves each argument as a module-name prefix by listing
+# every object file of the search path, and its call per module paid that walk
+# plus a `lake env` start each time (measured: 4.6 s of 8.2 s per module,
+# about 14 min for the library); the driver names the module, so a name that
+# prefixes others replays only itself. Eight modules share one process and
+# at most four processes run at once; each holds the imports of one module,
+# whose mapped objects are shared pages.
 # Prints each line of the Lean file $1 that is neither blank, `module`, nor
 # an import of a library module; succeeds when it printed one.
 root_extra() {
@@ -357,13 +357,76 @@ fi
   exit 0
 }
 
-for module in $(cat "$work/modules.txt"); do
-  lake env leanchecker "$module" >"$work/replay.out" 2>&1 || {
-    cat "$work/replay.out" >&2
-    echo "check: the kernel replay rejected $module" >&2
-    exit 1
-  }
-done
+replay_jobs=$(nproc 2>/dev/null || echo 1)
+[ "$replay_jobs" -le 4 ] || replay_jobs=4
+xargs -n 8 -P "$replay_jobs" lake env lean --run "$root/ci/replay_modules.lean" \
+  <"$work/modules.txt" >"$work/replay.out" 2>&1 || {
+  cat "$work/replay.out" >&2
+  echo "check: the kernel replay rejected a tracked module" >&2
+  exit 1
+}
+# The modules that printed PASS equal the tracked modules as sets: a count
+# alone accepts a duplicated line that stands for a dropped module.
+# Prints the names on which the sorted PASS list $1 and the sorted module
+# list $2 differ; succeeds when they are equal.
+pass_set_differs() {
+  cmp -s "$1" "$2" && return 1
+  diff "$1" "$2" | sed -n 's/^[<>] //p'
+  return 0
+}
+LC_ALL=C sort "$work/modules.txt" >"$work/modules.sorted"
+sed -n 's/^PASS //p' "$work/replay.out" | LC_ALL=C sort >"$work/passed.sorted"
+if pass_set_differs "$work/passed.sorted" "$work/modules.sorted" >"$work/pass-diff.txt"; then
+  cat "$work/replay.out" >&2
+  echo "check: the kernel replay did not accept every tracked module; differing names:" >&2
+  cat "$work/pass-diff.txt" >&2
+  exit 1
+fi
+# Known-bad inputs: a PASS list with one module dropped and one duplicated
+# (the same line count as the module list) must differ.
+{
+  sed 1d "$work/modules.sorted"
+  sed -n 2p "$work/modules.sorted"
+} | LC_ALL=C sort >"$work/passed.mutant"
+if [ "$(wc -l <"$work/passed.mutant")" -ne "$(wc -l <"$work/modules.sorted")" ] ||
+  ! pass_set_differs "$work/passed.mutant" "$work/modules.sorted" >/dev/null; then
+  echo "check: the PASS set comparison accepted a list with a dropped and a duplicated module" >&2
+  exit 1
+fi
+echo "check: the modules that passed the replay equal the $(wc -l <"$work/modules.sorted") tracked modules by name, and a list with a dropped and a duplicated module is rejected"
+# replayFromImports of the driver equals that of the installed toolchain's
+# leanchecker source, byte for byte: a toolchain bump that changes the
+# function fails here until the driver copies it. The source is part of the
+# release archive elan installs, hosted runners included; a missing file
+# fails the gate.
+replay_body() {
+  awk '/^unsafe def replayFromImports/ { on = 1 } on && /^$/ { exit } on' "$1"
+}
+sysroot=$(lake env lean --print-prefix)
+upstream="$sysroot/src/lean/LeanChecker.lean"
+[ -f "$upstream" ] || {
+  echo "check: $upstream is absent: the toolchain $(cat lean-toolchain) lacks the source of leanchecker the driver is compared with" >&2
+  exit 1
+}
+replay_body "$upstream" >"$work/replay-upstream.txt"
+replay_body "$root/ci/replay_modules.lean" >"$work/replay-driver.txt"
+[ -s "$work/replay-upstream.txt" ] && [ -s "$work/replay-driver.txt" ] || {
+  echo "check: replayFromImports was not found in $upstream or in ci/replay_modules.lean" >&2
+  exit 1
+}
+if ! cmp -s "$work/replay-upstream.txt" "$work/replay-driver.txt"; then
+  diff "$work/replay-upstream.txt" "$work/replay-driver.txt" >&2 || :
+  echo "check: replayFromImports of ci/replay_modules.lean differs from $upstream" >&2
+  exit 1
+fi
+# Known-bad input: the driver's body with one character changed must differ.
+sed '3s/mFile/nFile/' "$work/replay-driver.txt" >"$work/replay-driver.mutant"
+if cmp -s "$work/replay-upstream.txt" "$work/replay-driver.mutant" ||
+  cmp -s "$work/replay-driver.txt" "$work/replay-driver.mutant"; then
+  echo "check: the replayFromImports comparison accepted a copy with one character changed" >&2
+  exit 1
+fi
+echo "check: replayFromImports of ci/replay_modules.lean equals $upstream, and a copy with one character changed is rejected"
 lake build --wfail ReplayFixture >"$work/replay-fixture-build.log" 2>&1 || {
   cat "$work/replay-fixture-build.log" >&2
   echo "check: the replay fixture failed to build" >&2
@@ -375,7 +438,7 @@ lake env lean audit/ReplayFixture.lean >"$work/replay-fixture-audit.out" 2>&1 ||
   echo "check: the axiom audit now rejects the replay fixture; the fixture no longer calibrates the replay" >&2
   exit 1
 }
-if lake env leanchecker ReplayFixture >"$work/replay-fixture.out" 2>&1; then
+if lake env lean --run "$root/ci/replay_modules.lean" ReplayFixture >"$work/replay-fixture.out" 2>&1; then
   cat "$work/replay-fixture.out" >&2
   echo "check: the kernel replay accepted its known-bad fixture" >&2
   exit 1
@@ -385,5 +448,20 @@ grep -q -F "while replaying declaration 'ReplayFixture.bogus'" "$work/replay-fix
   echo "check: the kernel replay failed on its fixture without naming ReplayFixture.bogus" >&2
   exit 1
 }
+# The same fixture inside a batch after a good module: the exit stays
+# nonzero, the good module still passes and the diagnostic names the fixture.
+good=$(sed -n 1p "$work/modules.txt")
+if lake env lean --run "$root/ci/replay_modules.lean" "$good" ReplayFixture >"$work/replay-batch.out" 2>&1; then
+  cat "$work/replay-batch.out" >&2
+  echo "check: the kernel replay accepted a batch that holds its known-bad fixture" >&2
+  exit 1
+fi
+grep -q -x -F "PASS $good" "$work/replay-batch.out" &&
+  grep -q -F "while replaying declaration 'ReplayFixture.bogus'" "$work/replay-batch.out" || {
+  cat "$work/replay-batch.out" >&2
+  echo "check: the batch with the fixture did not report PASS $good and the fixture diagnostic" >&2
+  exit 1
+}
+echo "check: a batch of $good and the fixture exits nonzero, passes $good and names ReplayFixture.bogus"
 echo "check: kernel replay accepted $(wc -l <"$work/modules.txt") tracked module(s) and rejected the fixture"
 echo "check: passed"

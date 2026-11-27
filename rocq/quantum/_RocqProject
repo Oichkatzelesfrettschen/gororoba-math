@@ -68,7 +68,10 @@ HilbertCellA5_108.v
 HilbertCellA5_111.v
 HilbertCellCertificate.v
 K2CofactorCertificate.v
+K2CofactorFactored.v
+K2CofactorForced.v
 K2HilbertBound.v
+K2HilbertBoundFactored.v
 KernelMapEstimator.v
 MatrixLeftInverseCertificate.v
 MatrixSplittingCertificate.v

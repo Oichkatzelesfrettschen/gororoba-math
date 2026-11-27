@@ -2,7 +2,7 @@ name: lean
 
 # The Lean half of the admission gate, ci/check.sh: the library builds with
 # warnings as errors, the axiom audit accepts it and rejects its known-bad
-# fixture, and leanchecker replays every module. It runs nightly on main, on every push to main and
+# fixture, and the kernel replay (ci/replay_modules.lean) replays every tracked library module under lean/GororobaMath/. It runs nightly on main, on every push to main and
 # on manual dispatch on a named ref (gh workflow run lean.yml --ref BRANCH),
 # which a pull request that changes the toolchain or a gate script may get by
 # hand (AGENTS.md, "Landing"). The quick workflow builds the changed modules
@@ -26,8 +26,9 @@ jobs:
   check:
     name: check
     runs-on: ubuntu-26.04
-    # Measured on main: 24 to 28 min, of which the per-module kernel replay is
-    # about 19 min and grows with each tracked module.
+    # Measured: the gate took 24 to 28 min with one leanchecker call per module;
+    # with ci/replay_modules.lean the job took 12.5 min on a hosted runner
+    # (95 modules on c06bcad74: 14 min 43 s for the job, 3 min 48 s for the replay).
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

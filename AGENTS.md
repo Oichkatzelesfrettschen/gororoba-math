@@ -17,7 +17,7 @@ gororoba repository shares; this file governs where the two differ.
   namespace.
 - `lean/ReplayFixture.lean` is the known-bad input of the kernel replay:
   a declaration of type `False` added under `debug.skipKernelTC`, which
-  the build and the axiom audit both accept and `leanchecker` rejects. No
+  the build and the axiom audit both accept and the kernel replay rejects. No
   library module imports it.
 - `lean/AxiomAudit.lean` defines `#audit_axioms`; `lean/AuditFixture.lean` is
   its known-bad input and no library module imports it; `lean/audit/` holds
@@ -135,9 +135,11 @@ gororoba repository shares; this file governs where the two differ.
   `native_decide` and no declared axiom outside `lean/AuditFixture.lean`
   (a challenge module, below, holds `sorry` by design),
   and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
-  gate replays every tracked module through `leanchecker`, one call per
-  module, and keeps `lean/GororobaMath.lean` to `module` and its imports
-  of the library, since `leanchecker` reads its argument as a module-name
+  gate replays every tracked library module under `lean/GororobaMath/` through `ci/replay_modules.lean`, which
+  calls `replayFromImports` of the toolchain's `leanchecker` source (copied
+  verbatim from the Lean tag) on each named module, several processes at once,
+  and keeps `lean/GororobaMath.lean` to `module` and its imports
+  of the library, since `leanchecker` by hand reads its argument as a module-name
   prefix and replays every matching module at once, so a call on the root
   name replays the whole library concurrently (30.5 to 32.1 GB measured
   with Lean 4.35.0 on the eight-module library of an earlier commit,
@@ -379,7 +381,8 @@ gororoba repository shares; this file governs where the two differ.
   there (`PfaffianSixteenSchur.pfaffian_A16_poly`).
 - Check an identity by exact computation first and keep the prediction: the
   bordered sign convention held at 10 of 10 points, its swap at 0 of 9.
-- Replay one module per `leanchecker` call ("Statements and proofs"), and
+- Replay one module per `leanchecker` call by hand, as the gate does through
+  `ci/replay_modules.lean` ("Statements and proofs"), and
   confirm the axiom report of a headline theorem with
   `ci/check_external_kernels.sh` before `README.md` cites it.
 - Give the body of a commit that changes a proof one sentence of evidence:
@@ -600,7 +603,7 @@ merges on the quick tier and the full gates catch the rest).
 
   | Check | Caught by | Stays on `main` at most |
   |---|---|---|
-  | Lean kernel replay (`leanchecker`) | `lean` push run | 49 min |
+  | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 49 min |
   | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 67 min |
   | `vm_compute` certificate that only the pure kernel rejects | `rocq` nightly run | 24 h |
   | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 67 min |
