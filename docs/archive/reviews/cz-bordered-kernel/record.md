@@ -15,7 +15,8 @@ Branch lean/cz-bordered-kernel. Heads: 7e41d9991 under local review, 2c15e5fe0 a
 | "over the reals and complex numbers" overstates the generality | opencode | read from source | Fixed in 2c15e5fe0: "in the real tower with complex matrices" |
 | k = 0 vacuity of three level-indexed theorems | agy | read from source | Note: non-vacuous from k = 1; recorded in the pull-request body |
 | Conjecture: the nullity and rank identities hold over every ordered field with its quadratic extension K[i] | agy | hypothesis | Open item |
-| Placement: the row stays rocq with Lean entries only | worker | read from source | Open: the claims-ledger check decides; a Rocq bridge at dimension 32 settles it either way |
+| Placement: the row stayed rocq ("decided by evaluation: Rocq") with Lean entries only | worker, Advisor | read from source | Resolved by the guide's statement axis: a fixed-dimension statement that instances a Lean every-level theorem stays beside it; the row reads lean, "Fixed algebra instancing a Lean theorem: stays beside it" (as rows 247 and 248), and the tally reads 1 lean, proved and 2 rocq, proved |
+| No Rocq partner holds DoublyPure, czComplex or czComplexPlus (the doubly-pure files of rocq/open concern Moreno's unit-norm octonion statements under other definitions) | parent | read from source | No cross-prover comparison owed |
 
 ## Validation on 2c15e5fe0
 - lake build --wfail exit 0 on the workstation (Lean 4.35.0, Mathlib v4.35.0); axioms propext, Classical.choice, Quot.sound; leanchecker replay exit 0. ci/check_claims_ledger.py runs in the hosted quick tier.
