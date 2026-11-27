@@ -21,3 +21,6 @@ Branch ci/kernel-replay-driver. Heads: a45ba6c46 under local review, 29e44cccd a
 - Workstation: 93 modules replayed in 916 s by leanchecker, 412 s by the driver in one process, 180 s with four processes; ci/check.sh exit 0 in 340 s on 29e44cccd.
 - Hosted (workflow dispatch, run 45980090266, head 29e44cccd, 93 modules): the job took 12 min 32 s against 24 to 28 min with leanchecker.
 - Hosted (workflow dispatch, run 46030825313, head c06bcad74 with main merged, 95 modules): build ended 16:16:18, import checks ended 16:17:41, the replay and its three checks ended 16:21:40 (3 min 48 s for the replay), the job took 14 min 43 s; the three new check: lines printed.
+
+## Hosted review
+- Codex (requested 16:52Z on fb2b51191): no major issues; receipt comment on the pull request, no review threads.
