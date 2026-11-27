@@ -591,7 +591,7 @@ merges on the quick tier and the full gates catch the rest).
   BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is fully gated
   within one push run, which took 16 minutes for `lean` (hosted run of
   2026-11-27, after the replay driver) and 31 to 102 minutes for `rocq`
-  (five hosted push runs of 2026-11-27), queue time included; a
+  (six hosted push runs of 2026-11-27), queue time included; a
   push run that a newer push replaces while it waits reads cancelled, so
   only the last commit of a burst of merges is gated. The `rocq` runs of a
   push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`

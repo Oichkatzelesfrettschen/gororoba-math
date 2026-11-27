@@ -69,7 +69,7 @@ modules are those the 2.8.0.2 binary unpacks.
 |---|---|---|---|
 | Toolchain install | elan and the Mathlib cache, about 7 GB of build tree (`AGENTS.md`, "Toolchain and build tree") | opam switch of `ci/install_rocq.sh` | one static 55 MB binary, unpacked in 1 s (measured) |
 | Library | Mathlib cache download | MathComp from opam | agda-stdlib checkout 14 MB; its 162 interface files for the pilot, 33 MB, built in about 37 s (measured, cold run 191.6 s against warm 154.5 s); cubical `Cubical.Homotopy.Hopf` cold in 59.3 s at 0.88 GB, 185 interface files (measured) |
-| Gate | `quick` 11 s, `build` 342 s, hosted `lean` 15 to 49 min (`AGENTS.md`, "Landing") | hosted `rocq` 67 min | `ci/check_agda.sh` 309.6 s to 323.3 s at 0.68 to 0.70 GB with both planted copies (three measured runs) |
+| Gate | `quick` 11 s, `build` 342 s, hosted `lean` 15 to 49 min (`AGENTS.md`, "Landing") | hosted `rocq` 31 to 102 min | `ci/check_agda.sh` 309.6 s to 323.3 s at 0.68 to 0.70 GB with both planted copies (three measured runs) |
 
 ## 2. What Agda would add here
 
