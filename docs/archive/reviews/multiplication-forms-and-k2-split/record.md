@@ -1,11 +1,11 @@
 # Review record: multiplication forms and the split K2 cofactor checker (pull request 148)
 
-Branch lean-multiplication-forms. Heads: 3fa36704b under local review, 08d7608e9 and its successor after the fixes.
+Branch lean-multiplication-forms. Heads: 3fa36704b under local review, 9c0c0e055 under the first hosted Codex round, 2548ee171 after its fix.
 
 ## Reviewers (owner's selection of 2026-11-27)
 - opencode, red team. The owner chose the free DeepSeek model; its free allowance was spent (provider.free-limit, retry after 3.3 h), so opencode/hy4-flash-free stood in, the free model of the K2 cofactor checker review.
 - The Advisor last.
-- Hosted Codex after this record.
+- Hosted Codex after this record: one finding on 9c0c0e055 (last row).
 
 ## Findings and resolutions
 | Finding | Reviewer | Class | Resolution |
@@ -20,6 +20,7 @@ Branch lean-multiplication-forms. Heads: 3fa36704b under local review, 08d7608e9
 | The generators were reformatted and four lines hand-split after the probe branch; one constant's length was the only equality checked | Advisor | measured | Checked: ast.dump of the parsed k2_cofactor_split.py and k2_cofactor_certificate.py at this branch equals that of the probe branch (Python 3 on the compute workstation), so every rendered string is unchanged |
 | The opencode pin search ran in two directories that are not checkouts | Advisor | read from source | Checked again in the three primary checkouts (previous row but two) |
 | The pull-request body named the compile of K2CofactorSplit.v before a finished rocq-changed result existed | Advisor | process | The body now cites the finished hosted runs by head |
+| --write and --write-factored of k2_cofactor_certificate.py and the write of k2_cofactor_split.py follow a linked rocq/quantum or a linked output file, against the write-confinement rule of AGENTS.md | hosted Codex (P1) | read from source | Fixed in 2548ee171: confine_output refuses a rocq/quantum that is a link, lies outside the checkout or holds a symbolic link, before each write; calibrated on the compute workstation (a plain directory accepted; a linked directory, a linked source, a linked K2Split.order and a directory outside the checkout refused) |
 
 ## Left on the archived probe branch
 archive/rocq-k2-factored-probe (b43ced7f1) keeps the five accumulation-benchmark modules and K2FactoredCount.v, which import the untracked instance sources, and the older copy of K2CofactorFactored.v.
