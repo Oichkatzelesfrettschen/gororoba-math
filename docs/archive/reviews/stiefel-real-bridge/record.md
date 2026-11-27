@@ -29,3 +29,6 @@ Read by the parent, line by line, after the agy round on 3257d72b1:
 
 ## Advisor
 - Asked for: checks on the merged head, a read of the compare scripts, a restated partner row, this coverage list, the gate time worded as one run, and kernel evidence by dispatch or a not-run mark. All applied; the rocq times of the gate table (67 min) differ from the runs of 2026-11-27 (1 h 42 min on aab280686, 34 min on d9816eb07) and stay as they are, since only the lean figure was approved; reported to the owner.
+
+## Kernel evidence
+- Dispatched on 2d77579c9: lean.yml run 46045253527 (kernel replay of every tracked module) and rocq.yml run 46045257055 (rocq check and the axiom ledgers) passed. The first rocq-changed attempt failed in apt-get update (403 from a runner package repository) before any Rocq step; its rerun passed.
