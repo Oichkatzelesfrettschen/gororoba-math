@@ -70,6 +70,7 @@ HilbertCellCertificate.v
 K2CofactorCertificate.v
 K2CofactorFactored.v
 K2CofactorForced.v
+K2CofactorSplit.v
 K2HilbertBound.v
 K2HilbertBoundFactored.v
 KernelMapEstimator.v
