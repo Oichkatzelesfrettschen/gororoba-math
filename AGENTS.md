@@ -587,8 +587,9 @@ merges on the quick tier and the full gates catch the rest).
   `sh ci/check_rocq.sh`, the full gate: nightly on `main`, on every push
   to `main`, and on manual dispatch (`gh workflow run lean.yml --ref
   BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is fully gated
-  within one push run, which took 15 to 49 minutes for `lean` and 67
-  minutes for `rocq` (hosted runs of 2026-11-25, queue time included); a
+  within one push run, which took 16 minutes for `lean` (hosted run of
+  2026-11-27, after the replay driver) and 67 minutes for `rocq` (hosted
+  runs of 2026-11-25), queue time included; a
   push run that a newer push replaces while it waits reads cancelled, so
   only the last commit of a burst of merges is gated. The `rocq` runs of a
   push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`
@@ -603,7 +604,7 @@ merges on the quick tier and the full gates catch the rest).
 
   | Check | Caught by | Stays on `main` at most |
   |---|---|---|
-  | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 49 min |
+  | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 16 min |
   | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 67 min |
   | `vm_compute` certificate that only the pure kernel rejects | `rocq` nightly run | 24 h |
   | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 67 min |
