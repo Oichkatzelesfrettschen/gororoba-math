@@ -16,7 +16,7 @@ is the right annihilator of `a`.
 Three forms are read off `L_a`:
 
 * `Tower.gramForm k a u v = dot (a * u) (a * v)`, the pullback of the trace form along `L_a`,
-  symmetric and, over an ordered ring, positive semidefinite;
+  symmetric (`Tower.gramForm_comm`);
 * `Tower.skewForm k a u v = dot u (a * v)`, skew in `u` and `v` when `a` is pure;
 * `Tower.tripleForm k a b c = dot a (b * c)`, alternating on pure elements.
 
@@ -25,8 +25,8 @@ with linear coefficients and its exterior derivative at `a`, evaluated on consta
 `a`, `b`, `c`, is the alternating sum of the directional derivatives
 `skewForm a b c - skewForm b a c + skewForm c a b`. `Tower.skewForm_exterior_derivative` evaluates
 that sum to `-3 * tripleForm a b c`. The statement is this algebraic identity; no manifold, sphere
-or differential form of Mathlib enters it. `tripleForm` has constant coefficients, so the two-form
-is not closed and its derivative is an exact three-form.
+or differential form of Mathlib enters it. `tripleForm` has constant coefficients, so the sum is
+nonzero wherever `3 * tripleForm a b c` is: the two-form is not closed in general.
 
 No step uses associativity or alternativity. The radical statements use the ordered hypotheses of
 `GororobaMath.CayleyDickson.AnnihilatorSymmetry` (`ℤ`, `ℚ`, `ℝ`, every ordered field), under which

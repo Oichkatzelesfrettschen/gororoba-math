@@ -830,6 +830,8 @@ quantum	K2CofactorFactored.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	K2CofactorFactored.v	disj-pattern-notation
 quantum	K2CofactorForced.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	K2CofactorForced.v	disj-pattern-notation
+quantum	K2CofactorSplit.v	deprecated-transitive-library-file-since-Stdlib-9.0
+quantum	K2CofactorSplit.v	disj-pattern-notation
 quantum	K2HilbertBound.v	deprecated-transitive-library-file-since-Stdlib-9.0
 quantum	K2HilbertBound.v	disj-pattern-notation
 quantum	K2HilbertBoundFactored.v	deprecated-transitive-library-file-since-Stdlib-9.0
