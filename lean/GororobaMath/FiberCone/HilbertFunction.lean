@@ -11,7 +11,8 @@ public import Mathlib.Algebra.Module.Torsion.Basic
 
 Convention: `R` is a commutative local ring with maximal ideal `m` and residue field
 `k = R ⧸ m`; `I` is an ideal with generators `f : Fin s → R`, and `fiberMap` of
-`GororobaMath.FiberCone.Basic` is the surjection `k[y₁, …, yₛ] → F(I)`, `yᵢ ↦ fᵢ t`. The degree-`n`
+`GororobaMath.FiberCone.Basic` is the map `k[y₁, …, yₛ] → F(I)`, `yᵢ ↦ fᵢ t`, which is a
+surjection when the `fᵢ` generate `I` (`FiberCone.fiberMap_surjective`). The degree-`n`
 piece of `F(I) = R[It] / m R[It]` is `FiberCone.piece I n = I ^ n ⧸ m • ⊤`, a `k`-module through
 Mathlib's quotient-module instance. `FiberCone.fiberHilbert I n` is its `k`-dimension
 (`Module.finrank`, which is `0` on an infinite-dimensional module; finiteness is
@@ -25,16 +26,21 @@ coefficient lies in `m I ^ n` for every `n`.
 
 ## Main results
 
-* `FiberCone.mem_map_maximalIdeal_iff`: the extension `m R[It]` is cut out by the coefficient
-  conditions `coeff n ∈ m * I ^ n`.
+* `FiberCone.mem_map_iff`: for any ideal `J` of `R`, the extension `J R[It]` is cut out by the
+  coefficient conditions `coeff n ∈ J * I ^ n`; `FiberCone.mem_map_maximalIdeal_iff` is the case
+  `J = m`.
 * `FiberCone.fiberMap_eq_zero_iff`: `fiberMap q = 0` exactly when `phi n q = 0` for all `n`.
 * `FiberCone.homogeneousComponent_mem_ker`: the kernel of `fiberMap` is a homogeneous ideal
-  (no hypothesis beyond the statement).
+  (the section variables `f` and `hf` only: no generation hypothesis).
 * `FiberCone.pieceEquivRange`: `I ^ n / m I ^ n` is `k`-isomorphic to the image of the
   degree-`n` homogeneous polynomials under `fiberMap` (the map is graded).
 * `FiberCone.fiberHilbert_eq_finrank_quotient`: `h_F(n)` is the dimension of the degree-`n`
   part of `k[y] / K` with `K = ker fiberMap`, the bridge from a presentation `F(I) = S / K` to
   the Hilbert function.
+* `FiberCone.fiberMapQuotEquiv`: when the `fᵢ` generate `I`, `fiberMap` induces a `k`-algebra
+  isomorphism `k[y] ⧸ ker fiberMap ≃ₐ[k] F(I)`; the kernel is homogeneous by
+  `homogeneousComponent_mem_ker`, and the quotient grading matches `piece I n` through
+  `fiberHilbert_eq_finrank_quotient`.
 * `FiberCone.finite_piece`: each piece is finite over `k` when `I` is finitely generated.
 * `FiberCone.fiberHilbert_zero`: `h_F(0) = 1`.
 
@@ -62,10 +68,10 @@ abbrev piece (n : ℕ) : Type _ :=
 noncomputable def fiberHilbert (n : ℕ) : ℕ :=
   Module.finrank (R ⧸ maximalIdeal R) (piece I n)
 
-/-- The extension `m R[It]` is the set of Rees elements with `coeff n ∈ m I ^ n` for all `n`. -/
-theorem mem_map_maximalIdeal_iff (x : reesAlgebra I) :
-    x ∈ (maximalIdeal R).map (algebraMap R (reesAlgebra I)) ↔
-      ∀ n, x.1.coeff n ∈ maximalIdeal R * I ^ n := by
+omit [IsLocalRing R] in
+/-- The extension `J R[It]` is the set of Rees elements with `coeff n ∈ J I ^ n` for all `n`. -/
+theorem mem_map_iff (J : Ideal R) (x : reesAlgebra I) :
+    x ∈ J.map (algebraMap R (reesAlgebra I)) ↔ ∀ n, x.1.coeff n ∈ J * I ^ n := by
   refine ⟨fun h n => ?_, fun h => ?_⟩
   · rw [← Submodule.restrictScalars_mem R, ← Ideal.smul_top_eq_map] at h
     induction h using Submodule.smul_induction_on' with
@@ -74,9 +80,9 @@ theorem mem_map_maximalIdeal_iff (x : reesAlgebra I) :
     | add x hx y hy memx memy => simpa using add_mem memx memy
   · rw [reesAlgebra.as_sum_support x]
     apply sum_mem (fun i hi => ?_)
-    have {r : R} (h' : r ∈ maximalIdeal R * I ^ i) :
+    have {r : R} (h' : r ∈ J * I ^ i) :
         (⟨Polynomial.monomial i r, reesAlgebra.monomial_mem.mpr (Ideal.mul_le_right h')⟩ :
-          reesAlgebra I) ∈ (maximalIdeal R).map (algebraMap R (reesAlgebra I)) := by
+          reesAlgebra I) ∈ J.map (algebraMap R (reesAlgebra I)) := by
       induction h' using Submodule.mul_induction_on' with
       | mem_mul_mem s hs t ht =>
         simp_rw [← smul_eq_mul s t, ← Polynomial.smul_monomial,
@@ -84,6 +90,12 @@ theorem mem_map_maximalIdeal_iff (x : reesAlgebra I) :
         exact Ideal.mul_mem_right _ _ (Ideal.mem_map_of_mem _ hs)
       | add s1 hs1 s2 hs2 mem1 mem2 => simpa using add_mem mem1 mem2
     exact this (h i)
+
+/-- The extension `m R[It]` is the set of Rees elements with `coeff n ∈ m I ^ n` for all `n`. -/
+theorem mem_map_maximalIdeal_iff (x : reesAlgebra I) :
+    x ∈ (maximalIdeal R).map (algebraMap R (reesAlgebra I)) ↔
+      ∀ n, x.1.coeff n ∈ maximalIdeal R * I ^ n :=
+  mem_map_iff I (maximalIdeal R) x
 
 variable {I} {s : ℕ} (f : Fin s → R) (hf : ∀ i, f i ∈ I)
 
@@ -348,12 +360,16 @@ theorem fiberHilbert_eq_finrank_quotient (hI : Ideal.span (Set.range f) = I) :
     (Ideal.kerLiftAlg (fiberMap f hf)).toLinearMap
     (Ideal.kerLiftAlg_injective (fiberMap f hf)) _)).symm
 
+/-- When `fiberMap` is onto, it identifies `F(I)` with the quotient of `k[y]` by its kernel. -/
+noncomputable def fiberMapQuotEquiv (hI : Ideal.span (Set.range f) = I) :
+    (MvPolynomial (Fin s) (R ⧸ maximalIdeal R) ⧸ RingHom.ker (fiberMap f hf))
+      ≃ₐ[R ⧸ maximalIdeal R] fiberCone I :=
+  Ideal.quotientKerAlgEquivOfSurjective (fiberMap_surjective f hf hI)
+
 /-- With `I` finitely generated each piece is finite over `k`. -/
-theorem finite_piece (hI : Ideal.span (Set.range f) = I) :
+theorem finite_piece (hI : I.FG) :
     Module.Finite (R ⧸ maximalIdeal R) (piece I n) := by
-  have hfg : I.FG := by
-    rw [← hI]; exact Submodule.fg_span (Set.finite_range f)
-  have h1 : Module.Finite R ↥(I ^ n) := Module.Finite.of_fg (Ideal.FG.pow hfg)
+  have h1 : Module.Finite R ↥(I ^ n) := Module.Finite.of_fg (Ideal.FG.pow hI)
   exact Module.Finite.of_restrictScalars_finite R _ _
 
 omit [IsLocalRing R] in
