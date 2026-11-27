@@ -23,3 +23,6 @@ Branch rocq/k2-factored-q08. Heads: 93efffe92 under local review, 7c6592dae afte
 - K2CofactorForced.v lands as the retained refutation of the accumulation-order hypothesis: the forced variant is proved equal to check_factored and measured at 1,837 s and 3.53 GB on q08 against 220 s and 3.81 GB, so evaluation order does not bound the memory.
 - The diff 93efffe92..7c6592dae was read line by line: comments only.
 - Hosted checks on b34237964: quick, build, rocq-changed and main-gate succeeded.
+
+## Hosted review
+- Codex (requested 16:28Z on 3a6a002ca): no major issues; receipt comment on the pull request, no review threads.
