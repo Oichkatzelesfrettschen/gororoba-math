@@ -26,8 +26,9 @@ jobs:
   check:
     name: check
     runs-on: ubuntu-26.04
-    # Measured on main: 24 to 28 min, of which the per-module kernel replay is
-    # about 19 min and grows with each tracked module.
+    # Measured: the gate took 24 to 28 min with one leanchecker call per module;
+    # with ci/replay_modules.lean the job took 12.5 min on a hosted runner
+    # (93 modules, replay about 4.5 min).
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

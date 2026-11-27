@@ -393,6 +393,7 @@ if [ "$(wc -l <"$work/passed.mutant")" -ne "$(wc -l <"$work/modules.sorted")" ] 
   echo "check: the PASS set comparison accepted a list with a dropped and a duplicated module" >&2
   exit 1
 fi
+echo "check: the modules that passed the replay equal the $(wc -l <"$work/modules.sorted") tracked modules by name, and a list with a dropped and a duplicated module is rejected"
 # replayFromImports of the driver equals that of the installed toolchain's
 # leanchecker source, byte for byte: a toolchain bump that changes the
 # function fails here until the driver copies it. The source is part of the
@@ -425,6 +426,7 @@ if cmp -s "$work/replay-upstream.txt" "$work/replay-driver.mutant" ||
   echo "check: the replayFromImports comparison accepted a copy with one character changed" >&2
   exit 1
 fi
+echo "check: replayFromImports of ci/replay_modules.lean equals $upstream, and a copy with one character changed is rejected"
 lake build --wfail ReplayFixture >"$work/replay-fixture-build.log" 2>&1 || {
   cat "$work/replay-fixture-build.log" >&2
   echo "check: the replay fixture failed to build" >&2
@@ -460,5 +462,6 @@ grep -q -x -F "PASS $good" "$work/replay-batch.out" &&
   echo "check: the batch with the fixture did not report PASS $good and the fixture diagnostic" >&2
   exit 1
 }
+echo "check: a batch of $good and the fixture exits nonzero, passes $good and names ReplayFixture.bogus"
 echo "check: kernel replay accepted $(wc -l <"$work/modules.txt") tracked module(s) and rejected the fixture"
 echo "check: passed"
