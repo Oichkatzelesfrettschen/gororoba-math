@@ -17,3 +17,9 @@ Branch rocq/k2-factored-q08. Heads: 93efffe92 under local review, 7c6592dae afte
 
 ## Validation on 7c6592dae
 - rocq-9.3 (Rocq 9.3.0) on the workstation, -w all,+default, 8G scope: the six-file closure compiles; only allow-listed warnings; Print Assumptions closed for every theorem.
+
+## Additions after the Advisor
+- ci/rocq-warnings/allowed.tsv gains six rows: the two existing names deprecated-transitive-library-file-since-Stdlib-9.0 and disj-pattern-notation for each of the three files, as PR 126's files carry; none for bad-template-constraint (owner decision: fix the source).
+- K2CofactorForced.v lands as the retained refutation of the accumulation-order hypothesis: the forced variant is proved equal to check_factored and measured at 1,837 s and 3.53 GB on q08 against 220 s and 3.81 GB, so evaluation order does not bound the memory.
+- The diff 93efffe92..7c6592dae was read line by line: comments only.
+- Hosted checks on b34237964: quick, build, rocq-changed and main-gate succeeded.
