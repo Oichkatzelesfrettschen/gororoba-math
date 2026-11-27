@@ -620,7 +620,11 @@ Proof.
   { etransitivity; [apply stage1_len|exact Hr]. intros bl Hbl. rewrite repeat_length. exact (proj2 Hch bl Hbl). }
   pose proof (horner p Hp n G _ m HBc) as Hh.
   rewrite Hs, Z.add_0_l in Hh.
-  rewrite <- (firstn_skipn (length J) cofs) at 1.
+  assert (Hcc : cofs = firstn (length J) cofs ++ skipn (length J) cofs)
+    by (symmetry; apply (firstn_skipn (A := poly))).
+  replace (combo cofs (J ++ m_products n G 2))
+    with (combo (firstn (length J) cofs ++ skipn (length J) cofs) (J ++ m_products n G 2))
+    by (f_equal; symmetry; exact Hcc).
   rewrite combo_app by exact HcJ.
   rewrite pcoef_app. apply cg_add; [apply cg_refl|].
   unfold m_products. exact Hh.
