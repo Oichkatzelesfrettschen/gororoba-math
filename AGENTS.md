@@ -135,7 +135,7 @@ gororoba repository shares; this file governs where the two differ.
   `native_decide` and no declared axiom outside `lean/AuditFixture.lean`
   (a challenge module, below, holds `sorry` by design),
   and no `debug.skipKernelTC` outside `lean/ReplayFixture.lean`. The
-  gate replays every tracked module through `ci/replay_modules.lean`, which
+  gate replays every tracked library module under `lean/GororobaMath/` through `ci/replay_modules.lean`, which
   calls `replayFromImports` of the toolchain's `leanchecker` source (copied
   verbatim from the Lean tag) on each named module, several processes at once,
   and keeps `lean/GororobaMath.lean` to `module` and its imports

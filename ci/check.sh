@@ -365,11 +365,66 @@ xargs -n 8 -P "$replay_jobs" lake env lean --run "$root/ci/replay_modules.lean" 
   echo "check: the kernel replay rejected a tracked module" >&2
   exit 1
 }
-[ "$(grep -c '^PASS ' "$work/replay.out")" -eq "$(wc -l <"$work/modules.txt")" ] || {
+# The modules that printed PASS equal the tracked modules as sets: a count
+# alone accepts a duplicated line that stands for a dropped module.
+# Prints the names on which the sorted PASS list $1 and the sorted module
+# list $2 differ; succeeds when they are equal.
+pass_set_differs() {
+  cmp -s "$1" "$2" && return 1
+  diff "$1" "$2" | sed -n 's/^[<>] //p'
+  return 0
+}
+LC_ALL=C sort "$work/modules.txt" >"$work/modules.sorted"
+sed -n 's/^PASS //p' "$work/replay.out" | LC_ALL=C sort >"$work/passed.sorted"
+if pass_set_differs "$work/passed.sorted" "$work/modules.sorted" >"$work/pass-diff.txt"; then
   cat "$work/replay.out" >&2
-  echo "check: the kernel replay did not accept every tracked module" >&2
+  echo "check: the kernel replay did not accept every tracked module; differing names:" >&2
+  cat "$work/pass-diff.txt" >&2
+  exit 1
+fi
+# Known-bad inputs: a PASS list with one module dropped and one duplicated
+# (the same line count as the module list) must differ.
+{
+  sed 1d "$work/modules.sorted"
+  sed -n 2p "$work/modules.sorted"
+} | LC_ALL=C sort >"$work/passed.mutant"
+if [ "$(wc -l <"$work/passed.mutant")" -ne "$(wc -l <"$work/modules.sorted")" ] ||
+  ! pass_set_differs "$work/passed.mutant" "$work/modules.sorted" >/dev/null; then
+  echo "check: the PASS set comparison accepted a list with a dropped and a duplicated module" >&2
+  exit 1
+fi
+# replayFromImports of the driver equals that of the installed toolchain's
+# leanchecker source, byte for byte: a toolchain bump that changes the
+# function fails here until the driver copies it. The source is part of the
+# release archive elan installs, hosted runners included; a missing file
+# fails the gate.
+replay_body() {
+  awk '/^unsafe def replayFromImports/ { on = 1 } on && /^$/ { exit } on' "$1"
+}
+sysroot=$(lake env lean --print-prefix)
+upstream="$sysroot/src/lean/LeanChecker.lean"
+[ -f "$upstream" ] || {
+  echo "check: $upstream is absent: the toolchain $(cat lean-toolchain) lacks the source of leanchecker the driver is compared with" >&2
   exit 1
 }
+replay_body "$upstream" >"$work/replay-upstream.txt"
+replay_body "$root/ci/replay_modules.lean" >"$work/replay-driver.txt"
+[ -s "$work/replay-upstream.txt" ] && [ -s "$work/replay-driver.txt" ] || {
+  echo "check: replayFromImports was not found in $upstream or in ci/replay_modules.lean" >&2
+  exit 1
+}
+if ! cmp -s "$work/replay-upstream.txt" "$work/replay-driver.txt"; then
+  diff "$work/replay-upstream.txt" "$work/replay-driver.txt" >&2 || :
+  echo "check: replayFromImports of ci/replay_modules.lean differs from $upstream" >&2
+  exit 1
+fi
+# Known-bad input: the driver's body with one character changed must differ.
+sed '3s/mFile/nFile/' "$work/replay-driver.txt" >"$work/replay-driver.mutant"
+if cmp -s "$work/replay-upstream.txt" "$work/replay-driver.mutant" ||
+  cmp -s "$work/replay-driver.txt" "$work/replay-driver.mutant"; then
+  echo "check: the replayFromImports comparison accepted a copy with one character changed" >&2
+  exit 1
+fi
 lake build --wfail ReplayFixture >"$work/replay-fixture-build.log" 2>&1 || {
   cat "$work/replay-fixture-build.log" >&2
   echo "check: the replay fixture failed to build" >&2
@@ -389,6 +444,20 @@ fi
 grep -q -F "while replaying declaration 'ReplayFixture.bogus'" "$work/replay-fixture.out" || {
   cat "$work/replay-fixture.out" >&2
   echo "check: the kernel replay failed on its fixture without naming ReplayFixture.bogus" >&2
+  exit 1
+}
+# The same fixture inside a batch after a good module: the exit stays
+# nonzero, the good module still passes and the diagnostic names the fixture.
+good=$(sed -n 1p "$work/modules.txt")
+if lake env lean --run "$root/ci/replay_modules.lean" "$good" ReplayFixture >"$work/replay-batch.out" 2>&1; then
+  cat "$work/replay-batch.out" >&2
+  echo "check: the kernel replay accepted a batch that holds its known-bad fixture" >&2
+  exit 1
+fi
+grep -q -x -F "PASS $good" "$work/replay-batch.out" &&
+  grep -q -F "while replaying declaration 'ReplayFixture.bogus'" "$work/replay-batch.out" || {
+  cat "$work/replay-batch.out" >&2
+  echo "check: the batch with the fixture did not report PASS $good and the fixture diagnostic" >&2
   exit 1
 }
 echo "check: kernel replay accepted $(wc -l <"$work/modules.txt") tracked module(s) and rejected the fixture"

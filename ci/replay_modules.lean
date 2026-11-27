@@ -3,7 +3,7 @@ Copyright (c) 2023 Kim Morrison. All rights reserved.
 Released under Apache 2.0 license as described in the file LICENSE.
 Authors: Kim Morrison, Sebastian Ullrich
 
-`replayFromImports` is copied verbatim from `src/LeanChecker.lean` of Lean v4.35.0 (commit
+`replayFromImports` is copied verbatim from `src/lean/LeanChecker.lean` of Lean v4.35.0 (commit
 eb6cafb7290e8bd5f2937522d8d804f58f02bafc); the driver below it is this repository's.
 -/
 import Lean.CoreM
@@ -21,7 +21,7 @@ that is a prefix of other modules (the root module) replays only its own object.
 `PASS M` or `FAIL M: error` per module, with the kernel's error as `leanchecker` reports it,
 and the exit code is 1 when any module fails.
 
-Run it as `lake env lean --run ci/replay_modules.lean M...` from `lean/`: `lake env` supplies
+Run it as `lake env lean --run ../ci/replay_modules.lean M...` from `lean/`: `lake env` supplies
 `LEAN_PATH` and the sysroot once.
 -/
 
