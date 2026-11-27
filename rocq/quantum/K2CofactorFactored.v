@@ -1,6 +1,16 @@
 (** Factored cofactor checker: Horner grouping of the products t_i G_a G_b and normalized partial sums.
 
-    A certificate shows that the polynomial f = q(G) lies in the local ideal of J ++ m_products n G 2 in the
+    Convention: a polynomial is the list of (monomial, coefficient) pairs of HilbertCellCertificate.v, repeated
+    monomials allowed; [pcoef f m] sums the coefficients of the monomial m; [peq p f g] says every such sum of f
+    is congruent to the sum of g modulo p; [tri k] is k (k+1) / 2, the number of products G_a G_b with
+    a <= b of a list of k generators, in the order of [products n G 2]. The cofactor list holds one polynomial
+    per generator of J ++ m_products n G 2: the first length J entries belong to J, then n blocks of [tri
+    (length G)] entries, block i (t_i) in the order of [products n G 2]. The checker needs p > 0, where the
+    plain checker [check_cofactor] of K2CofactorCertificate.v needs p <> 0; the Hilbert application of
+    K2HilbertBoundFactored.v assumes prime p. The checker computes with the shapes of J, G and the cofactor
+    list and builds no polynomial of m_products.
+
+    Mechanism: a certificate shows that the polynomial f = q(G) lies in the local ideal of J ++ m_products n G 2 in the
     sense of [in_local_ideal] of HilbertCellCertificate.v: a unit u and one cofactor per generator with
     u f - sum_j cofs_j gens_j congruent to 0 modulo p in every coefficient. [check_factored] reads the cofactors
     b_{i,ab} of the generators t_i G_a G_b and forms, instead of the sum of the products b_{i,ab} (t_i G_a G_b),
@@ -9,19 +19,12 @@
     monomial once, reduces the coefficient modulo p and drops the zero terms. The trie of u f - sum_k a_k J_k
     - sum_a G_a H_a is then tested coefficient by coefficient modulo p ([tall] of K2CofactorCertificate.v).
 
-    Convention: a polynomial is the list of (monomial, coefficient) pairs of HilbertCellCertificate.v, repeated
-    monomials allowed; [pcoef f m] sums the coefficients of the monomial m; [peq p f g] says every such sum of f
-    is congruent to the sum of g modulo p; [tri k] is k (k+1) / 2, the number of products G_a G_b with
-    a <= b of a list of k generators, in the order of [products n G 2]. The cofactor list holds one polynomial
-    per generator of J ++ m_products n G 2: the first length J entries belong to J, then n blocks of [tri
-    (length G)] entries, block i (t_i) in the order of [products n G 2]. The checker needs p > 0; it
-    computes with the shapes of J, G and the cofactor list and builds no polynomial of m_products.
-
     Main results: [check_factored_sound] and [check_data_factored_sound] (an accepted certificate puts
     subst_q n G q in the local ideal of J ++ m_products n G 2, the conclusion of [check_cofactor_sound]
     of K2CofactorCertificate.v at d = 2); [norm_poly_peq] (normalization preserves a polynomial modulo p);
     [pmul_swap], [pmul_assoc], [pmul_comm] (the ring laws of pmul on coefficients); [horner] (the grouping);
-    [toy_accepted_f] and four [_rejected_f] lemmas (the one-variable cell over F_7 of K2CofactorCertificate.v). *)
+    [toy_accepted_f] and four [_rejected_f] lemmas, and [toy_data_accepted_f] and [toy_data_rejected_f] (the
+    decoded-data form through [decode_cert]), all on the one-variable cell over F_7 of K2CofactorCertificate.v. *)
 
 From Stdlib Require Import ZArith Lia List Bool PeanoNat NArith.
 Require Import HilbertCellCertificate K2CofactorCertificate.
@@ -648,6 +651,9 @@ Definition check_factored (p : Z) (n : nat) (J G : list poly) (q : list (Z * lis
       (stage1 n (seq 0 n) (chunk (tri (length G)) n (skipn (length J) (k_cofs c)))
         (repeat [] (tri (length G))))))).
 
+(** An accepted certificate gives the unit and cofactors of [in_local_ideal]: [master] equates the Horner grouping
+    with the plain sum of cofactor products modulo p, and [tall_sound] turns the passed coefficient test into
+    that congruence. *)
 Theorem check_factored_sound (p : Z) (n : nat) (J G : list poly) (q : list (Z * list nat)) (c : kcert) :
   check_factored p n J G q c = true ->
   in_local_ideal p n (J ++ m_products n G 2) (subst_q n G q).
@@ -680,6 +686,8 @@ Definition check_data_factored (p : Z) (n : nat) (J G : list poly) (q : list (Z 
   (b : N) (dat : kdata) : bool :=
   check_factored p n J G q (decode_cert b n (length J + n * tri (length G)) dat).
 
+(** The data form reduces to [check_factored_sound]: [check_data_factored] is [check_factored] on the certificate
+    that [decode_cert] reads from the packed data. *)
 Theorem check_data_factored_sound (p : Z) (n : nat) (J G : list poly) (q : list (Z * list nat))
   (b : N) (dat : kdata) :
   check_data_factored p n J G q b dat = true ->

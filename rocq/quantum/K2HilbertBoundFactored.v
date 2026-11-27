@@ -1,33 +1,38 @@
 (** * The factored cofactor certificate as the per-quadric hypothesis of the K2 Hilbert bound.
 
-    [check_factored_sound] of K2CofactorFactored.v concludes [in_local_ideal] for the quadric
+    Convention: [kcert], [kdata] and the generator list [J ++ m_products n G 2] are those of
+    K2CofactorCertificate.v; the quadric [q] is read through [subst_q n G] as there; [LI] and [check_red]
+    are those of K2HilbertBound.v. The factored checker requires p > 0 and [hilbert_upper_bound_of_factored]
+    assumes prime p, which gives p > 0.
+
+    Mechanism: [check_factored_sound] of K2CofactorFactored.v concludes [in_local_ideal] for the quadric
     [subst_q n G q] over [J ++ m_products n G 2]. [LI_of_ili] of K2HilbertBound.v turns that conclusion
     into [LI], the per-quadric hypothesis of [hilbert_upper_bound_of_red], [hilbert_upper_sel_of_red] and
     [hilbert_cell_of_red]. The theorems below state the two steps and their composition: a factored
     certificate for each quadric of [Q], together with an accepted [check_red], yields the span of the
-    degree-[d] products modulo [J ++ m_products n G d].
-
-    Convention: [kcert], [kdata] and the generator list [J ++ m_products n G 2] are those of
-    K2CofactorCertificate.v; the quadric [q] is read through [subst_q n G] as there; [LI] and [check_red]
-    are those of K2HilbertBound.v. *)
+    degree-[d] products modulo [J ++ m_products n G d]. *)
 
 From Stdlib Require Import ZArith Lia List Bool PeanoNat NArith Znumtheory.
 Require Import HilbertCellCertificate K2CofactorCertificate K2CofactorFactored K2HilbertBound.
 Import ListNotations.
 Open Scope Z_scope.
 
+(** An accepted factored certificate gives [LI]: [check_factored_sound] supplies [in_local_ideal] and
+    [LI_of_ili] converts it. *)
 Theorem check_factored_LI (p : Z) (n : nat) (J G : list poly) (q : list (Z * list nat)) (c : kcert) :
   check_factored p n J G q c = true ->
   LI p n (J ++ m_products n G 2) (subst_q n G q).
 Proof. intros H. apply LI_of_ili. exact (check_factored_sound _ _ _ _ _ _ H). Qed.
 
+(** The data form gives [LI] by the same two steps, through [check_data_factored_sound]. *)
 Theorem check_data_factored_LI (p : Z) (n : nat) (J G : list poly) (q : list (Z * list nat))
   (b : N) (dat : kdata) :
   check_data_factored p n J G q b dat = true ->
   LI p n (J ++ m_products n G 2) (subst_q n G q).
 Proof. intros H. apply LI_of_ili. exact (check_data_factored_sound _ _ _ _ _ _ _ H). Qed.
 
-(** The checker of a list of quadrics: one certificate for each quadric, in order. *)
+(** The checker of a list of quadrics accepts when the certificate count equals the quadric count and
+    [check_factored] accepts each quadric with the certificate at its position. *)
 Definition check_factored_all (p : Z) (n : nat) (J G : list poly) (Q : list (list (Z * list nat)))
   (cs : list kcert) : bool :=
   Nat.eqb (length cs) (length Q) &&
@@ -49,6 +54,8 @@ Proof.
       [apply Nat.eqb_eq; lia|exact Hf].
 Qed.
 
+(** The factored certificates discharge the [LI] hypothesis of [hilbert_upper_bound_of_red] for every quadric
+    of Q, through [check_factored_all_members] and [check_factored_LI]. *)
 Theorem hilbert_upper_bound_of_factored (p : Z) (n : nat) (J G : list poly) (d : nat)
   (Q : list (list (Z * list nat))) (S : list mono) (red : list red_entry) (cs : list kcert) :
   prime p ->

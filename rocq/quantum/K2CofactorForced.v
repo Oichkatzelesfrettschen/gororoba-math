@@ -1,13 +1,13 @@
 (** Forced accumulation for the factored cofactor checker: after each row of a product the trie is walked
     completely, so the kernel holds no unevaluated insertion between rows.
 
-    [check_factoredF] has the shape of [check_factored] of K2CofactorFactored.v with [tmul], [tcombo] and
-    [hfold] replaced by variants that evaluate the trie after each row; [check_factoredF_eq] states that the
-    result equals [check_factored], so [check_factoredF_sound] has the conclusion of [check_factored_sound]. The
-    walk [tforce] returns a boolean that the match discards in both branches.
-
     Convention: the tries, the polynomials and the certificate data are those of K2CofactorCertificate.v and
-    K2CofactorFactored.v. *)
+    K2CofactorFactored.v; [check_factoredF] requires p > 0 as [check_factored] does.
+
+    Mechanism: [check_factoredF] has the shape of [check_factored] of K2CofactorFactored.v with [tmul], [tcombo]
+    and [hfold] replaced by variants that evaluate the trie after each row; [check_factoredF_eq] states that the
+    result equals [check_factored], so [check_factoredF_sound] has the conclusion of [check_factored_sound]. The
+    walk [tforce] returns a boolean that the match discards in both branches. *)
 
 From Stdlib Require Import ZArith List Bool NArith.
 Require Import HilbertCellCertificate K2CofactorCertificate K2CofactorFactored.
@@ -69,6 +69,8 @@ Definition check_factoredF (p : Z) (n : nat) (J G : list poly) (q : list (Z * li
       (stage1 n (seq 0 n) (chunk (tri (length G)) n (skipn (length J) (k_cofs c)))
         (repeat [] (tri (length G))))))).
 
+(** The forced variant equals [check_factored]: [tmulF_eq], [tcomboF_eq] and [hfoldF_eq] rewrite each forced
+    step to its plain step, since [stepF] returns the same trie in both branches of its match. *)
 Lemma check_factoredF_eq (p : Z) (n : nat) (J G : list poly) (q : list (Z * list nat)) (c : kcert) :
   check_factoredF p n J G q c = check_factored p n J G q c.
 Proof.
