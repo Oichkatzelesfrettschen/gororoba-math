@@ -92,3 +92,4 @@ public import GororobaMath.CayleyDickson.OctonionMoufangLoop
 public import GororobaMath.CayleyDickson.PureDoublingTransport
 public import GororobaMath.CayleyDickson.StiefelZeroDivisor
 public import GororobaMath.Clifford.AnticommutingPairGram
+public import GororobaMath.CayleyDickson.CzComplexKernel
