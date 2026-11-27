@@ -26,7 +26,9 @@ jobs:
   check:
     name: check
     runs-on: ubuntu-26.04
-    timeout-minutes: 30
+    # Measured on main: 24 to 28 min, of which the per-module kernel replay is
+    # about 19 min and grows with each tracked module.
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       # Installs elan with the toolchain of lean/lean-toolchain and fetches
@@ -50,9 +52,10 @@ jobs:
         run: sh ci/check.sh
       # One issue per workflow holds its red runs of main; a later red run
       # adds a comment. The step follows the gate and precedes every later
-      # step, so it reports a failed gate and nothing else.
+      # step, so it reports a failed gate and nothing else; a timeout ends the
+      # job as cancelled, which counts as red.
       - name: Report a red gate on main
-        if: failure() && github.ref == 'refs/heads/main'
+        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
