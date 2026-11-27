@@ -25,8 +25,7 @@ with linear coefficients and its exterior derivative at `a`, evaluated on consta
 `a`, `b`, `c`, is the alternating sum of the directional derivatives
 `skewForm a b c - skewForm b a c + skewForm c a b`. `Tower.skewForm_exterior_derivative` evaluates
 that sum to `-3 * tripleForm a b c`. The statement is this algebraic identity; no manifold, sphere
-or differential form of Mathlib enters it. `tripleForm` has constant coefficients, so the sum is
-nonzero wherever `3 * tripleForm a b c` is: the two-form is not closed in general.
+or differential form of Mathlib enters it.
 
 No step uses associativity or alternativity. The radical statements use the ordered hypotheses of
 `GororobaMath.CayleyDickson.AnnihilatorSymmetry` (`ℤ`, `ℚ`, `ℝ`, every ordered field), under which
