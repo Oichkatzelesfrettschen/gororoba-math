@@ -212,9 +212,11 @@ gororoba repository shares; this file governs where the two differ.
   and `Matrix.pfaffian` of `PfaffianSixteenSchur.A16` with `P.pf` over the evaluated matrix at three of them;
   `ci/compare_transport.sh` compares `Tower.phi` at `ι` and at `-ι` (Rocq `phi` and `psi` of `StiefelTransport` in
   `rocq/quantum/StiefelA5Transport.v`) at level 5, on 24 seeded triples `u`, `y`, `x` and on `y * x`, over `ZMod 998244353`;
-  `ci/compare_complexification.sh` compares `Tower.map` along `Int.castRingHom` into the Gaussian integers with `emb`, and the
-  real and imaginary coordinates of a complex tower element with `re` and `im`, of `rocq/quantum/StiefelA5Real.v`, and the
-  step `map (y * xr) + I • map (y * xi)` of `StiefelRealZeroDivisor.lean` with `mul_emb`, at levels 4 and 5 on 24 seeded cases;
+  `ci/compare_complexification.sh` compares `Tower.map` along `Int.castRingHom` into the Gaussian integers (a wrapper with
+  the identity star, standing in for the noncomputable `TrivStarComplex` of `StiefelRealZeroDivisor.lean`) and the real and
+  imaginary coordinates with `emb`, `re` and `im` of `rocq/quantum/StiefelA5Real.v`, and the tower products `map y * x` and
+  `map (y * xr) + I • map (y * xi)` with the two sides of `mul_emb` there, at levels 4 and 5 on 24 seeded cases; its mutated
+  references change `re`, `im` and `emb`, not the products;
   `ci/compare_box_kite_census.sh` compares `sed_sign` of
   `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
   pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
@@ -604,7 +606,7 @@ merges on the quick tier and the full gates catch the rest).
 
   | Check | Caught by | Stays on `main` at most |
   |---|---|---|
-  | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 16 min |
+  | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 16 min (one run) |
   | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 67 min |
   | `vm_compute` certificate that only the pure kernel rejects | `rocq` nightly run | 24 h |
   | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 67 min |
