@@ -36,10 +36,12 @@ coefficient lies in `m I ^ n` for every `n`.
   part of `k[y] / K` with `K = ker fiberMap`, the bridge from a presentation `F(I) = S / K` to
   the Hilbert function.
 * `FiberCone.finite_piece`: each piece is finite over `k` when `I` is finitely generated.
+* `FiberCone.fiberHilbert_zero`: `h_F(0) = 1`.
 
 ## Open
 
-The multiplicity of `F(I)` (the leading coefficient of the Hilbert polynomial) and the
+The value `h_F(1) = dim_k I / m I` as the minimal number of generators of `I` (Nakayama), the
+multiplicity of `F(I)` (the leading coefficient of the Hilbert polynomial) and the
 rationality of the Hilbert series `∑ h_F(n) zⁿ` are not stated here; they wait on the Hilbert
 polynomial of a quotient of a polynomial ring by a homogeneous ideal.
 -/
@@ -353,5 +355,41 @@ theorem finite_piece (hI : Ideal.span (Set.range f) = I) :
     rw [← hI]; exact Submodule.fg_span (Set.finite_range f)
   have h1 : Module.Finite R ↥(I ^ n) := Module.Finite.of_fg (Ideal.FG.pow hfg)
   exact Module.Finite.of_restrictScalars_finite R _ _
+
+omit [IsLocalRing R] in
+theorem mem_pow_zero (I : Ideal R) (a : R) : a ∈ I ^ 0 := by simp
+
+/-- The degree-zero piece is the residue field: `h_F(0) = 1`. -/
+theorem fiberHilbert_zero : fiberHilbert I 0 = 1 := by
+  have : Nontrivial (R ⧸ maximalIdeal R) := Ideal.Quotient.nontrivial_iff.mpr
+    (maximalIdeal.isMaximal R).ne_top
+  let v : piece I 0 := Submodule.Quotient.mk ⟨1, mem_pow_zero I 1⟩
+  have hmem : ∀ a : R, (Submodule.Quotient.mk (p := maximalIdeal R • (⊤ : Submodule R ↥(I ^ 0)))
+      ⟨a, mem_pow_zero I a⟩ : piece I 0) = 0 ↔ a ∈ maximalIdeal R := fun a => by
+    rw [Submodule.Quotient.mk_eq_zero, Submodule.mem_smul_top_iff, smul_eq_mul]
+    simp
+  have hsmul : ∀ a : R, Ideal.Quotient.mk (maximalIdeal R) a • v =
+      Submodule.Quotient.mk ⟨a, mem_pow_zero I a⟩ := fun a => by
+    rw [quot_smul_eq]
+    exact congrArg Submodule.Quotient.mk (Subtype.ext (by simp))
+  have hbij : Function.Bijective
+      (LinearMap.toSpanSingleton (R ⧸ maximalIdeal R) (piece I 0) v) := by
+    constructor
+    · intro c d hcd
+      obtain ⟨a, rfl⟩ := Ideal.Quotient.mk_surjective c
+      obtain ⟨b, rfl⟩ := Ideal.Quotient.mk_surjective d
+      simp only [LinearMap.toSpanSingleton_apply, hsmul] at hcd
+      rw [Ideal.Quotient.eq]
+      have : (Submodule.Quotient.mk ⟨a - b, mem_pow_zero I _⟩ : piece I 0) = 0 := by
+        rw [← sub_eq_zero] at hcd
+        rw [← hcd, ← Submodule.Quotient.mk_sub]
+        rfl
+      exact (hmem _).mp this
+    · intro w
+      obtain ⟨⟨a, ha⟩, rfl⟩ := Submodule.Quotient.mk_surjective _ w
+      exact ⟨Ideal.Quotient.mk _ a, by simpa [LinearMap.toSpanSingleton_apply] using hsmul a⟩
+  unfold fiberHilbert
+  rw [← LinearEquiv.finrank_eq (LinearEquiv.ofBijective _ hbij), Module.finrank_self]
+
 
 end FiberCone
