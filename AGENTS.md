@@ -210,6 +210,9 @@ gororoba repository shares; this file governs where the two differ.
   and `Matrix.pfaffian` of `PfaffianSixteenSchur.A16` with `P.pf` over the evaluated matrix at three of them;
   `ci/compare_transport.sh` compares `Tower.phi` at `ι` and at `-ι` (Rocq `phi` and `psi` of `StiefelTransport` in
   `rocq/quantum/StiefelA5Transport.v`) at level 5, on 24 seeded triples `u`, `y`, `x` and on `y * x`, over `ZMod 998244353`;
+  `ci/compare_complexification.sh` compares `Tower.map` along `Int.castRingHom` into the Gaussian integers with `emb`, and the
+  real and imaginary coordinates of a complex tower element with `re` and `im`, of `rocq/quantum/StiefelA5Real.v`, and the
+  step `map (y * xr) + I • map (y * xi)` of `StiefelRealZeroDivisor.lean` with `mul_emb`, at levels 4 and 5 on 24 seeded cases;
   `ci/compare_box_kite_census.sh` compares `sed_sign` of
   `rocq/open/verified/C1467_XORSignCocycle.v` with `cd_sign(16, i, j)` on the 256 index
   pairs and the associator signs of `C1630_BasisAssociatorTensor.v` with `triple_sign` on
@@ -234,7 +237,7 @@ gororoba repository shares; this file governs where the two differ.
 
   | Provers | Checks (`ci/compare_*.sh` unless named) |
   |---|---|
-  | Lean and Rocq | `aligned_pair_count`, `aligned_pair_forms`, `alignment`, `am_exponent`, `anf`, `assoc_phase`, `bordered_matrix`, `dot`, `estimator_rocq`, `isum`, `open_tree`, `order_three`, `pfaffian`, `schreier`, `signs`, `transport` |
+  | Lean and Rocq | `aligned_pair_count`, `aligned_pair_forms`, `alignment`, `am_exponent`, `anf`, `assoc_phase`, `bordered_matrix`, `complexification`, `dot`, `estimator_rocq`, `isum`, `open_tree`, `order_three`, `pfaffian`, `schreier`, `signs`, `transport` |
   | Lean | `cz_matrix`, `estimator`, `kernel_map_bins`, `walsh`, `ci/check_external_kernels.sh`; `cuda_signs` on the `cuda/` package's own toolchain and CUDA 13 |
   | Rocq | `box_kite_census`, `hilbert_cell_header`, `split_tower` (also cargo), `ci/check_flocq_manifest.sh` |
   | Agda | `ci/check_agda.sh` |
