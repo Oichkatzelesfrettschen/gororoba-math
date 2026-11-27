@@ -96,3 +96,4 @@ public import GororobaMath.Clifford.AnticommutingPairGram
 public import GororobaMath.CayleyDickson.CzComplexKernel
 public import GororobaMath.LinearAlgebra.BlockRank
 public import GororobaMath.CayleyDickson.StiefelRealZeroDivisor
+public import GororobaMath.CayleyDickson.MultiplicationForms
