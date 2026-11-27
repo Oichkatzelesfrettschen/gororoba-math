@@ -16,7 +16,9 @@
     monomial as e ones and a zero from the low bit up, ended by the leading one; it is injective on all
     exponent lists, so a trie lookup at [enc m] returns the exact sum of the coefficients of m.
     [check_cofactor] holds no hypothesis on p except that p is nonzero and the constant term of u is nonzero
-    modulo p; primality enters nowhere because no coefficient is divided.
+    modulo p; primality enters nowhere because no coefficient is divided. [ymono] truncates at the shorter of G
+    and the exponent list, and [check_cofactor] checks no length of an exponent list or of G, so the theorem
+    is about [subst_q] of that truncating encoding; see the comment of [ymono].
 
     Certificate data: a cofactor certificate is read from lists of natural numbers, one number per term:
     the coefficient in the low b bits and above it the exponents of the n variables in four bits each,
@@ -198,6 +200,14 @@ Fixpoint pow_poly (n : nat) (g : poly) (k : nat) : poly :=
   | S k' => pmul g (pow_poly n g k')
   end.
 
+(** [ymono n G e] stops at the end of G or of e: a term whose exponent list is shorter than G drops the
+    trailing generators (a missing exponent acts as zero) and a term whose list is longer drops the trailing
+    exponents. [check_cofactor] checks neither the length of the exponent lists of q, nor [length G] against
+    them, nor the well-formedness of J and G; it checks the unit, the cofactors and the trie. Its soundness
+    theorem therefore concerns [subst_q] of this truncating encoding, and two lists q that differ only in
+    exponents beyond [length G] give one [subst_q]. Reading q as an ordinary polynomial in y_1 .. y_k needs the
+    extra hypotheses that every exponent list of q has length [length G] and that G is [wf_poly n]; the
+    [check_red] of K2HilbertBound.v checks both. *)
 Fixpoint ymono (n : nat) (G : list poly) (e : list nat) : poly :=
   match G, e with
   | g :: G', k :: e' => pmul (pow_poly n g k) (ymono n G' e')
