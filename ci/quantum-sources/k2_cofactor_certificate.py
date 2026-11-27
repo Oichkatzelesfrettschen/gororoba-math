@@ -47,6 +47,15 @@ def fail(message: str) -> None:
     sys.exit(f"k2_cofactor_certificate: {message}")
 
 
+def confine_output() -> None:
+    """Refuse a write unless rocq/quantum is a plain directory of this checkout that holds no symbolic link."""
+    if OUTPUT_DIR.is_symlink() or not OUTPUT_DIR.is_dir() or not OUTPUT_DIR.resolve().is_relative_to(ROOT):
+        fail("rocq/quantum is no plain directory of this checkout")
+    for entry in OUTPUT_DIR.iterdir():
+        if entry.is_symlink():
+            fail(f"rocq/quantum holds the symbolic link {entry.name}")
+
+
 def load(path: Path) -> dict:
     data = path.read_bytes()
     digest = hashlib.sha256(data).hexdigest()
@@ -353,6 +362,7 @@ def main() -> None:
         return
     if args.write_factored:
         validate(cert)
+        confine_output()
         for i in range(NQUADRICS):
             (OUTPUT_DIR / f"K2CofactorE8barVBf{i + 1:02d}.v").write_text(
                 render_quadric_factored(cert, i), encoding="utf-8"
@@ -361,6 +371,7 @@ def main() -> None:
         return
     files = render_all(cert)
     if args.write:
+        confine_output()
         for name, text in files.items():
             (OUTPUT_DIR / name).write_text(text, encoding="utf-8")
         print(f"wrote {len(files)} files under {OUTPUT_DIR.relative_to(ROOT)}")

@@ -388,6 +388,7 @@ def main() -> None:
             sum(len(s) for pl in plans.values() for s in pl["steps"]),
         )
         return
+    base.confine_output()
     order = ["K2CofactorE8barVBHeader"]
     (OUTPUT_DIR / "K2CofactorE8barVBHeader.v").write_text(base.render_header(cert), encoding="utf-8")
     for nn in quadric_order():
