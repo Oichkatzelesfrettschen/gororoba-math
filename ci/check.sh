@@ -33,10 +33,12 @@
 #      object of another library of this package, so the replay of step 7
 #      assumes only the package's dependencies (Mathlib and what it
 #      requires); each rule rejects a known-bad input;
-#   7. leanchecker, which reads the compiled objects in a second process
+#   7. ci/replay_modules.lean, which runs the replay function of
+#      leanchecker: it reads the compiled objects in another process
 #      and type-checks their theorems and definitions in the kernel again
 #      (it skips unsafe and partial declarations; the kernel rejects a
-#      theorem that uses one, measured under Lean 4.35.0), accepts each tracked module, one call per module, and rejects
+#      theorem that uses one, measured under Lean 4.35.0), accepts each
+#      tracked module, eight to a process, and rejects
 #      lean/ReplayFixture.lean, whose declaration of type False was added
 #      with the kernel switched off and which the build and the axiom
 #      audit (lean/audit/ReplayFixture.lean) both accept. The root module
@@ -324,19 +326,17 @@ done <"$work/sources.txt"
 }
 echo "check: $(wc -l <"$work/sources.txt") library source(s) import only the library and its dependencies"
 
-# leanchecker replays the modules it is given and assumes their imports, so
-# every library module is named; Mathlib's objects are assumed, as its
-# prebuilt cache already is. One module per call keeps the peak at 6.9 GB
-# (measured, Lean 4.35.0 with Mathlib v4.35.0, each of the seven modules
-# under a 14 GB limit). The root module is left out: leanchecker reads its
-# argument as a module-name prefix (checkOlean in LeanChecker.lean, Lean
-# 4.35.0) and replays every matching module at once, so a call on
-# GororobaMath replays the whole library concurrently, 30.5 to 32.1 GB
-# (measured on the eight-module library of an earlier commit; the peak
-# grows with the module count), while a copy of the root under another
-# name replays in 6.4 GB. The check below keeps the root free of declarations, and no
-# module name is a component prefix of another, so each call replays one
-# module.
+# ci/replay_modules.lean replays each module it is given from its imports with
+# the kernel, by the function `replayFromImports` that leanchecker runs (copied
+# verbatim from Lean v4.35.0), and assumes their imports, so every library
+# module is named; Mathlib's objects are assumed, as its prebuilt cache already
+# is. leanchecker resolves each argument as a module-name prefix by listing
+# every object file of the search path, and its call per module paid that walk
+# plus a `lake env` start each time (measured: 4.6 s of 8.2 s per module,
+# about 14 min for the library); the driver names the module, so a name that
+# prefixes others replays only itself. Eight modules share one process and
+# at most four processes run at once; each holds the imports of one module,
+# whose mapped objects are shared pages.
 # Prints each line of the Lean file $1 that is neither blank, `module`, nor
 # an import of a library module; succeeds when it printed one.
 root_extra() {
@@ -357,13 +357,19 @@ fi
   exit 0
 }
 
-for module in $(cat "$work/modules.txt"); do
-  lake env leanchecker "$module" >"$work/replay.out" 2>&1 || {
-    cat "$work/replay.out" >&2
-    echo "check: the kernel replay rejected $module" >&2
-    exit 1
-  }
-done
+replay_jobs=$(nproc 2>/dev/null || echo 1)
+[ "$replay_jobs" -le 4 ] || replay_jobs=4
+xargs -n 8 -P "$replay_jobs" lake env lean --run "$root/ci/replay_modules.lean" \
+  <"$work/modules.txt" >"$work/replay.out" 2>&1 || {
+  cat "$work/replay.out" >&2
+  echo "check: the kernel replay rejected a tracked module" >&2
+  exit 1
+}
+[ "$(grep -c '^PASS ' "$work/replay.out")" -eq "$(wc -l <"$work/modules.txt")" ] || {
+  cat "$work/replay.out" >&2
+  echo "check: the kernel replay did not accept every tracked module" >&2
+  exit 1
+}
 lake build --wfail ReplayFixture >"$work/replay-fixture-build.log" 2>&1 || {
   cat "$work/replay-fixture-build.log" >&2
   echo "check: the replay fixture failed to build" >&2
@@ -375,7 +381,7 @@ lake env lean audit/ReplayFixture.lean >"$work/replay-fixture-audit.out" 2>&1 ||
   echo "check: the axiom audit now rejects the replay fixture; the fixture no longer calibrates the replay" >&2
   exit 1
 }
-if lake env leanchecker ReplayFixture >"$work/replay-fixture.out" 2>&1; then
+if lake env lean --run "$root/ci/replay_modules.lean" ReplayFixture >"$work/replay-fixture.out" 2>&1; then
   cat "$work/replay-fixture.out" >&2
   echo "check: the kernel replay accepted its known-bad fixture" >&2
   exit 1
