@@ -32,3 +32,6 @@ Read by the parent, line by line, after the agy round on 3257d72b1:
 
 ## Kernel evidence
 - Dispatched on 2d77579c9: lean.yml run 46045253527 (kernel replay of every tracked module) and rocq.yml run 46045257055 (rocq check and the axiom ledgers) passed. The first rocq-changed attempt failed in apt-get update (403 from a runner package repository) before any Rocq step; its rerun passed.
+
+## Hosted review
+- Codex (requested 18:24Z on b0306cef6): no major issues; receipt comment on the pull request, no review threads.
