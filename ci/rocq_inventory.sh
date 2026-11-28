@@ -31,12 +31,23 @@ rocq/open/extraction/RustExtractSpike.v'
 # above, printing the difference. rocq/k2-instances holds the rendered K2
 # certificate modules, which K2Split.order lists and ci/check_k2_instances.sh
 # compiles and checks nightly; the admission gate compiles and checks none
-# of them (its export comparison lists their paths, and the changed tier
-# scans a changed one for declared assumptions and kernel-check switches).
+# of them. It holds their inventory (k2_sources_match below), its export
+# comparison lists their paths, and the changed tier scans a changed one
+# for declared assumptions and kernel-check switches.
 outside_sources_match() {
   grep -v -E '^rocq/(open/(theories|verified)|quantum|delegation|k2-instances)/' "$1" | LC_ALL=C sort >"$work/outside.txt"
   printf '%s\n%s\n' "$target_compiled" "$held_uncompiled" | LC_ALL=C sort >"$work/outside-named.txt"
   diff "$work/outside-named.txt" "$work/outside.txt"
+}
+
+# Fails unless the sources of the list $1 under rocq/k2-instances are exactly
+# the module names of the order file $2 with the suffix .v, printing the
+# difference: K2Split.order is the inventory of that directory, as a project
+# file is of a project-listed one.
+k2_sources_match() {
+  grep '^rocq/k2-instances/' "$1" | LC_ALL=C sort >"$work/k2-tracked.txt"
+  sed 's|^|rocq/k2-instances/|; s|$|.v|' "$2" | LC_ALL=C sort >"$work/k2-listed.txt"
+  diff "$work/k2-listed.txt" "$work/k2-tracked.txt"
 }
 
 # Fails when a line of the newline-separated source list $2 is absent, as a

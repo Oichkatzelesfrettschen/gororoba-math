@@ -224,6 +224,19 @@ if outside_sources_match "$work/tracked-sources-bad.txt" >/dev/null; then
   echo "check_rocq: the inventory check accepted a source that neither list names" >&2
   exit 1
 fi
+k2_sources_match "$work/tracked-sources.txt" "$work/rocq/k2-instances/K2Split.order" >"$work/k2-sources.diff" || {
+  echo "check_rocq: the sources of rocq/k2-instances differ from K2Split.order (< listed, > tracked):" >&2
+  cat "$work/k2-sources.diff" >&2
+  exit 1
+}
+{
+  cat "$work/tracked-sources.txt"
+  echo rocq/k2-instances/UnnamedSourceCalibration.v
+} >"$work/tracked-sources-bad.txt"
+if k2_sources_match "$work/tracked-sources-bad.txt" "$work/rocq/k2-instances/K2Split.order" >/dev/null; then
+  echo "check_rocq: the inventory check accepted a source of rocq/k2-instances that K2Split.order omits" >&2
+  exit 1
+fi
 # Fails when a .v source listed in the project file $1 (run in its
 # directory) has no .vo beside it, printing each such source.
 uncompiled_sources() {

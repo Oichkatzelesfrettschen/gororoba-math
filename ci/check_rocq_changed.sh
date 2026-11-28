@@ -570,6 +570,18 @@ outside_sources_match "$work/tracked-sources.txt" >"$work/outside.diff" || {
   cat "$work/outside.diff" >&2
   exit 1
 }
+k2_sources_match "$work/tracked-sources.txt" "$work/rocq/k2-instances/K2Split.order" >"$work/k2-sources.diff" || {
+  echo "check_rocq --changed: the sources of rocq/k2-instances differ from K2Split.order (< listed, > tracked):" >&2
+  cat "$work/k2-sources.diff" >&2
+  exit 1
+}
+{
+  cat "$work/tracked-sources.txt"
+  echo rocq/k2-instances/UnnamedSourceCalibration.v
+} >"$work/tracked-sources-k2-bad.txt"
+if k2_sources_match "$work/tracked-sources-k2-bad.txt" "$work/rocq/k2-instances/K2Split.order" >/dev/null; then
+  fail "the inventory check accepted a source of rocq/k2-instances that K2Split.order omits"
+fi
 for tree in open quantum delegation; do
   case $tree in
     open) pattern='^rocq/open/(theories|verified)/.*\.v$' ;;
