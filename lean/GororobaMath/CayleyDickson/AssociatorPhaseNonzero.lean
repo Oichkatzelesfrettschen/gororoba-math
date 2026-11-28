@@ -12,7 +12,7 @@ Convention: `Tower R k` and its basis `Tower.e R k p` are those of
 `associator a b c = (a * b) * c - a * (b * c)` (`Associator.lean`), and
 `Tower.assocPhase p q x` is `true` when `e p * (e q * e x)` and `(e p * e q) * e x` carry
 opposite signs (`AssociatorPhase.lean`). The results read over every nonassociative ring with
-a star in which `2 ≠ 0`.
+a star; the nonzero criterion and the count assume `2 ≠ 0`.
 
 By `Tower.e_mul_e_mul_e` the associator of three basis elements is twice `(e p * e q) * e x`
 when the phase holds and zero otherwise, and `(e p * e q) * e x` is a signed basis element, so
@@ -30,7 +30,7 @@ the ordered triples of imaginary basis units with a nonzero associator.
 * `Tower.ne_zero_of_associator_e_e_e_ne_zero`: a nonzero associator of basis elements has
   three nonzero indices.
 * `Tower.independent_of_associator_e_e_e_ne_zero`: its indices are moreover pairwise distinct
-  with `x ≠ p ^^^ q`.
+  with `p ^^^ q ≠ x`.
 * `Tower.card_associator_e_e_e_ne_zero`: at level `k + 1`, with `2 ≠ 0`, twice the number of
   ordered index triples with a nonzero associator is `(D - 2) (D - 4) (D + 6)` for
   `D = 2^(k+1)`, the count of gororoba-quantum's findings row A5-649 over every such ring.
@@ -94,7 +94,7 @@ theorem ne_zero_of_associator_e_e_e_ne_zero {k : ℕ} {p q x : BitVec k}
   refine ⟨?_, ?_, ?_⟩ <;> rintro rfl <;> simp at h
 
 /-- A nonzero associator of three basis elements has an independent index triple: the indices
-are nonzero and pairwise distinct, and `x ≠ p ^^^ q`, so `p`, `q`, `x` span a
+are nonzero and pairwise distinct, and `p ^^^ q ≠ x`, so `p`, `q`, `x` span a
 three-dimensional subspace of `BitVec k` over the two-element field. A dependent triple has phase
 `false` (`assocPhase_eq_false_of_dependent`), so its associator is zero. -/
 theorem independent_of_associator_e_e_e_ne_zero {k : ℕ} {p q x : BitVec k}
