@@ -1,10 +1,10 @@
 #!/bin/sh
 # Usage: sh ci/check_k2_instances.sh
-# The gate of rocq/k2-instances, the 64 rendered modules that certify the 21
+# The gate of rocq/k2-instances, the 65 rendered modules that certify the 21
 # quadrics of K2 for the fiber E8-bar to VB over F_32029 (K2Split.order lists
 # them in compile order). It runs nightly and on dispatch (the k2-instances
-# workflow) and is no part of ci/check_rocq.sh: one rocq check process over all
-# 64 modules was killed at 15 GB in both conversion modes, and the compile
+# workflow) and is no part of ci/check_rocq.sh: one rocq check process over
+# the modules was killed at 15 GB in both conversion modes, and the compile
 # alone takes 15 min 49 s at three jobs (measured 2026-11-27, Rocq 9.3.0, a
 # 32-thread x86-64 host). From an export of HEAD outside the checkout, under
 # the opam switch of ci/install_rocq.sh:
@@ -78,6 +78,16 @@ opam switch list --short | grep -q -x -F "$switch" || {
   exit 2
 }
 
+# A relative K2_CERTIFICATE is read from the caller's directory, which the
+# script leaves below; the file is required before any build starts.
+certificate=
+if [ -n "${K2_CERTIFICATE:-}" ]; then
+  [ -f "$K2_CERTIFICATE" ] || {
+    echo "check_k2_instances: K2_CERTIFICATE names no file: $K2_CERTIFICATE" >&2
+    exit 1
+  }
+  certificate=$(cd "$(dirname "$K2_CERTIFICATE")" && pwd)/$(basename "$K2_CERTIFICATE")
+fi
 root=$(git -C "$(dirname "$0")" rev-parse --show-toplevel)
 work=$(mktemp -d "${ROCQ_BUILD_DIR:-${TMPDIR:-/tmp}}/gororoba-math-k2.XXXXXXXX")
 trap 'rm -r "$work" </dev/null' EXIT
@@ -161,8 +171,8 @@ echo "check_k2_instances: $modules modules and three named files tracked; no adm
 # 1. The closure in rocq/quantum.
 cd "$work/rocq/quantum"
 run_logged "$work/quantum-makefile.log" opam exec --switch="$switch" -- rocq makefile --no-rocq-package-warning -f _RocqProject -o Makefile.rocq
-run_logged "$work/quantum-closure.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs" K2CofactorSplit.vo
-echo "check_k2_instances: rocq/quantum compiled K2CofactorSplit and its imports"
+run_logged "$work/quantum-closure.log" opam exec --switch="$switch" -- make -f Makefile.rocq --jobs="$jobs" K2CofactorSplit.vo HilbertCellA5_108.vo
+echo "check_k2_instances: rocq/quantum compiled K2CofactorSplit, HilbertCellA5_108 and their imports"
 
 # 2. The compile of the tree, in the order of K2Split.order.
 cd "$tree"
@@ -212,7 +222,37 @@ grep -q 'Unable to unify' "$work/mutant.log" || {
   tail -n 20 "$work/mutant.log" >&2
   fail "calibration: the mutant of $first_step failed elsewhere than at the value of its check"
 }
-echo "check_k2_instances: $modules modules compiled; a copy of $first_step with one changed digit is rejected"
+# The binding of k2_J and k2_G to the tables of HilbertCellA5_108: a header
+# with one changed coefficient of k2_J compiles, and the binding module
+# then fails at the equality.
+mkdir "$work/binding"
+cp "$tree/K2CofactorE8barVBHeader.v" "$tree/K2CofactorE8barVBTables.v" "$work/binding/"
+"$PYTHON" -I - "$work/binding/K2CofactorE8barVBHeader.v" <<'PY'
+import re
+import sys
+
+path = sys.argv[1]
+with open(path, encoding="utf-8") as handle:
+    text = handle.read()
+# The first coefficient of the first polynomial of k2_J: (m8 ..., C) becomes (m8 ..., C + 1).
+start = text.index("Definition k2_J")
+first = re.compile(r"\(m8 [0-9 ]+, (\d+)\)").search(text, start)
+changed = str(int(first.group(1)) + 1)
+with open(path, "w", encoding="utf-8") as handle:
+    handle.write(text[: first.start(1)] + changed + text[first.end(1) :])
+PY
+if cmp -s "$tree/K2CofactorE8barVBHeader.v" "$work/binding/K2CofactorE8barVBHeader.v"; then
+  fail "calibration: the header mutant equals its source"
+fi
+(cd "$work/binding" && run_logged "$work/binding-header.log" opam exec --switch="$switch" -- rocq compile -q -Q . "" -Q "$work/rocq/quantum" "" K2CofactorE8barVBHeader.v)
+if (cd "$work/binding" && opam exec --switch="$switch" -- rocq compile -q -Q . "" -Q "$work/rocq/quantum" "" K2CofactorE8barVBTables.v) >"$work/binding.log" 2>&1; then
+  fail "calibration: the binding of k2_J compiled against a header with one changed coefficient"
+fi
+grep -q 'Unable to unify' "$work/binding.log" || {
+  tail -n 20 "$work/binding.log" >&2
+  fail "calibration: the binding module failed elsewhere than at the equality of the tables"
+}
+echo "check_k2_instances: $modules modules compiled; a copy of $first_step with one changed digit and a header with one changed coefficient are rejected"
 
 # 3. The kernel check, one process per module.
 (cd "$work/mutant" && run_logged "$work/planted-compile.log" opam exec --switch="$switch" -- rocq compile -q -Q . "" PlantedAxiom.v)
@@ -244,8 +284,7 @@ fi
 echo "check_k2_instances: kernel check passed on $modules modules, one process each (${check_machine:-default conversion}); axioms match the ledger ($(grep -c . "$tree/kernel-assumptions.txt"))"
 
 # 4. Drift against the pinned certificate export.
-if [ -n "${K2_CERTIFICATE:-}" ]; then
-  [ -f "$K2_CERTIFICATE" ] || fail "K2_CERTIFICATE names no file: $K2_CERTIFICATE"
+if [ -n "$certificate" ]; then
   K2_INSTANCES_ROCQ="$work/drift-good"
   export K2_INSTANCES_ROCQ
   mkdir "$K2_INSTANCES_ROCQ" "$work/drift-mutant"
@@ -253,10 +292,10 @@ if [ -n "${K2_CERTIFICATE:-}" ]; then
     cp "$name" "$K2_INSTANCES_ROCQ/"
     cp "$name" "$work/drift-mutant/"
   done
-  run_logged "$work/drift.log" "$PYTHON" -I "$work/ci/quantum-sources/k2_cofactor_split.py" "$K2_CERTIFICATE" --check
+  run_logged "$work/drift.log" "$PYTHON" -I "$work/ci/quantum-sources/k2_cofactor_split.py" "$certificate" --check
   cp "$work/mutant/$first_step.v" "$work/drift-mutant/$first_step.v"
   K2_INSTANCES_ROCQ="$work/drift-mutant"
-  if "$PYTHON" -I "$work/ci/quantum-sources/k2_cofactor_split.py" "$K2_CERTIFICATE" --check >"$work/drift-mutant.log" 2>&1; then
+  if "$PYTHON" -I "$work/ci/quantum-sources/k2_cofactor_split.py" "$certificate" --check >"$work/drift-mutant.log" 2>&1; then
     fail "calibration: --check accepted a tree with one changed digit"
   fi
   echo "check_k2_instances: the tree equals the rendering of the pinned export; a changed digit is rejected"

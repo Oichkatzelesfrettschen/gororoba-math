@@ -1,7 +1,9 @@
 # K2 cofactor instances of the fiber E8-bar to VB
 
-The 64 Rocq modules of this directory certify, over F_32029, that each of the 21 quadrics q of K2 satisfies
-q(G) in J + m G^2: `K2CofactorE8barVB.v` states it for all 21 (`k2_quadrics_in_ideal`) from the chain
+The 65 Rocq modules of this directory certify, over F_32029, that each of the 21 quadrics q of K2 satisfies
+q(G) in J + m G^2, and bind the tables they use: `K2CofactorE8barVBTables.v` proves that `k2_J` and `k2_G` of the
+header equal `a5_108_J` and `a5_108_G` of `rocq/quantum/HilbertCellA5_108.v`, the canonical header of this fiber.
+Of the other 64, `K2CofactorE8barVB.v` states it for all 21 (`k2_quadrics_in_ideal`) from the chain
 modules `K2CofactorE8barVBcNN.v`, each of which sums the steps `K2CofactorE8barVBsNN_MM.v` of quadric NN through
 `LI_tele` and `LI_recover` of `rocq/quantum/K2CofactorSplit.v`. A step holds at most about 600,000 monomial
 products and is accepted by `check_step_sound` under `vm_compute`. `K2Split.order` lists the modules in compile
@@ -22,7 +24,8 @@ lines are fields of Stdlib and Corelib modules that `-norec` lists because it ad
 full check of `From Stdlib Require Import ZArith List Lia` lists none, and `-norec` also lists an axiom that an
 admitted module declares (measured 2026-11-27).
 
-Measured on 2026-11-27 (Rocq 9.3.0, a 32-thread x86-64 host that other jobs shared):
+Measured on 2026-11-27 (Rocq 9.3.0, a 32-thread x86-64 host that other jobs shared), on the 64 modules without
+the table binding, which compiles in under a second:
 
 - Compile of the 64 modules: 15 min 49 s at three jobs, 1,933 s summed over the modules, peak 6.65 GB in one
   compile; the objects take 821 MB.

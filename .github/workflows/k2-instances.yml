@@ -1,6 +1,6 @@
 name: k2-instances
 
-# The gate of rocq/k2-instances, ci/check_k2_instances.sh: the 64 rendered
+# The gate of rocq/k2-instances, ci/check_k2_instances.sh: the 65 rendered
 # modules that certify the 21 quadrics of K2 for the fiber E8-bar to VB. It
 # runs nightly on main with the bytecode machine and on manual dispatch on a
 # named ref (gh workflow run k2-instances.yml --ref BRANCH, with -f kernel=pure
