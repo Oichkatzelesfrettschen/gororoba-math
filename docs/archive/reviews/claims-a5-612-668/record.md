@@ -14,6 +14,8 @@ Head under local review: 5d768cc7e. Reviewer chosen by the owner on 2026-11-28: 
 | 6. The expected-sources diff and the README counts | justified: 57 added, 0 removed, digests changed at the eight rows only | the README counts move with the fixes to 15, 18, 1, 1, 195, 405, 9, 2 |
 | 7. The flagged placements | A5-622 and A5-658 take the existing-proof clause; A5-623 takes the placement both; the others stand | applied in 8b403433e; the README states the use of both and of the existing-proof clause for these rows |
 
+Hosted Codex round: requested on 52b8b55d0 at 2026-11-28T05:22:56Z; the receipt of 05:24:04Z reads "Didn't find any major issues" for that commit.
+
 Validation after the fixes: `expected_sources.py` (1,384 sources) and `sh ci/check.sh --quick` pass on the compute workstation at 8b403433e.
 
 ## Conjectures the reviewer raised (recorded, not acted on here)
