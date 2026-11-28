@@ -18,6 +18,22 @@ Hosted Codex round: requested on 52b8b55d0 at 2026-11-28T05:22:56Z; the receipt 
 
 Validation after the fixes: `expected_sources.py` (1,384 sources) and `sh ci/check.sh --quick` pass on the compute workstation at 8b403433e.
 
+## Advisor (last)
+
+The Advisor asked for the defect class of claim 4 to be searched beyond the eight rows the brief named. The search of the files it listed against the ledger notes found three more overlaps, fixed in the next commit:
+- A5-627 adds `alignedPairCountMultiplicity_five_twelve` and `alignedPairCountMultiplicity_succ_top`: 252 ordered pairs at count 12 at level 5, all across the halves, so 126 cross-half pairs, through a symmetry that no theorem states.
+- A5-642 reads partial on `CayleyDickson.mapAdd_leibniz`, the derivation extension through the doubling.
+- A5-661 adds `mul_self_eq_neg_smul_of_re_eq_zero`.
+
+Opened and found not to state a new row:
+- `Derivation.lean` and the Rocq G_2 tables: dim Der(O) = 14 only through certificate hypotheses, and the tables are derivations of the sedenions. The A5-663 note now says so.
+- `A5W8ArcMatrixRanks.v`: fiber-cone arc matrices.
+- `TwoTermScalar.lean`: real t with t^2 != 1, not t = i.
+- `PureDoublingTransport.lean`: q u + u q, not the Gram form.
+- `Kaplansky.lean` and `ZeroDivisorsZMod.lean`.
+
+The Advisor also asked for the PR body to be rewritten to the final counts, and for the first use of the placement `both` (A5-623) to go to the owner as a precedent.
+
 ## Conjectures the reviewer raised (recorded, not acted on here)
 
 - One operator identity, L_y^T L_y = N(y) I + Assoc(y, y, -), organizes the null-slice spectra and the nullity transitions (A5-612, A5-622, A5-623, A5-635, A5-650 to A5-668).
