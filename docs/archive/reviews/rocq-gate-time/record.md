@@ -15,3 +15,7 @@ Owner decisions (2026-11-27): the range wording "31 to 102 minutes"; local revie
 
 - The first duration read (`--limit 8`) missed run 45916108458 of 00:20Z: fixed by the `--created 2026-11-27` read above; six successful push runs, range unchanged at 31 to 102 minutes.
 - A wider `git grep` found `docs/plans/agda-third-prover.md` quoting the 67 minutes of `AGENTS.md`: updated to 31 to 102 minutes; the 67-minute figures in earlier review records stay, as records of their date.
+
+## Hosted review: Codex (one round, head 983ba88ce)
+
+- "Didn't find any major issues" (issue comment of 2026-11-27T23:14:46Z). Main lean and rocq on c5becc452 read success before the merge (the lean push run passed on its second attempt after a runner-side cancellation).
