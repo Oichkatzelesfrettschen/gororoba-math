@@ -6,19 +6,20 @@ public import GororobaMath.CayleyDickson.AnnihilatorSymmetry
 public import GororobaMath.CayleyDickson.Kaplansky
 
 /-!
-# Square-zero elements and idempotents over a field with `2 ≠ 0`
+# Square-zero elements and idempotents over a domain
 
-Convention: `Tower F k` is the `k`-fold Cayley-Dickson double of a field `F` with the identity
-as star, `Tower.re` is the coordinate of `1` and `Tower.dot` the trace form, so `dot k x x` is
-the norm `N(x)`. The results read at every level over every field in which `2 ≠ 0`, the finite
-fields `F_p` with `p` odd among them.
+Convention: `Tower F k` is the `k`-fold Cayley-Dickson double of a commutative ring `F`
+without zero divisors and with the identity as star, `Tower.re` is the coordinate of `1` and
+`Tower.dot` the trace form, so `dot k x x` is the norm `N(x)`. The results read at every level;
+the square-zero results also assume `2 ≠ 0`, so they cover the finite fields `F_p` with `p` odd
+and every field of characteristic other than `2`.
 
 The quadratic relation `x * x = (2 re x) • x - N(x) • 1` (`Tower.mul_self_eq_smul_sub`) decides
 both questions. Applying `dot · 1` to it gives the scalar equation `re (x * x) = 2 re(x)² - N(x)`.
-When the coefficient of `x` left in the relation is nonzero, `x` is a multiple of `1`, and a
-multiple `a • 1` squares to `a² • 1`; otherwise the relation is a scalar equation. Over a
-commutative ring with `2` a unit the first result fails: for `ε² = 0` the element `ε • 1` squares
-to zero with `re = ε ≠ 0`, so the field hypothesis enters.
+When the coefficient of `x` left in the relation is nonzero, it cancels, since `F` has no zero
+divisors, and `x` is a multiple of `1`; a multiple `a • 1` squares to `a² • 1`. Otherwise the
+relation is a scalar equation. Zero divisors break the first result: over `ℚ[ε]/(ε²)`, where `2` is
+a unit, the element `ε • 1` squares to zero with `re = ε ≠ 0`.
 
 ## Main results
 
@@ -28,7 +29,7 @@ to zero with `re = ε ≠ 0`, so the field hypothesis enters.
 * `Tower.mul_self_eq_self_iff`: `x * x = x` exactly when `x = 0`, `x = 1`, or `2 re x = 1` and
   `N(x) = 0`.
 
-These are the statements of gororoba-quantum's findings row A5-661 over every field with `2 ≠ 0`;
+These are the statements of gororoba-quantum's findings row A5-661 over every such ring;
 its enumerated counts over `F_p` are not stated here.
 -/
 
@@ -40,14 +41,15 @@ namespace Tower
 
 universe u
 
-variable {F : Type u} [Field F] [StarRing F] [TrivialStar F] {k : ℕ}
+variable {F : Type u} [CommRing F] [NoZeroDivisors F] [StarRing F] [TrivialStar F] {k : ℕ}
 
+omit [NoZeroDivisors F] in
 /-- The coordinate of `1` in `x * x`: `re (x * x) = 2 re(x)² - N(x)`. -/
 theorem re_mul_self (x : Tower F k) : re k (x * x) = 2 * re k x * re k x - dot k x x := by
   rw [← dot_one_right k (x * x), mul_self_eq_smul_sub x, dot_sub_left, dot_smul_left,
     dot_smul_left, dot_one_right, dot_one_right, re_one, mul_one]
 
-omit [TrivialStar F] in
+omit [NoZeroDivisors F] [TrivialStar F] in
 /-- The norm of `α • x - β • 1`: `α² N(x) - 2 α β re x + β²`. -/
 theorem dot_smul_sub_smul_one_self (α β : F) (x : Tower F k) :
     dot k (α • x - β • (1 : Tower F k)) (α • x - β • (1 : Tower F k)) =
@@ -60,18 +62,21 @@ omit [TrivialStar F] in
 /-- An element with `(2 re x - c) • x` a multiple of `1` and `2 re x ≠ c` is `re x • 1`. -/
 theorem eq_re_smul_one_of_smul_eq {c d : F} {x : Tower F k} (hc : 2 * re k x - c ≠ 0)
     (h : (2 * re k x - c) • x = d • (1 : Tower F k)) : x = re k x • (1 : Tower F k) := by
-  have hx1 : x = ((2 * re k x - c)⁻¹ * d) • (1 : Tower F k) := by
-    rw [← smul_smul, ← h, smul_smul, inv_mul_cancel₀ hc, one_smul]
-  conv_rhs => rw [hx1]
-  rw [re_smul, re_one, mul_one]
-  exact hx1
+  have hd : d = (2 * re k x - c) * re k x := by
+    have h1 := congrArg (re k) h
+    rw [re_smul, re_smul, re_one, mul_one] at h1
+    exact h1.symm
+  have h0 : (2 * re k x - c) • (x - re k x • (1 : Tower F k)) = 0 := by
+    rw [smul_sub, h, smul_smul, ← hd, sub_self]
+  exact sub_eq_zero.mp (eq_zero_of_smul_eq_zero hc h0)
 
+omit [NoZeroDivisors F] in
 /-- A multiple of `1` squares to the square of the scalar. -/
 theorem smul_one_mul_smul_one (a : F) :
     a • (1 : Tower F k) * a • (1 : Tower F k) = (a * a) • (1 : Tower F k) := by
   rw [smul_mul_assoc', mul_smul_comm', one_mul, smul_smul]
 
-/-- Over a field with `2 ≠ 0`, `x * x = 0` exactly when `re x = 0` and `N(x) = 0`. -/
+/-- Over a domain with `2 ≠ 0`, `x * x = 0` exactly when `re x = 0` and `N(x) = 0`. -/
 theorem mul_self_eq_zero_iff (h2 : (2 : F) ≠ 0) (x : Tower F k) :
     x * x = 0 ↔ re k x = 0 ∧ dot k x x = 0 := by
   refine ⟨fun h => ?_, fun ⟨h1, h2'⟩ => ?_⟩
@@ -95,7 +100,7 @@ theorem mul_self_eq_zero_iff (h2 : (2 : F) ≠ 0) (x : Tower F k) :
     linear_combination hre
   · rw [mul_self_eq_smul_sub, h1, h2', mul_zero, zero_smul, zero_smul, sub_zero]
 
-/-- Over a field with `2 ≠ 0`, `(x * x) * (x * x) = 0` only when `x * x = 0`: the square
+/-- Over a domain with `2 ≠ 0`, `(x * x) * (x * x) = 0` only when `x * x = 0`: the square
 `y = x * x` has `re y = 2 re(x)² - N(x)` and `N(y) = N(x)²`. -/
 theorem mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero (h2 : (2 : F) ≠ 0) {x : Tower F k}
     (h : x * x * (x * x) = 0) : x * x = 0 := by
@@ -112,7 +117,7 @@ theorem mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero (h2 : (2 : F) ≠ 0) {
     · exact h'
   exact (mul_self_eq_zero_iff h2 x).mpr ⟨ha, hd0⟩
 
-/-- Over a field, `x * x = x` exactly when `x` is `0` or `1`, or `2 re x = 1` and
+/-- Over a domain, `x * x = x` exactly when `x` is `0` or `1`, or `2 re x = 1` and
 `N(x) = 0`; so the idempotents other than `0` and `1` have real part `1/2` and norm `0` when
 `2 ≠ 0`. -/
 theorem mul_self_eq_self_iff (x : Tower F k) :

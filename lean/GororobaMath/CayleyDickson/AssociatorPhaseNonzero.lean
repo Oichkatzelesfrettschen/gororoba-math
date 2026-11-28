@@ -17,9 +17,9 @@ a star in which `2 ≠ 0`.
 By `Tower.e_mul_e_mul_e` the associator of three basis elements is twice `(e p * e q) * e x`
 when the phase holds and zero otherwise, and `(e p * e q) * e x` is a signed basis element, so
 with `2 ≠ 0` the associator is nonzero exactly at the phase-true triples. A triple with an index
-`0` holds the identity `e 0 = 1` and has associator zero, so every such triple is a triple of
-imaginary units, and the census `Tower.card_assocPhase_true` counts the ordered triples of
-imaginary basis units with a nonzero associator.
+`0` holds the identity `e 0 = 1` and has associator zero, so every triple with a nonzero
+associator is a triple of imaginary units, and the census `Tower.card_assocPhase_true` counts
+the ordered triples of imaginary basis units with a nonzero associator.
 
 ## Main results
 
