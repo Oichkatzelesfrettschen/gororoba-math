@@ -29,6 +29,7 @@ import os
 import sys
 from pathlib import Path
 
+sys.dont_write_bytecode = True  # --check creates no file, a bytecode cache of the import below included
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import k2_cofactor_certificate as base  # noqa: E402
 

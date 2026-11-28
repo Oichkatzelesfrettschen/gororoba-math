@@ -56,6 +56,8 @@ def confine_output(directory: Path | None = None) -> None:
     for entry in directory.iterdir():
         if entry.is_symlink():
             fail(f"{name} holds the symbolic link {entry.name}")
+        if entry.is_file() and entry.stat().st_nlink > 1:
+            fail(f"{name} holds {entry.name}, a file with a second hard link")
 
 
 def load(path: Path) -> dict:
