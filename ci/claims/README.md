@@ -75,7 +75,7 @@ claim, sorted by `source` in byte order, sources unique.
   Hilbert-function value, an ideal equality, a rank, a Cohen-Macaulay or
   reducedness property) is a Rocq certificate and reads `owed`, and a
   statement over every level or a class of fields is owed in Lean. The rows
-  read: 18 lean, owed; 15 lean, partial; 1 lean, proved; 195 none, no-proof-owed; 406 rocq, owed; 9 rocq, partial; 2 rocq, proved. The note of an
+  read: 15 lean, owed; 18 lean, partial; 1 lean, proved; 1 both, owed; 195 none, no-proof-owed; 405 rocq, owed; 9 rocq, partial; 2 rocq, proved. The note of an
   owed row says what a proof certifies and carries the findings status, whose
   `proved` and `certified` name a computation; `survives` marks a statement
   the source has not proved.
@@ -104,9 +104,12 @@ the claim` whenever it reads `no-proof-owed`, before the other two
 `Result already in a proof tree stays where it is` also covers the rows whose
 statement class puts them in the other prover: an every-level law that
 gororoba-math proves in Rocq keeps the Rocq proof as its home, and the note
-says that a Lean statement would be a bridge. No row uses the placement `both`
-yet; the clause is the one a claim takes when its general theorem and its
-certificate both land.
+says that a Lean statement would be a bridge; a finite-level claim whose
+general law Lean already proves keeps the Lean proof the same way (A5-622,
+A5-658). One row uses the placement `both`: A5-623 of the findings ledger,
+whose modular nullities are Rocq certificates and whose bound over a class
+of fields is a Lean statement; the clause names the two artifacts a claim
+owes when its general theorem and its certificate both apply.
 
 ## Proof files that the registry does not link
 
