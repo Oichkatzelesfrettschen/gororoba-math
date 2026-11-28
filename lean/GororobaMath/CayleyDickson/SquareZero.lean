@@ -26,6 +26,8 @@ a unit, the element `ε • 1` squares to zero with `re = ε ≠ 0`.
 * `Tower.mul_self_eq_zero_iff`: `x * x = 0` exactly when `re x = 0` and `N(x) = 0`.
 * `Tower.mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero`: `(x * x) * (x * x) = 0` only when
   `x * x = 0`.
+* `Tower.iterate_mul_self_eq_zero_iff`: for `m ≥ 1` the `m`-fold iterated square of `x` is
+  zero exactly when `x * x = 0`.
 * `Tower.mul_self_eq_self_iff`: `x * x = x` exactly when `x = 0`, `x = 1`, or `2 re x = 1` and
   `N(x) = 0`.
 
@@ -116,6 +118,20 @@ theorem mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero (h2 : (2 : F) ≠ 0) {
     · exact (mul_eq_zero.mp h').resolve_left h2
     · exact h'
   exact (mul_self_eq_zero_iff h2 x).mpr ⟨ha, hd0⟩
+
+/-- Over a domain with `2 ≠ 0`, the `m`-fold iterated square of `x`, for any `m ≥ 1`, is zero
+exactly when `x * x = 0`. A square-zero element has every later square zero; conversely the
+iterated square of `x` at `m + 1` is the iterated square of `x * x` at `m`, so induction on `m`
+reduces to `mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero`. In the tower the iterated square
+is the power `x^(2^m)`, since each square lies in the span of `1` and `x`. -/
+theorem iterate_mul_self_eq_zero_iff (h2 : (2 : F) ≠ 0) {m : ℕ} (hm : 1 ≤ m) (x : Tower F k) :
+    (fun y : Tower F k => y * y)^[m] x = 0 ↔ x * x = 0 := by
+  induction m, hm using Nat.le_induction generalizing x with
+  | base => exact Iff.rfl
+  | succ m _ ih =>
+    rw [Function.iterate_succ_apply, ih]
+    show x * x * (x * x) = 0 ↔ x * x = 0
+    exact ⟨mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero h2, fun h => by rw [h, mul_zero]⟩
 
 /-- Over a domain, `x * x = x` exactly when `x` is `0` or `1`, or `2 re x = 1` and
 `N(x) = 0`; so the idempotents other than `0` and `1` have real part `1/2` and norm `0` when
