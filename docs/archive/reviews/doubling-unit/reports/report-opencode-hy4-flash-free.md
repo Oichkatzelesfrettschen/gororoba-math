@@ -16,7 +16,7 @@ Let me test the cheapest parity lemma in scratch on the remote host.
 
 Verdict: both mathematical claims survive; one repo-rule breach falls; attribution holds. Read-only review, no files changed locally or remotely except a scratch file under `SCRATCH` on `the compute workstation`.
 
-Build context: `the compute workstation '... git -C .. log -1 --format="%H %s"; git -C .. status --short; lean --version'` -> `b947d1e360f3b66d639f8fde3be2d9b2c6c0a573 lean: doubling unit anticommutes with doubly pure elements`, clean tree, Lean 4.35.0, `.lake -> ~/build/lake/gm-doubling-unit`.
+Build context: `the compute workstation '... git -C .. log -1 --format="%H %s"; git -C .. status --short; lean --version'` -> `b947d1e360f3b66d639f8fde3be2d9b2c6c0a573 lean: doubling unit anticommutes with doubly pure elements`, clean tree, Lean 4.35.0, `.lake` linked to a Lake tree outside the checkout.
 
 ## Ranked findings
 

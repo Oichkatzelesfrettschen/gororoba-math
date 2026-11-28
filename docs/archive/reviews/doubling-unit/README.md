@@ -21,3 +21,10 @@ reviews last. Head under review: `b947d1e36`. Local paths in the retained files 
 | The citation should be Lemma 5.2, Lemma 5.7 with `alpha = i_n` and Lemma 9.6, with Proposition 5.3 and Lemma 6.4 as context | Neon (opencode accepts the original as fair) | confirmed; the docstring cites each |
 | `CayleyDickson.unit` already names `(0, 1)`, and `Tower.mk_mul_iota_mul`, `Tower.mul_cs_mul_eq_zero` and `Tower.iota_mul_iota_mul` state the field-level twins | Neon, opencode | confirmed; the module uses `unit` (the theorems are renamed to `unit_*`) and names the twins |
 | Next step: the parity of `ker L_p n ker L_q` through a determinant lemma over an ordered field (both reviewers wrote and compiled one) | Neon, opencode | recorded as the next PROOF-68 target; not in this change |
+
+## Advisor
+
+The Advisor reviewed last, on the findings above and the fix commit `b02ac4f94`. Its findings: the opencode report named a
+build-tree path of the compute workstation (replaced with a description), the hosted checks had been read on no head,
+and the review documents had not passed the quick tier. The quick tier and the `lean` and `rocq` runs of `main` are
+read before the merge.
