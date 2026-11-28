@@ -15,11 +15,11 @@
 #      textual scan, calibrated on planted lines; step 3 is the authority).
 #   1. closure: rocq/quantum compiles K2CofactorSplit and what it imports,
 #      under the options of its _RocqProject.
-#   2. compile: each module compiles with -w all,+default; the warning tags
-#      printed (a bracketed name, with or without categories, at the end of
-#      a line) carry only the two names of allowed_warnings below, both rows
-#      of ci/rocq-warnings/causes.tsv; the tag reader is calibrated on the
-#      three shapes. A copy of the first step with one changed hexadecimal
+#   2. compile: each module compiles with -w all,+default; the names of the
+#      warning tags printed (a bracketed name, with or without categories,
+#      at the end of a line) are exactly the two of allowed_warnings below,
+#      both rows of ci/rocq-warnings/causes.tsv; the tag reader is
+#      calibrated on the three shapes. A copy of the first step with one changed hexadecimal
 #      digit of its last cofactor word must fail in the check lemma, at the
 #      unification of its computed value with true.
 #   3. kernel: rocq check -silent -o -norec re-checks each module in a
@@ -179,8 +179,10 @@ printf 'Warning: one line [cal-one,cal,default]\nWarning: two lines\n[cal-two,ca
 [ "$(warning_names "$work/warning-calibration.log" | tr '\n' ' ')" = 'cal-one cal-three cal-two ' ] || fail "calibration: the warning reader missed a tag shape"
 warning_names "$work/k2-build.log" >"$work/warning-names.txt"
 printf '%s\n' "$allowed_warnings" | LC_ALL=C sort >"$work/warning-allowed.txt"
-unexpected=$(LC_ALL=C comm -23 "$work/warning-names.txt" "$work/warning-allowed.txt")
-[ -z "$unexpected" ] || fail "the compile printed a warning outside the two allowed names: $unexpected"
+diff "$work/warning-allowed.txt" "$work/warning-names.txt" >"$work/warnings.diff" || {
+  cat "$work/warnings.diff" >&2
+  fail "the warning names of the compile differ from allowed_warnings (< allowed, > printed); a fixed warning leaves the list in the same commit"
+}
 while IFS= read -r name; do
   cut -f 1 "$work/ci/rocq-warnings/causes.tsv" | grep -q -x -F "$name" || fail "ci/rocq-warnings/causes.tsv lacks the warning $name"
 done <"$work/warning-allowed.txt"

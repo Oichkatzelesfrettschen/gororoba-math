@@ -2,8 +2,9 @@ name: k2-instances
 
 # The gate of rocq/k2-instances, ci/check_k2_instances.sh: the 64 rendered
 # modules that certify the 21 quadrics of K2 for the fiber E8-bar to VB. It
-# runs nightly on main and on manual dispatch on a named ref (gh workflow run
-# k2-instances.yml --ref BRANCH) and is no part of the rocq workflow: the
+# runs nightly on main with the bytecode machine and on manual dispatch on a
+# named ref (gh workflow run k2-instances.yml --ref BRANCH, with -f kernel=pure
+# for the checker's own reduction) and is no part of the rocq workflow: the
 # compile alone took 15 min 49 s at three jobs on a 32-thread host and one
 # check process over all modules was killed at 15 GB (measured 2026-11-27),
 # so the script checks one module per process. No pull-request check reads
@@ -37,10 +38,11 @@ jobs:
     timeout-minutes: 350
     env:
       OPAMROOT: ${{ github.workspace }}/.opam
-      # The nightly run and a dispatch with kernel=pure re-check with the
-      # checker's own reduction; a default dispatch lets the checker use the
-      # bytecode machine (ci/check_k2_instances.sh).
-      ROCQ_CHECK_VM: ${{ (github.event_name == 'schedule' || inputs.kernel == 'pure') && '0' || '1' }}
+      # Only a dispatch with kernel=pure re-checks with the checker's own
+      # reduction: its 64 checks took 6,041 s of processor time against 880 s
+      # with the bytecode machine (measured 2026-11-27), which one job of a
+      # hosted runner may not finish inside the time limit above.
+      ROCQ_CHECK_VM: ${{ inputs.kernel == 'pure' && '0' || '1' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Install system packages

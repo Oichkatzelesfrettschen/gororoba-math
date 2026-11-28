@@ -22,9 +22,17 @@ lines are fields of Stdlib and Corelib modules that `-norec` lists because it ad
 full check of `From Stdlib Require Import ZArith List Lia` lists none, and `-norec` also lists an axiom that an
 admitted module declares (measured 2026-11-27).
 
-Measured on 2026-11-27 (Rocq 9.3.0, a 32-thread x86-64 host): the compile of the 64 modules takes 15 min 49 s
-at three jobs with a peak of 6.65 GB in one compile. With the bytecode machine `rocq check -norec` takes at most
-5.86 GB and 45 s a step, and 10.64 GB and 72 s on `K2CofactorE8barVB`, which loads the 63 other modules; with the
-checker's own reduction the two steps measured take 7.91 GB and 192 s (s17_00) and 8.87 GB and 212 s (s07_07), and
-`K2CofactorE8barVB` 4.52 GB. The whole script, drift step included, passes with the bytecode machine in 29 min 46 s at three compile
-jobs and in 32 min 23 s at two. The objects take 821 MB.
+Measured on 2026-11-27 (Rocq 9.3.0, a 32-thread x86-64 host that other jobs shared):
+
+- Compile of the 64 modules: 15 min 49 s at three jobs, 1,933 s summed over the modules, peak 6.65 GB in one
+  compile; the objects take 821 MB.
+- `rocq check -norec` with the bytecode machine, all 64 modules: 880 s of processor time; at most 5.86 GB and
+  45 s a step, and 10.64 GB and 72 s on `K2CofactorE8barVB`, which loads the 63 other modules.
+- `rocq check -norec` with the checker's own reduction, all 64 modules: every one passes, with the same 26
+  ledger lines; 6,041 s of processor time (6,266 s of wall time on the shared host), at most 9.17 GB (s17_01),
+  and 4.52 GB on `K2CofactorE8barVB`.
+- The whole script with the bytecode machine, drift step included: 29 min 46 s at three compile jobs, 32 min 23 s
+  and 44 min 24 s at two (the last beside the pure-kernel pass above); peak 10.63 GB.
+
+The nightly run uses the bytecode machine; `gh workflow run k2-instances.yml -f kernel=pure` runs the checker's
+own reduction. No hosted run of either has been timed yet.
