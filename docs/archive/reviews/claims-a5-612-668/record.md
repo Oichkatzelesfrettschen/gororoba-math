@@ -32,6 +32,8 @@ Opened and found not to state a new row:
 - `PureDoublingTransport.lean`: q u + u q, not the Gram form.
 - `Kaplansky.lean` and `ZeroDivisorsZMod.lean`.
 
+A second hosted round, requested on 7a5ba0f89 at 2026-11-28T05:33:33Z after the Advisor fixes, reads "Didn't find any major issues" for that commit.
+
 The Advisor also asked for the PR body to be rewritten to the final counts, and for the first use of the placement `both` (A5-623) to go to the owner as a precedent.
 
 ## Conjectures the reviewer raised (recorded, not acted on here)
