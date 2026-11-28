@@ -1,12 +1,12 @@
 # Review record: K2 cofactor instances of E8-bar to VB under a nightly gate (pull request 150)
 
-Branch rocq-k2-split-instances. Heads: ad85db15e under the opencode review, 1777f46d3 after its fixes and under the Advisor.
+Branch rocq-k2-split-instances. Heads: ad85db15e under the opencode review, 1777f46d3 after its fixes and under the Advisor, e03c8599a under the first hosted Codex round, 054220c61 after its fixes.
 
 ## Reviewers
 - The owner's question of 2026-11-27 (which gate tier runs the modules; which local reviewers run) stayed unanswered for two hours. The session took the recommended tier (a nightly gate of its own) and the reviewer of pull request 148, opencode on a free model, and recorded both defaults in the pull request and the work ledger.
 - opencode, red team: opencode/deepseek-v4.1-flash-free, 13 findings on ad85db15e.
 - The Advisor last, on 1777f46d3.
-- Hosted Codex after this record.
+- Hosted Codex: three findings on e03c8599a (last three rows).
 
 ## Findings and resolutions
 | Finding | Reviewer | Class | Resolution |
@@ -28,6 +28,9 @@ Branch rocq-k2-split-instances. Heads: ad85db15e under the opencode review, 1777
 | The warning comparison was one-sided, so a reader that extracted nothing passed | Advisor | read from source | Fixed: the printed names must equal the two allowed names; passed in the fourth gate run |
 | The pull-request body described the script before its fixes | Advisor | process | Rewritten before the hosted round |
 | The tier default and the AGENTS.md description wait for the owner | Advisor | process | Open rows of the work ledger; AGENTS.md is unchanged by this pull request |
+| The exclusion of rocq/k2-instances from the outside-source lists let an unnamed source under it pass the admission inventory | hosted Codex (P1) | read from source, reproduced | Fixed in fc6d6d5a8: both tiers of the admission gate require the tracked sources of the directory to be the lines of K2Split.order and reject a planted rocq/k2-instances/UnnamedSourceCalibration.v. The changed tier passes with the check on a full compile (compute workstation) |
+| k2_J and k2_G copy a5_108_J and a5_108_G of HilbertCellA5_108.v and no theorem binds them | hosted Codex (P1) | read from source | Fixed in 054220c61: K2CofactorE8barVBTables.v proves both equalities by reflexivity, and the gate requires the binding to fail with "Unable to unify" against a header with one changed coefficient of k2_J |
+| A relative K2_CERTIFICATE was read after the script changed directory, and only after the compile and the kernel checks | hosted Codex (P2) | read from source | Fixed in 054220c61: the path is made absolute from the caller's directory and the file is required before any build. Known-bad: a path that names no file stops the script before its first build; known-good: the passing run below used a relative path |
 
 ## Measurements
-rocq/k2-instances/README.md holds them. The four gate runs of ci/check_k2_instances.sh on the compute workstation: a first run stopped at the first kernel check (it required an empty axiom list, and -norec lists 26 admitted Stdlib and Corelib fields), then three passes, the last on the bytes of this record's commit.
+rocq/k2-instances/README.md holds them. Gate runs of ci/check_k2_instances.sh on the compute workstation: a first run stopped at the first kernel check (it required an empty axiom list, and -norec lists 26 admitted Stdlib and Corelib fields); three passes before the hosted round; after its fixes one run that the full disk of the workstation ended in the compile ("No space left on device"), then a pass on the 65 modules in 35 min 17 s at two compile jobs, peak 10.2 GB, on the script and generator bytes of 054220c61.

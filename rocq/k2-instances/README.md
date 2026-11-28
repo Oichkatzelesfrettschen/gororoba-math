@@ -35,7 +35,8 @@ the table binding, which compiles in under a second:
   ledger lines; 6,041 s of processor time (6,266 s of wall time on the shared host), at most 9.17 GB (s17_01),
   and 4.52 GB on `K2CofactorE8barVB`.
 - The whole script with the bytecode machine, drift step included: 29 min 46 s at three compile jobs, 32 min 23 s
-  and 44 min 24 s at two (the last beside the pure-kernel pass above); peak 10.63 GB.
+  and 44 min 24 s at two (the last beside the pure-kernel pass above); peak 10.63 GB. With the table binding, on
+  all 65 modules: 35 min 17 s at two compile jobs.
 
 The nightly run uses the bytecode machine; `gh workflow run k2-instances.yml -f kernel=pure` runs the checker's
 own reduction. No hosted run of either has been timed yet.
