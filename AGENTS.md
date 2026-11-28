@@ -590,8 +590,8 @@ merges on the quick tier and the full gates catch the rest).
   to `main`, and on manual dispatch (`gh workflow run lean.yml --ref
   BRANCH`, `gh workflow run rocq.yml --ref BRANCH`). A merge is fully gated
   within one push run, which took 16 minutes for `lean` (hosted run of
-  2026-11-27, after the replay driver) and 67 minutes for `rocq` (hosted
-  runs of 2026-11-25), queue time included; a
+  2026-11-27, after the replay driver) and 31 to 102 minutes for `rocq`
+  (six hosted push runs of 2026-11-27), queue time included; a
   push run that a newer push replaces while it waits reads cancelled, so
   only the last commit of a burst of merges is gated. The `rocq` runs of a
   push and of a dispatch set `ROCQ_CHECK_VM=1`, under which `rocq check`
@@ -607,13 +607,13 @@ merges on the quick tier and the full gates catch the rest).
   | Check | Caught by | Stays on `main` at most |
   |---|---|---|
   | Lean kernel replay (`ci/replay_modules.lean`) | `lean` push run | 16 min (one run) |
-  | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 67 min |
+  | `rocq check` and the axiom ledgers, bytecode conversion | `rocq` push run | 102 min |
   | `vm_compute` certificate that only the pure kernel rejects | `rocq` nightly run | 24 h |
-  | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 67 min |
-  | Mutation harnesses and kernel check of `check-schur-geometry` | `rocq` push run | 67 min |
+  | Kernel replay evidence calibration (`ci/check_kernel_replay_evidence.sh`) | `rocq` push run | 102 min |
+  | Mutation harnesses and kernel check of `check-schur-geometry` | `rocq` push run | 102 min |
   | Sources held uncompiled (CertiRocq targets) | no run compiles them | indefinitely |
   | Generated-source drift (`ci/check_quantum_sources.sh`, `ci/check_delegation_sources.sh`, `hilbert_cell_certificate.py --check`) | no scheduled run; run them on demand | indefinitely |
-  | A stale row of `ci/rocq-warnings/allowed.tsv` after a source change | `rocq` push run | 67 min |
+  | A stale row of `ci/rocq-warnings/allowed.tsv` after a source change | `rocq` push run | 102 min |
   | An unchanged Lean module outside the import closure of a changed one | cannot change; no run is needed | none |
 
 - A pull request that adds a `vm_compute` certificate, or changes `ci/`, a
