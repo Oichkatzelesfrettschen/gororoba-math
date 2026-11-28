@@ -716,6 +716,10 @@ check_declared_axioms() {
         ledger=rocq/delegation/kernel-assumptions.txt
         module=GororobaDelegation.${source#rocq/delegation/}
         ;;
+      rocq/k2-instances/*)
+        ledger=rocq/k2-instances/kernel-assumptions.txt
+        module=${source#rocq/k2-instances/}
+        ;;
     esac
     if [ -n "$module" ]; then
       module=${module%.v}

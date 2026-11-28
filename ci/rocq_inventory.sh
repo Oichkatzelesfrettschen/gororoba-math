@@ -30,7 +30,9 @@ rocq/open/extraction/RustExtractSpike.v'
 # project-listed directories and rocq/k2-instances are exactly the two lists
 # above, printing the difference. rocq/k2-instances holds the rendered K2
 # certificate modules, which K2Split.order lists and ci/check_k2_instances.sh
-# compiles and checks nightly; no step of the admission gate reads them.
+# compiles and checks nightly; the admission gate compiles and checks none
+# of them (its export comparison lists their paths, and the changed tier
+# scans a changed one for declared assumptions and kernel-check switches).
 outside_sources_match() {
   grep -v -E '^rocq/(open/(theories|verified)|quantum|delegation|k2-instances)/' "$1" | LC_ALL=C sort >"$work/outside.txt"
   printf '%s\n%s\n' "$target_compiled" "$held_uncompiled" | LC_ALL=C sort >"$work/outside-named.txt"

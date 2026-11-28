@@ -34,7 +34,7 @@ jobs:
     # One compile peaks at 6.65 GB and one kernel check at 10.6 GB (measured
     # 2026-11-27), so the script compiles and checks one module at a time; the
     # hosted time of a run is unmeasured until the first one.
-    timeout-minutes: 330
+    timeout-minutes: 350
     env:
       OPAMROOT: ${{ github.workspace }}/.opam
       # The nightly run and a dispatch with kernel=pure re-check with the

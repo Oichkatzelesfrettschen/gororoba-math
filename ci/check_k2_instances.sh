@@ -8,16 +8,20 @@
 # alone takes 15 min 49 s at three jobs (measured 2026-11-27, Rocq 9.3.0, a
 # 32-thread x86-64 host). From an export of HEAD outside the checkout, under
 # the opam switch of ci/install_rocq.sh:
-#   0. inventory: the .v files of the tree are the lines of K2Split.order, and
-#      no source holds an admission, a declared axiom or a switched-off kernel
-#      check (a textual scan, calibrated on a planted source; step 3 is the
-#      authority).
+#   0. inventory: the files of the tree, at any depth, are the sources that
+#      K2Split.order lists, that file, kernel-assumptions.txt and README.md,
+#      so no object or nested source rides along; no source holds an
+#      admission, a declared assumption or a switched-off kernel check (a
+#      textual scan, calibrated on planted lines; step 3 is the authority).
 #   1. closure: rocq/quantum compiles K2CofactorSplit and what it imports,
 #      under the options of its _RocqProject.
-#   2. compile: each module compiles with -w all,+default; the warnings
-#      printed carry only the two names of allowed_warnings below, both
-#      rows of ci/rocq-warnings/causes.tsv. A copy of the first step with
-#      one changed digit must fail to compile.
+#   2. compile: each module compiles with -w all,+default; the warning tags
+#      printed (a bracketed name, with or without categories, at the end of
+#      a line) carry only the two names of allowed_warnings below, both rows
+#      of ci/rocq-warnings/causes.tsv; the tag reader is calibrated on the
+#      three shapes. A copy of the first step with one changed hexadecimal
+#      digit of its last cofactor word must fail in the check lemma, at the
+#      unification of its computed value with true.
 #   3. kernel: rocq check -silent -o -norec re-checks each module in a
 #      process of its own. With the bytecode machine a step takes at most
 #      5.9 GB and 45 s, and the aggregate module, which loads the 63 others,
@@ -98,9 +102,15 @@ run_logged() {
   }
 }
 # Prints the lines of the source files named as arguments that declare an
-# admission, an axiom or a kernel-check switch.
+# admission, an assumption or a kernel-check switch. Status 0 with lines, 1
+# without, 2 when grep could not read a file.
 forbidden_lines() {
-  grep -n -E '(^|[^A-Za-z0-9_])(Admitted|admit|Axioms?|Parameters?|Conjectures?|Hypothes[ie]s|Variables?|bypass_check|Unset)([^A-Za-z0-9_]|$)' "$@"
+  grep -n -E '(^|[^A-Za-z0-9_])(Admitted|Admit|admit|Axioms?|Parameters?|Conjectures?|Hypothes[ie]s|Variables?|Context|bypass_check|Unset)([^A-Za-z0-9_]|$)' "$@"
+}
+# Prints the warning names of the build log $1: the first field of a
+# bracketed tag that ends a line.
+warning_names() {
+  sed -n 's/^.*\[\([A-Za-z0-9._-]*\)\(,[A-Za-z0-9._,-]*\)\{0,1\}\]$/\1/p' "$1" | LC_ALL=C sort -u
 }
 # Prints, sorted, the axiom names of the context summary in the log $1.
 checked_axioms() {
@@ -120,21 +130,33 @@ context_is_closed() {
 
 # 0. Inventory and the textual scan.
 [ -s "$order" ] || fail "rocq/k2-instances/K2Split.order is absent or empty"
-(cd "$tree" && for source in ./*.v; do basename "$source" .v; done | LC_ALL=C sort) >"$work/sources.txt"
-LC_ALL=C sort "$order" >"$work/ordered.txt"
-diff "$work/ordered.txt" "$work/sources.txt" >"$work/inventory.diff" || {
+(cd "$tree" && find . ! -type d | sed 's|^\./||' | LC_ALL=C sort) >"$work/files.txt"
+{
+  sed 's/$/.v/' "$order"
+  printf 'K2Split.order\nREADME.md\nkernel-assumptions.txt\n'
+} | LC_ALL=C sort >"$work/files-expected.txt"
+diff "$work/files-expected.txt" "$work/files.txt" >"$work/inventory.diff" || {
   cat "$work/inventory.diff" >&2
-  fail "the sources of rocq/k2-instances differ from K2Split.order (< order, > sources)"
+  fail "the files of rocq/k2-instances differ from K2Split.order and the three named files (< expected, > tracked)"
 }
 modules=$(awk 'END { print NR }' "$order")
-if (cd "$tree" && forbidden_lines ./*.v) >"$work/forbidden.txt"; then
+scan_status=0
+(cd "$tree" && forbidden_lines ./*.v) >"$work/forbidden.txt" || scan_status=$?
+case $scan_status in
+0)
   head -n 20 "$work/forbidden.txt" >&2
-  fail "a source of rocq/k2-instances holds an admission, a declared axiom or a kernel-check switch"
-fi
+  fail "a source of rocq/k2-instances holds an admission, a declared assumption or a kernel-check switch"
+  ;;
+1) ;;
+*) fail "the textual scan could not read the sources of rocq/k2-instances (grep status $scan_status)" ;;
+esac
 mkdir "$work/mutant"
+for planted in 'Axiom planted : False.' 'Admit Obligations.' 'Context (h : False).' 'Proof. Admitted.' 'Unset Guard Checking.'; do
+  printf '%s\n' "$planted" >"$work/mutant/planted-line.v"
+  forbidden_lines "$work/mutant/planted-line.v" >/dev/null || fail "calibration: the textual scan accepted the line: $planted"
+done
 printf 'Axiom planted : False.\n' >"$work/mutant/PlantedAxiom.v"
-forbidden_lines "$work/mutant/PlantedAxiom.v" >/dev/null || fail "calibration: the textual scan accepted a declared axiom"
-echo "check_k2_instances: $modules modules listed; no admission, declared axiom or kernel-check switch"
+echo "check_k2_instances: $modules modules and three named files tracked; no admission, declared assumption or kernel-check switch"
 
 # 1. The closure in rocq/quantum.
 cd "$work/rocq/quantum"
@@ -153,7 +175,9 @@ run_logged "$work/k2-build.log" opam exec --switch="$switch" -- make --keep-goin
 while IFS= read -r module; do
   [ -f "$module.vo" ] || fail "$module has no compiled object"
 done <"$order"
-sed -n 's/^\[\([^],]*\),[^]]*\]$/\1/p' "$work/k2-build.log" | LC_ALL=C sort -u >"$work/warning-names.txt"
+printf 'Warning: one line [cal-one,cal,default]\nWarning: two lines\n[cal-two,cal]\nWarning: no category [cal-three]\n' >"$work/warning-calibration.log"
+[ "$(warning_names "$work/warning-calibration.log" | tr '\n' ' ')" = 'cal-one cal-three cal-two ' ] || fail "calibration: the warning reader missed a tag shape"
+warning_names "$work/k2-build.log" >"$work/warning-names.txt"
 printf '%s\n' "$allowed_warnings" | LC_ALL=C sort >"$work/warning-allowed.txt"
 unexpected=$(LC_ALL=C comm -23 "$work/warning-names.txt" "$work/warning-allowed.txt")
 [ -z "$unexpected" ] || fail "the compile printed a warning outside the two allowed names: $unexpected"
@@ -169,11 +193,12 @@ import sys
 path = sys.argv[1]
 with open(path, encoding="utf-8") as handle:
     text = handle.read()
-# The last digit of the last number of the source: a coefficient of a cofactor or of a remainder.
-last = list(re.finditer(r"\d+", text))[-1]
-digit = "2" if text[last.end() - 1] == "1" else "1"
+# The last hexadecimal digit of the last packed word of the sparse cofactor table.
+last = list(re.finditer(r"0x[0-9a-f]+%N", text))[-1]
+at = last.end() - 3
+digit = "2" if text[at] == "1" else "1"
 with open(path, "w", encoding="utf-8") as handle:
-    handle.write(text[: last.end() - 1] + digit + text[last.end() :])
+    handle.write(text[:at] + digit + text[at + 1 :])
 PY
 if cmp -s "$tree/$first_step.v" "$work/mutant/$first_step.v"; then
   fail "calibration: the mutant equals its source"
@@ -181,6 +206,10 @@ fi
 if (cd "$work/mutant" && opam exec --switch="$switch" -- rocq compile -q -w all,+default -Q . "" -Q "$tree" "" -Q "$work/rocq/quantum" "" "$first_step.v") >"$work/mutant.log" 2>&1; then
   fail "calibration: $first_step compiled with one changed digit"
 fi
+grep -q 'Unable to unify' "$work/mutant.log" || {
+  tail -n 20 "$work/mutant.log" >&2
+  fail "calibration: the mutant of $first_step failed elsewhere than at the value of its check"
+}
 echo "check_k2_instances: $modules modules compiled; a copy of $first_step with one changed digit is rejected"
 
 # 3. The kernel check, one process per module.
