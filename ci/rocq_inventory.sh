@@ -27,10 +27,12 @@ rocq/open/extraction/ExtractR2VBDP4.v
 rocq/open/extraction/RustExtractSpike.v'
 
 # Fails unless the sources of the list $1 that lie outside the four
-# project-listed directories are exactly the two lists above, printing the
-# difference.
+# project-listed directories and rocq/k2-instances are exactly the two lists
+# above, printing the difference. rocq/k2-instances holds the rendered K2
+# certificate modules, which K2Split.order lists and ci/check_k2_instances.sh
+# compiles and checks nightly; no step of the admission gate reads them.
 outside_sources_match() {
-  grep -v -E '^rocq/(open/(theories|verified)|quantum|delegation)/' "$1" | LC_ALL=C sort >"$work/outside.txt"
+  grep -v -E '^rocq/(open/(theories|verified)|quantum|delegation|k2-instances)/' "$1" | LC_ALL=C sort >"$work/outside.txt"
   printf '%s\n%s\n' "$target_compiled" "$held_uncompiled" | LC_ALL=C sort >"$work/outside-named.txt"
   diff "$work/outside-named.txt" "$work/outside.txt"
 }

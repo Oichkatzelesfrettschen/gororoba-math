@@ -1,0 +1,76 @@
+name: k2-instances
+
+# The gate of rocq/k2-instances, ci/check_k2_instances.sh: the 64 rendered
+# modules that certify the 21 quadrics of K2 for the fiber E8-bar to VB. It
+# runs nightly on main and on manual dispatch on a named ref (gh workflow run
+# k2-instances.yml --ref BRANCH) and is no part of the rocq workflow: the
+# compile alone took 15 min 49 s at three jobs on a 32-thread host and one
+# check process over all modules was killed at 15 GB (measured 2026-11-27),
+# so the script checks one module per process. No pull-request check reads
+# this workflow, and the main-gate job of quick.yml reads lean and rocq only.
+on:
+  schedule:
+    - cron: "17 11 * * *"
+  workflow_dispatch:
+    inputs:
+      kernel:
+        description: "Conversion of the kernel checker: vm (bytecode machine) or pure (the checker's own reduction)"
+        type: choice
+        options: [vm, pure]
+        default: vm
+
+concurrency:
+  group: k2-instances-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-26.04
+    # One compile peaks at 6.65 GB and one kernel check at 10.6 GB (measured
+    # 2026-11-27), so the script compiles and checks one module at a time; the
+    # hosted time of a run is unmeasured until the first one.
+    timeout-minutes: 330
+    env:
+      OPAMROOT: ${{ github.workspace }}/.opam
+      # The nightly run and a dispatch with kernel=pure re-check with the
+      # checker's own reduction; a default dispatch lets the checker use the
+      # bytecode machine (ci/check_k2_instances.sh).
+      ROCQ_CHECK_VM: ${{ (github.event_name == 'schedule' || inputs.kernel == 'pure') && '0' || '1' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install system packages
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq opam m4 pkg-config libgmp-dev git make gcc clang unzip bubblewrap
+      # The key is the one of the rocq workflow, which saves the switch; this
+      # workflow only restores it and builds the switch from source without it.
+      - name: Restore the opam switch
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .opam
+          key: opam-rocq-v2-ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('rocq/open/opam/**', 'ci/install_rocq.sh') }}
+      - name: Install the Rocq toolchain
+        run: sh ci/install_rocq.sh
+      - name: Run the K2 instance gate
+        run: ROCQ_JOBS=1 ROCQ_BUILD_DIR="$RUNNER_TEMP" sh ci/check_k2_instances.sh
+      # One issue holds the red runs of main; a later red run adds a comment.
+      - name: Report a red gate on main
+        if: (failure() || cancelled()) && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TITLE: The k2-instances gate is red on main
+        run: |
+          body="The k2-instances workflow failed on main at $GITHUB_SHA: $RUN_URL"
+          number=$(gh issue list --repo "$REPOSITORY" --state open --limit 200 --json number,title --jq 'map(select(.title == env.TITLE)) | .[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue comment "$number" --repo "$REPOSITORY" --body "$body"
+          else
+            gh issue create --repo "$REPOSITORY" --title "$TITLE" --body "$body"
+          fi
