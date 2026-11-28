@@ -47,13 +47,17 @@ def fail(message: str) -> None:
     sys.exit(f"k2_cofactor_certificate: {message}")
 
 
-def confine_output() -> None:
-    """Refuse a write unless rocq/quantum is a plain directory of this checkout that holds no symbolic link."""
-    if OUTPUT_DIR.is_symlink() or not OUTPUT_DIR.is_dir() or not OUTPUT_DIR.resolve().is_relative_to(ROOT):
-        fail("rocq/quantum is no plain directory of this checkout")
-    for entry in OUTPUT_DIR.iterdir():
+def confine_output(directory: Path | None = None) -> None:
+    """Refuse a write unless the directory (default rocq/quantum) is a plain, link-free directory of this checkout."""
+    directory = OUTPUT_DIR if directory is None else directory
+    name = f"rocq/{directory.name}"
+    if directory.is_symlink() or not directory.is_dir() or not directory.resolve().is_relative_to(ROOT):
+        fail(f"{name} is no plain directory of this checkout")
+    for entry in directory.iterdir():
         if entry.is_symlink():
-            fail(f"rocq/quantum holds the symbolic link {entry.name}")
+            fail(f"{name} holds the symbolic link {entry.name}")
+        if entry.is_file() and entry.stat().st_nlink > 1:
+            fail(f"{name} holds {entry.name}, a file with a second hard link")
 
 
 def load(path: Path) -> dict:
