@@ -7,18 +7,25 @@ linear combinations of the pinned cofactors modulo 32029), and every certified q
 A step holds the cofactors of a few J indices and a few outer Horner indices a (the products G_a H_a with
 H_a the Horner sum over b >= a), at most about 600,000 monomial products of its identity, and the
 remainders R_j and R_{j+1} of the chain R_0 = q(G), R_{j+1} = R_j - (the combination of the step j), which end
-at R_m = 0. The outputs are K2CofactorE8barVBHeader.v (k2_J, k2_G and the 21 quadrics), K2CofactorE8barVBsNN_MM.v
-(step MM of quadric NN: the check of K2CofactorSplit.v), K2CofactorE8barVBcNN.v (the chain of quadric NN and
-the recovery of the original quadric), K2CofactorE8barVB.v (the statement for all 21 quadrics) and
-K2Split.order (the compile order, one module name per line).
+at R_m = 0. The outputs, under rocq/k2-instances, are K2CofactorE8barVBHeader.v (k2_J, k2_G and the 21 quadrics),
+K2CofactorE8barVBsNN_MM.v (step MM of quadric NN: the check of K2CofactorSplit.v), K2CofactorE8barVBcNN.v (the
+chain of quadric NN and the recovery of the original quadric), K2CofactorE8barVB.v (the statement for all 21
+quadrics) and K2Split.order (the compile order, one module name per line).
 
 Usage: k2_cofactor_split.py INPUT.json --plan
-       k2_cofactor_split.py INPUT.json --write [--step-products N]
+       k2_cofactor_split.py INPUT.json --write
+       k2_cofactor_split.py INPUT.json --check
+
+--write goes only to rocq/k2-instances of this checkout: it refuses K2_INSTANCES_ROCQ, a directory that is a link
+or holds one, and a K2CofactorE8barVB source there that the rendering does not name. --check compares the
+rendering with that directory, or with the existing directory K2_INSTANCES_ROCQ names, and creates nothing.
+--step-products N changes the product bound of --plan alone, since the tracked sources hold the default.
 """
 
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -33,7 +40,9 @@ SLOT = 8
 STEP_PRODUCTS = 600_000
 CHUNK = 256
 GENERATOR = "ci/quantum-sources/k2_cofactor_split.py"
-OUTPUT_DIR = base.OUTPUT_DIR
+OUTPUT_DIR = base.ROOT / "rocq" / "k2-instances"
+CHECK_DIR_VARIABLE = "K2_INSTANCES_ROCQ"
+ORDER_FILE = "K2Split.order"
 # (quadric, base quadric, c): the certified polynomial is q - c q_base, in 1-based numbers.
 BASIS = {9: (7, 22069), 21: (17, 22069), 15: (13, 1), 18: (13, 1), 14: (8, 1), 16: (10, 1), 11: (8, 1), 13: (6, 16685)}
 
@@ -355,6 +364,45 @@ def quadric_order() -> list:
     return order
 
 
+def render_all(cert: dict, plans: dict) -> dict:
+    """The file name and text of every output, the order file last; its lines are the compile order."""
+    files = {"K2CofactorE8barVBHeader.v": base.render_header(cert)}
+    order = ["K2CofactorE8barVBHeader"]
+    for nn in quadric_order():
+        pl = plans[nn]
+        for mm in range(len(pl["steps"])):
+            files[f"{mod_name(nn, mm)}.v"] = render_step(cert, pl, nn, mm)
+            order.append(mod_name(nn, mm))
+        files[f"{mod_name(nn)}.v"] = render_chain(pl, nn)
+        order.append(mod_name(nn))
+    imports = " ".join(mod_name(nn) for nn in range(1, base.NQUADRICS + 1))
+    cases = "\n".join(f"  destruct i as [|i]; [exact k2_in_ideal_{i + 1:02d}|]." for i in range(base.NQUADRICS))
+    files["K2CofactorE8barVB.v"] = base.STATEMENT.format(
+        digest=base.EXPECTED_SHA256, generator=GENERATOR, imports=imports, cases=cases
+    )
+    order.append("K2CofactorE8barVB")
+    files[ORDER_FILE] = "\n".join(order) + "\n"
+    return files
+
+
+def check(files: dict) -> None:
+    """Fail unless the directory holds exactly the rendered sources and the order file, byte for byte."""
+    override = os.environ.get(CHECK_DIR_VARIABLE)
+    directory = Path(override) if override else OUTPUT_DIR
+    if not directory.is_dir():
+        base.fail(f"{directory} is no directory")
+    tracked = {p.name for p in directory.iterdir() if p.suffix == ".v" or p.name == ORDER_FILE}
+    problems = [f"absent: {name}" for name in sorted(set(files) - tracked)]
+    problems += [f"not rendered: {name}" for name in sorted(tracked - set(files))]
+    for name in sorted(set(files) & tracked):
+        if (directory / name).read_bytes() != files[name].encode("utf-8"):
+            problems.append(f"differs: {name}")
+    if problems:
+        print("\n".join(problems), file=sys.stderr)
+        base.fail(f"{len(problems)} of {len(files)} files differ from the rendering")
+    print(f"{len(files) - 1} modules and {ORDER_FILE} equal the rendering")
+
+
 def main() -> None:
     global STEP_PRODUCTS
     parser = argparse.ArgumentParser(description=__doc__)
@@ -362,8 +410,11 @@ def main() -> None:
     actions = parser.add_mutually_exclusive_group(required=True)
     actions.add_argument("--plan", action="store_true", help="print the steps and remainder sizes")
     actions.add_argument("--write", action="store_true", help="write the Rocq sources")
-    parser.add_argument("--step-products", type=int, default=STEP_PRODUCTS, help="product bound of one step")
+    actions.add_argument("--check", action="store_true", help="compare the rendering with the tracked sources")
+    parser.add_argument("--step-products", type=int, default=STEP_PRODUCTS, help="product bound of one step (--plan)")
     args = parser.parse_args()
+    if args.step_products != STEP_PRODUCTS and not args.plan:
+        base.fail("--step-products changes --plan alone; the tracked sources hold the default bound")
     STEP_PRODUCTS = args.step_products
     cert = base.load(args.input)
     base.validate(cert)
@@ -388,25 +439,19 @@ def main() -> None:
             sum(len(s) for pl in plans.values() for s in pl["steps"]),
         )
         return
-    base.confine_output()
-    order = ["K2CofactorE8barVBHeader"]
-    (OUTPUT_DIR / "K2CofactorE8barVBHeader.v").write_text(base.render_header(cert), encoding="utf-8")
-    for nn in quadric_order():
-        pl = plans[nn]
-        for mm in range(len(pl["steps"])):
-            (OUTPUT_DIR / f"{mod_name(nn, mm)}.v").write_text(render_step(cert, pl, nn, mm), encoding="utf-8")
-            order.append(mod_name(nn, mm))
-        (OUTPUT_DIR / f"{mod_name(nn)}.v").write_text(render_chain(pl, nn), encoding="utf-8")
-        order.append(mod_name(nn))
-    imports = " ".join(mod_name(nn) for nn in range(1, base.NQUADRICS + 1))
-    cases = "\n".join(f"  destruct i as [|i]; [exact k2_in_ideal_{i + 1:02d}|]." for i in range(base.NQUADRICS))
-    (OUTPUT_DIR / "K2CofactorE8barVB.v").write_text(
-        base.STATEMENT.format(digest=base.EXPECTED_SHA256, generator=GENERATOR, imports=imports, cases=cases),
-        encoding="utf-8",
-    )
-    order.append("K2CofactorE8barVB")
-    (OUTPUT_DIR / "K2Split.order").write_text("\n".join(order) + "\n", encoding="utf-8")
-    print(f"wrote {len(order)} modules under {OUTPUT_DIR.relative_to(base.ROOT)}")
+    files = render_all(cert, plans)
+    if args.check:
+        check(files)
+        return
+    if os.environ.get(CHECK_DIR_VARIABLE):
+        base.fail(f"--write goes to rocq/k2-instances of this checkout; unset {CHECK_DIR_VARIABLE}")
+    base.confine_output(OUTPUT_DIR)
+    stale = sorted(p.name for p in OUTPUT_DIR.glob("K2CofactorE8barVB*.v") if p.name not in files)
+    if stale:
+        base.fail(f"rocq/k2-instances holds sources the rendering does not name: {' '.join(stale)}")
+    for name, text in files.items():
+        (OUTPUT_DIR / name).write_text(text, encoding="utf-8")
+    print(f"wrote {len(files) - 1} modules under {OUTPUT_DIR.relative_to(base.ROOT)}")
 
 
 if __name__ == "__main__":
