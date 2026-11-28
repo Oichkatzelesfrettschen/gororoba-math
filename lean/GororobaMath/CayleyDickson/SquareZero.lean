@@ -1,0 +1,150 @@
+/- SPDX-License-Identifier: Apache-2.0 -/
+module
+
+public import GororobaMath.CayleyDickson.Associator
+public import GororobaMath.CayleyDickson.AnnihilatorSymmetry
+public import GororobaMath.CayleyDickson.Kaplansky
+
+/-!
+# Square-zero elements and idempotents over a field with `2 ≠ 0`
+
+Convention: `Tower F k` is the `k`-fold Cayley-Dickson double of a field `F` with the identity
+as star, `Tower.re` is the coordinate of `1` and `Tower.dot` the trace form, so `dot k x x` is
+the norm `N(x)`. The results read at every level over every field in which `2 ≠ 0`, the finite
+fields `F_p` with `p` odd among them.
+
+The quadratic relation `x * x = (2 re x) • x - N(x) • 1` (`Tower.mul_self_eq_smul_sub`) decides
+both questions. Applying `dot · 1` to it gives the scalar equation `re (x * x) = 2 re(x)² - N(x)`.
+When the coefficient of `x` left in the relation is nonzero, `x` is a multiple of `1`, and a
+multiple `a • 1` squares to `a² • 1`; otherwise the relation is a scalar equation. Over a
+commutative ring with `2` a unit the first result fails: for `ε² = 0` the element `ε • 1` squares
+to zero with `re = ε ≠ 0`, so the field hypothesis enters.
+
+## Main results
+
+* `Tower.mul_self_eq_zero_iff`: `x * x = 0` exactly when `re x = 0` and `N(x) = 0`.
+* `Tower.mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero`: `(x * x) * (x * x) = 0` only when
+  `x * x = 0`.
+* `Tower.mul_self_eq_self_iff`: `x * x = x` exactly when `x = 0`, `x = 1`, or `2 re x = 1` and
+  `N(x) = 0`.
+
+These are the statements of gororoba-quantum's findings row A5-661 over every field with `2 ≠ 0`;
+its enumerated counts over `F_p` are not stated here.
+-/
+
+@[expose] public section
+
+namespace CayleyDickson
+
+namespace Tower
+
+universe u
+
+variable {F : Type u} [Field F] [StarRing F] [TrivialStar F] {k : ℕ}
+
+/-- The coordinate of `1` in `x * x`: `re (x * x) = 2 re(x)² - N(x)`. -/
+theorem re_mul_self (x : Tower F k) : re k (x * x) = 2 * re k x * re k x - dot k x x := by
+  rw [← dot_one_right k (x * x), mul_self_eq_smul_sub x, dot_sub_left, dot_smul_left,
+    dot_smul_left, dot_one_right, dot_one_right, re_one, mul_one]
+
+omit [TrivialStar F] in
+/-- The norm of `α • x - β • 1`: `α² N(x) - 2 α β re x + β²`. -/
+theorem dot_smul_sub_smul_one_self (α β : F) (x : Tower F k) :
+    dot k (α • x - β • (1 : Tower F k)) (α • x - β • (1 : Tower F k)) =
+      α * α * dot k x x - 2 * α * β * re k x + β * β := by
+  simp only [dot_sub_left, dot_sub_right, dot_smul_left, dot_smul_right]
+  simp only [dot_one_right, dot_comm k 1 x, re_one]
+  ring
+
+omit [TrivialStar F] in
+/-- An element with `(2 re x - c) • x` a multiple of `1` and `2 re x ≠ c` is `re x • 1`. -/
+theorem eq_re_smul_one_of_smul_eq {c d : F} {x : Tower F k} (hc : 2 * re k x - c ≠ 0)
+    (h : (2 * re k x - c) • x = d • (1 : Tower F k)) : x = re k x • (1 : Tower F k) := by
+  have hx1 : x = ((2 * re k x - c)⁻¹ * d) • (1 : Tower F k) := by
+    rw [← smul_smul, ← h, smul_smul, inv_mul_cancel₀ hc, one_smul]
+  conv_rhs => rw [hx1]
+  rw [re_smul, re_one, mul_one]
+  exact hx1
+
+/-- A multiple of `1` squares to the square of the scalar. -/
+theorem smul_one_mul_smul_one (a : F) :
+    a • (1 : Tower F k) * a • (1 : Tower F k) = (a * a) • (1 : Tower F k) := by
+  rw [smul_mul_assoc', mul_smul_comm', one_mul, smul_smul]
+
+/-- Over a field with `2 ≠ 0`, `x * x = 0` exactly when `re x = 0` and `N(x) = 0`. -/
+theorem mul_self_eq_zero_iff (h2 : (2 : F) ≠ 0) (x : Tower F k) :
+    x * x = 0 ↔ re k x = 0 ∧ dot k x x = 0 := by
+  refine ⟨fun h => ?_, fun ⟨h1, h2'⟩ => ?_⟩
+  · have hre := re_mul_self x
+    rw [h, re_zero] at hre
+    have ha : re k x = 0 := by
+      by_contra ha
+      have hlin : (2 * re k x - 0) • x = dot k x x • (1 : Tower F k) := by
+        have hq := mul_self_eq_smul_sub x
+        rw [h, eq_comm, sub_eq_zero] at hq
+        rw [sub_zero, hq]
+      have hx := eq_re_smul_one_of_smul_eq (by rw [sub_zero]; exact mul_ne_zero h2 ha) hlin
+      have hsq : x * x = (re k x * re k x) • (1 : Tower F k) := by
+        conv_lhs => rw [hx]
+        exact smul_one_mul_smul_one _
+      have h3 := congrArg (re k) (hsq.symm.trans h)
+      rw [re_smul, re_one, mul_one, re_zero] at h3
+      exact ha (mul_self_eq_zero.mp h3)
+    refine ⟨ha, ?_⟩
+    rw [ha] at hre
+    linear_combination hre
+  · rw [mul_self_eq_smul_sub, h1, h2', mul_zero, zero_smul, zero_smul, sub_zero]
+
+/-- Over a field with `2 ≠ 0`, `(x * x) * (x * x) = 0` only when `x * x = 0`: the square
+`y = x * x` has `re y = 2 re(x)² - N(x)` and `N(y) = N(x)²`. -/
+theorem mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero (h2 : (2 : F) ≠ 0) {x : Tower F k}
+    (h : x * x * (x * x) = 0) : x * x = 0 := by
+  obtain ⟨hre, hdot⟩ := (mul_self_eq_zero_iff h2 (x * x)).mp h
+  have hd : dot k (x * x) (x * x) = dot k x x * dot k x x := by
+    rw [mul_self_eq_smul_sub x, dot_smul_sub_smul_one_self]
+    ring
+  rw [hd] at hdot
+  have hd0 : dot k x x = 0 := mul_self_eq_zero.mp hdot
+  rw [re_mul_self, hd0, sub_zero] at hre
+  have ha : re k x = 0 := by
+    rcases mul_eq_zero.mp hre with h' | h'
+    · exact (mul_eq_zero.mp h').resolve_left h2
+    · exact h'
+  exact (mul_self_eq_zero_iff h2 x).mpr ⟨ha, hd0⟩
+
+/-- Over a field, `x * x = x` exactly when `x` is `0` or `1`, or `2 re x = 1` and
+`N(x) = 0`; so the idempotents other than `0` and `1` have real part `1/2` and norm `0` when
+`2 ≠ 0`. -/
+theorem mul_self_eq_self_iff (x : Tower F k) :
+    x * x = x ↔ x = 0 ∨ x = 1 ∨ (2 * re k x = 1 ∧ dot k x x = 0) := by
+  refine ⟨fun h => ?_, ?_⟩
+  · have hlin : (2 * re k x - 1) • x = dot k x x • (1 : Tower F k) := by
+      have hq := mul_self_eq_smul_sub x
+      rw [h, eq_sub_iff_add_eq] at hq
+      rw [sub_smul, one_smul, ← hq]
+      abel
+    by_cases hc : 2 * re k x - 1 = 0
+    · rw [hc, zero_smul] at hlin
+      have hd := congrArg (re k) hlin
+      rw [re_zero, re_smul, re_one, mul_one] at hd
+      exact Or.inr (Or.inr ⟨by linear_combination hc, hd.symm⟩)
+    · have hx := eq_re_smul_one_of_smul_eq hc hlin
+      have hsq : x * x = (re k x * re k x) • (1 : Tower F k) := by
+        conv_lhs => rw [hx]
+        exact smul_one_mul_smul_one _
+      have h3 := congrArg (re k) (hsq.symm.trans h)
+      rw [re_smul, re_one, mul_one] at h3
+      have h4 : re k x * (re k x - 1) = 0 := by linear_combination h3
+      rcases mul_eq_zero.mp h4 with h0 | h0
+      · left
+        rw [hx, h0, zero_smul]
+      · right; left
+        rw [hx, sub_eq_zero.mp h0, one_smul]
+  · rintro (h | h | ⟨ha, hd⟩)
+    · rw [h, mul_zero]
+    · rw [h, mul_one]
+    · rw [mul_self_eq_smul_sub, ha, hd, one_smul, zero_smul, sub_zero]
+
+end Tower
+
+end CayleyDickson
