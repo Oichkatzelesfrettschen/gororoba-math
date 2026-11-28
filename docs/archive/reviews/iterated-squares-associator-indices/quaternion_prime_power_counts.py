@@ -1,18 +1,25 @@
-"""Square-zero and idempotent counts of the quaternions over F_9, F_25 and F_27.
+"""Square-zero and idempotent counts of the quaternions over F_4, F_8, F_9, F_25 and F_27.
 
 The record extends the prime-field counts of gororoba-quantum's findings row A5-662 to fields of
 prime-power order, the falsifier named by pool row PROOF-75. The quaternions A_2 over F_q are
 built by the Cayley-Dickson doubling (a, b)(c, d) = (ac - d* b, da + b c*) with the identity as
 the star of F_q, so e_i e_j = s(i, j) e_(i ^ j) with s read from the doubled product of basis
-vectors over the integers. Every element of F_q^4 is enumerated, and the record checks:
+vectors over the integers, and the table is checked to be associative. Every element of F_q^4 is
+enumerated, and the record checks, for odd q:
 
 - x * x = 0 exactly when re x = 0 and N(x) = 0, with N(x) the sum of the squared coordinates;
 - the elements with x * x = 0 number q^2 (prediction q^(2^n - 2) at n = 2);
 - the elements with (x * x) * (x * x) = 0 are the same set;
 - the idempotents other than 0 and 1 number q^2 + q (prediction q^(2^n - 2) + q^(2^(n-1) - 1)).
 
-Control: the product with s(1, 2) negated changes both counts at q = 9, so the enumeration
-reads the sign table. Arithmetic is exact over integer tables of F_q; no random draw enters.
+For even q (a reviewer conjecture of the record) it checks q^3 square-zero elements, the same
+set for the fourth power, no idempotent other than 0 and 1, and q^3 - q^2 elements with x * x = 0
+outside re x = 0 and N(x) = 0.
+
+Controls: the product with s(1, 2) negated changes both counts at q = 9, so the enumeration reads
+the sign table; negating s(1, 2) and s(2, 1) together leaves every square unchanged, and the
+associativity check rejects that table. Arithmetic is exact over integer tables of F_q; no random
+draw enters.
 """
 
 from __future__ import annotations
@@ -22,7 +29,7 @@ import sys
 
 # Each field: characteristic p and the monic irreducible polynomial m(t) of degree e, listed by
 # its coefficients of t^0 .. t^(e - 1) in t^e = -(c_0 + c_1 t + ...).
-FIELDS = {9: (3, (1, 0)), 25: (5, (3, 0)), 27: (3, (2, 2, 0))}
+FIELDS = {4: (2, (1, 1)), 8: (2, (1, 1, 0)), 9: (3, (1, 0)), 25: (5, (3, 0)), 27: (3, (2, 2, 0))}
 
 
 def require(condition: bool, message: str) -> None:
@@ -86,12 +93,27 @@ def sign_table(n: int) -> list[list[int]]:
     return table
 
 
-def counts(q: int, flip: bool) -> dict[str, int]:
+def is_associative(signs: list[list[int]]) -> bool:
+    """Whether e_i (e_j e_k) = (e_i e_j) e_k for every basis triple of the signed table."""
+    dim = len(signs)
+    return all(
+        signs[j][k] * signs[i][j ^ k] == signs[i][j] * signs[i ^ j][k]
+        for i in range(dim)
+        for j in range(dim)
+        for k in range(dim)
+    )
+
+
+def mutated_signs(flips: tuple[tuple[int, int], ...]) -> list[list[int]]:
+    signs = sign_table(2)
+    for i, j in flips:
+        signs[i][j] = -signs[i][j]
+    return signs
+
+
+def counts(q: int, signs: list[list[int]]) -> dict[str, int]:
     add_t, mul_t = field_tables(q)
     neg = [next(b for b in range(q) if add_t[a][b] == 0) for a in range(q)]
-    signs = sign_table(2)
-    if flip:
-        signs[1][2] = -signs[1][2]
 
     def product(x: tuple[int, ...], y: tuple[int, ...]) -> tuple[int, ...]:
         out = [0] * 4
@@ -116,18 +138,35 @@ def counts(q: int, flip: bool) -> dict[str, int]:
     return {"nil2": nil2, "nil4": nil4, "idempotents": idem, "predicate_mismatches": mismatch}
 
 
+def predicted(q: int) -> dict[str, int]:
+    """Odd q: A5-662 at n = 2. Even q: x * x = N(x) 1 with N(x) = (sum of the coordinates)^2, so
+    x * x = 0 on a hyperplane, re x = 0 and N(x) = 0 on a plane inside it, and no idempotent other
+    than 0 and 1 (Tower.mul_self_eq_self_iff_of_two_eq_zero)."""
+    if q % 2:
+        return {"nil2": q**2, "nil4": q**2, "idempotents": q**2 + q, "predicate_mismatches": 0}
+    return {"nil2": q**3, "nil4": q**3, "idempotents": 0, "predicate_mismatches": q**3 - q**2}
+
+
 def main() -> int:
+    table = sign_table(2)
+    require(is_associative(table), "the quaternion sign table is not associative")
     for q in FIELDS:
-        got = counts(q, flip=False)
-        want = {"nil2": q**2, "nil4": q**2, "idempotents": q**2 + q, "predicate_mismatches": 0}
+        got = counts(q, table)
+        want = predicted(q)
         require(got == want, f"F_{q}: {got} against {want}")
         print(f"F_{q}: {got}")
-    control = counts(9, flip=True)
+    single = counts(9, mutated_signs(((1, 2),)))
     require(
-        control["nil2"] != 81 and control["idempotents"] != 90,
-        f"control: the flipped sign table kept the counts {control}",
+        single["nil2"] != 81 and single["idempotents"] != 90,
+        f"control: the table with s(1, 2) negated kept the counts {single}",
     )
-    print(f"F_9 control, s(1, 2) negated: {control}")
+    print(f"F_9 control, s(1, 2) negated: {single}")
+    # Squares read only s(i, j) + s(j, i), so a paired flip keeps every count; the associativity
+    # check of the table rejects it.
+    paired = mutated_signs(((1, 2), (2, 1)))
+    require(not is_associative(paired), "control: the paired flip kept an associative table")
+    require(counts(9, paired) == predicted(9), "control: the paired flip changed a square")
+    print("F_9 control, s(1, 2) and s(2, 1) negated: counts unchanged, table not associative")
     return 0
 
 
