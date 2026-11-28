@@ -18,6 +18,8 @@ public import GororobaMath.CayleyDickson.Derivation
 public import GororobaMath.CayleyDickson.TraceForm
 public import GororobaMath.CayleyDickson.AssociatorPhase
 public import GororobaMath.CayleyDickson.AssociatorCensus
+public import GororobaMath.CayleyDickson.AssociatorPhaseNonzero
+public import GororobaMath.CayleyDickson.AnticommutingAssociator
 public import GororobaMath.CayleyDickson.FlexibleLaw
 public import GororobaMath.CayleyDickson.BasisExt
 public import GororobaMath.CayleyDickson.BooleanAnf
@@ -74,6 +76,7 @@ public import GororobaMath.CayleyDickson.AlignedPairTotal
 public import GororobaMath.CayleyDickson.AssociatorClasses
 public import GororobaMath.CayleyDickson.LeftMulDeterminant
 public import GororobaMath.CayleyDickson.SingularKernel
+public import GororobaMath.CayleyDickson.SquareZero
 public import GororobaMath.CayleyDickson.ScaledPairAnnihilator
 public import GororobaMath.CayleyDickson.AnnihilatorBound
 public import GororobaMath.CayleyDickson.SedenionCriterion

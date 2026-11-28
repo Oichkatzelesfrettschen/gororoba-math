@@ -75,7 +75,7 @@ claim, sorted by `source` in byte order, sources unique.
   Hilbert-function value, an ideal equality, a rank, a Cohen-Macaulay or
   reducedness property) is a Rocq certificate and reads `owed`, and a
   statement over every level or a class of fields is owed in Lean. The rows
-  read: 14 lean, owed; 19 lean, partial; 1 lean, proved; 1 both, owed; 195 none, no-proof-owed; 405 rocq, owed; 9 rocq, partial; 2 rocq, proved. The note of an
+  read: 14 lean, owed; 18 lean, partial; 2 lean, proved; 1 both, owed; 195 none, no-proof-owed; 405 rocq, owed; 9 rocq, partial; 2 rocq, proved. The note of an
   owed row says what a proof certifies and carries the findings status, whose
   `proved` and `certified` name a computation; `survives` marks a statement
   the source has not proved.
