@@ -35,3 +35,21 @@ Rocq source changes.
    induction on `mul_self_eq_zero_of_mul_self_mul_mul_self_eq_zero`.
 3. A nonzero basis associator has pairwise distinct nonzero indices with `p ^^^ q ≠ x`. Cheapest
    test: combine `associator_e_e_e_ne_zero_iff` with `assocPhase_eq_false_of_dependent`.
+
+## Hosted round
+
+`@Codex review` on `7047482b2`: "Didn't find any major issues" (receipt comment, no inline thread).
+The `quick`, `build`, `rocq-changed` and `main-gate` checks passed on that head.
+
+## Advisor
+
+The Advisor, last, found no defect in the change and asked for three checks before the merge:
+
+| Item | Resolution |
+|---|---|
+| Rerun the statement check on the final head | Done at `beee3e4fd`: `#check` shows `CayleyDickson.associator` in both theorems of `AnticommutingAssociator`, `NonUnitalNonAssocRing` in the generic lemma, and `CommRing` with `NoZeroDivisors` in `SquareZero`; the axiom report is unchanged. |
+| Read the `lean` and `rocq` runs of `main` before the merge | The newest completed runs of both workflows, on `466168f0f`, are successes. |
+| Commit the hosted round and this section before the merge | This section. |
+
+Not changed, as the Advisor judged it non-blocking: `eq_re_smul_one_of_smul_eq` holds for every
+nonzero scalar coefficient, so its `2 * re k x - c` shape is wider than the callers need.
